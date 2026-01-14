@@ -39,7 +39,7 @@
                             <div class="h-100">
                                 <h5 class="text-muted border-bottom pb-2">Detalles del Trabajo</h5>
                                 <p class="lead fw-bold mb-2">{{ pedido.resumen_pedido }}</p>
-                                <p class="text-muted mb-4">{{ pedido.detalles_pedido|linebreaks }}</p>
+                                <div class="text-muted mb-4">{{ pedido.detalles_pedido|safe }}</div>
 
                                 <div class="d-flex flex-column align-items-start">
                                     <p class="mb-1">Estado Actual:</p>

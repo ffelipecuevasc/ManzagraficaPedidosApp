@@ -24,7 +24,6 @@
             </div>
             <div class="card-body">
 
-                <!-- Ayuda para crear cliente -->
                 <div class="alert alert-info d-flex justify-content-between align-items-center mb-4">
                     <span>¿El cliente no aparece en la lista?</span>
                     <a href="{% url 'crear_cliente' %}" class="btn btn-sm btn-light fw-bold">
@@ -34,7 +33,7 @@
 
                 <form method="post">
                     {% csrf_token %}
-                    
+
                     {{ form.as_p }}
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
@@ -52,4 +51,25 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Inicializar Summernote en el campo de detalles (TextField)
+        $('#id_detalles_pedido').summernote({
+            placeholder: 'Escribe aquí las especificaciones técnicas, tallas, materiales, etc...',
+            tabsize: 2,
+            height: 300,  // Un poco más alto para que sea cómodo escribir
+            toolbar: [
+              ['style', ['style']],
+              ['font', ['bold', 'underline', 'clear']],
+              ['color', ['color']],
+              ['para', ['ul', 'ol', 'paragraph']],
+              ['table', ['table']],
+              ['view', ['fullscreen', 'codeview']]
+            ]
+        });
+    });
+</script>
 {% endblock %}
