@@ -1,13 +1,26 @@
 {% extends 'pedidos/base.html' %}
 
-{% block title %}Nuevo Pedido - Manzagrafica{% endblock %}
+{% block title %}
+    {% if form.instance.pk %}
+        Editar Pedido #{{ form.instance.id }}
+    {% else %}
+        Nuevo Pedido
+    {% endif %}
+    - Manzagrafica
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Nuevo Pedido</h4>
+                <h4 class="mb-0">
+                    {% if form.instance.pk %}
+                        Editar Pedido #{{ form.instance.id }}
+                    {% else %}
+                        Nuevo Pedido
+                    {% endif %}
+                </h4>
             </div>
             <div class="card-body">
 
@@ -26,7 +39,13 @@
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                         <a href="{% url 'dashboard' %}" class="btn btn-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-primary">Guardar Pedido</button>
+                        <button type="submit" class="btn btn-primary">
+                            {% if form.instance.pk %}
+                                Guardar Cambios
+                            {% else %}
+                                Crear Pedido
+                            {% endif %}
+                        </button>
                     </div>
                 </form>
             </div>

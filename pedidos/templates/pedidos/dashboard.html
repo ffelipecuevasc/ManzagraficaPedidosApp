@@ -91,7 +91,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-striped table-hover align-middle">
                     <thead>
                         <tr>
                             <th>#Pedido</th>
@@ -99,16 +99,13 @@
                             <th>Resumen</th>
                             <th>Estado</th>
                             <th>Fecha Entrega</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for pedido in page_obj %}
                         <tr>
-                            <td>
-                                <a href="{% url 'detalle_pedido' pedido.id %}" class="text-decoration-none fw-bold text-primary">
-                                    {{ pedido.id }}
-                                </a>
-                            </td>
+                            <td>{{ pedido.id }}</td>
                             <td>{{ pedido.cliente.nombre }}</td>
                             <td>{{ pedido.resumen_pedido }}</td>
                             <td>
@@ -123,10 +120,23 @@
                                 {% endif %}
                             </td>
                             <td>{{ pedido.fecha_entrega|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'detalle_pedido' pedido.id %}" class="btn btn-info text-white" title="Ver">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'editar_pedido' pedido.id %}" class="btn btn-warning text-white" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'eliminar_pedido' pedido.id %}" class="btn btn-danger" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center">No hay pedidos recientes.</td>
+                            <td colspan="6" class="text-center">No hay pedidos recientes.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

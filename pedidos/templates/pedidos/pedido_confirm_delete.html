@@ -1,0 +1,29 @@
+{% extends 'pedidos/base.html' %}
+
+{% block title %}Eliminar Pedido - Manzagrafica{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger shadow">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Confirmar Eliminación</h4>
+            </div>
+            <div class="card-body text-center p-5">
+                <h5 class="card-title mb-4">
+                    ¿Estás seguro de que deseas eliminar el pedido #{{ pedido.id }} del cliente <strong>{{ pedido.cliente }}</strong>?
+                </h5>
+                <p class="card-text text-muted mb-4">Esta acción no se puede deshacer.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -57,6 +57,27 @@ def crear_pedido(request):
     return render(request, 'pedidos/pedido_form.html', {'form': form})
 
 @login_required
+def editar_pedido(request, pk):
+    pedido = get_object_or_404(Pedido, pk=pk)
+    if request.method == 'POST':
+        form = PedidoForm(request.POST, instance=pedido)
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+    else:
+        form = PedidoForm(instance=pedido)
+    
+    return render(request, 'pedidos/pedido_form.html', {'form': form})
+
+@login_required
+def eliminar_pedido(request, pk):
+    pedido = get_object_or_404(Pedido, pk=pk)
+    if request.method == 'POST':
+        pedido.delete()
+        return redirect('dashboard')
+    return render(request, 'pedidos/pedido_confirm_delete.html', {'pedido': pedido})
+
+@login_required
 def detalle_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     return render(request, 'pedidos/pedido_detail.html', {'pedido': pedido})
