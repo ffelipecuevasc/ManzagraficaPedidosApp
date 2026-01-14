@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Q
 from .models import Pedido, Cliente
 from .forms import PedidoForm, ClienteForm
 
@@ -11,12 +12,21 @@ def dashboard(request):
     en_proceso = Pedido.objects.filter(estado='EN_PROCESO').count()
     completados = Pedido.objects.filter(estado='TERMINADO').count()
     
+    # Base QuerySet
+    ultimos_pedidos = Pedido.objects.all().order_by('-fecha_solicitud')
+
+    # Filtro por Estado
     estado_filter = request.GET.get('estado')
-    
     if estado_filter:
-        ultimos_pedidos = Pedido.objects.filter(estado=estado_filter).order_by('-fecha_solicitud')
-    else:
-        ultimos_pedidos = Pedido.objects.order_by('-fecha_solicitud')
+        ultimos_pedidos = ultimos_pedidos.filter(estado=estado_filter)
+    
+    # Búsqueda
+    busqueda = request.GET.get('busqueda')
+    if busqueda:
+        ultimos_pedidos = ultimos_pedidos.filter(
+            Q(cliente__nombre__icontains=busqueda) | 
+            Q(cliente__telefono__icontains=busqueda)
+        )
 
     paginator = Paginator(ultimos_pedidos, 5)
     page_number = request.GET.get('page')
@@ -29,6 +39,7 @@ def dashboard(request):
         'completados': completados,
         'page_obj': page_obj,
         'estado_filter': estado_filter,
+        'busqueda': busqueda,
     }
 
     return render(request, 'pedidos/dashboard.html', context)

@@ -17,7 +17,7 @@ class PedidoForm(forms.ModelForm):
         fields = ['cliente', 'resumen_pedido', 'detalles_pedido', 'valor_venta', 'valor_abonado', 'fecha_entrega']
         widgets = {
             'fecha_entrega': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'cliente': forms.Select(attrs={'class': 'form-control'}),
+            'cliente': forms.Select(attrs={'class': 'form-select select2', 'data-placeholder': 'Busque un cliente...'}),
             'resumen_pedido': forms.TextInput(attrs={'class': 'form-control'}),
             'detalles_pedido': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'valor_venta': forms.NumberInput(attrs={'class': 'form-control'}),

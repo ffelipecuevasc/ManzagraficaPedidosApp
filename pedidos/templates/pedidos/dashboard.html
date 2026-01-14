@@ -62,16 +62,32 @@
 
     <!-- Recent Orders Table -->
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>
-                Recientes
-                {% if estado_filter %}
-                    - Filtrado por: <strong>{{ estado_filter }}</strong>
-                {% endif %}
-            </span>
-            {% if estado_filter %}
-                <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">Limpiar Filtro</a>
-            {% endif %}
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col-12 col-md">
+                    <h5 class="mb-0">
+                        Recientes
+                        {% if estado_filter %}
+                            <small class="text-muted fs-6">- Filtrado por: {{ estado_filter }}</small>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="col-12 col-md-auto mt-3 mt-md-0">
+                    <form method="get" action="." class="d-flex" role="search">
+                        <input class="form-control me-2" type="search" name="busqueda" placeholder="Buscar cliente..." aria-label="Search" value="{{ busqueda|default:'' }}">
+
+                        {% if estado_filter %}
+                        <input type="hidden" name="estado" value="{{ estado_filter }}">
+                        {% endif %}
+
+                        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+
+                        {% if busqueda or estado_filter %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary ms-2">X</a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -123,7 +139,7 @@
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" aria-label="Anterior">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" aria-label="Anterior">
                                 <span aria-hidden="true">&laquo; Anterior</span>
                             </a>
                         </li>
@@ -141,7 +157,7 @@
 
                     {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" aria-label="Siguiente">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" aria-label="Siguiente">
                                 <span aria-hidden="true">Siguiente &raquo;</span>
                             </a>
                         </li>
