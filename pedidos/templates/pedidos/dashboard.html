@@ -4,16 +4,21 @@
 
 {% block content %}
     <!-- Header with Action Button -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Panel de Control</h2>
-        <a href="{% url 'crear_pedido' %}" class="btn btn-primary btn-lg shadow-sm">
-            + Nuevo Pedido
-        </a>
+    <div class="row align-items-center mb-4">
+        <div class="col-12 col-md">
+            <h1 class="h2 mb-0">Panel de Control</h1>
+        </div>
+
+        <div class="col-12 col-md-auto mt-3 mt-md-0">
+            <a href="{% url 'crear_pedido' %}" class="btn btn-primary w-100">
+                + Nuevo Pedido
+            </a>
+        </div>
     </div>
 
     <!-- KPI Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-3">
             <a href="{% url 'dashboard' %}" class="text-decoration-none text-reset">
                 <div class="card text-white bg-primary mb-3 h-100 shadow-sm hover-scale">
                     <div class="card-header">Total Pedidos</div>
@@ -23,7 +28,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-12 col-sm-6 col-lg-3">
             <a href="?estado=PENDIENTE" class="text-decoration-none text-reset">
                 <div class="card text-white bg-danger mb-3 h-100 shadow-sm hover-scale">
                     <div class="card-header">Pendientes</div>
@@ -33,7 +38,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-12 col-sm-6 col-lg-3">
             <a href="?estado=EN_PROCESO" class="text-decoration-none text-reset">
                 <div class="card text-dark bg-warning mb-3 h-100 shadow-sm hover-scale">
                     <div class="card-header">En Proceso</div>
@@ -43,7 +48,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-12 col-sm-6 col-lg-3">
             <a href="?estado=TERMINADO" class="text-decoration-none text-reset">
                 <div class="card text-white bg-success mb-3 h-100 shadow-sm hover-scale">
                     <div class="card-header">Terminados</div>
