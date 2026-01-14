@@ -1,0 +1,164 @@
+{% extends 'pedidos/base.html' %}
+
+{% block title %}Mis pedidos - Manzagrafica{% endblock %}
+
+{% block content %}
+    <!-- Header with Action Button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Panel de Control</h2>
+        <a href="{% url 'crear_pedido' %}" class="btn btn-primary btn-lg shadow-sm">
+            + Nuevo Pedido
+        </a>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <a href="{% url 'dashboard' %}" class="text-decoration-none text-reset">
+                <div class="card text-white bg-primary mb-3 h-100 shadow-sm hover-scale">
+                    <div class="card-header">Total Pedidos</div>
+                    <div class="card-body">
+                        <h5 class="card-title display-4">{{ total_pedidos }}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="?estado=PENDIENTE" class="text-decoration-none text-reset">
+                <div class="card text-white bg-danger mb-3 h-100 shadow-sm hover-scale">
+                    <div class="card-header">Pendientes</div>
+                    <div class="card-body">
+                        <h5 class="card-title display-4">{{ pendientes }}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="?estado=EN_PROCESO" class="text-decoration-none text-reset">
+                <div class="card text-dark bg-warning mb-3 h-100 shadow-sm hover-scale">
+                    <div class="card-header">En Proceso</div>
+                    <div class="card-body">
+                        <h5 class="card-title display-4">{{ en_proceso }}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="?estado=TERMINADO" class="text-decoration-none text-reset">
+                <div class="card text-white bg-success mb-3 h-100 shadow-sm hover-scale">
+                    <div class="card-header">Terminados</div>
+                    <div class="card-body">
+                        <h5 class="card-title display-4">{{ completados }}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Orders Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>
+                Recientes
+                {% if estado_filter %}
+                    - Filtrado por: <strong>{{ estado_filter }}</strong>
+                {% endif %}
+            </span>
+            {% if estado_filter %}
+                <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">Limpiar Filtro</a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>#Pedido</th>
+                            <th>Cliente</th>
+                            <th>Resumen</th>
+                            <th>Estado</th>
+                            <th>Fecha Entrega</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in page_obj %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'detalle_pedido' pedido.id %}" class="text-decoration-none fw-bold text-primary">
+                                    {{ pedido.id }}
+                                </a>
+                            </td>
+                            <td>{{ pedido.cliente.nombre }}</td>
+                            <td>{{ pedido.resumen_pedido }}</td>
+                            <td>
+                                {% if pedido.estado == 'PENDIENTE' %}
+                                    <span class="badge bg-danger">Pendiente</span>
+                                {% elif pedido.estado == 'EN_PROCESO' %}
+                                    <span class="badge bg-warning text-dark">En Proceso</span>
+                                {% elif pedido.estado == 'TERMINADO' %}
+                                    <span class="badge bg-success">Terminado</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ pedido.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ pedido.fecha_entrega|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay pedidos recientes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Navegación de páginas" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" aria-label="Anterior">
+                                <span aria-hidden="true">&laquo; Anterior</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo; Anterior</span>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" aria-label="Siguiente">
+                                <span aria-hidden="true">Siguiente &raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Siguiente &raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <style>
+        .hover-scale {
+            transition: transform 0.2s;
+        }
+        .hover-scale:hover {
+            transform: scale(1.03);
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
