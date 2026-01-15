@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('nuevo/', views.crear_pedido, name='crear_pedido'),
+    path('api/cliente/nuevo/', views.api_crear_cliente_rapido, name='api_crear_cliente_rapido'),
     path('pedidos/lista/', views.lista_pedidos, name='lista_pedidos'),
     path('<int:pk>/', views.detalle_pedido, name='detalle_pedido'),
     path('pedido/<int:pk>/cambiar/<str:nuevo_estado>/', views.cambiar_estado_pedido, name='cambiar_estado'),

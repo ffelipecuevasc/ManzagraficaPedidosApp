@@ -14,132 +14,243 @@
                     Registrar Nuevo Pedido
                 {% endif %}
             </h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Completa los detalles del trabajo a realizar.</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Sigue los pasos para crear la orden de trabajo.</p>
         </div>
         <a href="{% url 'dashboard' %}" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center text-sm font-medium">
             <span class="material-icons-round mr-1 text-lg">arrow_back</span>
-            Cancelar y Volver
+            Cancelar
         </a>
     </div>
 
     <div class="flex justify-center">
         <div class="w-full max-w-4xl">
 
-            <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 rounded-full p-2">
-                        <span class="material-icons-round text-xl">person_search</span>
-                    </div>
-                    <div>
-                        <p class="text-sm font-bold text-blue-900 dark:text-blue-100">¿El cliente no aparece en la lista?</p>
-                        <p class="text-xs text-blue-600 dark:text-blue-300">Debes registrarlo antes de crear el pedido.</p>
+            <style>
+                /* --- INPUTS GENERALES --- */
+                .custom-input {
+                    width: 100%;
+                    background-color: #ffffff;
+                    border: 1px solid #d1d5db;
+                    border-radius: 0.5rem;
+                    padding: 0.625rem 1rem;
+                    font-size: 0.95rem;
+                    color: #111827; /* Texto negro en modo claro */
+                    transition: all 0.2s;
+                }
+
+                /* Corrección Modo Oscuro para Inputs */
+                .dark .custom-input,
+                .dark input[type="text"],
+                .dark input[type="number"],
+                .dark input[type="date"] {
+                    background-color: #262626 !important;
+                    border-color: #404040 !important;
+                    color: #ffffff !important; /* Texto blanco forzado */
+                }
+
+                .custom-input:focus {
+                    outline: none;
+                    border-color: #FBBF24 !important;
+                    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+                }
+
+                /* --- CORRECCIÓN CAMPOS DE MONEDA ($) --- */
+                /* Agregamos espacio a la izquierda para que no choque con el signo $ */
+                #id_valor_venta, #id_valor_abonado {
+                    padding-left: 2rem !important;
+                }
+
+                /* --- LABELS --- */
+                .custom-label {
+                    display: block;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: #374151;
+                    margin-bottom: 0.5rem;
+                }
+                .dark .custom-label { color: #cbd5e1; }
+
+                /* --- CORRECCIONES SELECT2 (Buscador Clientes) --- */
+                /* Caja Principal */
+                .select2-container--default .select2-selection--single {
+                    height: 46px !important;
+                    padding-top: 8px;
+                    border-radius: 0.5rem !important;
+                }
+                /* Modo Oscuro - Caja Principal */
+                .dark .select2-container--default .select2-selection--single {
+                    background-color: #262626 !important;
+                    border-color: #404040 !important;
+                }
+                /* Texto Seleccionado */
+                .select2-container--default .select2-selection--single .select2-selection__rendered {
+                    line-height: 28px !important;
+                    color: #111827 !important;
+                }
+                .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+                    color: #ffffff !important; /* Texto blanco al seleccionar */
+                }
+
+                /* Menú Desplegable (Dropdown) */
+                .dark .select2-dropdown {
+                    background-color: #262626 !important;
+                    border-color: #404040 !important;
+                    color: #ffffff !important;
+                }
+                /* Opciones del Dropdown */
+                .dark .select2-results__option {
+                    color: #ffffff !important;
+                }
+                /* Opción Hover/Seleccionada */
+                .dark .select2-results__option--highlighted {
+                    background-color: #FBBF24 !important; /* Amarillo */
+                    color: #000000 !important;
+                }
+                /* Input de Búsqueda dentro del Dropdown */
+                .dark .select2-search__field {
+                    background-color: #171717 !important;
+                    color: #ffffff !important;
+                    border-color: #404040 !important;
+                }
+
+                /* --- CORRECCIONES SUMMERNOTE (Editor) --- */
+                .note-editor.note-frame {
+                    border-radius: 0.5rem !important;
+                    overflow: hidden;
+                }
+                /* Modo Oscuro Editor */
+                .dark .note-editor.note-frame {
+                    border-color: #404040 !important;
+                }
+                .dark .note-toolbar {
+                    background-color: #171717 !important;
+                    border-bottom-color: #404040 !important;
+                }
+                .dark .note-editing-area {
+                    background-color: #262626 !important;
+                }
+                /* El área donde escribes */
+                .dark .note-editable {
+                    background-color: #262626 !important;
+                    color: #ffffff !important;
+                }
+                /* Botones del toolbar */
+                .dark .note-btn {
+                    background-color: #262626 !important;
+                    color: #ffffff !important;
+                    border-color: #404040 !important;
+                }
+            </style>
+
+            <form method="post" id="pedidoForm">
+                {% csrf_token %}
+
+                <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+
+                    <div class="p-6 md:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
+                            <span class="bg-primary text-black w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">1</span>
+                            ¿Quién es el cliente?
+                        </h2>
+
+                        <div id="section-buscar-cliente">
+                            <div class="mb-4">
+                                <label class="custom-label">Buscar en la base de datos:</label>
+                                {{ form.cliente }}
+                            </div>
+
+                            <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-neutral-800">
+                                <span class="text-sm text-slate-500 dark:text-slate-400">¿No lo encuentras?</span>
+                                <button type="button" id="btn-toggle-crear" class="text-primary hover:text-yellow-400 font-bold text-sm uppercase tracking-wide flex items-center transition-colors">
+                                    <span class="material-icons-round mr-1 text-lg">person_add</span>
+                                    Crear Nuevo Cliente
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="section-crear-cliente" class="hidden bg-slate-50 dark:bg-neutral-900/50 p-6 rounded-lg border border-slate-200 dark:border-neutral-800">
+                            <h3 class="font-bold text-slate-800 dark:text-white mb-4 text-sm uppercase tracking-wide">Nuevo Cliente Rápido</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="custom-label">Nombre *</label>
+                                    <input type="text" id="new_client_nombre" class="custom-input" placeholder="Ej: Juan Pérez">
+                                </div>
+                                <div>
+                                    <label class="custom-label">Teléfono *</label>
+                                    <input type="text" id="new_client_telefono" class="custom-input" placeholder="+56 9...">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="custom-label">Email (Opcional)</label>
+                                    <input type="text" id="new_client_email" class="custom-input" placeholder="ejemplo@correo.com">
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-3">
+                                <button type="button" id="btn-cancelar-crear" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Cancelar</button>
+                                <button type="button" id="btn-guardar-cliente-api" class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg font-bold text-sm shadow hover:shadow-lg transition-all flex items-center">
+                                    <span class="material-icons-round text-sm mr-2">save</span>
+                                    Guardar y Seleccionar
+                                </button>
+                            </div>
+                            <div id="cliente-api-error" class="hidden mt-3 text-xs text-red-500 font-bold text-right"></div>
+                        </div>
                     </div>
                 </div>
-                <a href="{% url 'crear_cliente' %}" class="whitespace-nowrap px-4 py-2 bg-white dark:bg-card-dark border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-sm font-bold rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors shadow-sm">
-                    + Registrar Cliente
-                </a>
-            </div>
 
-            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
-                <div class="p-6 md:p-8">
+                <div id="section-detalles-pedido" class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 dark:bg-neutral-700"></div>
 
-                    <style>
-                        /* Estilos Generales de Formulario */
-                        form p { margin-bottom: 1.5rem; }
-                        form label {
-                            display: block;
-                            font-size: 0.875rem;
-                            font-weight: 600;
-                            color: #374151;
-                            margin-bottom: 0.5rem;
-                        }
-                        .dark form label { color: #cbd5e1; }
+                    <div class="p-6 md:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+                            <span class="bg-slate-200 dark:bg-neutral-700 text-slate-600 dark:text-slate-300 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
+                            Detalles del Trabajo
+                        </h2>
 
-                        /* Inputs Estándar */
-                        form input[type="text"],
-                        form input[type="number"],
-                        form input[type="date"],
-                        form select,
-                        form textarea {
-                            width: 100%;
-                            background-color: #ffffff;
-                            border: 1px solid #d1d5db;
-                            border-radius: 0.5rem;
-                            padding: 0.625rem 1rem;
-                            font-size: 0.95rem;
-                            color: #111827;
-                            transition: all 0.2s;
-                        }
-                        .dark form input[type="text"],
-                        .dark form input[type="number"],
-                        .dark form input[type="date"],
-                        .dark form select,
-                        .dark form textarea {
-                            background-color: #262626;
-                            border-color: #404040;
-                            color: #ffffff;
-                        }
+                        <div class="space-y-6">
 
-                        /* Foco */
-                        form input:focus, form select:focus, form textarea:focus {
-                            outline: none;
-                            border-color: #FBBF24;
-                            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
-                        }
+                            <div>
+                                <label class="custom-label" for="{{ form.resumen_pedido.id_for_label }}">{{ form.resumen_pedido.label }}</label>
+                                {{ form.resumen_pedido }}
+                            </div>
 
-                        /* Correcciones para Select2 en Tailwind Dark/Light */
-                        .select2-container--default .select2-selection--single {
-                            background-color: #ffffff !important;
-                            border: 1px solid #d1d5db !important;
-                            border-radius: 0.5rem !important;
-                            height: 46px !important;
-                            padding-top: 8px;
-                        }
-                        .dark .select2-container--default .select2-selection--single {
-                            background-color: #262626 !important;
-                            border-color: #404040 !important;
-                        }
-                        .select2-container--default .select2-selection--single .select2-selection__rendered {
-                            color: #111827 !important;
-                            line-height: 28px !important;
-                        }
-                        .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
-                            color: #ffffff !important;
-                        }
-                        /* Flecha del Select2 */
-                        .select2-container--default .select2-selection--single .select2-selection__arrow {
-                            height: 44px !important;
-                        }
+                            <div>
+                                <label class="custom-label" for="{{ form.detalles_pedido.id_for_label }}">{{ form.detalles_pedido.label }}</label>
+                                {{ form.detalles_pedido }}
+                            </div>
 
-                        /* Correcciones para Summernote (Editor) */
-                        .note-editor.note-frame {
-                            border: 1px solid #d1d5db !important;
-                            border-radius: 0.5rem !important;
-                            overflow: hidden;
-                        }
-                        .dark .note-editor.note-frame {
-                            border-color: #404040 !important;
-                            background-color: #fff; /* Summernote es difícil de oscurecer totalmente sin CSS complejo, mejor dejarlo claro para legibilidad */
-                        }
-                    </style>
-
-                    <form method="post">
-                        {% csrf_token %}
-
-                        {{ form.as_p }}
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="custom-label" for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
+                                        {{ form.valor_venta }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="custom-label" for="{{ form.valor_abonado.id_for_label }}">{{ form.valor_abonado.label }}</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
+                                        {{ form.valor_abonado }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="custom-label" for="{{ form.fecha_entrega.id_for_label }}">{{ form.fecha_entrega.label }}</label>
+                                    {{ form.fecha_entrega }}
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
-                            <a href="{% url 'dashboard' %}" class="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm">
-                                Cancelar
-                            </a>
-                            <button type="submit" class="px-6 py-2.5 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-sm hover:shadow-md transition-all text-sm uppercase tracking-wide flex items-center">
-                                <span class="material-icons-round mr-2 text-lg">save</span>
-                                {% if form.instance.pk %}Guardar Cambios{% else %}Crear Pedido{% endif %}
+                            <button type="submit" class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center">
+                                <span class="material-icons-round mr-2 text-xl">check_circle</span>
+                                Confirmar Pedido
                             </button>
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 {% endblock %}
@@ -147,27 +258,109 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
-        // Inicializar Summernote en el campo de detalles
-        // Nota: Mantenemos el fondo blanco en el editor para evitar conflictos de contraste
+        // --- 1. Inicialización ---
+
+        // Editor de texto (Summernote)
         $('#id_detalles_pedido').summernote({
-            placeholder: 'Escribe aquí las especificaciones técnicas, tallas, materiales, medidas...',
+            placeholder: 'Escribe aquí las especificaciones...',
             tabsize: 2,
-            height: 300,
-            toolbar: [
-              ['style', ['style']],
-              ['font', ['bold', 'underline', 'clear']],
-              ['color', ['color']],
-              ['para', ['ul', 'ol', 'paragraph']],
-              ['table', ['table']],
-              ['view', ['fullscreen', 'codeview']]
-            ]
+            height: 200,
+            toolbar: [['style', ['bold', 'italic', 'clear']], ['para', ['ul', 'ol']]],
+            // Truco para que cargue bien los estilos dark al iniciar
+            callbacks: {
+                onInit: function() {
+                    // Forzar clases dark si el body las tiene
+                    if($('html').hasClass('dark')) {
+                        $('.note-editable').css({'background-color': '#262626', 'color': 'white'});
+                    }
+                }
+            }
         });
 
-        // Asegurar que Select2 siga funcionando con el nuevo CSS
-        $('.select2').select2({
+        // Select2 (Buscador)
+        var $selectCliente = $('#id_cliente');
+        $selectCliente.select2({
             width: '100%',
-            placeholder: "Selecciona un cliente",
+            placeholder: "Escribe para buscar cliente...",
             allowClear: true
+        });
+
+        // --- 2. Lógica del "Wizard" (Paso a Paso) ---
+        var $sectionDetalles = $('#section-detalles-pedido');
+        var $sectionBuscar = $('#section-buscar-cliente');
+        var $sectionCrear = $('#section-crear-cliente');
+
+        function checkClienteSeleccionado() {
+            if ($selectCliente.val()) {
+                $sectionDetalles.removeClass('hidden opacity-50').addClass('opacity-100');
+            } else {
+                $sectionDetalles.addClass('hidden opacity-50').removeClass('opacity-100');
+            }
+        }
+
+        $selectCliente.on('change', checkClienteSeleccionado);
+        checkClienteSeleccionado();
+
+        // --- 3. Lógica "Nuevo Cliente" ---
+        $('#btn-toggle-crear').click(function() {
+            $sectionBuscar.addClass('hidden');
+            $sectionCrear.removeClass('hidden');
+        });
+
+        $('#btn-cancelar-crear').click(function() {
+            $sectionCrear.addClass('hidden');
+            $sectionBuscar.removeClass('hidden');
+            $('#cliente-api-error').addClass('hidden');
+        });
+
+        $('#btn-guardar-cliente-api').click(function() {
+            var nombre = $('#new_client_nombre').val();
+            var telefono = $('#new_client_telefono').val();
+            var email = $('#new_client_email').val();
+
+            if(!nombre || !telefono) {
+                $('#cliente-api-error').text('Nombre y Teléfono son obligatorios').removeClass('hidden');
+                return;
+            }
+
+            var $btn = $(this);
+            var originalText = $btn.html();
+            $btn.prop('disabled', true).html('<span class="material-icons-round animate-spin text-sm mr-2">refresh</span> Guardando...');
+
+            fetch("{% url 'api_crear_cliente_rapido' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: new URLSearchParams({
+                    'nombre': nombre,
+                    'telefono': telefono,
+                    'email': email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    var newOption = new Option(data.nombre, data.id, true, true);
+                    $selectCliente.append(newOption).trigger('change');
+                    $sectionCrear.addClass('hidden');
+                    $sectionBuscar.removeClass('hidden');
+                    $('#new_client_nombre').val('');
+                    $('#new_client_telefono').val('');
+                    $('#new_client_email').val('');
+                    checkClienteSeleccionado();
+                } else {
+                    $('#cliente-api-error').text('Error: ' + JSON.stringify(data.errors)).removeClass('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                $('#cliente-api-error').text('Error de conexión').removeClass('hidden');
+            })
+            .finally(() => {
+                $btn.prop('disabled', false).html(originalText);
+            });
         });
     });
 </script>
