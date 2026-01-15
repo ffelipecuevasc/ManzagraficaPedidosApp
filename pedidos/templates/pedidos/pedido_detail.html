@@ -1,143 +1,183 @@
 {% extends 'pedidos/base.html' %}
 {% load humanize %}
 
-{% block title %}Pedido #{{ pedido.id }} - Manzagrafica{% endblock %}
+{% block title %}Pedido #{{ pedido.id }} - Manza Gráfica{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-12">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-dark text-white d-flex flex-column flex-md-row justify-content-between align-items-center">
-                    <h4 class="mb-0">Detalle del Pedido #{{ pedido.id }}</h4>
-                    <small class="mt-2 mt-md-0">Solicitado: {{ pedido.fecha_solicitud|date:"d/m/Y H:i" }}</small>
-                </div>
-                <div class="card-body p-4 p-md-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Detalle del Pedido</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Información completa y seguimiento del trabajo.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'dashboard' %}" class="px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-slate-700 dark:text-slate-300 font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm flex items-center">
+                <span class="material-icons-round mr-2 text-lg">arrow_back</span>
+                Volver
+            </a>
+            <button onclick="window.print()" class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors text-sm flex items-center shadow-sm">
+                <span class="material-icons-round mr-2 text-lg">print</span>
+                Imprimir Recibo
+            </button>
+        </div>
+    </div>
 
-                    <div class="row g-4">
-                        <!-- Columna Izquierda: Datos Cliente -->
-                        <div class="col-12 col-md-6">
-                            <div class="alert alert-light border h-100">
-                                <h5 class="alert-heading text-muted mb-3">Información del Cliente</h5>
-                                <div class="mb-2">
-                                    <strong>Nombre:</strong><br>
-                                    {{ pedido.cliente.nombre }}
-                                </div>
-                                <div class="mb-2">
-                                    <strong>Teléfono:</strong><br>
-                                    {{ pedido.cliente.telefono }}
-                                </div>
-                                <div>
-                                    <strong>Email:</strong><br>
-                                    {{ pedido.cliente.email|default:"No registrado" }}
-                                </div>
-                            </div>
+    <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden print:shadow-none print:border-0 print:dark:bg-white print:dark:text-black">
+
+        <div class="bg-slate-50 dark:bg-neutral-900/50 border-b border-slate-200 dark:border-neutral-800 p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:bg-white print:border-b-2 print:border-black">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    Pedido <span class="text-primary print:text-black">#{{ pedido.id }}</span>
+                </h2>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                    Solicitado el {{ pedido.fecha_solicitud|date:"d de F Y, H:i" }}
+                </p>
+            </div>
+
+            <div class="print:hidden">
+                {% if pedido.estado == 'PENDIENTE' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50">
+                        <span class="material-icons-round mr-1.5 text-base">pending_actions</span> PENDIENTE
+                    </span>
+                {% elif pedido.estado == 'EN_PROCESO' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800/50">
+                        <span class="material-icons-round mr-1.5 text-base">cached</span> EN PROCESO
+                    </span>
+                {% elif pedido.estado == 'TERMINADO' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50">
+                        <span class="material-icons-round mr-1.5 text-base">check_circle</span> TERMINADO
+                    </span>
+                {% else %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400">
+                        {{ pedido.estado }}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="hidden print:block text-right">
+                <p class="font-bold uppercase text-sm border border-black px-3 py-1">{{ pedido.estado }}</p>
+            </div>
+        </div>
+
+        <div class="p-6 md:p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
+                        Información del Cliente
+                    </h3>
+                    <div class="bg-slate-50 dark:bg-neutral-900/30 rounded-lg p-5 border border-slate-100 dark:border-neutral-800 print:bg-white print:border-0 print:p-0">
+                        <p class="text-lg font-bold text-slate-900 dark:text-white mb-1">{{ pedido.cliente.nombre }}</p>
+
+                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 mb-2 text-sm">
+                            <span class="material-icons-round text-base text-slate-400">phone</span>
+                            {{ pedido.cliente.telefono }}
                         </div>
 
-                        <!-- Columna Derecha: Detalles y Estado -->
-                        <div class="col-12 col-md-6">
-                            <div class="h-100">
-                                <h5 class="text-muted border-bottom pb-2">Detalles del Trabajo</h5>
-                                <p class="lead fw-bold mb-2">{{ pedido.resumen_pedido }}</p>
-                                <div class="text-muted mb-4">{{ pedido.detalles_pedido|safe }}</div>
+                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm">
+                            <span class="material-icons-round text-base text-slate-400">email</span>
+                            {{ pedido.cliente.email|default:"No registrado" }}
+                        </div>
+                    </div>
 
-                                <div class="d-flex flex-column align-items-start">
-                                    <p class="mb-1">Estado Actual:</p>
-                                    {% if pedido.estado == 'PENDIENTE' %}
-                                        <span class="badge bg-danger fs-6">Pendiente</span>
-                                    {% elif pedido.estado == 'EN_PROCESO' %}
-                                        <span class="badge bg-warning text-dark fs-6">En Proceso</span>
-                                    {% elif pedido.estado == 'TERMINADO' %}
-                                        <span class="badge bg-success fs-6">Terminado</span>
+                    <div class="mt-8 print:hidden">
+                        <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
+                            Gestionar Estado
+                        </h3>
+
+                        <div class="flex flex-col gap-3">
+                            {% if pedido.estado == 'PENDIENTE' %}
+                                <a href="{% url 'cambiar_estado' pedido.id 'EN_PROCESO' %}" class="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center">
+                                    <span class="material-icons-round mr-2">play_arrow</span>
+                                    Iniciar Trabajo (En Proceso)
+                                </a>
+                            {% elif pedido.estado == 'EN_PROCESO' %}
+                                <a href="{% url 'cambiar_estado' pedido.id 'TERMINADO' %}" class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center">
+                                    <span class="material-icons-round mr-2">done_all</span>
+                                    Marcar como Terminado
+                                </a>
+                            {% elif pedido.estado == 'TERMINADO' %}
+                                <div class="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-4 rounded-lg text-center text-sm font-medium border border-green-100 dark:border-green-900/30 mb-2">
+                                    <span class="material-icons-round block text-2xl mb-1">verified</span>
+                                    Este trabajo ha sido finalizado.
+                                </div>
+                                <a href="{% url 'cambiar_estado' pedido.id 'EN_PROCESO' %}" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-sm flex items-center justify-center py-2 transition-colors">
+                                    <span class="material-icons-round mr-1 text-base">replay</span>
+                                    Reabrir pedido
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
+                        Detalles del Trabajo
+                    </h3>
+
+                    <div class="mb-6">
+                        <label class="text-xs text-slate-500 uppercase mb-1 block">Resumen</label>
+                        <p class="text-xl font-bold text-slate-900 dark:text-white leading-tight">
+                            {{ pedido.resumen_pedido }}
+                        </p>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="text-xs text-slate-500 uppercase mb-1 block">Especificaciones</label>
+                        <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-100 dark:border-neutral-800 print:bg-white print:border-0 print:p-0">
+                            {{ pedido.detalles_pedido|safe }}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-icons-round text-slate-400">event</span>
+                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Fecha de Entrega:</span>
+                        <span class="text-sm text-slate-900 dark:text-white">{{ pedido.fecha_entrega|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 pt-8 border-t border-slate-200 dark:border-neutral-800 print:border-black print:mt-8">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Resumen Financiero</h3>
+
+                <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-neutral-800 print:border-black">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-neutral-800 print:divide-black">
+                        <thead class="bg-slate-50 dark:bg-neutral-900/50 print:bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider print:text-black">Valor Total</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider print:text-black">Abonado</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider print:text-black">Saldo Pendiente</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-card-dark divide-y divide-slate-200 dark:divide-neutral-800 print:divide-black">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-medium text-slate-900 dark:text-white">
+                                    ${{ pedido.valor_venta|intcomma }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-medium text-slate-900 dark:text-white">
+                                    ${{ pedido.valor_abonado|intcomma }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    {% if pedido.valor_pendiente > 0 %}
+                                        <span class="text-xl font-bold text-red-600 dark:text-red-400">
+                                            ${{ pedido.valor_pendiente|intcomma }}
+                                        </span>
                                     {% else %}
-                                        <span class="badge bg-secondary fs-6">{{ pedido.estado }}</span>
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xl font-bold text-green-600 dark:text-green-400">$0</span>
+                                            <span class="text-xs font-bold text-green-600 dark:text-green-400 uppercase bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full mt-1">Pagado</span>
+                                        </div>
                                     {% endif %}
-
-                                    <div class="mt-3 w-100">
-                                        {% if pedido.estado == 'PENDIENTE' %}
-                                            <a href="{% url 'cambiar_estado' pedido.id 'EN_PROCESO' %}" class="btn btn-warning btn-sm w-100">
-                                                Iniciar Trabajo
-                                            </a>
-                                        {% elif pedido.estado == 'EN_PROCESO' %}
-                                            <a href="{% url 'cambiar_estado' pedido.id 'TERMINADO' %}" class="btn btn-success btn-sm w-100">
-                                                Terminar Trabajo
-                                            </a>
-                                        {% elif pedido.estado == 'TERMINADO' %}
-                                            <span class="text-success fw-bold d-block mb-2">Trabajo Finalizado</span>
-                                            <a href="{% url 'cambiar_estado' pedido.id 'EN_PROCESO' %}" class="btn btn-outline-secondary btn-sm w-100">
-                                                Reabrir
-                                            </a>
-                                        {% endif %}
-                                    </div>
-
-                                    <p class="mt-3 mb-1">Fecha de Entrega:</p>
-                                    <strong>{{ pedido.fecha_entrega|date:"d/m/Y" }}</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Zona de Dinero -->
-                    <div class="table-responsive mt-5">
-                        <table class="table table-bordered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="text-center">Valor Total</th>
-                                    <th class="text-center">Abonado</th>
-                                    <th class="text-center">Saldo Pendiente</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="text-center fs-5">${{ pedido.valor_venta|intcomma }}</td>
-                                    <td class="text-center fs-5">${{ pedido.valor_abonado|intcomma }}</td>
-                                    <td class="text-center fs-4 fw-bold {% if pedido.valor_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">
-                                        ${{ pedido.valor_pendiente|intcomma }}
-                                        {% if pedido.valor_pendiente == 0 %}
-                                            <br><small class="fs-6 text-success">(Pagado)</small>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Botones de Acción -->
-                    <div class="d-flex flex-column flex-md-row justify-content-between mt-5 no-print">
-                        <a href="{% url 'dashboard' %}" class="btn btn-secondary mb-3 mb-md-0">
-                            &larr; Volver
-                        </a>
-                        <button onclick="window.print()" class="btn btn-outline-primary">
-                            Imprimir Recibo
-                        </button>
-                    </div>
-
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+
+            <div class="hidden print:block mt-12 pt-8 border-t-2 border-dashed border-gray-300 text-center">
+                <h1 class="font-bold text-xl mb-1">MANZA GRÁFICA</h1>
+                <p class="text-sm text-gray-600">Diseño y Publicidad</p>
+                <p class="text-xs text-gray-500 mt-4">Gracias por su preferencia</p>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Estilos simples para impresión -->
-<style>
-    @media print {
-        body * {
-            visibility: hidden;
-        }
-        .card, .card * {
-            visibility: visible;
-        }
-        .card {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            border: none !important;
-            box-shadow: none !important;
-        }
-        .no-print {
-            display: none !important;
-        }
-    }
-</style>
 {% endblock %}

@@ -1,195 +1,219 @@
 {% extends 'pedidos/base.html' %}
 
-{% block title %}Mis pedidos - Manzagrafica{% endblock %}
+{% block title %}Panel de Control - Manza Gráfica{% endblock %}
 
 {% block content %}
-    <!-- Header with Action Button -->
-    <div class="row align-items-center mb-4">
-        <div class="col-12 col-md">
-            <h1 class="h2 mb-0">Panel de Control</h1>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Panel de Control</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Resumen general de pedidos y métricas clave.</p>
         </div>
-
-        <div class="col-12 col-md-auto mt-3 mt-md-0">
-            <a href="{% url 'crear_pedido' %}" class="btn btn-primary w-100">
-                + Nuevo Pedido
-            </a>
-        </div>
+        <a href="{% url 'crear_pedido' %}" class="bg-primary hover:bg-yellow-400 text-black font-bold py-2.5 px-6 rounded-lg shadow-sm inline-flex items-center justify-center transition-colors uppercase tracking-wide text-sm">
+            <span class="material-icons-round mr-2 text-lg">add_circle</span>
+            Nuevo Pedido
+        </a>
     </div>
 
-    <!-- KPI Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-lg-3">
-            <a href="{% url 'dashboard' %}" class="text-decoration-none text-reset">
-                <div class="card text-white bg-primary mb-3 h-100 shadow-sm hover-scale">
-                    <div class="card-header">Total Pedidos</div>
-                    <div class="card-body">
-                        <h5 class="card-title display-4">{{ total_pedidos }}</h5>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+        <a href="{% url 'dashboard' %}" class="block group">
+            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group-hover:border-primary/50">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pedidos</h3>
+                    <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+                        <span class="material-icons-round text-xl">inventory_2</span>
                     </div>
                 </div>
-            </a>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <a href="?estado=PENDIENTE" class="text-decoration-none text-reset">
-                <div class="card text-white bg-danger mb-3 h-100 shadow-sm hover-scale">
-                    <div class="card-header">Pendientes</div>
-                    <div class="card-body">
-                        <h5 class="card-title display-4">{{ pendientes }}</h5>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <a href="?estado=EN_PROCESO" class="text-decoration-none text-reset">
-                <div class="card text-dark bg-warning mb-3 h-100 shadow-sm hover-scale">
-                    <div class="card-header">En Proceso</div>
-                    <div class="card-body">
-                        <h5 class="card-title display-4">{{ en_proceso }}</h5>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <a href="?estado=TERMINADO" class="text-decoration-none text-reset">
-                <div class="card text-white bg-success mb-3 h-100 shadow-sm hover-scale">
-                    <div class="card-header">Terminados</div>
-                    <div class="card-body">
-                        <h5 class="card-title display-4">{{ completados }}</h5>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Recent Orders Table -->
-    <div class="card">
-        <div class="card-header">
-            <div class="row align-items-center">
-                <div class="col-12 col-md">
-                    <h5 class="mb-0">
-                        Recientes
-                        {% if estado_filter %}
-                            <small class="text-muted fs-6">- Filtrado por: {{ estado_filter }}</small>
-                        {% endif %}
-                    </h5>
-                </div>
-                <div class="col-12 col-md-auto mt-3 mt-md-0">
-                    <form method="get" action="." class="d-flex" role="search">
-                        <input class="form-control me-2" type="search" name="busqueda" placeholder="Buscar cliente..." aria-label="Search" value="{{ busqueda|default:'' }}">
-
-                        {% if estado_filter %}
-                        <input type="hidden" name="estado" value="{{ estado_filter }}">
-                        {% endif %}
-
-                        <button class="btn btn-outline-primary" type="submit">Buscar</button>
-
-                        {% if busqueda or estado_filter %}
-                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary ms-2">X</a>
-                        {% endif %}
-                    </form>
-                </div>
+                <div class="text-3xl font-bold text-slate-900 dark:text-white">{{ total_pedidos }}</div>
             </div>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
+        </a>
+
+        <a href="?estado=PENDIENTE" class="block group">
+            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group-hover:border-red-500/50">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendientes</h3>
+                    <div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400">
+                        <span class="material-icons-round text-xl">pending_actions</span>
+                    </div>
+                </div>
+                <div class="text-3xl font-bold text-red-600 dark:text-red-400">{{ pendientes }}</div>
+            </div>
+        </a>
+
+        <a href="?estado=EN_PROCESO" class="block group">
+            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group-hover:border-yellow-500/50">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">En Proceso</h3>
+                    <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-yellow-600 dark:text-yellow-400">
+                        <span class="material-icons-round text-xl">cached</span>
+                    </div>
+                </div>
+                <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ en_proceso }}</div>
+            </div>
+        </a>
+
+        <a href="?estado=TERMINADO" class="block group">
+            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group-hover:border-green-500/50">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Terminados</h3>
+                    <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
+                        <span class="material-icons-round text-xl">check_circle</span>
+                    </div>
+                </div>
+                <div class="text-3xl font-bold text-green-600 dark:text-green-400">{{ completados }}</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="lg:col-span-2 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col">
+
+            <div class="p-5 border-b border-slate-200 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Pedidos Recientes</h2>
+                    {% if estado_filter %}
+                    <span class="px-2 py-1 text-xs font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-400 rounded">
+                        Filtro: {{ estado_filter }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <form method="get" action="." class="flex w-full md:w-auto gap-2">
+                    <div class="relative flex-grow">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-icons-round text-slate-400 text-lg">search</span>
+                        </span>
+                        <input type="search" name="busqueda" value="{{ busqueda|default:'' }}"
+                               class="pl-10 pr-4 py-2 w-full md:w-48 bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-primary focus:border-primary placeholder-slate-400"
+                               placeholder="Buscar...">
+                    </div>
+                    {% if estado_filter %}
+                    <input type="hidden" name="estado" value="{{ estado_filter }}">
+                    {% endif %}
+                    <button type="submit" class="p-2 bg-white dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-700 transition-colors">
+                        <span class="material-icons-round text-lg">search</span>
+                    </button>
+                    {% if busqueda or estado_filter %}
+                    <a href="{% url 'dashboard' %}" class="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
+                        <span class="material-icons-round text-lg">close</span>
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+
+            <div class="overflow-x-auto flex-grow">
+                <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr>
-                            <th>#Pedido</th>
-                            <th>Cliente</th>
-                            <th>Resumen</th>
-                            <th>Estado</th>
-                            <th>Fecha Entrega</th>
-                            <th>Acciones</th>
+                        <tr class="bg-slate-50 dark:bg-neutral-900/50 border-b border-slate-200 dark:border-neutral-800">
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">#ID</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cliente</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-slate-200 dark:divide-neutral-800">
                         {% for pedido in page_obj %}
-                        <tr>
-                            <td>{{ pedido.id }}</td>
-                            <td>{{ pedido.cliente.nombre }}</td>
-                            <td>{{ pedido.resumen_pedido }}</td>
-                            <td>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors">
+                            <td class="px-6 py-3 text-sm font-medium text-slate-900 dark:text-white">#{{ pedido.id }}</td>
+                            <td class="px-6 py-3 text-sm text-slate-700 dark:text-slate-300">
+                                <div class="font-medium">{{ pedido.cliente.nombre }}</div>
+                                <div class="text-xs text-slate-500 truncate max-w-[150px]">{{ pedido.resumen_pedido }}</div>
+                            </td>
+                            <td class="px-6 py-3">
                                 {% if pedido.estado == 'PENDIENTE' %}
-                                    <span class="badge bg-danger">Pendiente</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50">Pendiente</span>
                                 {% elif pedido.estado == 'EN_PROCESO' %}
-                                    <span class="badge bg-warning text-dark">En Proceso</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800/50">Proceso</span>
                                 {% elif pedido.estado == 'TERMINADO' %}
-                                    <span class="badge bg-success">Terminado</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50">Listo</span>
                                 {% else %}
-                                    <span class="badge bg-secondary">{{ pedido.estado }}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400">{{ pedido.estado }}</span>
                                 {% endif %}
                             </td>
-                            <td>{{ pedido.fecha_entrega|date:"d/m/Y" }}</td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{% url 'detalle_pedido' pedido.id %}" class="btn btn-info text-white" title="Ver">
-                                        <i class="bi bi-eye"></i>
+                            <td class="px-6 py-3 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{% url 'detalle_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors" title="Ver">
+                                        <span class="material-icons-round text-lg">visibility</span>
                                     </a>
-                                    <a href="{% url 'editar_pedido' pedido.id %}" class="btn btn-warning text-white" title="Editar">
-                                        <i class="bi bi-pencil"></i>
+                                    <a href="{% url 'editar_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded transition-colors" title="Editar">
+                                        <span class="material-icons-round text-lg">edit</span>
                                     </a>
-                                    <a href="{% url 'eliminar_pedido' pedido.id %}" class="btn btn-danger" title="Eliminar">
-                                        <i class="bi bi-trash"></i>
+                                    <a href="{% url 'eliminar_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Eliminar">
+                                        <span class="material-icons-round text-lg">delete</span>
                                     </a>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center">No hay pedidos recientes.</td>
+                            <td colspan="4" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
+                                Sin pedidos recientes.
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Pagination Controls -->
             {% if page_obj.has_other_pages %}
-            <nav aria-label="Navegación de páginas" class="mt-4">
-                <ul class="pagination justify-content-center">
+            <div class="p-3 border-t border-slate-200 dark:border-neutral-800 flex items-center justify-center bg-slate-50 dark:bg-neutral-900/30">
+                <nav class="inline-flex rounded-md shadow-sm -space-x-px">
                     {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" aria-label="Anterior">
-                                <span aria-hidden="true">&laquo; Anterior</span>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">&laquo; Anterior</span>
-                        </li>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" class="px-2 py-1 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-l">
+                        <span class="material-icons-round text-base">chevron_left</span>
+                    </a>
                     {% endif %}
-
-                    <li class="page-item disabled">
-                        <span class="page-link">
-                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-                        </span>
-                    </li>
-
+                    <span class="px-3 py-1 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-xs font-medium text-slate-700 dark:text-slate-200 flex items-center">
+                        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                    </span>
                     {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" aria-label="Siguiente">
-                                <span aria-hidden="true">Siguiente &raquo;</span>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">Siguiente &raquo;</span>
-                        </li>
+                    <a href="?page={{ page_obj.next_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" class="px-2 py-1 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-r">
+                        <span class="material-icons-round text-base">chevron_right</span>
+                    </a>
                     {% endif %}
-                </ul>
-            </nav>
+                </nav>
+            </div>
             {% endif %}
-
         </div>
-    </div>
 
-    <style>
-        .hover-scale {
-            transition: transform 0.2s;
-        }
-        .hover-scale:hover {
-            transform: scale(1.03);
-            cursor: pointer;
-        }
-    </style>
+        <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden h-fit">
+            <div class="p-5 border-b border-slate-200 dark:border-neutral-800">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Clientes Frecuentes</h2>
+            </div>
+            <div class="divide-y divide-slate-100 dark:divide-neutral-800">
+                {% if clientes_destacados %}
+                    {% for cliente in clientes_destacados %}
+                    <div class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
+                                {{ cliente.nombre|slice:":2"|upper }}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-900 dark:text-white">{{ cliente.nombre }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ cliente.email|default:"Sin email" }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-sm font-bold text-slate-900 dark:text-white">{{ cliente.total_pedidos }}</span>
+                            <span class="text-[10px] text-slate-500 uppercase">Pedidos</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-8 text-center">
+                        <div class="inline-flex p-3 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-400 mb-3">
+                            <span class="material-icons-round">people_outline</span>
+                        </div>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">No hay datos de clientes destacados.</p>
+                        <a href="{% url 'crear_cliente' %}" class="mt-4 text-xs font-bold text-primary hover:text-yellow-500 uppercase tracking-wide">Registrar Cliente</a>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="p-3 bg-slate-50 dark:bg-neutral-900/30 text-center border-t border-slate-200 dark:border-neutral-800">
+                <a href="{% url 'lista_clientes' %}" class="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Ver todos los clientes &rarr;</a>
+            </div>
+        </div>
+
+    </div>
 {% endblock %}

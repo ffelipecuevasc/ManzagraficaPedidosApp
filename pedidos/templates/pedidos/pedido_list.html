@@ -1,0 +1,182 @@
+{% extends 'pedidos/base.html' %}
+
+{% block title %}Gestión de Pedidos - Manza Gráfica{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Gestión de Pedidos</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Administra y realiza el seguimiento de todos los trabajos.</p>
+        </div>
+        <a href="{% url 'crear_pedido' %}" class="bg-primary hover:bg-yellow-400 text-black font-bold py-2.5 px-6 rounded-lg shadow-sm inline-flex items-center justify-center transition-colors uppercase tracking-wide text-sm">
+            <span class="material-icons-round mr-2 text-lg">add_circle</span>
+            NUEVO PEDIDO
+        </a>
+    </div>
+
+    <div class="mb-6 flex flex-col sm:flex-row gap-4">
+        <form method="get" action="." class="relative flex-grow flex gap-2">
+            <div class="relative flex-grow">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="material-icons-round text-slate-400 text-xl">search</span>
+                </span>
+                <input type="search" name="busqueda" value="{{ request.GET.busqueda|default:'' }}" 
+                       class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-neutral-700 rounded-lg leading-5 bg-white dark:bg-card-dark text-slate-900 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-colors" 
+                       placeholder="Buscar por ID, cliente o resumen...">
+            </div>
+            
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
+                <span class="material-icons-round text-lg">search</span>
+            </button>
+            
+            {% if request.GET.busqueda %}
+            <a href="{% url 'lista_pedidos' %}" class="inline-flex items-center px-3 py-2 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
+                <span class="material-icons-round text-lg">close</span>
+            </a>
+            {% endif %}
+        </form>
+
+        <div class="flex gap-2 relative group">
+            <button class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors focus:outline-none">
+                <span class="material-icons-round mr-2 text-lg">filter_list</span>
+                Filtrar por Estado
+                <span class="material-icons-round ml-2 text-lg">expand_more</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-card-dark border border-slate-200 dark:border-neutral-700 rounded-lg shadow-lg z-50 hidden group-hover:block">
+                <div class="py-1">
+                    <a href="?{% if request.GET.busqueda %}busqueda={{ request.GET.busqueda }}&{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800">
+                        Todos
+                    </a>
+                    <a href="?estado=PENDIENTE{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800">
+                        Pendientes
+                    </a>
+                    <a href="?estado=EN_PROCESO{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800">
+                        En Proceso
+                    </a>
+                    <a href="?estado=TERMINADO{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800">
+                        Terminados
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-card-dark border border-slate-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 dark:divide-neutral-800">
+                <thead class="bg-slate-50 dark:bg-neutral-900/50">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ID Pedido</th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cliente</th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resumen</th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Entrega</th>
+                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-neutral-800">
+                    {% for pedido in pedidos %}
+                    <tr class="hover:bg-yellow-50/50 dark:hover:bg-neutral-800/50 transition-colors group">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
+                            #{{ pedido.id }}
+                        </td>
+                        
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-8 w-8 rounded-full bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold text-xs mr-3 group-hover:bg-primary group-hover:text-black group-hover:border-primary transition-colors">
+                                    {{ pedido.cliente.nombre|slice:":2"|upper }}
+                                </div>
+                                <div class="text-sm font-medium text-slate-900 dark:text-slate-200">
+                                    {{ pedido.cliente.nombre }}
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 max-w-xs truncate">
+                            {{ pedido.resumen_pedido }}
+                        </td>
+                        
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if pedido.estado == 'PENDIENTE' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50">
+                                    Pendiente
+                                </span>
+                            {% elif pedido.estado == 'EN_PROCESO' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800/50">
+                                    En Proceso
+                                </span>
+                            {% elif pedido.estado == 'TERMINADO' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50">
+                                    Completado
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400">
+                                    {{ pedido.estado }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                            {{ pedido.fecha_entrega|date:"d M Y" }}
+                        </td>
+                        
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end gap-1">
+                                <a href="{% url 'detalle_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Ver detalle">
+                                    <span class="material-icons-round text-lg">visibility</span>
+                                </a>
+                                <a href="{% url 'editar_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors" title="Editar">
+                                    <span class="material-icons-round text-lg">edit</span>
+                                </a>
+                                <a href="{% url 'eliminar_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Eliminar">
+                                    <span class="material-icons-round text-lg">delete</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                            <span class="material-icons-round text-4xl mb-2 text-slate-300 dark:text-neutral-700 block">inbox</span>
+                            No se encontraron pedidos. Intenta con otra búsqueda o crea uno nuevo.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <div class="bg-slate-50 dark:bg-neutral-900/50 px-6 py-4 flex items-center justify-between border-t border-slate-200 dark:border-neutral-800">
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Página <span class="font-medium">{{ page_obj.number }}</span> de <span class="font-medium">{{ page_obj.paginator.num_pages }}</span>
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800">
+                            <span class="material-icons-round">chevron_left</span>
+                        </a>
+                        {% endif %}
+                        
+                        <span class="relative inline-flex items-center px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-sm font-medium text-slate-700 dark:text-slate-200">
+                            {{ page_obj.number }}
+                        </span>
+
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800">
+                            <span class="material-icons-round">chevron_right</span>
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}

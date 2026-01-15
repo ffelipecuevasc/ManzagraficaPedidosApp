@@ -1,27 +1,117 @@
 {% extends 'pedidos/base.html' %}
 
-{% block title %}Registrar Cliente - Manzagrafica{% endblock %}
+{% block title %}
+    {% if form.instance.pk %}Editar Cliente{% else %}Nuevo Cliente{% endif %} - Manza Gráfica
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Registrar Cliente</h4>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    {{ form.as_p }}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+                {% if form.instance.pk %}Editar Cliente{% else %}Registrar Nuevo Cliente{% endif %}
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Completa la información para gestionar este cliente.</p>
+        </div>
+        <a href="{% url 'lista_clientes' %}" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center text-sm font-medium">
+            <span class="material-icons-round mr-1 text-lg">arrow_back</span>
+            Volver al listado
+        </a>
+    </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <a href="{% url 'lista_clientes' %}" class="btn btn-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+    <div class="flex justify-center">
+        <div class="w-full max-w-2xl">
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+
+                <div class="p-6 md:p-8">
+                    <div class="mb-6 pb-4 border-b border-slate-100 dark:border-neutral-800">
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center">
+                            <span class="material-icons-round mr-2 text-primary">person</span>
+                            Datos del Cliente
+                        </h2>
                     </div>
-                </form>
+
+                    <style>
+                        /* Contenedor de cada campo (los <p> que genera Django) */
+                        form p {
+                            margin-bottom: 1.5rem;
+                        }
+
+                        /* Etiquetas (Labels) */
+                        form label {
+                            display: block;
+                            font-size: 0.875rem; /* text-sm */
+                            font-weight: 500;
+                            color: #374151; /* text-slate-700 */
+                            margin-bottom: 0.5rem;
+                        }
+                        .dark form label {
+                            color: #cbd5e1; /* text-slate-300 */
+                        }
+
+                        /* Inputs de Texto, Email, Teléfono, URL */
+                        form input[type="text"],
+                        form input[type="email"],
+                        form input[type="number"],
+                        form input[type="tel"],
+                        form input[type="url"],
+                        form textarea,
+                        form select {
+                            width: 100%;
+                            background-color: #ffffff;
+                            border: 1px solid #d1d5db; /* border-slate-300 */
+                            border-radius: 0.5rem; /* rounded-lg */
+                            padding: 0.625rem 1rem;
+                            font-size: 0.95rem;
+                            color: #111827; /* text-slate-900 */
+                            transition: all 0.2s;
+                        }
+
+                        /* Estilos en Modo Oscuro para Inputs */
+                        .dark form input[type="text"],
+                        .dark form input[type="email"],
+                        .dark form input[type="number"],
+                        .dark form input[type="tel"],
+                        .dark form input[type="url"],
+                        .dark form textarea,
+                        .dark form select {
+                            background-color: #262626; /* neutral-800 */
+                            border-color: #404040; /* neutral-700 */
+                            color: #ffffff;
+                        }
+
+                        /* Foco (Focus) amarillo */
+                        form input:focus, form select:focus, form textarea:focus {
+                            outline: none;
+                            border-color: #FBBF24;
+                            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+                        }
+
+                        /* Textos de ayuda (help_text) */
+                        .helptext {
+                            font-size: 0.75rem;
+                            color: #9ca3af; /* text-slate-400 */
+                            margin-top: 0.25rem;
+                            display: block;
+                        }
+                    </style>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {{ form.as_p }}
+
+                        <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
+                            <a href="{% url 'lista_clientes' %}" class="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-sm transition-colors text-sm uppercase tracking-wide flex items-center">
+                                <span class="material-icons-round mr-2 text-lg">save</span>
+                                {% if form.instance.pk %}Guardar Cambios{% else %}Registrar Cliente{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

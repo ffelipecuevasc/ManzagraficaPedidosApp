@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count
 from .models import Pedido, Cliente
 from .forms import PedidoForm, ClienteForm
 
@@ -32,6 +32,11 @@ def dashboard(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # Clientes Destacados
+    clientes_destacados = Cliente.objects.annotate(
+        total_pedidos=Count('pedido')
+    ).order_by('-total_pedidos')[:5]
+
     context = {
         'total_pedidos': total_pedidos,
         'pendientes': pendientes,
@@ -40,6 +45,7 @@ def dashboard(request):
         'page_obj': page_obj,
         'estado_filter': estado_filter,
         'busqueda': busqueda,
+        'clientes_destacados': clientes_destacados,
     }
 
     return render(request, 'pedidos/dashboard.html', context)
@@ -97,8 +103,22 @@ def cambiar_estado_pedido(request, pk, nuevo_estado):
 
 @login_required
 def lista_clientes(request):
-    clientes = Cliente.objects.all()
-    return render(request, 'pedidos/cliente_list.html', {'clientes': clientes})
+    # Anotar clientes con el total de pedidos
+    clientes = Cliente.objects.annotate(total_pedidos=Count('pedido'))
+    
+    # Calcular clientes activos (aquellos con más de 0 pedidos)
+    clientes_activos = clientes.filter(total_pedidos__gt=0).count()
+    
+    # Obtener el cliente top (con más pedidos)
+    top_cliente = clientes.order_by('-total_pedidos').first()
+    
+    context = {
+        'clientes': clientes,
+        'clientes_activos': clientes_activos,
+        'clientes_nuevos': 0, # Placeholder
+        'top_cliente': top_cliente,
+    }
+    return render(request, 'pedidos/cliente_list.html', context)
 
 @login_required
 def crear_cliente(request):
@@ -132,3 +152,34 @@ def eliminar_cliente(request, pk):
         cliente.delete()
         return redirect('lista_clientes')
     return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente})
+
+@login_required
+def lista_pedidos(request):
+    pedidos = Pedido.objects.all().order_by('-fecha_solicitud')
+
+    # Filtro por Estado
+    estado_filter = request.GET.get('estado')
+    if estado_filter:
+        pedidos = pedidos.filter(estado=estado_filter)
+    
+    # Búsqueda
+    busqueda = request.GET.get('busqueda')
+    if busqueda:
+        pedidos = pedidos.filter(
+            Q(cliente__nombre__icontains=busqueda) | 
+            Q(cliente__telefono__icontains=busqueda)
+        )
+
+    paginator = Paginator(pedidos, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'pedidos': page_obj,
+        'page_obj': page_obj,
+        'busqueda': busqueda,
+        'estado_filter': estado_filter,
+        'is_paginated': page_obj.has_other_pages(),
+    }
+
+    return render(request, 'pedidos/pedido_list.html', context)

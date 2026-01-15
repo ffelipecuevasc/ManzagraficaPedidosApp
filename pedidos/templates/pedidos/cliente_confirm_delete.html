@@ -1,27 +1,50 @@
 {% extends 'pedidos/base.html' %}
 
-{% block title %}Eliminar Cliente - Manzagrafica{% endblock %}
+{% block title %}Eliminar Cliente - Manza Gráfica{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-danger shadow">
-            <div class="card-header bg-danger text-white">
-                <h4 class="mb-0">¿Estás seguro?</h4>
-            </div>
-            <div class="card-body text-center p-5">
-                <h5 class="card-title mb-4">Vas a eliminar al cliente <strong>{{ cliente.nombre }}</strong>.</h5>
-                <p class="card-text text-muted mb-4">Esta acción no se puede deshacer y podría afectar a los pedidos asociados.</p>
-                
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="d-grid gap-2 d-md-flex justify-content-center">
-                        <a href="{% url 'lista_clientes' %}" class="btn btn-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-danger">Confirmar Eliminación</button>
+    <div class="flex items-center justify-center min-h-[60vh]">
+        <div class="w-full max-w-md">
+
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-red-200 dark:border-red-900/50 shadow-xl overflow-hidden relative">
+
+                <div class="h-2 bg-red-500 w-full absolute top-0 left-0"></div>
+
+                <div class="p-8 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 mb-6">
+                        <span class="material-icons-round text-4xl">warning_amber</span>
                     </div>
-                </form>
+
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        ¿Estás seguro?
+                    </h2>
+
+                    <p class="text-slate-500 dark:text-slate-400 mb-6">
+                        Estás a punto de eliminar al cliente <br>
+                        <span class="font-bold text-slate-900 dark:text-white text-lg">"{{ cliente.nombre }}"</span>
+                    </p>
+
+                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-lg p-4 mb-8 text-sm text-red-700 dark:text-red-300 text-left flex items-start">
+                        <span class="material-icons-round text-base mr-2 mt-0.5 flex-shrink-0">info</span>
+                        <div>
+                            <strong>Advertencia:</strong> Esta acción no se puede deshacer. Si eliminas este cliente, podrías perder el historial de sus pedidos asociados.
+                        </div>
+                    </div>
+
+                    <form method="post" class="flex flex-col sm:flex-row gap-3 justify-center">
+                        {% csrf_token %}
+
+                        <a href="{% url 'lista_clientes' %}" class="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
+                            Cancelar
+                        </a>
+
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center">
+                            <span class="material-icons-round text-lg mr-2">delete_forever</span>
+                            Sí, Eliminar
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

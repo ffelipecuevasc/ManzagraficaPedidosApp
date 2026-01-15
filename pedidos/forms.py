@@ -8,7 +8,11 @@ class ClienteForm(forms.ModelForm):
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            # CAMBIO: TextInput para evitar que el navegador exija un "@"
+            'email': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: correo@ejemplo.com o "No registrado"'
+            }),
         }
 
 class PedidoForm(forms.ModelForm):
