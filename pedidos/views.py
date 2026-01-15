@@ -106,7 +106,18 @@ def lista_clientes(request):
     # Anotar clientes con el total de pedidos
     clientes = Cliente.objects.annotate(total_pedidos=Count('pedido'))
     
+    # Búsqueda
+    busqueda = request.GET.get('busqueda')
+    if busqueda:
+        clientes = clientes.filter(
+            Q(nombre__icontains=busqueda) | 
+            Q(email__icontains=busqueda) |
+            Q(telefono__icontains=busqueda)
+        )
+    
     # Calcular clientes activos (aquellos con más de 0 pedidos)
+    # Nota: Usamos la lista anotada para filtrar en Python o hacemos otra query.
+    # Para eficiencia, podemos contar sobre el QuerySet anotado:
     clientes_activos = clientes.filter(total_pedidos__gt=0).count()
     
     # Obtener el cliente top (con más pedidos)
@@ -117,6 +128,7 @@ def lista_clientes(request):
         'clientes_activos': clientes_activos,
         'clientes_nuevos': 0, # Placeholder
         'top_cliente': top_cliente,
+        'busqueda': busqueda,
     }
     return render(request, 'pedidos/cliente_list.html', context)
 
