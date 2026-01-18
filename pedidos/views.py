@@ -55,7 +55,7 @@ def dashboard(request):
 @login_required
 def crear_pedido(request):
     if request.method == 'POST':
-        form = PedidoForm(request.POST)
+        form = PedidoForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect('dashboard')
@@ -87,7 +87,7 @@ def api_crear_cliente_rapido(request):
 def editar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     if request.method == 'POST':
-        form = PedidoForm(request.POST, instance=pedido)
+        form = PedidoForm(request.POST, request.FILES, instance=pedido)
         if form.is_valid():
             form.save()
             return redirect('dashboard')
