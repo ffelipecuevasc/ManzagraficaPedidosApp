@@ -43,21 +43,22 @@
                 <span class="material-icons-round ml-2 text-lg">expand_more</span>
             </button>
 
-            <!-- Dropdown Menu -->
-            <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-card-dark border border-slate-200 dark:border-neutral-700 rounded-lg shadow-lg z-50 hidden group-hover:block">
-                <div class="py-1">
-                    <a href="?{% if request.GET.busqueda %}busqueda={{ request.GET.busqueda }}&{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800">
-                        Todos
-                    </a>
-                    <a href="?estado=PENDIENTE{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800">
-                        Pendientes
-                    </a>
-                    <a href="?estado=EN_PROCESO{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800">
-                        En Proceso
-                    </a>
-                    <a href="?estado=TERMINADO{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800">
-                        Terminados
-                    </a>
+            <div class="absolute right-0 top-full pt-2 w-48 z-50 hidden group-hover:block">
+                <div class="bg-white dark:bg-card-dark border border-slate-200 dark:border-neutral-700 rounded-lg shadow-lg overflow-hidden">
+                    <div class="py-1">
+                        <a href="?{% if request.GET.busqueda %}busqueda={{ request.GET.busqueda }}&{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors">
+                            Todos
+                        </a>
+                        <a href="?estado=PENDIENTE{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors">
+                            <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span> Pendientes
+                        </a>
+                        <a href="?estado=EN_PROCESO{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors">
+                            <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span> En Proceso
+                        </a>
+                        <a href="?estado=TERMINADO{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors">
+                            <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span> Terminados
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

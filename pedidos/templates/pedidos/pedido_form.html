@@ -34,7 +34,7 @@
                     border-radius: 0.5rem;
                     padding: 0.625rem 1rem;
                     font-size: 0.95rem;
-                    color: #111827; /* Texto negro en modo claro */
+                    color: #111827;
                     transition: all 0.2s;
                 }
 
@@ -45,7 +45,7 @@
                 .dark input[type="date"] {
                     background-color: #262626 !important;
                     border-color: #404040 !important;
-                    color: #ffffff !important; /* Texto blanco forzado */
+                    color: #ffffff !important;
                 }
 
                 .custom-input:focus {
@@ -54,8 +54,43 @@
                     box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
                 }
 
+                /* --- INPUT FILE (SUBIDA DE ARCHIVOS) --- */
+                input[type="file"] {
+                    display: block;
+                    width: 100%;
+                    font-size: 0.875rem;
+                    color: #4b5563;
+                    background-color: #ffffff;
+                    border: 1px solid #d1d5db;
+                    border-radius: 0.5rem;
+                    padding: 0.5rem;
+                    cursor: pointer;
+                }
+                .dark input[type="file"] {
+                    background-color: #262626;
+                    border-color: #404040;
+                    color: #cbd5e1;
+                }
+                /* El botón 'Examinar' del navegador */
+                ::file-selector-button {
+                    background-color: #f3f4f6;
+                    color: #1f2937;
+                    border: 0;
+                    border-right: 1px solid #e5e7eb;
+                    padding: 0.5rem 1rem;
+                    margin-right: 1rem;
+                    border-radius: 0.3rem;
+                    cursor: pointer;
+                    font-weight: 600;
+                    font-size: 0.8rem;
+                }
+                .dark ::file-selector-button {
+                    background-color: #404040;
+                    color: #ffffff;
+                    border-color: #525252;
+                }
+
                 /* --- CORRECCIÓN CAMPOS DE MONEDA ($) --- */
-                /* Agregamos espacio a la izquierda para que no choque con el signo $ */
                 #id_valor_venta, #id_valor_abonado {
                     padding-left: 2rem !important;
                 }
@@ -70,96 +105,63 @@
                 }
                 .dark .custom-label { color: #cbd5e1; }
 
-                /* --- CORRECCIONES SELECT2 (Buscador Clientes) --- */
-                /* Caja Principal */
+                /* --- CORRECCIONES SELECT2 --- */
                 .select2-container--default .select2-selection--single {
                     height: 46px !important;
                     padding-top: 8px;
                     border-radius: 0.5rem !important;
                 }
-                /* Modo Oscuro - Caja Principal */
                 .dark .select2-container--default .select2-selection--single {
                     background-color: #262626 !important;
                     border-color: #404040 !important;
                 }
-                /* Texto Seleccionado */
                 .select2-container--default .select2-selection--single .select2-selection__rendered {
                     line-height: 28px !important;
                     color: #111827 !important;
                 }
                 .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
-                    color: #ffffff !important; /* Texto blanco al seleccionar */
+                    color: #ffffff !important;
                 }
-
-                /* Menú Desplegable (Dropdown) */
                 .dark .select2-dropdown {
                     background-color: #262626 !important;
                     border-color: #404040 !important;
                     color: #ffffff !important;
                 }
-                /* Opciones del Dropdown */
-                .dark .select2-results__option {
-                    color: #ffffff !important;
-                }
-                /* Opción Hover/Seleccionada */
+                .dark .select2-results__option { color: #ffffff !important; }
                 .dark .select2-results__option--highlighted {
-                    background-color: #FBBF24 !important; /* Amarillo */
+                    background-color: #FBBF24 !important;
                     color: #000000 !important;
                 }
-                /* Input de Búsqueda dentro del Dropdown */
                 .dark .select2-search__field {
                     background-color: #171717 !important;
                     color: #ffffff !important;
                     border-color: #404040 !important;
                 }
 
-                /* --- CORRECCIONES SUMMERNOTE (Editor) --- */
-                .note-editor.note-frame {
-                    border-radius: 0.5rem !important;
-                    overflow: hidden;
-                }
-                /* Modo Oscuro Editor */
-                .dark .note-editor.note-frame {
-                    border-color: #404040 !important;
-                }
-                .dark .note-toolbar {
-                    background-color: #171717 !important;
-                    border-bottom-color: #404040 !important;
-                }
-                .dark .note-editing-area {
-                    background-color: #262626 !important;
-                }
-                /* El área donde escribes */
-                .dark .note-editable {
-                    background-color: #262626 !important;
-                    color: #ffffff !important;
-                }
-                /* Botones del toolbar */
-                .dark .note-btn {
-                    background-color: #262626 !important;
-                    color: #ffffff !important;
-                    border-color: #404040 !important;
-                }
+                /* --- SUMMERNOTE --- */
+                .note-editor.note-frame { border-radius: 0.5rem !important; overflow: hidden; }
+                .dark .note-editor.note-frame { border-color: #404040 !important; }
+                .dark .note-toolbar { background-color: #171717 !important; border-bottom-color: #404040 !important; }
+                .dark .note-editing-area { background-color: #262626 !important; }
+                .dark .note-editable { background-color: #262626 !important; color: #ffffff !important; }
+                .dark .note-btn { background-color: #262626 !important; color: #ffffff !important; border-color: #404040 !important; }
             </style>
 
-            <form method="post" id="pedidoForm">
+            <form method="post" id="pedidoForm" enctype="multipart/form-data">
                 {% csrf_token %}
 
                 <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
-
                     <div class="p-6 md:p-8">
                         <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
                             <span class="bg-primary text-black w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">1</span>
                             ¿Quién es el cliente?
                         </h2>
-
                         <div id="section-buscar-cliente">
                             <div class="mb-4">
                                 <label class="custom-label">Buscar en la base de datos:</label>
                                 {{ form.cliente }}
                             </div>
-
                             <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-neutral-800">
                                 <span class="text-sm text-slate-500 dark:text-slate-400">¿No lo encuentras?</span>
                                 <button type="button" id="btn-toggle-crear" class="text-primary hover:text-yellow-400 font-bold text-sm uppercase tracking-wide flex items-center transition-colors">
@@ -171,22 +173,11 @@
 
                         <div id="section-crear-cliente" class="hidden bg-slate-50 dark:bg-neutral-900/50 p-6 rounded-lg border border-slate-200 dark:border-neutral-800">
                             <h3 class="font-bold text-slate-800 dark:text-white mb-4 text-sm uppercase tracking-wide">Nuevo Cliente Rápido</h3>
-
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="custom-label">Nombre *</label>
-                                    <input type="text" id="new_client_nombre" class="custom-input" placeholder="Ej: Juan Pérez">
-                                </div>
-                                <div>
-                                    <label class="custom-label">Teléfono *</label>
-                                    <input type="text" id="new_client_telefono" class="custom-input" placeholder="+56 9...">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="custom-label">Email (Opcional)</label>
-                                    <input type="text" id="new_client_email" class="custom-input" placeholder="ejemplo@correo.com">
-                                </div>
+                                <div><label class="custom-label">Nombre *</label><input type="text" id="new_client_nombre" class="custom-input" placeholder="Ej: Juan Pérez"></div>
+                                <div><label class="custom-label">Teléfono *</label><input type="text" id="new_client_telefono" class="custom-input" placeholder="+56 9..."></div>
+                                <div class="md:col-span-2"><label class="custom-label">Email (Opcional)</label><input type="text" id="new_client_email" class="custom-input" placeholder="ejemplo@correo.com"></div>
                             </div>
-
                             <div class="flex items-center justify-end gap-3">
                                 <button type="button" id="btn-cancelar-crear" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Cancelar</button>
                                 <button type="button" id="btn-guardar-cliente-api" class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg font-bold text-sm shadow hover:shadow-lg transition-all flex items-center">
@@ -201,39 +192,35 @@
 
                 <div id="section-detalles-pedido" class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 dark:bg-neutral-700"></div>
-
                     <div class="p-6 md:p-8">
                         <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
                             <span class="bg-slate-200 dark:bg-neutral-700 text-slate-600 dark:text-slate-300 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
                             Detalles del Trabajo
                         </h2>
-
                         <div class="space-y-6">
-
                             <div>
                                 <label class="custom-label" for="{{ form.resumen_pedido.id_for_label }}">{{ form.resumen_pedido.label }}</label>
                                 {{ form.resumen_pedido }}
                             </div>
 
                             <div>
+                                <label class="custom-label" for="{{ form.imagen_referencia.id_for_label }}">Imagen de Referencia (Opcional)</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Sube una foto, bosquejo o captura del diseño.</p>
+                                {{ form.imagen_referencia }}
+                            </div>
+
+                            <div>
                                 <label class="custom-label" for="{{ form.detalles_pedido.id_for_label }}">{{ form.detalles_pedido.label }}</label>
                                 {{ form.detalles_pedido }}
                             </div>
-
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <label class="custom-label" for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
-                                    <div class="relative">
-                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
-                                        {{ form.valor_venta }}
-                                    </div>
+                                    <div class="relative"><span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>{{ form.valor_venta }}</div>
                                 </div>
                                 <div>
                                     <label class="custom-label" for="{{ form.valor_abonado.id_for_label }}">{{ form.valor_abonado.label }}</label>
-                                    <div class="relative">
-                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
-                                        {{ form.valor_abonado }}
-                                    </div>
+                                    <div class="relative"><span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>{{ form.valor_abonado }}</div>
                                 </div>
                                 <div>
                                     <label class="custom-label" for="{{ form.fecha_entrega.id_for_label }}">{{ form.fecha_entrega.label }}</label>
@@ -241,7 +228,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
                             <button type="submit" class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center">
                                 <span class="material-icons-round mr-2 text-xl">check_circle</span>
@@ -258,59 +244,33 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
-        // --- 1. Inicialización ---
-
-        // Editor de texto (Summernote)
         $('#id_detalles_pedido').summernote({
             placeholder: 'Escribe aquí las especificaciones...',
-            tabsize: 2,
-            height: 200,
+            tabsize: 2, height: 200,
             toolbar: [['style', ['bold', 'italic', 'clear']], ['para', ['ul', 'ol']]],
-            // Truco para que cargue bien los estilos dark al iniciar
             callbacks: {
                 onInit: function() {
-                    // Forzar clases dark si el body las tiene
-                    if($('html').hasClass('dark')) {
-                        $('.note-editable').css({'background-color': '#262626', 'color': 'white'});
-                    }
+                    if($('html').hasClass('dark')) { $('.note-editable').css({'background-color': '#262626', 'color': 'white'}); }
                 }
             }
         });
-
-        // Select2 (Buscador)
         var $selectCliente = $('#id_cliente');
-        $selectCliente.select2({
-            width: '100%',
-            placeholder: "Escribe para buscar cliente...",
-            allowClear: true
-        });
+        $selectCliente.select2({ width: '100%', placeholder: "Escribe para buscar cliente...", allowClear: true });
 
-        // --- 2. Lógica del "Wizard" (Paso a Paso) ---
         var $sectionDetalles = $('#section-detalles-pedido');
         var $sectionBuscar = $('#section-buscar-cliente');
         var $sectionCrear = $('#section-crear-cliente');
 
         function checkClienteSeleccionado() {
-            if ($selectCliente.val()) {
-                $sectionDetalles.removeClass('hidden opacity-50').addClass('opacity-100');
-            } else {
-                $sectionDetalles.addClass('hidden opacity-50').removeClass('opacity-100');
-            }
+            if ($selectCliente.val()) { $sectionDetalles.removeClass('hidden opacity-50').addClass('opacity-100'); }
+            else { $sectionDetalles.addClass('hidden opacity-50').removeClass('opacity-100'); }
         }
-
         $selectCliente.on('change', checkClienteSeleccionado);
         checkClienteSeleccionado();
 
-        // --- 3. Lógica "Nuevo Cliente" ---
-        $('#btn-toggle-crear').click(function() {
-            $sectionBuscar.addClass('hidden');
-            $sectionCrear.removeClass('hidden');
-        });
-
+        $('#btn-toggle-crear').click(function() { $sectionBuscar.addClass('hidden'); $sectionCrear.removeClass('hidden'); });
         $('#btn-cancelar-crear').click(function() {
-            $sectionCrear.addClass('hidden');
-            $sectionBuscar.removeClass('hidden');
-            $('#cliente-api-error').addClass('hidden');
+            $sectionCrear.addClass('hidden'); $sectionBuscar.removeClass('hidden'); $('#cliente-api-error').addClass('hidden');
         });
 
         $('#btn-guardar-cliente-api').click(function() {
@@ -318,10 +278,7 @@
             var telefono = $('#new_client_telefono').val();
             var email = $('#new_client_email').val();
 
-            if(!nombre || !telefono) {
-                $('#cliente-api-error').text('Nombre y Teléfono son obligatorios').removeClass('hidden');
-                return;
-            }
+            if(!nombre || !telefono) { $('#cliente-api-error').text('Nombre y Teléfono son obligatorios').removeClass('hidden'); return; }
 
             var $btn = $(this);
             var originalText = $btn.html();
@@ -329,15 +286,8 @@
 
             fetch("{% url 'api_crear_cliente_rapido' %}", {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: new URLSearchParams({
-                    'nombre': nombre,
-                    'telefono': telefono,
-                    'email': email
-                })
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: new URLSearchParams({ 'nombre': nombre, 'telefono': telefono, 'email': email })
             })
             .then(response => response.json())
             .then(data => {
@@ -346,21 +296,14 @@
                     $selectCliente.append(newOption).trigger('change');
                     $sectionCrear.addClass('hidden');
                     $sectionBuscar.removeClass('hidden');
-                    $('#new_client_nombre').val('');
-                    $('#new_client_telefono').val('');
-                    $('#new_client_email').val('');
+                    $('#new_client_nombre').val(''); $('#new_client_telefono').val(''); $('#new_client_email').val('');
                     checkClienteSeleccionado();
                 } else {
                     $('#cliente-api-error').text('Error: ' + JSON.stringify(data.errors)).removeClass('hidden');
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                $('#cliente-api-error').text('Error de conexión').removeClass('hidden');
-            })
-            .finally(() => {
-                $btn.prop('disabled', false).html(originalText);
-            });
+            .catch(error => { console.error('Error:', error); $('#cliente-api-error').text('Error de conexión').removeClass('hidden'); })
+            .finally(() => { $btn.prop('disabled', false).html(originalText); });
         });
     });
 </script>

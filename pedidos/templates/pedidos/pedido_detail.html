@@ -120,6 +120,21 @@
                         </p>
                     </div>
 
+                    {% if pedido.imagen_referencia %}
+                    <div class="mb-6">
+                        <label class="text-xs text-slate-500 uppercase mb-1 block">Referencia Visual</label>
+                        <div class="bg-slate-50 dark:bg-neutral-900/30 p-2 rounded-lg border border-slate-100 dark:border-neutral-800 inline-block">
+                            <a href="{{ pedido.imagen_referencia.url }}" target="_blank">
+                                <img src="{{ pedido.imagen_referencia.url }}" alt="Referencia Visual" class="max-w-xs h-auto max-h-48 rounded shadow-sm hover:opacity-90 transition-opacity object-contain bg-white">
+                            </a>
+                            <a href="{{ pedido.imagen_referencia.url }}" target="_blank" class="block text-center text-xs text-primary mt-2 font-bold hover:underline">
+                                <span class="material-icons-round text-sm align-middle mr-1">open_in_new</span>
+                                Ver Imagen Original
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="mb-6">
                         <label class="text-xs text-slate-500 uppercase mb-1 block">Especificaciones</label>
                         <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-100 dark:border-neutral-800 print:bg-white print:border-0 print:p-0">

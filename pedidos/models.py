@@ -24,6 +24,7 @@ class Pedido(models.Model):
     valor_abonado = models.IntegerField(default=0)
     fecha_solicitud = models.DateTimeField(auto_now_add=True)
     fecha_entrega = models.DateField()
+    imagen_referencia = models.ImageField(upload_to='pedidos/', blank=True, null=True)
 
     @property
     def valor_pendiente(self):
