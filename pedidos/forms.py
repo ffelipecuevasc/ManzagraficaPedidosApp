@@ -8,7 +8,6 @@ class ClienteForm(forms.ModelForm):
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            # CAMBIO: TextInput para evitar que el navegador exija un "@"
             'email': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ej: correo@ejemplo.com o "No registrado"'
@@ -18,7 +17,8 @@ class ClienteForm(forms.ModelForm):
 class PedidoForm(forms.ModelForm):
     class Meta:
         model = Pedido
-        fields = ['cliente', 'resumen_pedido', 'detalles_pedido', 'valor_venta', 'valor_abonado', 'fecha_entrega']
+        # AQUI AGREGAMOS 'imagen_referencia' A LA LISTA
+        fields = ['cliente', 'resumen_pedido', 'detalles_pedido', 'valor_venta', 'valor_abonado', 'fecha_entrega', 'imagen_referencia']
         widgets = {
             'fecha_entrega': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'cliente': forms.Select(attrs={'class': 'form-select select2', 'data-placeholder': 'Busque un cliente...'}),
@@ -26,4 +26,6 @@ class PedidoForm(forms.ModelForm):
             'detalles_pedido': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'valor_venta': forms.NumberInput(attrs={'class': 'form-control'}),
             'valor_abonado': forms.NumberInput(attrs={'class': 'form-control'}),
+            # Widget básico para archivos (el estilo lo da el CSS del template)
+            'imagen_referencia': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
