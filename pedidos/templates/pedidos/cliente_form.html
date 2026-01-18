@@ -30,75 +30,30 @@
                         </h2>
                     </div>
 
-                    <style>
-                        /* Contenedor de cada campo (los <p> que genera Django) */
-                        form p {
-                            margin-bottom: 1.5rem;
-                        }
-
-                        /* Etiquetas (Labels) */
-                        form label {
-                            display: block;
-                            font-size: 0.875rem; /* text-sm */
-                            font-weight: 500;
-                            color: #374151; /* text-slate-700 */
-                            margin-bottom: 0.5rem;
-                        }
-                        .dark form label {
-                            color: #cbd5e1; /* text-slate-300 */
-                        }
-
-                        /* Inputs de Texto, Email, Teléfono, URL */
-                        form input[type="text"],
-                        form input[type="email"],
-                        form input[type="number"],
-                        form input[type="tel"],
-                        form input[type="url"],
-                        form textarea,
-                        form select {
-                            width: 100%;
-                            background-color: #ffffff;
-                            border: 1px solid #d1d5db; /* border-slate-300 */
-                            border-radius: 0.5rem; /* rounded-lg */
-                            padding: 0.625rem 1rem;
-                            font-size: 0.95rem;
-                            color: #111827; /* text-slate-900 */
-                            transition: all 0.2s;
-                        }
-
-                        /* Estilos en Modo Oscuro para Inputs */
-                        .dark form input[type="text"],
-                        .dark form input[type="email"],
-                        .dark form input[type="number"],
-                        .dark form input[type="tel"],
-                        .dark form input[type="url"],
-                        .dark form textarea,
-                        .dark form select {
-                            background-color: #262626; /* neutral-800 */
-                            border-color: #404040; /* neutral-700 */
-                            color: #ffffff;
-                        }
-
-                        /* Foco (Focus) amarillo */
-                        form input:focus, form select:focus, form textarea:focus {
-                            outline: none;
-                            border-color: #FBBF24;
-                            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
-                        }
-
-                        /* Textos de ayuda (help_text) */
-                        .helptext {
-                            font-size: 0.75rem;
-                            color: #9ca3af; /* text-slate-400 */
-                            margin-top: 0.25rem;
-                            display: block;
-                        }
-                    </style>
-
                     <form method="post">
                         {% csrf_token %}
 
-                        {{ form.as_p }}
+                        <div class="space-y-5">
+                            {% for field in form %}
+                            <div>
+                                <label for="{{ field.id_for_label }}" class="custom-label">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field }}
+
+                                {% if field.help_text %}
+                                    <span class="helptext">{{ field.help_text }}</span>
+                                {% endif %}
+
+                                {% if field.errors %}
+                                    <div class="mt-1 text-sm text-red-500 font-medium">
+                                        {{ field.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
 
                         <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
                             <a href="{% url 'lista_clientes' %}" class="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm">

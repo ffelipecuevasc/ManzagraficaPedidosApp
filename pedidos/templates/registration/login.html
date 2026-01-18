@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
@@ -29,51 +30,8 @@
             },
         };
     </script>
-
-    <style>
-        /* Estilos base para el body */
-        body { font-family: 'Inter', sans-serif; }
-        .display-font { font-family: 'Bebas Neue', cursive; }
-
-        /* Estilizar inputs generados por Django (form.as_p) */
-        form input[type="text"],
-        form input[type="password"] {
-            width: 100%;
-            border-radius: 0.5rem;
-            border: 1px solid #d1d5db;
-            padding: 0.625rem 1rem;
-            margin-top: 0.25rem;
-            margin-bottom: 1rem;
-            background-color: white;
-            color: #111827;
-            transition: all 0.2s;
-        }
-
-        /* Estilos de inputs en Modo Oscuro */
-        .dark form input[type="text"],
-        .dark form input[type="password"] {
-            background-color: #262626; /* neutral-800 */
-            border-color: #404040; /* neutral-700 */
-            color: white;
-        }
-
-        /* Foco (Focus) amarillo */
-        form input[type="text"]:focus,
-        form input[type="password"]:focus {
-            outline: none;
-            border-color: #FBBF24;
-            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
-        }
-
-        /* Ocultar las etiquetas de ayuda de Django si molestan */
-        .helptext {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            display: block;
-            margin-top: -0.75rem;
-            margin-bottom: 1rem;
-        }
-    </style>
+    <!-- Incorporación de estilos CSS propios -->
+    <link href="{% static 'pedidos/css/index.css' %}" rel="stylesheet">
 </head>
 <body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
 
@@ -146,26 +104,6 @@
         </div>
     </div>
 
-    <script>
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const htmlElement = document.documentElement;
-
-        // Verificar preferencia al cargar
-        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            htmlElement.classList.add('dark');
-        } else {
-            htmlElement.classList.remove('dark');
-        }
-
-        themeToggleBtn.addEventListener('click', function() {
-            if (htmlElement.classList.contains('dark')) {
-                htmlElement.classList.remove('dark');
-                localStorage.setItem('color-theme', 'light');
-            } else {
-                htmlElement.classList.add('dark');
-                localStorage.setItem('color-theme', 'dark');
-            }
-        });
-    </script>
+    <script src="{% static 'pedidos/js/index.js' %}"></script>
 </body>
 </html>

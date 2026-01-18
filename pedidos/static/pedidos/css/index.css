@@ -1,0 +1,248 @@
+/* =========================================
+   1. TIPOGRAFÍA Y BASE
+   ========================================= */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.display-font {
+    font-family: 'Bebas Neue', cursive;
+}
+
+/* =========================================
+   2. FORMULARIOS GLOBALES (INPUTS)
+   ========================================= */
+/* Estilos base para todos los inputs de texto, select y textarea */
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form input[type="number"],
+form input[type="tel"],
+form input[type="url"],
+form input[type="date"],
+form textarea,
+form select,
+.custom-input,
+.form-control {
+    width: 100%;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db; /* border-slate-300 */
+    border-radius: 0.5rem;     /* rounded-lg */
+    padding: 0.625rem 1rem;
+    font-size: 0.95rem;
+    color: #111827;            /* text-slate-900 */
+    transition: all 0.2s;
+}
+
+/* Espaciado para párrafos de formularios Django */
+form p {
+    margin-bottom: 1.5rem;
+}
+
+/* Etiquetas (Labels) */
+form label,
+.custom-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151; /* text-slate-700 */
+    margin-bottom: 0.5rem;
+}
+
+/* Textos de ayuda */
+.helptext {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* --- MODO OSCURO (FORMULARIOS) --- */
+.dark form input[type="text"],
+.dark form input[type="password"],
+.dark form input[type="email"],
+.dark form input[type="number"],
+.dark form input[type="tel"],
+.dark form input[type="url"],
+.dark form input[type="date"],
+.dark form textarea,
+.dark form select,
+.dark .custom-input,
+.dark .form-control {
+    background-color: #262626 !important; /* neutral-800 */
+    border-color: #404040 !important;     /* neutral-700 */
+    color: #ffffff !important;
+}
+
+.dark form label,
+.dark .custom-label {
+    color: #cbd5e1; /* text-slate-300 */
+}
+
+/* --- ESTADOS DE FOCO (FOCUS) --- */
+form input:focus,
+form select:focus,
+form textarea:focus,
+.custom-input:focus,
+.form-control:focus {
+    outline: none;
+    border-color: #FBBF24 !important; /* Amarillo Manzagrafica */
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+}
+
+/* =========================================
+   3. INPUTS ESPECIALES
+   ========================================= */
+/* Padding extra para inputs con prefijo de moneda ($) */
+#id_valor_venta,
+#id_valor_abonado {
+    padding-left: 2rem !important;
+}
+
+/* Input de Archivo (File Upload) */
+input[type="file"] {
+    display: block;
+    width: 100%;
+    font-size: 0.875rem;
+    color: #4b5563;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+.dark input[type="file"] {
+    background-color: #262626;
+    border-color: #404040;
+    color: #cbd5e1;
+}
+
+/* Botón "Examinar" del input file */
+::file-selector-button {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    border: 0;
+    border-right: 1px solid #e5e7eb;
+    padding: 0.5rem 1rem;
+    margin-right: 1rem;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+.dark ::file-selector-button {
+    background-color: #404040;
+    color: #ffffff;
+    border-color: #525252;
+}
+
+/* =========================================
+   4. PLUGINS (SELECT2 & SUMMERNOTE)
+   ========================================= */
+
+/* --- SELECT2 --- */
+/* Caja Principal */
+.select2-container--default .select2-selection--single {
+    height: 46px !important;
+    padding-top: 8px;
+    border-radius: 0.5rem !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+}
+/* Flecha */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 44px !important;
+}
+/* Texto Renderizado */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 28px !important;
+    color: #111827 !important;
+}
+
+/* Modo Oscuro Select2 */
+.dark .select2-container--default .select2-selection--single {
+    background-color: #262626 !important;
+    border-color: #404040 !important;
+}
+.dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+}
+.dark .select2-dropdown {
+    background-color: #262626 !important;
+    border-color: #404040 !important;
+    color: #ffffff !important;
+}
+.dark .select2-results__option {
+    color: #ffffff !important;
+}
+.dark .select2-results__option--highlighted {
+    background-color: #FBBF24 !important;
+    color: #000000 !important;
+}
+.dark .select2-search__field {
+    background-color: #171717 !important;
+    color: #ffffff !important;
+    border-color: #404040 !important;
+}
+
+/* --- SUMMERNOTE --- */
+.note-editor.note-frame {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.5rem !important;
+    overflow: hidden;
+}
+/* Modo Oscuro Summernote */
+.dark .note-editor.note-frame {
+    border-color: #404040 !important;
+}
+.dark .note-toolbar {
+    background-color: #171717 !important;
+    border-bottom-color: #404040 !important;
+}
+.dark .note-editing-area {
+    background-color: #262626 !important;
+}
+.dark .note-editable {
+    background-color: #262626 !important;
+    color: #ffffff !important;
+}
+.dark .note-btn {
+    background-color: #262626 !important;
+    color: #ffffff !important;
+    border-color: #404040 !important;
+}
+.dark .note-placeholder {
+    color: #6b7280 !important; /* Gris claro para el placeholder */
+}
+
+/* =========================================
+   5. IMPRESIÓN (PRINT)
+   ========================================= */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .card, .card * {
+        visibility: visible;
+    }
+    .card {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .no-print, .print\:hidden {
+        display: none !important;
+    }
+    .print\:border-black {
+        border-color: #000 !important;
+    }
+    .print\:text-black {
+        color: #000 !important;
+    }
+    .print\:bg-white {
+        background-color: #fff !important;
+    }
+}
