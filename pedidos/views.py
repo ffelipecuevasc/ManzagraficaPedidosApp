@@ -193,11 +193,8 @@ def lista_pedidos(request):
     pedidos = Pedido.objects.all()
 
     # 2. Lógica de Ordenamiento (Sorting)
-    # Leemos el parámetro 'orden' de la URL (ej: ?orden=fecha_entrega)
     orden = request.GET.get('orden', '-fecha_solicitud')  # Default: Lo más nuevo primero
 
-    # Validamos que sea un campo permitido (Seguridad)
-    # Esto evita errores 500 si alguien escribe ?orden=campo_inexistente
     campos_permitidos = [
         'cliente__nombre', '-cliente__nombre',
         'estado', '-estado',
@@ -216,13 +213,12 @@ def lista_pedidos(request):
     if estado_filter:
         pedidos = pedidos.filter(estado=estado_filter)
 
-    # 4. Filtros Existentes (Búsqueda)
+    # 4. Búsqueda - Solo Cliente y Teléfono
     busqueda = request.GET.get('busqueda')
     if busqueda:
         pedidos = pedidos.filter(
             Q(cliente__nombre__icontains=busqueda) |
-            Q(cliente__telefono__icontains=busqueda) |
-            Q(resumen_pedido__icontains=busqueda)  # Agregué resumen también, es útil
+            Q(cliente__telefono__icontains=busqueda)
         )
 
     # 5. Paginación
@@ -235,7 +231,7 @@ def lista_pedidos(request):
         'page_obj': page_obj,
         'busqueda': busqueda,
         'estado_filter': estado_filter,
-        'orden': orden,  # Pasamos el orden actual al template (útil para el JS)
+        'orden': orden,
         'is_paginated': page_obj.has_other_pages(),
     }
 
