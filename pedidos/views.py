@@ -186,23 +186,46 @@ def eliminar_cliente(request, pk):
         return redirect('lista_clientes')
     return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente})
 
+
 @login_required
 def lista_pedidos(request):
-    pedidos = Pedido.objects.all().order_by('-fecha_solicitud')
+    # 1. Base QuerySet
+    pedidos = Pedido.objects.all()
 
-    # Filtro por Estado
+    # 2. Lógica de Ordenamiento (Sorting)
+    # Leemos el parámetro 'orden' de la URL (ej: ?orden=fecha_entrega)
+    orden = request.GET.get('orden', '-fecha_solicitud')  # Default: Lo más nuevo primero
+
+    # Validamos que sea un campo permitido (Seguridad)
+    # Esto evita errores 500 si alguien escribe ?orden=campo_inexistente
+    campos_permitidos = [
+        'cliente__nombre', '-cliente__nombre',
+        'estado', '-estado',
+        'fecha_entrega', '-fecha_entrega',
+        'fecha_solicitud', '-fecha_solicitud',
+        'id', '-id'
+    ]
+
+    if orden in campos_permitidos:
+        pedidos = pedidos.order_by(orden)
+    else:
+        pedidos = pedidos.order_by('-fecha_solicitud')
+
+    # 3. Filtros Existentes (Estado)
     estado_filter = request.GET.get('estado')
     if estado_filter:
         pedidos = pedidos.filter(estado=estado_filter)
-    
-    # Búsqueda
+
+    # 4. Filtros Existentes (Búsqueda)
     busqueda = request.GET.get('busqueda')
     if busqueda:
         pedidos = pedidos.filter(
-            Q(cliente__nombre__icontains=busqueda) | 
-            Q(cliente__telefono__icontains=busqueda)
+            Q(cliente__nombre__icontains=busqueda) |
+            Q(cliente__telefono__icontains=busqueda) |
+            Q(resumen_pedido__icontains=busqueda)  # Agregué resumen también, es útil
         )
 
+    # 5. Paginación
     paginator = Paginator(pedidos, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -212,6 +235,7 @@ def lista_pedidos(request):
         'page_obj': page_obj,
         'busqueda': busqueda,
         'estado_filter': estado_filter,
+        'orden': orden,  # Pasamos el orden actual al template (útil para el JS)
         'is_paginated': page_obj.has_other_pages(),
     }
 

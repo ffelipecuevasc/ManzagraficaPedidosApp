@@ -69,12 +69,49 @@
             <table class="min-w-full divide-y divide-slate-200 dark:divide-neutral-800">
                 <thead class="bg-slate-50 dark:bg-neutral-900/50">
                     <tr>
-                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ID Pedido</th>
-                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cliente</th>
-                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resumen</th>
-                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
-                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Entrega</th>
-                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Acciones</th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors sortable group" data-sort="id">
+                            <div class="flex items-center gap-1">
+                                ID Pedido
+                                <span class="material-icons-round text-base opacity-0 group-hover:opacity-50 {% if 'id' in orden %}opacity-100 text-primary{% endif %}">
+                                    {% if orden == 'id' %}arrow_drop_down{% elif orden == '-id' %}arrow_drop_up{% else %}unfold_more{% endif %}
+                                </span>
+                            </div>
+                        </th>
+
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors sortable group" data-sort="cliente__nombre">
+                            <div class="flex items-center gap-1">
+                                Cliente
+                                <span class="material-icons-round text-base opacity-0 group-hover:opacity-50 {% if 'cliente__nombre' in orden %}opacity-100 text-primary{% endif %}">
+                                    {% if orden == 'cliente__nombre' %}arrow_drop_down{% elif orden == '-cliente__nombre' %}arrow_drop_up{% else %}unfold_more{% endif %}
+                                </span>
+                            </div>
+                        </th>
+
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Resumen
+                        </th>
+
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors sortable group" data-sort="estado">
+                            <div class="flex items-center gap-1">
+                                Estado
+                                <span class="material-icons-round text-base opacity-0 group-hover:opacity-50 {% if 'estado' in orden %}opacity-100 text-primary{% endif %}">
+                                    {% if orden == 'estado' %}arrow_drop_down{% elif orden == '-estado' %}arrow_drop_up{% else %}unfold_more{% endif %}
+                                </span>
+                            </div>
+                        </th>
+
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors sortable group" data-sort="fecha_entrega">
+                            <div class="flex items-center gap-1">
+                                Entrega
+                                <span class="material-icons-round text-base opacity-0 group-hover:opacity-50 {% if 'fecha_entrega' in orden %}opacity-100 text-primary{% endif %}">
+                                    {% if orden == 'fecha_entrega' %}arrow_drop_down{% elif orden == '-fecha_entrega' %}arrow_drop_up{% else %}unfold_more{% endif %}
+                                </span>
+                            </div>
+                        </th>
+
+                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Acciones
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-neutral-800">

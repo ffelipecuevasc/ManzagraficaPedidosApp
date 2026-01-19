@@ -24,6 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-(kw5_kyy3@!i*6wm=7_%#hb5lygkhm9#^m3%a2#j6%3ijp4az3"
 
 # ADVERTENCIA: No subir el proyecto al Servidor PythonAnywhere con esta configuración TRUE
+# Sólo para desarrollo (pruebas) el atributo puede estar en TRUE para reconocer los estáticos (CSS + JS)
+# Para la producción (despliegue) el archivo debe estar en FALSE para que el servidor pueda intervenir
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
