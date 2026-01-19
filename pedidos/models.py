@@ -3,8 +3,21 @@ from django.db import models
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
     telefono = models.CharField(max_length=20, help_text='Formato WhatsApp')
-    # CAMBIO: Usamos CharField en lugar de EmailField para permitir texto libre
     email = models.CharField(max_length=100, blank=True, null=True)
+
+    # --- Función que permite limpiar el número telefónico al vuelo para la API WhatsApp ---
+    @property
+    def telefono_whatsapp(self):
+        """
+        Toma el teléfono (ej: '+56 9 1234-5678') y lo deja limpio
+        para la URL de WhatsApp (ej: '56912345678').
+        """
+        if not self.telefono:
+            return ""
+
+        # Quitamos espacios, el signo +, guiones y paréntesis
+        limpio = self.telefono.replace(" ", "").replace("+", "").replace("-", "").replace("(", "").replace(")", "")
+        return limpio
 
     def __str__(self):
         return self.nombre
