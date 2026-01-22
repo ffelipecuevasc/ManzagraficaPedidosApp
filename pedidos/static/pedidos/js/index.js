@@ -2,22 +2,25 @@
    1. INICIALIZACIÓN GLOBAL (Se ejecuta al cargar)
    ========================================= */
 document.addEventListener('DOMContentLoaded', function() {
-
     // A. Gestión del Modo Oscuro
     initThemeToggle();
 
-    // B. Inicializar Plugins (Select2 y Summernote)
+    // B. Inicializar Plugins
     initPlugins();
 
-    // C. Lógica del Formulario de Pedidos (Solo si existe)
+    // C. Formulario Pedidos
     if (document.getElementById('pedidoForm')) {
         initPedidoForm();
     }
 
-    // D. Lógica de Ordenamiento de Tablas (NUEVO)
-    // Solo si existen columnas ordenables
+    // D. Ordenamiento Tablas
     if (document.querySelector('th.sortable')) {
         initTableSorting();
+    }
+
+    // E. Gráficos del Dashboard (NUEVO)
+    if (document.getElementById('chartEstados')) {
+        initDashboardCharts();
     }
 });
 
@@ -55,11 +58,11 @@ function initThemeToggle() {
     }
 }
 
-
 /* =========================================
    3. CONFIGURACIÓN DE PLUGINS (JQUERY)
    ========================================= */
 function initPlugins() {
+    // A. Configuración Select2
     if ($('.select2').length) {
         $('.select2').select2({
             width: '100%',
@@ -68,25 +71,57 @@ function initPlugins() {
         });
     }
 
+    // B. Configuración Summernote (Editor de Texto)
     if ($('#id_detalles_pedido').length) {
         let isDark = document.documentElement.classList.contains('dark');
+
         $('#id_detalles_pedido').summernote({
-            placeholder: 'Escribe aquí las especificaciones...',
+            placeholder: 'Escribe aquí las especificaciones (Solo texto, no imágenes)...',
             tabsize: 2,
             height: 200,
-            toolbar: [['style', ['bold', 'italic', 'clear']], ['para', ['ul', 'ol']]],
+            disableDragAndDrop: true,
+            toolbar: [
+                ['style', ['bold', 'italic', 'clear']],
+                ['para', ['ul', 'ol']]
+            ],
             callbacks: {
                 onInit: function() {
                     if(isDark) {
                         $('.note-editable').css({'background-color': '#262626', 'color': 'white'});
                         $('.note-editor').css({'border-color': '#404040'});
                     }
+                },
+                // CANDADO 1: Bloqueo de subida directa (Botón o Drag & Drop)
+                onImageUpload: function(files) {
+                    alert('⚠️ NO ESTÁ PERMITIDO pegar imágenes aquí.\n\nPor favor, usa el campo "Imagen de Referencia".');
+                },
+                // CANDADO 2: Bloqueo de Pegado (Ctrl+V)
+                onPaste: function (e) {
+                    // 1. Detenemos la acción estándar inmediatamente
+                    e.preventDefault();
+
+                    var bufferText = '';
+
+                    // 2. Intentamos recuperar el contenido como TEXTO PLANO
+                    if (e.originalEvent && e.originalEvent.clipboardData) {
+                        bufferText = e.originalEvent.clipboardData.getData('text/plain');
+                    } else if (window.clipboardData) {
+                        bufferText = window.clipboardData.getData('Text');
+                    }
+
+                    // 3. Verificamos si hay texto real
+                    if (bufferText && bufferText.trim().length > 0) {
+                        // Solución al Warning: Usamos la API nativa de Summernote en vez de execCommand
+                        $('#id_detalles_pedido').summernote('insertText', bufferText);
+                    } else {
+                        // Si no hay texto (es una imagen pura), mostramos la alerta
+                        alert('NO ESTÁ PERMITIDO pegar imágenes aquí.\n\nPor favor, usa el campo "Imagen de Referencia".');
+                    }
                 }
             }
         });
     }
 }
-
 
 /* =========================================
    4. LÓGICA DEL FORMULARIO PEDIDOS (AJAX)
@@ -217,5 +252,127 @@ function initTableSorting() {
             // (Esto preserva automáticamente la búsqueda y otros filtros que ya estén en la URL)
             window.location.href = currentUrl.toString();
         });
+    });
+}
+
+/* =========================================
+   6. GRÁFICOS DEL DASHBOARD (CHART.JS)
+   ========================================= */
+function initDashboardCharts() {
+    // 1. Recuperar los datos desde los script tags generados por Django
+    const estadosLabels = JSON.parse(document.getElementById('data-estados-labels').textContent);
+    const estadosData = JSON.parse(document.getElementById('data-estados-data').textContent);
+    const clientesLabels = JSON.parse(document.getElementById('data-clientes-labels').textContent);
+    const clientesData = JSON.parse(document.getElementById('data-clientes-data').textContent);
+
+    // 2. Definición de Colores
+    const colorPendiente = '#EF4444'; // Rojo
+    const colorProceso = '#EAB308';   // Amarillo
+    const colorTerminado = '#22C55E'; // Verde
+    const coloresClientes = [
+        '#FACC15', '#A16207', '#CA8A04', '#EAB308', '#FEF08A' // Gama Dorada
+    ];
+
+    // 3. Configuración de Tema y Colores de Fuente
+    const isDark = document.documentElement.classList.contains('dark');
+
+    // CORRECCIÓN 2: Color más oscuro para modo claro (casi negro) para mejor lectura
+    const textColor = isDark ? '#cbd5e1' : '#111827';
+    const gridColor = isDark ? '#404040' : '#e2e8f0';
+
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: textColor,
+                    font: { family: "'Inter', sans-serif", size: 12 }
+                }
+            }
+        },
+        layout: { padding: 10 }
+    };
+
+    // 4. GRÁFICO 1: ESTADOS
+    const ctxEstados = document.getElementById('chartEstados').getContext('2d');
+    new Chart(ctxEstados, {
+        type: 'doughnut',
+        data: {
+            labels: estadosLabels,
+            datasets: [{
+                data: estadosData,
+                backgroundColor: [colorPendiente, colorProceso, colorTerminado],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: commonOptions
+    });
+
+    // 5. GRÁFICO 2: TOP CLIENTES (MODO BARRAS HORIZONTALES)
+    const ctxClientes = document.getElementById('chartClientes').getContext('2d');
+    new Chart(ctxClientes, {
+        type: 'bar',
+        data: {
+            labels: clientesLabels,
+            datasets: [{
+                label: 'Cantidad de Pedidos',
+                data: clientesData,
+                backgroundColor: coloresClientes,
+                borderRadius: 4,
+                barThickness: 20,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.raw + ' Pedidos';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: gridColor,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        color: textColor // Color oscuro corregido
+                    },
+                    // CORRECCIÓN 3: Etiqueta explicativa en el eje X
+                    title: {
+                        display: true,
+                        text: 'Total de Pedidos Realizados',
+                        color: isDark ? '#9ca3af' : '#6b7280',
+                        font: {
+                            size: 11,
+                            family: "'Inter', sans-serif"
+                        }
+                    }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: {
+                        color: textColor, // Color oscuro corregido (Nombres de clientes)
+                        font: {
+                            family: "'Inter', sans-serif",
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+            layout: { padding: 0 }
+        }
     });
 }

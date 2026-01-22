@@ -1,58 +1,87 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import Pedido, Cliente
 from .forms import PedidoForm, ClienteForm
+from .decorators import transaccion_segura
+
 
 @login_required
 def dashboard(request):
-    total_pedidos = Pedido.objects.count()
+    # ==========================================
+    # 1. KPIs FINANCIEROS (Dinero)
+    # ==========================================
+
+    # Ingresos Totales: Suma de valor_venta de todo lo TERMINADO (Plata segura)
+    ingresos_totales = Pedido.objects.filter(estado='TERMINADO').aggregate(
+        total=Sum('valor_venta')
+    )['total'] or 0  # El 'or 0' es por si no hay pedidos, para que no devuelva None
+
+    # Por Cobrar: Suma de (Venta - Abonado) de lo NO terminado (Plata en la calle)
+    # Usamos 'F' para restar columnas fila por fila
+    por_cobrar = Pedido.objects.filter(
+        estado__in=['PENDIENTE', 'EN_PROCESO']
+    ).aggregate(
+        total=Sum(F('valor_venta') - F('valor_abonado'))
+    )['total'] or 0
+
+    # ==========================================
+    # 2. MÉTRICAS OPERATIVAS (Conteos)
+    # ==========================================
+    total_clientes = Cliente.objects.count()
+
+    # Conteos por estado para el Gráfico de Dona 1
     pendientes = Pedido.objects.filter(estado='PENDIENTE').count()
     en_proceso = Pedido.objects.filter(estado='EN_PROCESO').count()
     completados = Pedido.objects.filter(estado='TERMINADO').count()
-    
-    # Base QuerySet
-    ultimos_pedidos = Pedido.objects.all().order_by('-fecha_solicitud')
 
-    # Filtro por Estado
-    estado_filter = request.GET.get('estado')
-    if estado_filter:
-        ultimos_pedidos = ultimos_pedidos.filter(estado=estado_filter)
-    
-    # Búsqueda
-    busqueda = request.GET.get('busqueda')
-    if busqueda:
-        ultimos_pedidos = ultimos_pedidos.filter(
-            Q(cliente__nombre__icontains=busqueda) | 
-            Q(cliente__telefono__icontains=busqueda)
-        )
+    # ==========================================
+    # 3. DATOS PARA GRÁFICOS (Listas limpias)
+    # ==========================================
 
-    paginator = Paginator(ultimos_pedidos, 5)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # Gráfico 1: Estado de Pedidos
+    # Pasamos los datos ordenados para que coincidan con los labels
+    grafico_estados_labels = ['Pendientes', 'En Proceso', 'Terminados']
+    grafico_estados_data = [pendientes, en_proceso, completados]
 
-    # Clientes Destacados
-    clientes_destacados = Cliente.objects.annotate(
-        total_pedidos=Count('pedido')
-    ).order_by('-total_pedidos')[:5]
+    # Gráfico 2: Top 5 Clientes (Dona/Torta)
+    # Obtenemos los 5 clientes con más pedidos
+    top_clientes_qs = Cliente.objects.annotate(
+        num_pedidos=Count('pedido')
+    ).order_by('-num_pedidos')[:5]
 
+    # Convertimos el QuerySet a listas simples de Python para Chart.js
+    grafico_clientes_labels = [c.nombre for c in top_clientes_qs]
+    grafico_clientes_data = [c.num_pedidos for c in top_clientes_qs]
+
+    # ==========================================
+    # 4. CONTEXTO FINAL
+    # ==========================================
     context = {
-        'total_pedidos': total_pedidos,
+        # KPIs Tarjetas Superiores
+        'ingresos_totales': ingresos_totales,
+        'por_cobrar': por_cobrar,
+        'total_clientes': total_clientes,
+
+        # Datos Crudos (por si acaso)
         'pendientes': pendientes,
         'en_proceso': en_proceso,
         'completados': completados,
-        'page_obj': page_obj,
-        'estado_filter': estado_filter,
-        'busqueda': busqueda,
-        'clientes_destacados': clientes_destacados,
+
+        # Listas listas para Chart.js (Frontend)
+        'grafico_estados_labels': grafico_estados_labels,
+        'grafico_estados_data': grafico_estados_data,
+        'grafico_clientes_labels': grafico_clientes_labels,
+        'grafico_clientes_data': grafico_clientes_data,
     }
 
     return render(request, 'pedidos/dashboard.html', context)
 
 @login_required
+@transaccion_segura
 def crear_pedido(request):
     if request.method == 'POST':
         form = PedidoForm(request.POST, request.FILES)
@@ -84,6 +113,7 @@ def api_crear_cliente_rapido(request):
         })
 
 @login_required
+@transaccion_segura
 def editar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     if request.method == 'POST':
@@ -97,6 +127,7 @@ def editar_pedido(request, pk):
     return render(request, 'pedidos/pedido_form.html', {'form': form})
 
 @login_required
+@transaccion_segura
 def eliminar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     if request.method == 'POST':
@@ -154,6 +185,7 @@ def lista_clientes(request):
     return render(request, 'pedidos/cliente_list.html', context)
 
 @login_required
+@transaccion_segura
 def crear_cliente(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
@@ -166,6 +198,7 @@ def crear_cliente(request):
     return render(request, 'pedidos/cliente_form.html', {'form': form})
 
 @login_required
+@transaccion_segura
 def editar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     if request.method == 'POST':
@@ -179,6 +212,7 @@ def editar_cliente(request, pk):
     return render(request, 'pedidos/cliente_form.html', {'form': form})
 
 @login_required
+@transaccion_segura
 def eliminar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     if request.method == 'POST':
@@ -189,6 +223,12 @@ def eliminar_cliente(request, pk):
 
 @login_required
 def lista_pedidos(request):
+    # Contadores globales
+    total_pedidos = Pedido.objects.count()
+    pendientes = Pedido.objects.filter(estado='PENDIENTE').count()
+    en_proceso = Pedido.objects.filter(estado='EN_PROCESO').count()
+    completados = Pedido.objects.filter(estado='TERMINADO').count()
+
     # 1. Base QuerySet
     pedidos = Pedido.objects.all()
 
@@ -227,6 +267,10 @@ def lista_pedidos(request):
     page_obj = paginator.get_page(page_number)
 
     context = {
+        'total_pedidos': total_pedidos,
+        'pendientes': pendientes,
+        'en_proceso': en_proceso,
+        'completados': completados,
         'pedidos': page_obj,
         'page_obj': page_obj,
         'busqueda': busqueda,
@@ -236,3 +280,9 @@ def lista_pedidos(request):
     }
 
     return render(request, 'pedidos/pedido_list.html', context)
+
+def error_404(request, exception):
+    return render(request, 'pedidos/errors/404.html', status=404)
+
+def error_500(request):
+    return render(request, 'pedidos/errors/500.html', status=500)

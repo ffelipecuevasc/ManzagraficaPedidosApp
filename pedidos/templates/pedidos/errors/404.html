@@ -1,0 +1,28 @@
+{% extends 'pedidos/base.html' %}
+
+{% block title %}Página no encontrada - Manza Gráfica{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex flex-col items-center justify-center text-center p-4">
+    <div class="bg-yellow-100 dark:bg-yellow-900/20 p-6 rounded-full mb-6">
+        <span class="material-icons-round text-6xl text-yellow-600 dark:text-yellow-400">sentiment_dissatisfied</span>
+    </div>
+    
+    <h1 class="text-4xl font-bold text-slate-900 dark:text-white mb-2 font-display tracking-wide">
+        404 <span class="text-primary">ERROR</span>
+    </h1>
+    
+    <h2 class="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">
+        ¡Ups! Parece que te perdiste
+    </h2>
+    
+    <p class="text-slate-500 dark:text-slate-400 max-w-md mb-8">
+        La página que estás buscando no existe, fue movida o el enlace está roto. No te preocupes, el resto del sistema funciona bien.
+    </p>
+
+    <a href="{% url 'dashboard' %}" class="px-6 py-3 bg-primary hover:bg-yellow-400 text-black font-bold rounded-lg shadow-lg hover:shadow-xl transition-all flex items-center">
+        <span class="material-icons-round mr-2">home</span>
+        Volver al Panel de Control
+    </a>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 {% extends 'pedidos/base.html' %}
+{% load humanize %}
 
 {% block title %}Panel de Control - Manza Gráfica{% endblock %}
 
@@ -6,214 +7,115 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Panel de Control</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Resumen general de pedidos y métricas clave.</p>
-        </div>
-        <a href="{% url 'crear_pedido' %}" class="bg-primary hover:bg-yellow-400 text-black font-bold py-2.5 px-6 rounded-lg shadow-sm inline-flex items-center justify-center transition-colors uppercase tracking-wide text-sm">
-            <span class="material-icons-round mr-2 text-lg">add_circle</span>
-            Nuevo Pedido
-        </a>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
-        <a href="{% url 'dashboard' %}" class="block group">
-            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group-hover:border-primary/50">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pedidos</h3>
-                    <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
-                        <span class="material-icons-round text-xl">inventory_2</span>
-                    </div>
-                </div>
-                <div class="text-3xl font-bold text-slate-900 dark:text-white">{{ total_pedidos }}</div>
-            </div>
-        </a>
-
-        <a href="?estado=PENDIENTE" class="block group">
-            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group-hover:border-red-500/50">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendientes</h3>
-                    <div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400">
-                        <span class="material-icons-round text-xl">pending_actions</span>
-                    </div>
-                </div>
-                <div class="text-3xl font-bold text-red-600 dark:text-red-400">{{ pendientes }}</div>
-            </div>
-        </a>
-
-        <a href="?estado=EN_PROCESO" class="block group">
-            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group-hover:border-yellow-500/50">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">En Proceso</h3>
-                    <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-yellow-600 dark:text-yellow-400">
-                        <span class="material-icons-round text-xl">cached</span>
-                    </div>
-                </div>
-                <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ en_proceso }}</div>
-            </div>
-        </a>
-
-        <a href="?estado=TERMINADO" class="block group">
-            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group-hover:border-green-500/50">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Terminados</h3>
-                    <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
-                        <span class="material-icons-round text-xl">check_circle</span>
-                    </div>
-                </div>
-                <div class="text-3xl font-bold text-green-600 dark:text-green-400">{{ completados }}</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <div class="lg:col-span-2 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col">
-
-            <div class="p-5 border-b border-slate-200 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Pedidos Recientes</h2>
-                    {% if estado_filter %}
-                    <span class="px-2 py-1 text-xs font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-400 rounded">
-                        Filtro: {{ estado_filter }}
-                    </span>
-                    {% endif %}
-                </div>
-
-                <form method="get" action="." class="flex w-full md:w-auto gap-2">
-                    <div class="relative flex-grow">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="material-icons-round text-slate-400 text-lg">search</span>
-                        </span>
-                        <input type="search" name="busqueda" value="{{ busqueda|default:'' }}"
-                               class="pl-10 pr-4 py-2 w-full md:w-48 bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-primary focus:border-primary placeholder-slate-400"
-                               placeholder="Buscar...">
-                    </div>
-                    {% if estado_filter %}
-                    <input type="hidden" name="estado" value="{{ estado_filter }}">
-                    {% endif %}
-                    <button type="submit" class="p-2 bg-white dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-700 transition-colors">
-                        <span class="material-icons-round text-lg">search</span>
-                    </button>
-                    {% if busqueda or estado_filter %}
-                    <a href="{% url 'dashboard' %}" class="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
-                        <span class="material-icons-round text-lg">close</span>
-                    </a>
-                    {% endif %}
-                </form>
-            </div>
-
-            <div class="overflow-x-auto flex-grow">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50 dark:bg-neutral-900/50 border-b border-slate-200 dark:border-neutral-800">
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">#ID</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cliente</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200 dark:divide-neutral-800">
-                        {% for pedido in page_obj %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors">
-                            <td class="px-6 py-3 text-sm font-medium text-slate-900 dark:text-white">#{{ pedido.id }}</td>
-                            <td class="px-6 py-3 text-sm text-slate-700 dark:text-slate-300">
-                                <div class="font-medium">{{ pedido.cliente.nombre }}</div>
-                                <div class="text-xs text-slate-500 truncate max-w-[150px]">{{ pedido.resumen_pedido }}</div>
-                            </td>
-                            <td class="px-6 py-3">
-                                {% if pedido.estado == 'PENDIENTE' %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50">Pendiente</span>
-                                {% elif pedido.estado == 'EN_PROCESO' %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800/50">Proceso</span>
-                                {% elif pedido.estado == 'TERMINADO' %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50">Listo</span>
-                                {% else %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400">{{ pedido.estado }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-3 text-right">
-                                <div class="flex items-center justify-end gap-1">
-                                    <a href="{% url 'detalle_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors" title="Ver">
-                                        <span class="material-icons-round text-lg">visibility</span>
-                                    </a>
-                                    <a href="{% url 'editar_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded transition-colors" title="Editar">
-                                        <span class="material-icons-round text-lg">edit</span>
-                                    </a>
-                                    <a href="{% url 'eliminar_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Eliminar">
-                                        <span class="material-icons-round text-lg">delete</span>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
-                                Sin pedidos recientes.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% if page_obj.has_other_pages %}
-            <div class="p-3 border-t border-slate-200 dark:border-neutral-800 flex items-center justify-center bg-slate-50 dark:bg-neutral-900/30">
-                <nav class="inline-flex rounded-md shadow-sm -space-x-px">
-                    {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" class="px-2 py-1 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-l">
-                        <span class="material-icons-round text-base">chevron_left</span>
-                    </a>
-                    {% endif %}
-                    <span class="px-3 py-1 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-xs font-medium text-slate-700 dark:text-slate-200 flex items-center">
-                        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-                    </span>
-                    {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" class="px-2 py-1 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-r">
-                        <span class="material-icons-round text-base">chevron_right</span>
-                    </a>
-                    {% endif %}
-                </nav>
-            </div>
-            {% endif %}
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Visión estratégica y métricas de rendimiento.</p>
         </div>
 
-        <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden h-fit">
-            <div class="p-5 border-b border-slate-200 dark:border-neutral-800">
-                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Clientes Frecuentes</h2>
+        <div class="flex gap-3">
+            <a href="{% url 'lista_pedidos' %}" class="bg-white dark:bg-card-dark border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-neutral-800 font-bold py-2.5 px-4 rounded-lg shadow-sm inline-flex items-center justify-center transition-colors text-sm">
+                <span class="material-icons-round mr-2 text-lg">list_alt</span>
+                Ver Listado
+            </a>
+            <a href="{% url 'crear_pedido' %}" class="bg-primary hover:bg-yellow-400 text-black font-bold py-2.5 px-6 rounded-lg shadow-sm inline-flex items-center justify-center transition-colors uppercase tracking-wide text-sm">
+                <span class="material-icons-round mr-2 text-lg">add_circle</span>
+                Nuevo Pedido
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="material-icons-round text-8xl text-green-500">payments</span>
             </div>
-            <div class="divide-y divide-slate-100 dark:divide-neutral-800">
-                {% if clientes_destacados %}
-                    {% for cliente in clientes_destacados %}
-                    <div class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
-                                {{ cliente.nombre|slice:":2"|upper }}
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-slate-900 dark:text-white">{{ cliente.nombre }}</p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ cliente.email|default:"Sin email" }}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="block text-sm font-bold text-slate-900 dark:text-white">{{ cliente.total_pedidos }}</span>
-                            <span class="text-[10px] text-slate-500 uppercase">Pedidos</span>
-                        </div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg text-green-600 dark:text-green-400">
+                        <span class="material-icons-round text-xl">payments</span>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="p-8 text-center">
-                        <div class="inline-flex p-3 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-400 mb-3">
-                            <span class="material-icons-round">people_outline</span>
-                        </div>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">No hay datos de clientes destacados.</p>
-                        <a href="{% url 'crear_cliente' %}" class="mt-4 text-xs font-bold text-primary hover:text-yellow-500 uppercase tracking-wide">Registrar Cliente</a>
-                    </div>
-                {% endif %}
-            </div>
-            <div class="p-3 bg-slate-50 dark:bg-neutral-900/30 text-center border-t border-slate-200 dark:border-neutral-800">
-                <a href="{% url 'lista_clientes' %}" class="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Ver todos los clientes &rarr;</a>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ingresos Totales</h3>
+                </div>
+                <div class="text-3xl font-bold text-slate-900 dark:text-white">
+                    ${{ ingresos_totales|intcomma }}
+                </div>
+                <p class="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">
+                    <span class="material-icons-round text-xs align-middle">check_circle</span>
+                    Pedidos Terminados
+                </p>
             </div>
         </div>
 
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="material-icons-round text-8xl text-orange-500">account_balance_wallet</span>
+            </div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
+                        <span class="material-icons-round text-xl">account_balance_wallet</span>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Por Cobrar</h3>
+                </div>
+                <div class="text-3xl font-bold text-slate-900 dark:text-white">
+                    ${{ por_cobrar|intcomma }}
+                </div>
+                <p class="text-xs text-orange-600 dark:text-orange-400 mt-2 font-medium">
+                    <span class="material-icons-round text-xs align-middle">pending</span>
+                    Pedidos Pendientes y En Proceso
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="material-icons-round text-8xl text-blue-500">groups</span>
+            </div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                        <span class="material-icons-round text-xl">groups</span>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Clientes</h3>
+                </div>
+                <div class="text-3xl font-bold text-slate-900 dark:text-white">
+                    {{ total_clientes }}
+                </div>
+                <p class="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
+                    <a href="{% url 'lista_clientes' %}" class="hover:underline flex items-center gap-1">
+                        Ver directorio <span class="material-icons-round text-xs">arrow_forward</span>
+                    </a>
+                </p>
+            </div>
+        </div>
     </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+                <span class="material-icons-round text-primary mr-2">pie_chart</span>
+                Distribución de Pedidos
+            </h3>
+            <div class="relative h-64 w-full">
+                <canvas id="chartEstados"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+                <span class="material-icons-round text-primary mr-2">stars</span>
+                Top 5 Clientes
+            </h3>
+            <div class="relative h-64 w-full">
+                <canvas id="chartClientes"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {{ grafico_estados_labels|json_script:"data-estados-labels" }}
+    {{ grafico_estados_data|json_script:"data-estados-data" }}
+    {{ grafico_clientes_labels|json_script:"data-clientes-labels" }}
+    {{ grafico_clientes_data|json_script:"data-clientes-data" }}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}

@@ -96,11 +96,45 @@
                             </div>
 
                             <div>
-                                <label class="custom-label" for="{{ form.imagen_referencia.id_for_label }}">Imagen de Referencia</label>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Sube una foto, dibujo o captura del diseño.</p>
-                                {{ form.imagen_referencia }}
-                            </div>
+                                <label class="custom-label mb-2">Imagen de Referencia</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Sube una foto, dibujo o captura del diseño.</p>
 
+                                <div class="bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-800">
+                                    {% if form.instance.imagen_referencia %}
+                                        <div class="text-xs text-indigo-600 dark:text-indigo-400 mb-2 font-bold flex items-center">
+                                            <span class="material-icons-round text-sm mr-1">info</span>
+                                            ¡Importante! Este pedido ya tiene una imagen asociada.
+                                        </div>
+
+                                        <div class="flex items-center justify-between mb-4 p-3 bg-white dark:bg-neutral-800 rounded border border-slate-200 dark:border-neutral-700">
+
+                                            <div class="flex items-center gap-3 overflow-hidden mr-4">
+                                                <span class="material-icons-round text-primary">image</span>
+                                                <a href="{{ form.instance.imagen_referencia.url }}" target="_blank" title="{{ form.instance.imagen_referencia.name }}" class="text-sm text-slate-700 dark:text-slate-300 hover:text-primary truncate underline">
+                                                    Ver imagen actual ({{ form.instance.imagen_referencia.name|slice:"8:"|truncatechars:25 }})
+                                                </a>
+                                            </div>
+
+                                            <div class="flex items-center gap-2 flex-shrink-0">
+                                                <input type="checkbox" name="imagen_referencia-clear" id="imagen_referencia-clear_id" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer">
+
+                                                <label for="imagen_referencia-clear_id" class="text-xs font-bold text-red-500 cursor-pointer uppercase select-none mb-0">Eliminar</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-xs text-slate-400 mb-1 font-medium">Cambiar imagen (Opcional):</div>
+                                    {% endif %}
+
+                                    <input type="file" name="imagen_referencia" class="block w-full text-sm text-slate-500
+                                      file:mr-4 file:py-2 file:px-4
+                                      file:rounded-full file:border-0
+                                      file:text-sm file:font-semibold
+                                      file:bg-primary file:text-black
+                                      hover:file:bg-yellow-400
+                                      cursor-pointer
+                                      dark:file:bg-white dark:file:text-black dark:hover:file:bg-gray-200" id="id_imagen_referencia">
+                                </div>
+                            </div>
                             <div>
                                 <label class="custom-label" for="{{ form.detalles_pedido.id_for_label }}">{{ form.detalles_pedido.label }}</label>
                                 {{ form.detalles_pedido }}

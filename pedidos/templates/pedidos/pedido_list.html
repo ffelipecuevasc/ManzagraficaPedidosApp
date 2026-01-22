@@ -14,54 +14,98 @@
         </a>
     </div>
 
-    <div class="mb-6 flex flex-col sm:flex-row gap-4">
-        <form method="get" action="." class="relative flex-grow flex gap-2">
-            <div class="relative flex-grow">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+        <a href="{% url 'lista_pedidos' %}" class="block group">
+            <div class="p-4 rounded-xl border shadow-sm transition-all
+                {% if not estado_filter %}
+                    bg-blue-50/50 dark:bg-blue-900/10 border-blue-500 ring-1 ring-blue-500
+                {% else %}
+                    bg-white dark:bg-card-dark border-slate-200 dark:border-neutral-800 hover:shadow-md hover:border-blue-500/50
+                {% endif %}">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</h3>
+                    <div class="p-1.5 rounded-lg {% if not estado_filter %}bg-blue-500 text-white{% else %}bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400{% endif %}">
+                        <span class="material-icons-round text-lg">inventory_2</span>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ total_pedidos }}</div>
+            </div>
+        </a>
+
+        <a href="?estado=PENDIENTE" class="block group">
+            <div class="p-4 rounded-xl border shadow-sm transition-all
+                {% if estado_filter == 'PENDIENTE' %}
+                    bg-red-50/50 dark:bg-red-900/10 border-red-500 ring-1 ring-red-500
+                {% else %}
+                    bg-white dark:bg-card-dark border-slate-200 dark:border-neutral-800 hover:shadow-md hover:border-red-500/50
+                {% endif %}">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendientes</h3>
+                    <div class="p-1.5 rounded-lg {% if estado_filter == 'PENDIENTE' %}bg-red-500 text-white{% else %}bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400{% endif %}">
+                        <span class="material-icons-round text-lg">pending_actions</span>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ pendientes }}</div>
+            </div>
+        </a>
+
+        <a href="?estado=EN_PROCESO" class="block group">
+            <div class="p-4 rounded-xl border shadow-sm transition-all
+                {% if estado_filter == 'EN_PROCESO' %}
+                    bg-yellow-50/50 dark:bg-yellow-900/10 border-yellow-500 ring-1 ring-yellow-500
+                {% else %}
+                    bg-white dark:bg-card-dark border-slate-200 dark:border-neutral-800 hover:shadow-md hover:border-yellow-500/50
+                {% endif %}">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">En Proceso</h3>
+                    <div class="p-1.5 rounded-lg {% if estado_filter == 'EN_PROCESO' %}bg-yellow-500 text-black{% else %}bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400{% endif %}">
+                        <span class="material-icons-round text-lg">cached</span>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ en_proceso }}</div>
+            </div>
+        </a>
+
+        <a href="?estado=TERMINADO" class="block group">
+            <div class="p-4 rounded-xl border shadow-sm transition-all
+                {% if estado_filter == 'TERMINADO' %}
+                    bg-green-50/50 dark:bg-green-900/10 border-green-500 ring-1 ring-green-500
+                {% else %}
+                    bg-white dark:bg-card-dark border-slate-200 dark:border-neutral-800 hover:shadow-md hover:border-green-500/50
+                {% endif %}">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Terminados</h3>
+                    <div class="p-1.5 rounded-lg {% if estado_filter == 'TERMINADO' %}bg-green-500 text-white{% else %}bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400{% endif %}">
+                        <span class="material-icons-round text-lg">check_circle</span>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ completados }}</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="mb-6">
+        <form method="get" action="." class="relative w-full">
+            {% if estado_filter %}
+                <input type="hidden" name="estado" value="{{ estado_filter }}">
+            {% endif %}
+
+            <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span class="material-icons-round text-slate-400 text-xl">search</span>
                 </span>
                 <input type="search" name="busqueda" value="{{ request.GET.busqueda|default:'' }}"
-                       class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-neutral-700 rounded-lg leading-5 bg-white dark:bg-card-dark text-slate-900 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-colors"
+                       class="block w-full pl-10 pr-12 py-3 border border-slate-300 dark:border-neutral-700 rounded-lg leading-5 bg-white dark:bg-card-dark text-slate-900 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary shadow-sm transition-all"
                        placeholder="Buscar por Cliente o Teléfono...">
+
+                {% if request.GET.busqueda %}
+                <a href="?{% if estado_filter %}estado={{ estado_filter }}{% endif %}" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                     <span class="material-icons-round text-slate-400 hover:text-red-500 transition-colors">close</span>
+                </a>
+                {% endif %}
             </div>
-
-            <button type="submit" class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
-                <span class="material-icons-round text-lg">search</span>
-            </button>
-
-            {% if request.GET.busqueda %}
-            <a href="{% url 'lista_pedidos' %}" class="inline-flex items-center px-3 py-2 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
-                <span class="material-icons-round text-lg">close</span>
-            </a>
-            {% endif %}
         </form>
-
-        <div class="flex gap-2 relative group">
-            <button class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors focus:outline-none">
-                <span class="material-icons-round mr-2 text-lg">filter_list</span>
-                Filtrar por Estado
-                <span class="material-icons-round ml-2 text-lg">expand_more</span>
-            </button>
-
-            <div class="absolute right-0 top-full pt-2 w-48 z-50 hidden group-hover:block">
-                <div class="bg-white dark:bg-card-dark border border-slate-200 dark:border-neutral-700 rounded-lg shadow-lg overflow-hidden">
-                    <div class="py-1">
-                        <a href="?{% if request.GET.busqueda %}busqueda={{ request.GET.busqueda }}&{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors">
-                            Todos
-                        </a>
-                        <a href="?estado=PENDIENTE{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors">
-                            <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span> Pendientes
-                        </a>
-                        <a href="?estado=EN_PROCESO{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors">
-                            <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span> En Proceso
-                        </a>
-                        <a href="?estado=TERMINADO{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors">
-                            <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span> Terminados
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="bg-white dark:bg-card-dark border border-slate-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm">
@@ -120,7 +164,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
                             #{{ pedido.id }}
                         </td>
-                        
+
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="h-8 w-8 rounded-full bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold text-xs mr-3 group-hover:bg-primary group-hover:text-black group-hover:border-primary transition-colors">
@@ -131,11 +175,11 @@
                                 </div>
                             </div>
                         </td>
-                        
+
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 max-w-xs truncate">
                             {{ pedido.resumen_pedido }}
                         </td>
-                        
+
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if pedido.estado == 'PENDIENTE' %}
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50">
@@ -155,11 +199,11 @@
                                 </span>
                             {% endif %}
                         </td>
-                        
+
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                             {{ pedido.fecha_entrega|date:"d M Y" }}
                         </td>
-                        
+
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end gap-1">
                                 <a href="{% url 'detalle_pedido' pedido.id %}" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Ver detalle">
@@ -197,17 +241,17 @@
                 <div>
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                         {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800">
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800">
                             <span class="material-icons-round">chevron_left</span>
                         </a>
                         {% endif %}
-                        
+
                         <span class="relative inline-flex items-center px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-sm font-medium text-slate-700 dark:text-slate-200">
                             {{ page_obj.number }}
                         </span>
 
                         {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800">
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800">
                             <span class="material-icons-round">chevron_right</span>
                         </a>
                         {% endif %}
