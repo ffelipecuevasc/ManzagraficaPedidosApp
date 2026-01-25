@@ -29,3 +29,15 @@ class PedidoForm(forms.ModelForm):
             # Widget básico para archivos (el estilo lo da el CSS del template)
             'imagen_referencia': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        valor_venta = cleaned_data.get('valor_venta')
+        valor_abonado = cleaned_data.get('valor_abonado')
+
+        # Validar que el abono no supere el total
+        if valor_venta is not None and valor_abonado is not None:
+            if valor_abonado > valor_venta:
+                self.add_error('valor_abonado', 'El abono no puede ser mayor al valor total del pedido.')
+
+        return cleaned_data

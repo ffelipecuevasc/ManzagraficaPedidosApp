@@ -18,12 +18,16 @@ document.addEventListener('DOMContentLoaded', function() {
         initTableSorting();
     }
 
-    // E. Gráficos del Dashboard (NUEVO)
-    if (document.getElementById('chartEstados')) {
-        initDashboardCharts();
+    // E. Gráficos del Dashboard (ELIMINADO - Ahora es HTML/CSS puro)
+    // if (document.getElementById('chartEstados')) {
+    //    initDashboardCharts();
+    // }
+
+    // F. Modales de Detalle
+    if (document.getElementById('modal-confirmacion')) {
+        initDetailModals();
     }
 });
-
 
 /* =========================================
    2. FUNCIONES DE TEMA (MODO OSCURO)
@@ -97,24 +101,17 @@ function initPlugins() {
                 },
                 // CANDADO 2: Bloqueo de Pegado (Ctrl+V)
                 onPaste: function (e) {
-                    // 1. Detenemos la acción estándar inmediatamente
                     e.preventDefault();
-
                     var bufferText = '';
-
-                    // 2. Intentamos recuperar el contenido como TEXTO PLANO
                     if (e.originalEvent && e.originalEvent.clipboardData) {
                         bufferText = e.originalEvent.clipboardData.getData('text/plain');
                     } else if (window.clipboardData) {
                         bufferText = window.clipboardData.getData('Text');
                     }
 
-                    // 3. Verificamos si hay texto real
                     if (bufferText && bufferText.trim().length > 0) {
-                        // Solución al Warning: Usamos la API nativa de Summernote en vez de execCommand
                         $('#id_detalles_pedido').summernote('insertText', bufferText);
                     } else {
-                        // Si no hay texto (es una imagen pura), mostramos la alerta
                         alert('NO ESTÁ PERMITIDO pegar imágenes aquí.\n\nPor favor, usa el campo "Imagen de Referencia".');
                     }
                 }
@@ -218,161 +215,118 @@ function initPedidoForm() {
             });
         });
     }
+    initMoneyValidation();
 }
 
 /* =========================================
-   5. ORDENAMIENTO DE TABLAS (NUEVO)
+   5. ORDENAMIENTO DE TABLAS
    ========================================= */
 function initTableSorting() {
-    // Buscamos todas las cabeceras que tengan la clase .sortable
     const headers = document.querySelectorAll('th.sortable');
-
     headers.forEach(header => {
         header.addEventListener('click', () => {
-            // 1. Obtener el campo por el cual ordenar (ej: 'cliente__nombre')
             const sortField = header.getAttribute('data-sort');
-
-            // 2. Leer la URL actual para ver qué filtros ya existen
             const currentUrl = new URL(window.location.href);
             const currentSort = currentUrl.searchParams.get('orden');
-
-            // 3. Calcular el nuevo orden
             let newSort = sortField;
 
-            // Si ya estamos ordenando por este campo, lo invertimos (agregamos el guion -)
             if (currentSort === sortField) {
                 newSort = '-' + sortField;
             }
-            // (Si ya estaba invertido, al asignar newSort = sortField volvemos al orden normal)
-
-            // 4. Actualizar el parámetro en la URL
             currentUrl.searchParams.set('orden', newSort);
-
-            // 5. Recargar la página con la nueva URL
-            // (Esto preserva automáticamente la búsqueda y otros filtros que ya estén en la URL)
             window.location.href = currentUrl.toString();
         });
     });
 }
 
 /* =========================================
-   6. GRÁFICOS DEL DASHBOARD (CHART.JS)
+   7. VALIDACIÓN MONETARIA EN VIVO
    ========================================= */
-function initDashboardCharts() {
-    // 1. Recuperar los datos desde los script tags generados por Django
-    const estadosLabels = JSON.parse(document.getElementById('data-estados-labels').textContent);
-    const estadosData = JSON.parse(document.getElementById('data-estados-data').textContent);
-    const clientesLabels = JSON.parse(document.getElementById('data-clientes-labels').textContent);
-    const clientesData = JSON.parse(document.getElementById('data-clientes-data').textContent);
+function initMoneyValidation() {
+    const inputVenta = document.getElementById('id_valor_venta');
+    const inputAbono = document.getElementById('id_valor_abonado');
+    const btnSubmit = document.getElementById('btn-submit-pedido');
 
-    // 2. Definición de Colores
-    const colorPendiente = '#EF4444'; // Rojo
-    const colorProceso = '#EAB308';   // Amarillo
-    const colorTerminado = '#22C55E'; // Verde
-    const coloresClientes = [
-        '#FACC15', '#A16207', '#CA8A04', '#EAB308', '#FEF08A' // Gama Dorada
-    ];
+    function validarMontos() {
+        if (!inputVenta || !inputAbono) return;
 
-    // 3. Configuración de Tema y Colores de Fuente
-    const isDark = document.documentElement.classList.contains('dark');
+        const venta = parseFloat(inputVenta.value) || 0;
+        const abono = parseFloat(inputAbono.value) || 0;
 
-    // CORRECCIÓN 2: Color más oscuro para modo claro (casi negro) para mejor lectura
-    const textColor = isDark ? '#cbd5e1' : '#111827';
-    const gridColor = isDark ? '#404040' : '#e2e8f0';
+        inputAbono.classList.remove('border-red-500', 'focus:ring-red-500');
+        let errorMsg = document.getElementById('error-monto-js');
+        if (errorMsg) errorMsg.remove();
 
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    color: textColor,
-                    font: { family: "'Inter', sans-serif", size: 12 }
-                }
+        if (abono > venta) {
+            inputAbono.classList.add('border-red-500', 'focus:ring-red-500');
+            const p = document.createElement('p');
+            p.id = 'error-monto-js';
+            p.className = 'text-red-500 text-xs mt-1 font-bold flex items-center animate-pulse';
+            p.innerHTML = '<span class="material-icons-round text-sm mr-1">cancel</span> El abono no puede ser mayor al valor total del pedido.';
+            inputAbono.parentNode.appendChild(p);
+
+            if(btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
             }
-        },
-        layout: { padding: 10 }
-    };
-
-    // 4. GRÁFICO 1: ESTADOS
-    const ctxEstados = document.getElementById('chartEstados').getContext('2d');
-    new Chart(ctxEstados, {
-        type: 'doughnut',
-        data: {
-            labels: estadosLabels,
-            datasets: [{
-                data: estadosData,
-                backgroundColor: [colorPendiente, colorProceso, colorTerminado],
-                borderWidth: 0,
-                hoverOffset: 4
-            }]
-        },
-        options: commonOptions
-    });
-
-    // 5. GRÁFICO 2: TOP CLIENTES (MODO BARRAS HORIZONTALES)
-    const ctxClientes = document.getElementById('chartClientes').getContext('2d');
-    new Chart(ctxClientes, {
-        type: 'bar',
-        data: {
-            labels: clientesLabels,
-            datasets: [{
-                label: 'Cantidad de Pedidos',
-                data: clientesData,
-                backgroundColor: coloresClientes,
-                borderRadius: 4,
-                barThickness: 20,
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.raw + ' Pedidos';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    grid: {
-                        color: gridColor,
-                        drawBorder: false
-                    },
-                    ticks: {
-                        stepSize: 1,
-                        color: textColor // Color oscuro corregido
-                    },
-                    // CORRECCIÓN 3: Etiqueta explicativa en el eje X
-                    title: {
-                        display: true,
-                        text: 'Total de Pedidos Realizados',
-                        color: isDark ? '#9ca3af' : '#6b7280',
-                        font: {
-                            size: 11,
-                            family: "'Inter', sans-serif"
-                        }
-                    }
-                },
-                y: {
-                    grid: { display: false },
-                    ticks: {
-                        color: textColor, // Color oscuro corregido (Nombres de clientes)
-                        font: {
-                            family: "'Inter', sans-serif",
-                            weight: 'bold'
-                        }
-                    }
-                }
-            },
-            layout: { padding: 0 }
+        } else {
+            if(btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+            }
         }
+    }
+
+    if (inputVenta && inputAbono) {
+        inputVenta.addEventListener('input', validarMontos);
+        inputAbono.addEventListener('input', validarMontos);
+        inputAbono.addEventListener('keyup', validarMontos);
+        inputAbono.addEventListener('change', validarMontos);
+    }
+}
+
+/* =========================================
+   8. LOGICA DE MODALES DE CONFIRMACIÓN (NUEVO)
+   ========================================= */
+function initDetailModals() {
+    const modal = document.getElementById('modal-confirmacion');
+    if (!modal) return;
+
+    const titulo = document.getElementById('modal-titulo');
+    const mensaje = document.getElementById('modal-mensaje');
+    const btnConfirmar = document.getElementById('modal-btn-confirmar');
+    const btnCancelar = document.getElementById('modal-btn-cancelar');
+
+    // 1. Abrir Modal (Delegación para botones con data-confirm="true")
+    const triggers = document.querySelectorAll('[data-confirm="true"]');
+    triggers.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('data-url');
+            const tipo = this.getAttribute('data-type');
+
+            // Configurar contenido
+            if (tipo === 'TERMINAR') {
+                titulo.textContent = '¿Finalizar y Pagar Pedido?';
+                mensaje.innerHTML = 'Estás a punto de marcar este trabajo como <strong>TERMINADO</strong>.<br><br>El sistema registrará automáticamente que el <strong>TOTAL HA SIDO PAGADO ($0 deuda)</strong>.<br>¿Confirmas esta acción?';
+                btnConfirmar.className = "inline-flex w-full justify-center rounded-lg bg-green-600 hover:bg-green-700 px-3 py-2 text-sm font-bold text-white shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide";
+            } else if (tipo === 'CLONAR') {
+                titulo.textContent = '¿Reabrir Pedido?';
+                mensaje.innerHTML = 'Se creará un <strong>NUEVO PEDIDO</strong> idéntico a este, con estado PENDIENTE y deuda inicial.<br><br>El pedido actual no se modificará y quedará guardado en la BD.';
+                btnConfirmar.className = "inline-flex w-full justify-center rounded-lg bg-primary hover:bg-yellow-400 px-3 py-2 text-sm font-bold text-black shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide";
+            }
+
+            btnConfirmar.href = url;
+            modal.classList.remove('hidden');
+        });
     });
+
+    // 2. Cerrar Modal
+    function closeModal() {
+        modal.classList.add('hidden');
+    }
+
+    if(btnCancelar) {
+        btnCancelar.addEventListener('click', closeModal);
+    }
 }

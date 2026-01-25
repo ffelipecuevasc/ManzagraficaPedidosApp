@@ -14,14 +14,10 @@ def dashboard(request):
     # ==========================================
     # 1. KPIs FINANCIEROS (Dinero)
     # ==========================================
-
-    # Ingresos Totales: Suma de valor_venta de todo lo TERMINADO (Plata segura)
     ingresos_totales = Pedido.objects.filter(estado='TERMINADO').aggregate(
         total=Sum('valor_venta')
-    )['total'] or 0  # El 'or 0' es por si no hay pedidos, para que no devuelva None
+    )['total'] or 0
 
-    # Por Cobrar: Suma de (Venta - Abonado) de lo NO terminado (Plata en la calle)
-    # Usamos 'F' para restar columnas fila por fila
     por_cobrar = Pedido.objects.filter(
         estado__in=['PENDIENTE', 'EN_PROCESO']
     ).aggregate(
@@ -29,53 +25,69 @@ def dashboard(request):
     )['total'] or 0
 
     # ==========================================
-    # 2. MÉTRICAS OPERATIVAS (Conteos)
+    # 2. MÉTRICAS OPERATIVAS
     # ==========================================
     total_clientes = Cliente.objects.count()
 
-    # Conteos por estado para el Gráfico de Dona 1
+    total_pedidos = Pedido.objects.count()
     pendientes = Pedido.objects.filter(estado='PENDIENTE').count()
     en_proceso = Pedido.objects.filter(estado='EN_PROCESO').count()
     completados = Pedido.objects.filter(estado='TERMINADO').count()
 
     # ==========================================
-    # 3. DATOS PARA GRÁFICOS (Listas limpias)
+    # 3. CÁLCULOS PARA GRÁFICOS HTML (CSS PURO)
     # ==========================================
 
-    # Gráfico 1: Estado de Pedidos
-    # Pasamos los datos ordenados para que coincidan con los labels
-    grafico_estados_labels = ['Pendientes', 'En Proceso', 'Terminados']
-    grafico_estados_data = [pendientes, en_proceso, completados]
+    # A. Datos para Gráfico de Dona (Conic Gradient)
+    # Calculamos los puntos de corte del gradiente (acumulados)
+    if total_pedidos > 0:
+        pct_pendientes = (pendientes / total_pedidos) * 100
+        pct_en_proceso = (en_proceso / total_pedidos) * 100
+        # Puntos de parada para el CSS conic-gradient
+        stop_1 = pct_pendientes
+        stop_2 = pct_pendientes + pct_en_proceso
+    else:
+        stop_1 = 0
+        stop_2 = 0
 
-    # Gráfico 2: Top 5 Clientes (Dona/Torta)
-    # Obtenemos los 5 clientes con más pedidos
-    top_clientes_qs = Cliente.objects.annotate(
+    # Porcentajes individuales para mostrar en texto
+    pct_text_pendientes = round((pendientes / total_pedidos * 100)) if total_pedidos > 0 else 0
+    pct_text_proceso = round((en_proceso / total_pedidos * 100)) if total_pedidos > 0 else 0
+    pct_text_completados = round((completados / total_pedidos * 100)) if total_pedidos > 0 else 0
+
+    # B. Datos para Gráfico de Barras (Top Clientes)
+    top_clientes = Cliente.objects.annotate(
         num_pedidos=Count('pedido')
     ).order_by('-num_pedidos')[:5]
 
-    # Convertimos el QuerySet a listas simples de Python para Chart.js
-    grafico_clientes_labels = [c.nombre for c in top_clientes_qs]
-    grafico_clientes_data = [c.num_pedidos for c in top_clientes_qs]
+    # Obtener el valor máximo para calcular el ancho de las barras (width %)
+    max_pedidos = top_clientes[0].num_pedidos if top_clientes else 1
 
     # ==========================================
-    # 4. CONTEXTO FINAL
+    # 4. CONTEXTO
     # ==========================================
     context = {
-        # KPIs Tarjetas Superiores
+        # KPIs
         'ingresos_totales': ingresos_totales,
         'por_cobrar': por_cobrar,
         'total_clientes': total_clientes,
+        'total_pedidos': total_pedidos,  # Necesario para el centro de la dona
 
-        # Datos Crudos (por si acaso)
+        # Datos Crudos
         'pendientes': pendientes,
         'en_proceso': en_proceso,
         'completados': completados,
 
-        # Listas listas para Chart.js (Frontend)
-        'grafico_estados_labels': grafico_estados_labels,
-        'grafico_estados_data': grafico_estados_data,
-        'grafico_clientes_labels': grafico_clientes_labels,
-        'grafico_clientes_data': grafico_clientes_data,
+        # Porcentajes Visuales (Donut)
+        'donut_stop_1': stop_1,
+        'donut_stop_2': stop_2,
+        'pct_pendientes': pct_text_pendientes,
+        'pct_proceso': pct_text_proceso,
+        'pct_completados': pct_text_completados,
+
+        # Datos Visuales (Barras)
+        'top_clientes': top_clientes,
+        'max_pedidos': max_pedidos,
     }
 
     return render(request, 'pedidos/dashboard.html', context)
@@ -83,6 +95,10 @@ def dashboard(request):
 @login_required
 @transaccion_segura
 def crear_pedido(request):
+    # CORRECCIÓN: Inicializamos el form de cliente FUERA de los bloques if/else
+    # Así garantizamos que la variable siempre exista, evitando el Error 500.
+    cliente_form = ClienteForm()
+
     if request.method == 'POST':
         form = PedidoForm(request.POST, request.FILES)
         if form.is_valid():
@@ -90,8 +106,7 @@ def crear_pedido(request):
             return redirect('dashboard')
     else:
         form = PedidoForm()
-        cliente_form = ClienteForm()
-    
+
     return render(request, 'pedidos/pedido_form.html', {'form': form, 'cliente_form': cliente_form})
 
 @login_required
@@ -140,17 +155,22 @@ def detalle_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     return render(request, 'pedidos/pedido_detail.html', {'pedido': pedido})
 
+
 @login_required
 def cambiar_estado_pedido(request, pk, nuevo_estado):
     pedido = get_object_or_404(Pedido, pk=pk)
-    
+
     # Validar que el nuevo estado sea una opción válida
     opciones_validas = [opcion[0] for opcion in Pedido.ESTADO_CHOICES]
-    
+
     if nuevo_estado in opciones_validas:
+        # REGLA DE NEGOCIO: Si se termina, se asume pagado
+        if nuevo_estado == 'TERMINADO':
+            pedido.valor_abonado = pedido.valor_venta
+
         pedido.estado = nuevo_estado
         pedido.save()
-    
+
     return redirect('detalle_pedido', pk=pk)
 
 @login_required
@@ -280,6 +300,30 @@ def lista_pedidos(request):
     }
 
     return render(request, 'pedidos/pedido_list.html', context)
+
+@login_required
+@transaccion_segura
+def duplicar_pedido(request, pk):
+    # 1. Obtener el pedido original
+    original = get_object_or_404(Pedido, pk=pk)
+
+    # 2. Crear una copia en memoria (sin PK para que sea nuevo)
+    nuevo_pedido = Pedido(
+        cliente=original.cliente,
+        resumen_pedido=original.resumen_pedido,
+        detalles_pedido=original.detalles_pedido,
+        valor_venta=original.valor_venta,
+        valor_abonado=0,  # IMPORTANTE: La deuda nace en 0
+        estado='PENDIENTE',  # IMPORTANTE: Nace pendiente
+        fecha_entrega=original.fecha_entrega,  # Mantenemos fecha ref, usuario editará si quiere
+        imagen_referencia=original.imagen_referencia  # Mantenemos la imagen si tenía
+    )
+
+    # 3. Guardar el nuevo registro (esto genera fecha_solicitud actual automática)
+    nuevo_pedido.save()
+
+    # 4. Redirigir al detalle del nuevo pedido clonado
+    return redirect('detalle_pedido', pk=nuevo_pedido.pk)
 
 def error_404(request, exception):
     return render(request, 'pedidos/errors/404.html', status=404)

@@ -16,7 +16,8 @@
             </h1>
             <p class="text-slate-500 dark:text-slate-400 text-sm">Sigue los pasos para crear la orden de trabajo.</p>
         </div>
-        <a href="{% url 'dashboard' %}" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center text-sm font-medium">
+        <a href="{% url 'dashboard' %}"
+           class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center text-sm font-medium">
             <span class="material-icons-round mr-1 text-lg">arrow_back</span>
             Cancelar
         </a>
@@ -27,6 +28,26 @@
 
             <form method="post" id="pedidoForm" enctype="multipart/form-data">
                 {% csrf_token %}
+
+                {% if form.errors %}
+                    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3 animate-pulse">
+                        <span class="material-icons-round text-red-500 text-xl mt-0.5">error_outline</span>
+                        <div>
+                            <h3 class="text-red-800 dark:text-red-400 font-bold text-sm">No pudimos guardar el
+                                pedido</h3>
+                            <p class="text-red-600 dark:text-red-300 text-xs mt-1">Por favor revisa los campos marcados
+                                en rojo.</p>
+
+                            {% if form.non_field_errors %}
+                                <ul class="list-disc list-inside mt-2 text-xs text-red-600 dark:text-red-300 font-medium">
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
 
                 <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
@@ -40,34 +61,48 @@
                             <div class="mb-4">
                                 <label class="custom-label">Buscar en la base de datos:</label>
                                 {{ form.cliente }}
+                                {% if form.cliente.errors %}
+                                    <p class="text-red-500 text-xs mt-1 font-bold flex items-center"><span
+                                            class="material-icons-round text-sm mr-1">warning</span> {{ form.cliente.errors.0 }}
+                                    </p>
+                                {% endif %}
                             </div>
                             <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-neutral-800">
                                 <span class="text-sm text-slate-500 dark:text-slate-400">¿No lo encuentras?</span>
-                                <button type="button" id="btn-toggle-crear" class="text-primary hover:text-yellow-400 font-bold text-sm uppercase tracking-wide flex items-center transition-colors">
+                                <button type="button" id="btn-toggle-crear"
+                                        class="text-primary hover:text-yellow-400 font-bold text-sm uppercase tracking-wide flex items-center transition-colors">
                                     <span class="material-icons-round mr-1 text-lg">person_add</span>
                                     Crear Nuevo Cliente
                                 </button>
                             </div>
                         </div>
 
-                        <div id="section-crear-cliente" class="hidden bg-slate-50 dark:bg-neutral-900/50 p-6 rounded-lg border border-slate-200 dark:border-neutral-800">
-                            <h3 class="font-bold text-slate-800 dark:text-white mb-4 text-sm uppercase tracking-wide">Nuevo Cliente Rápido</h3>
+                        <div id="section-crear-cliente"
+                             class="hidden bg-slate-50 dark:bg-neutral-900/50 p-6 rounded-lg border border-slate-200 dark:border-neutral-800">
+                            <h3 class="font-bold text-slate-800 dark:text-white mb-4 text-sm uppercase tracking-wide">
+                                Nuevo Cliente Rápido</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="custom-label">Nombre *</label>
-                                    <input type="text" id="new_client_nombre" class="custom-input" placeholder="Ej: Juan Pérez">
+                                    <input type="text" id="new_client_nombre" class="custom-input"
+                                           placeholder="Ej: Juan Pérez">
                                 </div>
                                 <div>
                                     <label class="custom-label">Teléfono *</label>
-                                    <input type="text" id="new_client_telefono" class="custom-input" placeholder="+56 9...">
+                                    <input type="text" id="new_client_telefono" class="custom-input"
+                                           placeholder="+56 9...">
                                 </div>
                                 <div class="md:col-span-2">
                                     <label class="custom-label">Email (Opcional)</label>
-                                    <input type="text" id="new_client_email" class="custom-input" placeholder="ejemplo@correo.com">
+                                    <input type="text" id="new_client_email" class="custom-input"
+                                           placeholder="ejemplo@correo.com">
                                 </div>
                             </div>
                             <div class="flex items-center justify-end gap-3">
-                                <button type="button" id="btn-cancelar-crear" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Cancelar</button>
+                                <button type="button" id="btn-cancelar-crear"
+                                        class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                                    Cancelar
+                                </button>
 
                                 <button type="button"
                                         id="btn-guardar-cliente-api"
@@ -77,12 +112,14 @@
                                     Guardar y Seleccionar
                                 </button>
                             </div>
-                            <div id="cliente-api-error" class="hidden mt-3 text-xs text-red-500 font-bold text-right"></div>
+                            <div id="cliente-api-error"
+                                 class="hidden mt-3 text-xs text-red-500 font-bold text-right"></div>
                         </div>
                     </div>
                 </div>
 
-                <div id="section-detalles-pedido" class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+                <div id="section-detalles-pedido"
+                     class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 dark:bg-neutral-700"></div>
                     <div class="p-6 md:p-8">
                         <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
@@ -91,13 +128,18 @@
                         </h2>
                         <div class="space-y-6">
                             <div>
-                                <label class="custom-label" for="{{ form.resumen_pedido.id_for_label }}">{{ form.resumen_pedido.label }}</label>
+                                <label class="custom-label"
+                                       for="{{ form.resumen_pedido.id_for_label }}">{{ form.resumen_pedido.label }}</label>
                                 {{ form.resumen_pedido }}
+                                {% if form.resumen_pedido.errors %}
+                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ form.resumen_pedido.errors.0 }}</p>
+                                {% endif %}
                             </div>
 
                             <div>
                                 <label class="custom-label mb-2">Imagen de Referencia</label>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Sube una foto, dibujo o captura del diseño.</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Sube una foto, dibujo o
+                                    captura del diseño.</p>
 
                                 <div class="bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-800">
                                     {% if form.instance.imagen_referencia %}
@@ -110,19 +152,27 @@
 
                                             <div class="flex items-center gap-3 overflow-hidden mr-4">
                                                 <span class="material-icons-round text-primary">image</span>
-                                                <a href="{{ form.instance.imagen_referencia.url }}" target="_blank" title="{{ form.instance.imagen_referencia.name }}" class="text-sm text-slate-700 dark:text-slate-300 hover:text-primary truncate underline">
-                                                    Ver imagen actual ({{ form.instance.imagen_referencia.name|slice:"8:"|truncatechars:25 }})
+                                                <a href="{{ form.instance.imagen_referencia.url }}" target="_blank"
+                                                   title="{{ form.instance.imagen_referencia.name }}"
+                                                   class="text-sm text-slate-700 dark:text-slate-300 hover:text-primary truncate underline">
+                                                    Ver imagen actual
+                                                    ({{ form.instance.imagen_referencia.name|slice:"8:"|truncatechars:25 }})
                                                 </a>
                                             </div>
 
                                             <div class="flex items-center gap-2 flex-shrink-0">
-                                                <input type="checkbox" name="imagen_referencia-clear" id="imagen_referencia-clear_id" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer">
+                                                <input type="checkbox" name="imagen_referencia-clear"
+                                                       id="imagen_referencia-clear_id"
+                                                       class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer">
 
-                                                <label for="imagen_referencia-clear_id" class="text-xs font-bold text-red-500 cursor-pointer uppercase select-none mb-0">Eliminar</label>
+                                                <label for="imagen_referencia-clear_id"
+                                                       class="text-xs font-bold text-red-500 cursor-pointer uppercase select-none mb-0">Eliminar</label>
                                             </div>
                                         </div>
 
-                                        <div class="text-xs text-slate-400 mb-1 font-medium">Cambiar imagen (Opcional):</div>
+                                        <div class="text-xs text-slate-400 mb-1 font-medium">Cambiar imagen
+                                            (Opcional):
+                                        </div>
                                     {% endif %}
 
                                     <input type="file" name="imagen_referencia" class="block w-full text-sm text-slate-500
@@ -132,30 +182,62 @@
                                       file:bg-primary file:text-black
                                       hover:file:bg-yellow-400
                                       cursor-pointer
-                                      dark:file:bg-white dark:file:text-black dark:hover:file:bg-gray-200" id="id_imagen_referencia">
+                                      dark:file:bg-white dark:file:text-black dark:hover:file:bg-gray-200"
+                                           id="id_imagen_referencia">
+                                    {% if form.imagen_referencia.errors %}
+                                        <p class="text-red-500 text-xs mt-1 font-bold">{{ form.imagen_referencia.errors.0 }}</p>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div>
-                                <label class="custom-label" for="{{ form.detalles_pedido.id_for_label }}">{{ form.detalles_pedido.label }}</label>
+                                <label class="custom-label"
+                                       for="{{ form.detalles_pedido.id_for_label }}">{{ form.detalles_pedido.label }}</label>
                                 {{ form.detalles_pedido }}
+                                {% if form.detalles_pedido.errors %}
+                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ form.detalles_pedido.errors.0 }}</p>
+                                {% endif %}
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
-                                    <label class="custom-label" for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
-                                    <div class="relative"><span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>{{ form.valor_venta }}</div>
+                                    <label class="custom-label"
+                                           for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
+                                    <div class="relative"><span
+                                            class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>{{ form.valor_venta }}
+                                    </div>
+                                    {% if form.valor_venta.errors %}
+                                        <p class="text-red-500 text-xs mt-1 font-bold flex items-center"><span
+                                                class="material-icons-round text-sm mr-1">error</span> {{ form.valor_venta.errors.0 }}
+                                        </p>
+                                    {% endif %}
                                 </div>
                                 <div>
-                                    <label class="custom-label" for="{{ form.valor_abonado.id_for_label }}">{{ form.valor_abonado.label }}</label>
-                                    <div class="relative"><span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>{{ form.valor_abonado }}</div>
+                                    <label class="custom-label"
+                                           for="{{ form.valor_abonado.id_for_label }}">{{ form.valor_abonado.label }}</label>
+                                    <div class="relative"><span
+                                            class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>{{ form.valor_abonado }}
+                                    </div>
+
+                                    {% if form.valor_abonado.errors %}
+                                        <p class="text-red-500 text-xs mt-1 font-bold flex items-center animate-pulse">
+                                            <span class="material-icons-round text-sm mr-1">cancel</span>
+                                            {{ form.valor_abonado.errors.0 }}
+                                        </p>
+                                    {% endif %}
                                 </div>
                                 <div>
-                                    <label class="custom-label" for="{{ form.fecha_entrega.id_for_label }}">{{ form.fecha_entrega.label }}</label>
+                                    <label class="custom-label"
+                                           for="{{ form.fecha_entrega.id_for_label }}">{{ form.fecha_entrega.label }}</label>
                                     {{ form.fecha_entrega }}
+                                    {% if form.fecha_entrega.errors %}
+                                        <p class="text-red-500 text-xs mt-1 font-bold">{{ form.fecha_entrega.errors.0 }}</p>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                         <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
-                            <button type="submit" class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center">
+                            <button type="submit"
+                                    id="btn-confirmar-pedido"
+                                    class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center">
                                 <span class="material-icons-round mr-2 text-xl">check_circle</span>
                                 Confirmar Pedido
                             </button>

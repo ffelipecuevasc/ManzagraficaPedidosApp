@@ -1,7 +1,6 @@
 {% extends 'pedidos/base.html' %}
 {% load humanize %}
-
-{% block title %}Panel de Control - Manza Gráfica{% endblock %}
+{% load l10n %} {% block title %}Panel de Control - Manza Gráfica{% endblock %}
 
 {% block content %}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -91,31 +90,91 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 flex flex-col shadow-sm">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
                 <span class="material-icons-round text-primary mr-2">pie_chart</span>
                 Distribución de Pedidos
-            </h3>
-            <div class="relative h-64 w-full">
-                <canvas id="chartEstados"></canvas>
+            </h2>
+
+            <div class="flex-1 flex flex-col items-center justify-center">
+                <div class="relative w-40 h-40 rounded-full flex items-center justify-center shadow-inner"
+                     style="background: conic-gradient(
+                        #EF4444 0% {{ donut_stop_1|unlocalize }}%,
+                        #EAB308 {{ donut_stop_1|unlocalize }}% {{ donut_stop_2|unlocalize }}%,
+                        #22C55E {{ donut_stop_2|unlocalize }}% 100%
+                     );">
+                    <div class="bg-white dark:bg-card-dark w-28 h-28 rounded-full flex flex-col items-center justify-center relative z-10">
+                        <span class="text-2xl font-black text-slate-900 dark:text-white">{{ total_pedidos }}</span>
+                        <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Total</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 w-full mt-8 gap-3 px-4">
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 rounded-sm bg-red-500 mr-2"></span>
+                            <span class="text-slate-600 dark:text-slate-400 font-bold">PENDIENTE</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-400">{{ pendientes }}</span>
+                            <span class="font-bold text-slate-900 dark:text-white w-8 text-right">{{ pct_pendientes }}%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 rounded-sm bg-yellow-500 mr-2"></span>
+                            <span class="text-slate-600 dark:text-slate-400 font-bold">EN PROCESO</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-400">{{ en_proceso }}</span>
+                            <span class="font-bold text-slate-900 dark:text-white w-8 text-right">{{ pct_proceso }}%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 rounded-sm bg-green-500 mr-2"></span>
+                            <span class="text-slate-600 dark:text-slate-400 font-bold">TERMINADO</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-400">{{ completados }}</span>
+                            <span class="font-bold text-slate-900 dark:text-white w-8 text-right">{{ pct_completados }}%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
                 <span class="material-icons-round text-primary mr-2">stars</span>
                 Top 5 Clientes
-            </h3>
-            <div class="relative h-64 w-full">
-                <canvas id="chartClientes"></canvas>
+            </h2>
+
+            <div class="space-y-5 mt-4">
+                {% for cliente in top_clientes %}
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="font-bold text-slate-700 dark:text-slate-200 truncate pr-2">{{ cliente.nombre }}</span>
+                        <span class="text-slate-500 whitespace-nowrap">{{ cliente.num_pedidos }} pedidos</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-neutral-800 h-3 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-1000 ease-out
+                            {% cycle 'bg-primary' 'bg-primary/80' 'bg-primary/60' 'bg-primary/40' 'bg-primary/20' %}"
+                             style="width: {% widthratio cliente.num_pedidos max_pedidos 100 %}%">
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8 text-slate-500 text-sm">
+                    No hay datos suficientes aún.
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-slate-100 dark:border-neutral-800">
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest text-center">Fidelidad acumulada histórica</p>
             </div>
         </div>
+
     </div>
-
-    {{ grafico_estados_labels|json_script:"data-estados-labels" }}
-    {{ grafico_estados_data|json_script:"data-estados-data" }}
-    {{ grafico_clientes_labels|json_script:"data-clientes-labels" }}
-    {{ grafico_clientes_data|json_script:"data-clientes-data" }}
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}

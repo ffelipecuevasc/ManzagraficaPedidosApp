@@ -101,18 +101,26 @@
                                     Iniciar Trabajo (En Proceso)
                                 </a>
                             {% elif pedido.estado == 'EN_PROCESO' %}
-                                <a href="{% url 'cambiar_estado' pedido.id 'TERMINADO' %}" class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center">
+                                <a href="#"
+                                   data-confirm="true"
+                                   data-url="{% url 'cambiar_estado' pedido.id 'TERMINADO' %}"
+                                   data-type="TERMINAR"
+                                   class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center">
                                     <span class="material-icons-round mr-2">done_all</span>
-                                    Marcar como Terminado
+                                    Marcar como Terminado (Pagar y Cerrar)
                                 </a>
                             {% elif pedido.estado == 'TERMINADO' %}
                                 <div class="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-4 rounded-lg text-center text-sm font-medium border border-green-100 dark:border-green-900/30 mb-2">
                                     <span class="material-icons-round block text-2xl mb-1">verified</span>
-                                    Este trabajo ha sido finalizado.
+                                    Este trabajo ha sido finalizado y pagado.
                                 </div>
-                                <a href="{% url 'cambiar_estado' pedido.id 'EN_PROCESO' %}" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-sm flex items-center justify-center py-2 transition-colors">
-                                    <span class="material-icons-round mr-1 text-base">replay</span>
-                                    Reabrir pedido
+                                <a href="#"
+                                   data-confirm="true"
+                                   data-url="{% url 'duplicar_pedido' pedido.id %}"
+                                   data-type="CLONAR"
+                                   class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-sm flex items-center justify-center py-2 transition-colors">
+                                    <span class="material-icons-round mr-1 text-base">refresh</span>
+                                    Reabrir Pedido
                                 </a>
                             {% endif %}
                         </div>
@@ -203,6 +211,45 @@
                 <h1 class="font-bold text-xl mb-1">MANZA GRÁFICA</h1>
                 <p class="text-sm text-gray-600">Diseño y Publicidad</p>
                 <p class="text-xs text-gray-500 mt-4">Gracias por su preferencia</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmacion" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/75 transition-opacity backdrop-blur-sm"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-neutral-700">
+
+                    <div class="bg-white dark:bg-neutral-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 sm:mx-0 sm:h-10 sm:w-10">
+                                <span class="material-icons-round text-yellow-600 dark:text-yellow-400 text-2xl">warning_amber</span>
+                            </div>
+
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                <h3 class="text-lg font-bold leading-6 text-slate-900 dark:text-white" id="modal-titulo">
+                                    Confirmar Acción
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-slate-500 dark:text-slate-400" id="modal-mensaje">
+                                        ¿Estás seguro de continuar?
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-neutral-900/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
+                        <a id="modal-btn-confirmar" href="#" class="inline-flex w-full justify-center rounded-lg bg-primary hover:bg-yellow-400 px-3 py-2 text-sm font-bold text-black shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide">
+                            Confirmar
+                        </a>
+                        <button type="button" id="modal-btn-cancelar" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-700 sm:mt-0 sm:w-auto transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
