@@ -1,0 +1,241 @@
+{% extends 'pedidos/base.html' %}
+{% load humanize %}
+
+{% block title %}Trabajo Semanal - Manza Gráfica{% endblock %}
+
+{% block content %}
+    <style>
+        /* Solo mantenemos el gráfico circular aquí porque usa variables dinámicas */
+        .circular-progress {
+            background: conic-gradient(#FBBF24 {{ nivel_presion }}%, #262626 0);
+        }
+    </style>
+
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Prioridad de Pedidos</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Panel de Control operativo semanal.</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'crear_pedido' %}" class="bg-primary hover:opacity-90 text-black px-4 py-2 rounded-md font-semibold text-sm flex items-center shadow-sm transition-opacity">
+                <span class="material-icons-round text-sm mr-2">add</span>
+                Nuevo Pedido
+            </a>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white dark:bg-card-dark p-8 rounded-xl border border-slate-200 dark:border-neutral-800 flex items-center justify-between shadow-sm transition-colors duration-300">
+            <div>
+                <h3 class="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider mb-1">Nivel de Presión</h3>
+                <div class="text-5xl font-black mb-2 flex items-baseline text-slate-900 dark:text-white">
+                    {{ nivel_presion }}<span class="text-2xl text-primary">%</span>
+                </div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 italic">
+                    {% if nivel_presion > 80 %} Carga máxima (no aceptar más pedidos) {% elif nivel_presion > 50 %} Carga considerable {% else %} Carga controlada {% endif %}
+                </p>
+            </div>
+            <div class="relative w-24 h-24 rounded-full circular-progress flex items-center justify-center shadow-lg">
+                <div class="bg-white dark:bg-card-dark w-16 h-16 rounded-full flex items-center justify-center transition-colors duration-300">
+                    <span class="material-icons-round text-primary text-3xl">speed</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-8 rounded-xl border border-slate-200 dark:border-neutral-800 flex items-center justify-between shadow-sm transition-colors duration-300">
+            <div>
+                <h3 class="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider mb-1">Día Más Exigente</h3>
+                <div class="text-4xl md:text-5xl font-black display-font text-primary tracking-wide uppercase">
+                    {% if dia_peak_date %}
+                        {{ dia_peak_date|date:"l d" }}
+                    {% else %}
+                        Sin Carga
+                    {% endif %}
+                </div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                    {% if dia_peak_cantidad > 0 %}
+                        {{ dia_peak_cantidad }} Entregas programadas
+                    {% else %}
+                        Todo tranquilo
+                    {% endif %}
+                </p>
+            </div>
+            <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-full transition-colors duration-300">
+                <span class="material-icons-round text-red-500 text-5xl">local_fire_department</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-8">
+
+        <section>
+            <div class="flex items-center space-x-2 mb-4">
+                <h2 class="font-black uppercase tracking-tight text-red-600 dark:text-red-500 text-lg flex items-center">
+                    ZONA CRÍTICA
+                </h2>
+                <span class="bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-500 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 dark:border-red-500/20">
+                    {{ criticos.count }} Pedidos Atrasados
+                </span>
+            </div>
+
+            {% if criticos %}
+            <div class="overflow-hidden rounded-xl border border-red-200 dark:border-red-900/30 bg-white dark:bg-card-dark transition-colors duration-300">
+                <table class="min-w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-red-50 dark:bg-red-500/10 border-b border-red-100 dark:border-red-900/30">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-red-800 dark:text-red-400">ID Pedido</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-red-800 dark:text-red-400">Cliente</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-red-800 dark:text-red-400">Resumen</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-red-800 dark:text-red-400">Fecha Ingreso</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-red-800 dark:text-red-400">Fecha Entrega</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-red-800 dark:text-red-400">Estado</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-red-800 dark:text-red-400 text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-red-100 dark:divide-red-900/20">
+                    {% for pedido in criticos %}
+                    <tr class="hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+                        <td class="px-6 py-4 text-sm font-mono text-red-600 dark:text-red-400 font-bold">#{{ pedido.id }}</td>
+                        <td class="px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ pedido.cliente.nombre }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 text-xs">{{ pedido.resumen_pedido }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-500 text-xs">{{ pedido.fecha_solicitud|date:"d M Y" }}</td>
+                        <td class="px-6 py-4 text-sm text-red-600 dark:text-red-500 font-black">{{ pedido.fecha_entrega|date:"d M Y" }}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="bg-red-100 text-red-700 dark:bg-red-500 dark:text-white text-[10px] font-black px-2 py-1 rounded uppercase">
+                                {{ pedido.get_estado_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-center">
+                            <a href="{% url 'detalle_pedido' pedido.id %}"
+                               class="inline-block p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all"
+                               title="Ver detalle">
+                                    <span class="material-icons-round text-lg">visibility</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="p-6 text-center border-2 border-dashed border-slate-200 dark:border-neutral-800 rounded-xl text-slate-400 text-sm">
+                    ¡Excelente! No hay pedidos atrasados.
+                </div>
+            {% endif %}
+        </section>
+
+        <section>
+            <div class="flex items-center space-x-2 mb-4">
+                <h2 class="font-black uppercase tracking-tight text-yellow-600 dark:text-yellow-500 text-lg flex items-center">
+                    ZONA URGENTE
+                </h2>
+                <span class="bg-yellow-100 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-500 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-200 dark:border-yellow-500/20">
+                    {{ urgentes.count }} Próx. 7 días
+                </span>
+            </div>
+
+            {% if urgentes %}
+            <div class="overflow-hidden rounded-xl border border-yellow-200 dark:border-yellow-900/30 bg-white dark:bg-card-dark transition-colors duration-300">
+                <table class="min-w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-yellow-50 dark:bg-yellow-500/10 border-b border-yellow-100 dark:border-yellow-900/30">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-yellow-800 dark:text-yellow-500">ID Pedido</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-yellow-800 dark:text-yellow-500">Cliente</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-yellow-800 dark:text-yellow-500">Resumen</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-yellow-800 dark:text-yellow-500">Fecha Ingreso</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-yellow-800 dark:text-yellow-500">Fecha Entrega</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-yellow-800 dark:text-yellow-500">Estado</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-yellow-800 dark:text-yellow-500 text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-yellow-100 dark:divide-yellow-900/20">
+                    {% for pedido in urgentes %}
+                    <tr class="hover:bg-yellow-50 dark:hover:bg-yellow-900/10 transition-colors">
+                        <td class="px-6 py-4 text-sm font-mono text-yellow-600 dark:text-yellow-400 font-bold">#{{ pedido.id }}</td>
+                        <td class="px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ pedido.cliente.nombre }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 text-xs">{{ pedido.resumen_pedido }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-500 text-xs">{{ pedido.fecha_solicitud|date:"d M Y" }}</td>
+                        <td class="px-6 py-4 text-sm text-yellow-600 dark:text-yellow-500 font-bold">
+                            {% if pedido.fecha_entrega == hoy %}
+                                <span class="animate-pulse text-red-500 font-black">HOY</span>
+                            {% else %}
+                                {{ pedido.fecha_entrega|date:"d M Y" }}
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="bg-yellow-100 text-yellow-800 dark:bg-yellow-500 dark:text-black text-[10px] font-black px-2 py-1 rounded uppercase">
+                                {{ pedido.get_estado_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-center">
+                            <a href="{% url 'detalle_pedido' pedido.id %}"
+                               class="inline-block p-2 text-slate-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 rounded-lg transition-all"
+                               title="Ver detalle">
+                                    <span class="material-icons-round text-lg">visibility</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="text-slate-500 text-sm italic ml-2">No hay entregas urgentes para esta semana.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <div class="flex items-center space-x-2 mb-4">
+                <h2 class="font-black uppercase tracking-tight text-emerald-600 dark:text-emerald-500 text-lg flex items-center">
+                    ZONA NORMAL
+                </h2>
+                <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-500 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-500/20">
+                    Pedidos Futuros
+                </span>
+            </div>
+
+            {% if normales %}
+            <div class="overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900/30 bg-white dark:bg-card-dark transition-colors duration-300">
+                <table class="min-w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-emerald-50 dark:bg-emerald-500/10 border-b border-emerald-100 dark:border-emerald-900/30">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-500">ID Pedido</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-500">Cliente</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-500">Resumen</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-500">Fecha Ingreso</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-500">Fecha Entrega</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-500">Estado</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-500 text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-emerald-100 dark:divide-emerald-900/20">
+                    {% for pedido in normales %}
+                    <tr class="hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors">
+                        <td class="px-6 py-4 text-sm font-mono text-emerald-600 dark:text-emerald-400 font-bold">#{{ pedido.id }}</td>
+                        <td class="px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ pedido.cliente.nombre }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 text-xs">{{ pedido.resumen_pedido }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-500 text-xs">{{ pedido.fecha_solicitud|date:"d M Y" }}</td>
+                        <td class="px-6 py-4 text-sm text-emerald-600 dark:text-emerald-500 font-bold">{{ pedido.fecha_entrega|date:"d M Y" }}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-500 dark:text-white text-[10px] font-black px-2 py-1 rounded uppercase">
+                                {{ pedido.get_estado_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-center">
+                            <a href="{% url 'detalle_pedido' pedido.id %}"
+                               class="inline-block p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-all"
+                               title="Ver detalle">
+                                    <span class="material-icons-round text-lg">visibility</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="text-slate-500 text-sm italic ml-2">No hay trabajos programados para el futuro lejano.</p>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

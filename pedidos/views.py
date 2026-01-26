@@ -7,6 +7,9 @@ from django.views.decorators.http import require_POST
 from .models import Pedido, Cliente
 from .forms import PedidoForm, ClienteForm
 from .decorators import transaccion_segura
+from django.utils import timezone
+from datetime import timedelta
+import locale
 
 
 @login_required
@@ -324,6 +327,53 @@ def duplicar_pedido(request, pk):
 
     # 4. Redirigir al detalle del nuevo pedido clonado
     return redirect('detalle_pedido', pk=nuevo_pedido.pk)
+
+
+@login_required
+def trabajo_semanal(request):
+    # 1. Definir Fechas
+    hoy = timezone.now().date()
+    limite_semana = hoy + timedelta(days=7)
+
+    # 2. Obtener Pedidos Activos
+    activos = Pedido.objects.exclude(estado='TERMINADO')
+
+    # 3. Clasificación
+    criticos = activos.filter(fecha_entrega__lt=hoy).order_by('fecha_entrega')
+    urgentes = activos.filter(fecha_entrega__range=[hoy, limite_semana]).order_by('fecha_entrega')
+    normales = activos.filter(fecha_entrega__gt=limite_semana).order_by('fecha_entrega')
+
+    # 4. Métricas
+    total_activos = activos.count()
+    total_presion = criticos.count() + urgentes.count()
+
+    if total_activos > 0:
+        nivel_presion = int((total_presion / total_activos) * 100)
+    else:
+        nivel_presion = 0
+
+    # 5. Métrica Peak Load (CORREGIDA)
+    dia_peak_date = None  # Pasamos el objeto fecha, no el texto
+    dia_peak_cantidad = 0
+
+    if urgentes.exists():
+        fechas = [p.fecha_entrega for p in urgentes]
+        # Encontramos la fecha más común
+        fecha_mas_comun = max(set(fechas), key=fechas.count)
+        dia_peak_cantidad = fechas.count(fecha_mas_comun)
+        dia_peak_date = fecha_mas_comun  # Guardamos la fecha real
+
+    context = {
+        'criticos': criticos,
+        'urgentes': urgentes,
+        'normales': normales,
+        'nivel_presion': nivel_presion,
+        'dia_peak_date': dia_peak_date,  # Nueva variable para el template
+        'dia_peak_cantidad': dia_peak_cantidad,
+        'hoy': hoy,
+    }
+
+    return render(request, 'pedidos/trabajo_semanal.html', context)
 
 def error_404(request, exception):
     return render(request, 'pedidos/errors/404.html', status=404)

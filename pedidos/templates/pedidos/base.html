@@ -71,6 +71,11 @@
                 Nuevo Pedido
             </a>
 
+            <a href="{% url 'trabajo_semanal' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'trabajo_semanal' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
+                <span class="material-icons-round mr-3">calendar_view_week</span>
+                Trabajo Semanal
+            </a>
+
             <div class="pt-4 pb-2">
                 <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestión Clientes</p>
             </div>
