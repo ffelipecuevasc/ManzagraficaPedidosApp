@@ -9,3 +9,6 @@ db.sqlite3
 __pycache__/
 *.pyc
 *.pyo
+
+# Ignorar la configuración (SECRETOS) del .env
+.env

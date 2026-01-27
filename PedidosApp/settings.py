@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-(kw5_kyy3@!i*6wm=7_%#hb5lygkhm9#^m3%a2#j6%3ijp4az3"
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # ADVERTENCIA: No subir el proyecto al Servidor PythonAnywhere con esta configuración TRUE
 # Sólo para desarrollo (pruebas) el atributo puede estar en TRUE para reconocer los estáticos (CSS + JS)
 # Para la producción (despliegue) el archivo debe estar en FALSE para que el servidor pueda intervenir
-DEBUG = False
+DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
