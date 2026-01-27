@@ -15,7 +15,14 @@ import os
 from dotenv import load_dotenv
 
 # Cargar variables de entorno desde el archivo .env
-load_dotenv()
+# 1. Primero definimos la Ruta Base (El mapa)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 2. Luego construimos la ruta al archivo .env
+env_path = BASE_DIR / '.env'
+
+# 3. Finalmente cargamos el archivo usando esa ruta exacta
+load_dotenv(env_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
