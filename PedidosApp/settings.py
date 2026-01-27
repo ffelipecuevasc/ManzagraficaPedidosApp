@@ -39,7 +39,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # Para la producción (despliegue) el archivo debe estar en FALSE para que el servidor pueda intervenir
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['manzagrafica.pythonanywhere.com']
 
 
 # Application definition
