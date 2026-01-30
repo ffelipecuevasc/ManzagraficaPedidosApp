@@ -1,0 +1,172 @@
+{% load widget_tweaks %}
+{% extends 'pedidos/base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Cotización #{{ form.instance.id }}{% else %}Nueva Cotización{% endif %} - Manza Gráfica
+{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+                {% if form.instance.pk %}
+                    Editar Cotización <span class="text-primary">#{{ form.instance.id }}</span>
+                {% else %}
+                    Crear Nueva Cotización
+                {% endif %}
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Prepara una propuesta comercial profesional.</p>
+        </div>
+        <a href="{% url 'lista_cotizaciones' %}"
+           class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center text-sm font-medium">
+            <span class="material-icons-round mr-1 text-lg">arrow_back</span>
+            Cancelar
+        </a>
+    </div>
+
+    <div class="flex justify-center">
+        <div class="w-full max-w-4xl">
+
+            <form method="post" id="pedidoForm">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3 animate-pulse">
+                        <span class="material-icons-round text-red-500 text-xl mt-0.5">error_outline</span>
+                        <div>
+                            <h3 class="text-red-800 dark:text-red-400 font-bold text-sm">Hay errores en el formulario</h3>
+                            <p class="text-red-600 dark:text-red-300 text-xs mt-1">Revisa los campos marcados.</p>
+                            {% if form.non_field_errors %}
+                                <ul class="list-disc list-inside mt-2 text-xs text-red-600 dark:text-red-300 font-medium">
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+                    <div class="p-6 md:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
+                            <span class="bg-primary text-black w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">1</span>
+                            ¿A quién cotizamos?
+                        </h2>
+
+                        <div id="section-buscar-cliente">
+                            <div class="mb-4">
+                                <label class="custom-label">Buscar Cliente:</label>
+                                {% render_field form.cliente class="form-select select2" data-placeholder="Busque un cliente..." %}
+                                
+                                {% if form.cliente.errors %}
+                                    <p class="text-red-500 text-xs mt-1 font-bold flex items-center">
+                                        <span class="material-icons-round text-sm mr-1">warning</span> {{ form.cliente.errors.0 }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-neutral-800">
+                                <span class="text-sm text-slate-500 dark:text-slate-400">¿Cliente nuevo?</span>
+                                <button type="button" id="btn-toggle-crear"
+                                        class="text-primary hover:text-yellow-400 font-bold text-sm uppercase tracking-wide flex items-center transition-colors">
+                                    <span class="material-icons-round mr-1 text-lg">person_add</span>
+                                    Crear Rápido
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="section-crear-cliente" class="hidden bg-slate-50 dark:bg-neutral-900/50 p-6 rounded-lg border border-slate-200 dark:border-neutral-800">
+                            <h3 class="font-bold text-slate-800 dark:text-white mb-4 text-sm uppercase tracking-wide">Nuevo Cliente</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="custom-label">Nombre *</label>
+                                    <input type="text" id="new_client_nombre" class="custom-input" placeholder="Ej: Empresa SPA">
+                                </div>
+                                <div>
+                                    <label class="custom-label">Teléfono *</label>
+                                    <input type="text" id="new_client_telefono" class="custom-input" placeholder="+56 9...">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="custom-label">Email (Opcional)</label>
+                                    <input type="text" id="new_client_email" class="custom-input" placeholder="contacto@empresa.com">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-end gap-3">
+                                <button type="button" id="btn-cancelar-crear" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Cancelar</button>
+                                <button type="button" id="btn-guardar-cliente-api" data-url="{% url 'api_crear_cliente_rapido' %}" class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg font-bold text-sm shadow hover:shadow-lg transition-all flex items-center">
+                                    <span class="material-icons-round text-sm mr-2">save</span> Guardar y Usar
+                                </button>
+                            </div>
+                            <div id="cliente-api-error" class="hidden mt-3 text-xs text-red-500 font-bold text-right"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-detalles-pedido" class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 dark:bg-neutral-700"></div>
+                    <div class="p-6 md:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+                            <span class="bg-slate-200 dark:bg-neutral-700 text-slate-600 dark:text-slate-300 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
+                            Detalles de la Propuesta
+                        </h2>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label class="custom-label" for="{{ form.resumen.id_for_label }}">Título / Resumen</label>
+                                {% render_field form.resumen class="form-control" placeholder="Ej: 1000 Volantes Corporativos" %}
+                                {% if form.resumen.errors %}
+                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ form.resumen.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label class="custom-label" for="{{ form.detalles.id_for_label }}">Descripción Técnica</label>
+                                {% render_field form.detalles class="form-control summernote-editor" rows="4" %}
+                                {% if form.detalles.errors %}
+                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ form.detalles.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 dark:bg-neutral-900/30 p-5 rounded-lg border border-slate-100 dark:border-neutral-800">
+                                
+                                <div>
+                                    <label class="custom-label text-primary" for="{{ form.valor_total.id_for_label }}">Valor Neto Total</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
+                                        {% render_field form.valor_total class="form-control pl-8 font-bold text-lg" placeholder="0" %}
+                                    </div>
+                                    {% if form.valor_total.errors %}
+                                        <p class="text-red-500 text-xs mt-1 font-bold">{{ form.valor_total.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+
+                                <div>
+                                    <label class="custom-label" for="{{ form.validez.id_for_label }}">Validez (Días)</label>
+                                    <div class="relative">
+                                        {% render_field form.validez class="form-control" placeholder="15" %}
+                                        <span class="absolute right-3 top-2.5 text-slate-400 text-xs select-none font-medium">DÍAS</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1">Tiempo para mantener el precio.</p>
+                                </div>
+
+                                <div>
+                                    <label class="custom-label" for="{{ form.fecha_emision.id_for_label }}">Fecha Emisión</label>
+                                    {% render_field form.fecha_emision class="form-control" type="date" %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
+                            <button type="submit"
+                                    class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center">
+                                <span class="material-icons-round mr-2 text-xl">save</span>
+                                {% if form.instance.pk %}Actualizar Cotización{% else %}Guardar Cotización{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -18,11 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
         initTableSorting();
     }
 
-    // E. Gráficos del Dashboard (ELIMINADO - Ahora es HTML/CSS puro)
-    // if (document.getElementById('chartEstados')) {
-    //    initDashboardCharts();
-    // }
-
     // F. Modales de Detalle
     if (document.getElementById('modal-confirmacion')) {
         initDetailModals();
@@ -54,8 +49,10 @@ function initThemeToggle() {
                 htmlElement.classList.add('dark');
                 localStorage.setItem('color-theme', 'dark');
             }
-            if ($('#id_detalles_pedido').length) {
-                $('#id_detalles_pedido').summernote('destroy');
+
+            // ACTUALIZACIÓN: Destruir y recrear Summernote buscando por CLASE
+            if ($('.summernote-editor').length) {
+                $('.summernote-editor').summernote('destroy');
                 initPlugins();
             }
         });
@@ -75,11 +72,12 @@ function initPlugins() {
         });
     }
 
-    // B. Configuración Summernote (Editor de Texto)
-    if ($('#id_detalles_pedido').length) {
+    // B. Configuración Summernote (Editor de Texto) - GENERALIZADO
+    // AHORA BUSCAMOS POR LA CLASE .summernote-editor
+    if ($('.summernote-editor').length) {
         let isDark = document.documentElement.classList.contains('dark');
 
-        $('#id_detalles_pedido').summernote({
+        $('.summernote-editor').summernote({
             placeholder: 'Escribe aquí las especificaciones (Solo texto, no imágenes)...',
             tabsize: 2,
             height: 200,
@@ -95,7 +93,7 @@ function initPlugins() {
                         $('.note-editor').css({'border-color': '#404040'});
                     }
                 },
-                // CANDADO 1: Bloqueo de subida directa (Botón o Drag & Drop)
+                // CANDADO 1: Bloqueo de subida directa
                 onImageUpload: function(files) {
                     alert('⚠️ NO ESTÁ PERMITIDO pegar imágenes aquí.\n\nPor favor, usa el campo "Imagen de Referencia".');
                 },
@@ -110,7 +108,8 @@ function initPlugins() {
                     }
 
                     if (bufferText && bufferText.trim().length > 0) {
-                        $('#id_detalles_pedido').summernote('insertText', bufferText);
+                        // Usamos $(this) para insertar texto en el editor actual
+                        $(this).summernote('insertText', bufferText);
                     } else {
                         alert('NO ESTÁ PERMITIDO pegar imágenes aquí.\n\nPor favor, usa el campo "Imagen de Referencia".');
                     }
@@ -286,7 +285,7 @@ function initMoneyValidation() {
 }
 
 /* =========================================
-   8. LOGICA DE MODALES DE CONFIRMACIÓN (NUEVO)
+   8. LOGICA DE MODALES DE CONFIRMACIÓN
    ========================================= */
 function initDetailModals() {
     const modal = document.getElementById('modal-confirmacion');

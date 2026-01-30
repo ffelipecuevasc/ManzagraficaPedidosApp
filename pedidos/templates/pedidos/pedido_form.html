@@ -1,3 +1,4 @@
+{% load widget_tweaks %}
 {% extends 'pedidos/base.html' %}
 
 {% block title %}
@@ -60,7 +61,8 @@
                         <div id="section-buscar-cliente">
                             <div class="mb-4">
                                 <label class="custom-label">Buscar en la base de datos:</label>
-                                {{ form.cliente }}
+                                {% render_field form.cliente class="form-select select2" data-placeholder="Busque un cliente..." %}
+
                                 {% if form.cliente.errors %}
                                     <p class="text-red-500 text-xs mt-1 font-bold flex items-center"><span
                                             class="material-icons-round text-sm mr-1">warning</span> {{ form.cliente.errors.0 }}
@@ -127,10 +129,10 @@
                             Detalles del Trabajo
                         </h2>
                         <div class="space-y-6">
+
                             <div>
-                                <label class="custom-label"
-                                       for="{{ form.resumen_pedido.id_for_label }}">{{ form.resumen_pedido.label }}</label>
-                                {{ form.resumen_pedido }}
+                                <label class="custom-label" for="{{ form.resumen_pedido.id_for_label }}">{{ form.resumen_pedido.label }}</label>
+                                {% render_field form.resumen_pedido class="form-control" placeholder="Ej: 100 Tarjetas de Visita" %}
                                 {% if form.resumen_pedido.errors %}
                                     <p class="text-red-500 text-xs mt-1 font-bold">{{ form.resumen_pedido.errors.0 }}</p>
                                 {% endif %}
@@ -138,8 +140,7 @@
 
                             <div>
                                 <label class="custom-label mb-2">Imagen de Referencia</label>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Sube una foto, dibujo o
-                                    captura del diseño.</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Sube una foto, dibujo o captura del diseño.</p>
 
                                 <div class="bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-800">
                                     {% if form.instance.imagen_referencia %}
@@ -149,30 +150,23 @@
                                         </div>
 
                                         <div class="flex items-center justify-between mb-4 p-3 bg-white dark:bg-neutral-800 rounded border border-slate-200 dark:border-neutral-700">
-
                                             <div class="flex items-center gap-3 overflow-hidden mr-4">
                                                 <span class="material-icons-round text-primary">image</span>
                                                 <a href="{{ form.instance.imagen_referencia.url }}" target="_blank"
                                                    title="{{ form.instance.imagen_referencia.name }}"
                                                    class="text-sm text-slate-700 dark:text-slate-300 hover:text-primary truncate underline">
-                                                    Ver imagen actual
-                                                    ({{ form.instance.imagen_referencia.name|slice:"8:"|truncatechars:25 }})
+                                                    Ver imagen actual ({{ form.instance.imagen_referencia.name|slice:"8:"|truncatechars:25 }})
                                                 </a>
                                             </div>
-
                                             <div class="flex items-center gap-2 flex-shrink-0">
                                                 <input type="checkbox" name="imagen_referencia-clear"
                                                        id="imagen_referencia-clear_id"
                                                        class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer">
-
                                                 <label for="imagen_referencia-clear_id"
                                                        class="text-xs font-bold text-red-500 cursor-pointer uppercase select-none mb-0">Eliminar</label>
                                             </div>
                                         </div>
-
-                                        <div class="text-xs text-slate-400 mb-1 font-medium">Cambiar imagen
-                                            (Opcional):
-                                        </div>
+                                        <div class="text-xs text-slate-400 mb-1 font-medium">Cambiar imagen (Opcional):</div>
                                     {% endif %}
 
                                     <input type="file" name="imagen_referencia" class="block w-full text-sm text-slate-500
@@ -184,25 +178,27 @@
                                       cursor-pointer
                                       dark:file:bg-white dark:file:text-black dark:hover:file:bg-gray-200"
                                            id="id_imagen_referencia">
+
                                     {% if form.imagen_referencia.errors %}
                                         <p class="text-red-500 text-xs mt-1 font-bold">{{ form.imagen_referencia.errors.0 }}</p>
                                     {% endif %}
                                 </div>
                             </div>
+
                             <div>
-                                <label class="custom-label"
-                                       for="{{ form.detalles_pedido.id_for_label }}">{{ form.detalles_pedido.label }}</label>
-                                {{ form.detalles_pedido }}
+                                <label class="custom-label" for="{{ form.detalles_pedido.id_for_label }}">{{ form.detalles_pedido.label }}</label>
+                                {% render_field form.detalles_pedido class="form-control summernote-editor" rows="3" %}
                                 {% if form.detalles_pedido.errors %}
                                     <p class="text-red-500 text-xs mt-1 font-bold">{{ form.detalles_pedido.errors.0 }}</p>
                                 {% endif %}
                             </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
-                                    <label class="custom-label"
-                                           for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
-                                    <div class="relative"><span
-                                            class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>{{ form.valor_venta }}
+                                    <label class="custom-label" for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
+                                        {% render_field form.valor_venta class="form-control pl-8" placeholder="0" %}
                                     </div>
                                     {% if form.valor_venta.errors %}
                                         <p class="text-red-500 text-xs mt-1 font-bold flex items-center"><span
@@ -211,12 +207,11 @@
                                     {% endif %}
                                 </div>
                                 <div>
-                                    <label class="custom-label"
-                                           for="{{ form.valor_abonado.id_for_label }}">{{ form.valor_abonado.label }}</label>
-                                    <div class="relative"><span
-                                            class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>{{ form.valor_abonado }}
+                                    <label class="custom-label" for="{{ form.valor_abonado.id_for_label }}">{{ form.valor_abonado.label }}</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
+                                        {% render_field form.valor_abonado class="form-control pl-8" placeholder="0" %}
                                     </div>
-
                                     {% if form.valor_abonado.errors %}
                                         <p class="text-red-500 text-xs mt-1 font-bold flex items-center animate-pulse">
                                             <span class="material-icons-round text-sm mr-1">cancel</span>
@@ -225,15 +220,15 @@
                                     {% endif %}
                                 </div>
                                 <div>
-                                    <label class="custom-label"
-                                           for="{{ form.fecha_entrega.id_for_label }}">{{ form.fecha_entrega.label }}</label>
-                                    {{ form.fecha_entrega }}
+                                    <label class="custom-label" for="{{ form.fecha_entrega.id_for_label }}">{{ form.fecha_entrega.label }}</label>
+                                    {% render_field form.fecha_entrega class="form-control" type="date" %}
                                     {% if form.fecha_entrega.errors %}
                                         <p class="text-red-500 text-xs mt-1 font-bold">{{ form.fecha_entrega.errors.0 }}</p>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
+
                         <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
                             <button type="submit"
                                     id="btn-confirmar-pedido"

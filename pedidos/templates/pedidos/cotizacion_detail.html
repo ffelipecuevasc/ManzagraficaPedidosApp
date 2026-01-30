@@ -1,0 +1,162 @@
+{% extends 'pedidos/base.html' %}
+{% load humanize %}
+
+{% block title %}Cotización #{{ cotizacion.id }} - Manza Gráfica{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Detalle de Cotización</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Revisa los detalles antes de enviar o convertir.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'lista_cotizaciones' %}" class="px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-slate-700 dark:text-slate-300 font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm flex items-center">
+                <span class="material-icons-round mr-2 text-lg">arrow_back</span>
+                Volver
+            </a>
+            
+            <button disabled class="px-4 py-2 bg-slate-200 dark:bg-neutral-800 text-slate-400 dark:text-slate-500 font-bold rounded-lg cursor-not-allowed text-sm flex items-center shadow-none" title="Disponible en Fase B">
+                <span class="material-icons-round mr-2 text-lg">picture_as_pdf</span>
+                Descargar PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+
+        <div class="bg-slate-50 dark:bg-neutral-900/50 border-b border-slate-200 dark:border-neutral-800 p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    Cotización <span class="text-primary">#{{ cotizacion.id }}</span>
+                </h2>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                    Emitida el {{ cotizacion.fecha_emision|date:"d de F Y" }}
+                </p>
+            </div>
+
+            <div>
+                {% if cotizacion.estado == 'BORRADOR' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+                        <span class="material-icons-round mr-1.5 text-base">edit_note</span> BORRADOR
+                    </span>
+                {% elif cotizacion.estado == 'ENVIADA' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50">
+                        <span class="material-icons-round mr-1.5 text-base">send</span> ENVIADA
+                    </span>
+                {% elif cotizacion.estado == 'ACEPTADA' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50">
+                        <span class="material-icons-round mr-1.5 text-base">check_circle</span> ACEPTADA
+                    </span>
+                {% elif cotizacion.estado == 'EXPIRADA' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800/50">
+                        <span class="material-icons-round mr-1.5 text-base">history</span> EXPIRADA
+                    </span>
+                {% elif cotizacion.estado == 'RECHAZADA' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50">
+                        <span class="material-icons-round mr-1.5 text-base">cancel</span> RECHAZADA
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="p-6 md:p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
+                        Cliente
+                    </h3>
+                    <div class="bg-slate-50 dark:bg-neutral-900/30 rounded-lg p-5 border border-slate-100 dark:border-neutral-800 mb-8">
+                        <p class="text-lg font-bold text-slate-900 dark:text-white mb-1">{{ cotizacion.cliente.nombre }}</p>
+
+                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 mb-2 text-sm">
+                            <span class="material-icons-round text-base text-slate-400">phone</span>
+                            {{ cotizacion.cliente.telefono }}
+                        </div>
+
+                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm">
+                            <span class="material-icons-round text-base text-slate-400">email</span>
+                            {{ cotizacion.cliente.email|default:"No registrado" }}
+                        </div>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
+                        Condiciones
+                    </h3>
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                            <span class="block text-xs text-yellow-600 dark:text-yellow-500 font-bold uppercase">Validez</span>
+                            <span class="text-lg font-black text-slate-900 dark:text-white">{{ cotizacion.validez }} Días</span>
+                        </div>
+                        <div class="p-3 {% if cotizacion.esta_vencida %}bg-red-50 dark:bg-red-900/10 border-red-100{% else %}bg-slate-50 dark:bg-neutral-900/30 border-slate-100{% endif %} rounded-lg border">
+                            <span class="block text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Vence el</span>
+                            <span class="text-lg font-bold {% if cotizacion.esta_vencida %}text-red-600{% else %}text-slate-700 dark:text-slate-200{% endif %}">
+                                {{ cotizacion.fecha_vencimiento|date:"d M Y" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if cotizacion.estado != 'ACEPTADA' %}
+                        <div class="bg-slate-900 dark:bg-neutral-900 p-6 rounded-xl text-center border border-slate-800 dark:border-neutral-700 shadow-lg">
+                            <h4 class="text-white font-bold mb-2">¿Cliente Aprobó?</h4>
+                            <p class="text-slate-400 text-sm mb-4">Convierte esta cotización en una orden de trabajo oficial.</p>
+                            
+                            <a href="{% url 'convertir_a_pedido' cotizacion.id %}" 
+                               class="w-full py-3 px-4 bg-primary hover:bg-yellow-400 text-black font-black rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center uppercase tracking-wide text-sm transform hover:scale-105">
+                                <span class="material-icons-round mr-2">auto_fix_high</span>
+                                Convertir en Pedido
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-xl text-center border border-green-200 dark:border-green-900/30">
+                            <span class="material-icons-round text-4xl text-green-500 mb-2">check_circle</span>
+                            <h4 class="text-green-800 dark:text-green-400 font-bold">¡Cotización Convertida!</h4>
+                            <p class="text-green-600 dark:text-green-300 text-sm mt-1">Ya existe un pedido asociado a este presupuesto.</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if cotizacion.estado != 'ACEPTADA' %}
+                    <div class="mt-6 flex justify-center gap-4">
+                        <a href="{% url 'editar_cotizacion' cotizacion.id %}" class="text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 text-sm font-medium flex items-center transition-colors">
+                            <span class="material-icons-round mr-1 text-base">edit</span> Editar
+                        </a>
+                        <a href="{% url 'eliminar_cotizacion' cotizacion.id %}" class="text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 text-sm font-medium flex items-center transition-colors">
+                            <span class="material-icons-round mr-1 text-base">delete</span> Eliminar
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
+                        Detalle de la Propuesta
+                    </h3>
+
+                    <div class="mb-6">
+                        <label class="text-xs text-slate-500 uppercase mb-1 block">Título</label>
+                        <p class="text-xl font-bold text-slate-900 dark:text-white leading-tight">
+                            {{ cotizacion.resumen }}
+                        </p>
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="text-xs text-slate-500 uppercase mb-1 block">Descripción Técnica</label>
+                        <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-100 dark:border-neutral-800">
+                            {{ cotizacion.detalles|safe }}
+                        </div>
+                    </div>
+
+                    <div class="border-t-2 border-dashed border-slate-200 dark:border-neutral-700 pt-6 mt-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-medium text-slate-500 dark:text-slate-400">Total Neto</span>
+                            <span class="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                                ${{ cotizacion.valor_total|intcomma }}
+                            </span>
+                        </div>
+                        <p class="text-right text-xs text-slate-400 mt-2">* Valores incluyen impuestos si aplica.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -2,18 +2,31 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # DASHBOARD
     path('', views.dashboard, name='dashboard'),
+
+    # PEDIDOS
     path('nuevo/', views.crear_pedido, name='crear_pedido'),
-    path('api/cliente/nuevo/', views.api_crear_cliente_rapido, name='api_crear_cliente_rapido'),
     path('pedidos/lista/', views.lista_pedidos, name='lista_pedidos'),
     path('<int:pk>/', views.detalle_pedido, name='detalle_pedido'),
     path('pedido/<int:pk>/cambiar/<str:nuevo_estado>/', views.cambiar_estado_pedido, name='cambiar_estado'),
     path('pedido/duplicar/<int:pk>/', views.duplicar_pedido, name='duplicar_pedido'),
     path('pedido/editar/<int:pk>/', views.editar_pedido, name='editar_pedido'),
     path('pedido/eliminar/<int:pk>/', views.eliminar_pedido, name='eliminar_pedido'),
+    path('pedidos/trabajo-semanal/', views.trabajo_semanal, name='trabajo_semanal'),
+
+    # CLIENTES
+    path('api/cliente/nuevo/', views.api_crear_cliente_rapido, name='api_crear_cliente_rapido'),
     path('clientes/', views.lista_clientes, name='lista_clientes'),
     path('clientes/nuevo/', views.crear_cliente, name='crear_cliente'),
     path('clientes/editar/<int:pk>/', views.editar_cliente, name='editar_cliente'),
     path('clientes/eliminar/<int:pk>/', views.eliminar_cliente, name='eliminar_cliente'),
-    path('pedidos/trabajo-semanal/', views.trabajo_semanal, name='trabajo_semanal'),
+
+    # COTIZACIONES (NUEVO MÓDULO FASE A)
+    path('cotizaciones/lista/', views.lista_cotizaciones, name='lista_cotizaciones'),
+    path('cotizaciones/nueva/', views.crear_cotizacion, name='crear_cotizacion'),
+    path('cotizaciones/detalle/<int:pk>/', views.detalle_cotizacion, name='detalle_cotizacion'),
+    path('cotizaciones/editar/<int:pk>/', views.editar_cotizacion, name='editar_cotizacion'),
+    path('cotizaciones/eliminar/<int:pk>/', views.eliminar_cotizacion, name='eliminar_cotizacion'),
+    path('cotizaciones/convertir/<int:pk>/', views.convertir_a_pedido, name='convertir_a_pedido'),
 ]

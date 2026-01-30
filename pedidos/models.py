@@ -1,11 +1,12 @@
 from django.db import models
+from datetime import timedelta
+from django.utils import timezone
 
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
     telefono = models.CharField(max_length=20, help_text='Formato WhatsApp')
     email = models.CharField(max_length=100, blank=True, null=True)
 
-    # --- Función que permite limpiar el número telefónico al vuelo para la API WhatsApp ---
     @property
     def telefono_whatsapp(self):
         """
@@ -14,13 +15,53 @@ class Cliente(models.Model):
         """
         if not self.telefono:
             return ""
-
         # Quitamos espacios, el signo +, guiones y paréntesis
         limpio = self.telefono.replace(" ", "").replace("+", "").replace("-", "").replace("(", "").replace(")", "")
         return limpio
 
     def __str__(self):
         return self.nombre
+
+
+class Cotizacion(models.Model):
+    """
+    Modelo espejo de Pedido para la Fase A: Gestión de Cotizaciones.
+    """
+    ESTADO_COTIZACION_CHOICES = [
+        ('BORRADOR', 'Borrador'),  # Aún editando
+        ('ENVIADA', 'Enviada'),  # Esperando respuesta
+        ('ACEPTADA', 'Aceptada'),  # Se convirtió en pedido
+        ('EXPIRADA', 'Expirada'),  # Pasó la fecha sin acción
+        ('RECHAZADA', 'Rechazada'),  # Cliente no quiso
+    ]
+
+    # Relaciones y Datos Básicos
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    resumen = models.CharField(max_length=100, help_text="Título corto del trabajo")
+    detalles = models.TextField(help_text="Detalles técnicos (Summernote)")
+
+    # Datos Económicos y Temporales
+    valor_total = models.IntegerField(help_text="Precio neto propuesto")
+    fecha_emision = models.DateField(default=timezone.now)  # Editable si se requiere, por defecto hoy
+    validez = models.IntegerField(default=15, help_text="Días de validez de la oferta")
+
+    estado = models.CharField(max_length=20, choices=ESTADO_COTIZACION_CHOICES, default='BORRADOR')
+
+    # Timestamps de control interno
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def fecha_vencimiento(self):
+        # Ojo: fecha_emision es Date, timedelta es tiempo. Funciona directo.
+        return self.fecha_emision + timedelta(days=self.validez)
+
+    @property
+    def esta_vencida(self):
+        return self.estado == 'ENVIADA' and self.fecha_vencimiento < timezone.now().date()
+
+    def __str__(self):
+        return f"Cotización #{self.id} - {self.cliente.nombre}"
 
 class Pedido(models.Model):
     ESTADO_CHOICES = [

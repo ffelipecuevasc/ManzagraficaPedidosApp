@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     'pedidos.apps.PedidosConfig',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

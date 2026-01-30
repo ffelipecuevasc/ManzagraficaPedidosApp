@@ -4,12 +4,11 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Pedido, Cliente
-from .forms import PedidoForm, ClienteForm
+from .models import Pedido, Cliente, Cotizacion
+from .forms import PedidoForm, ClienteForm, CotizacionForm
 from .decorators import transaccion_segura
 from django.utils import timezone
 from datetime import timedelta
-import locale
 
 
 @login_required
@@ -374,6 +373,140 @@ def trabajo_semanal(request):
     }
 
     return render(request, 'pedidos/trabajo_semanal.html', context)
+
+# ==========================================
+# GESTIÓN DE COTIZACIONES (FASE A)
+# ==========================================
+
+@login_required
+def lista_cotizaciones(request):
+    # 1. Base QuerySet
+    cotizaciones = Cotizacion.objects.all().order_by('-created_at')
+
+    # 2. Filtros (Estado)
+    estado_filter = request.GET.get('estado')
+    if estado_filter:
+        cotizaciones = cotizaciones.filter(estado=estado_filter)
+
+    # 3. Búsqueda
+    busqueda = request.GET.get('busqueda')
+    if busqueda:
+        cotizaciones = cotizaciones.filter(
+            Q(cliente__nombre__icontains=busqueda) |
+            Q(resumen__icontains=busqueda)
+        )
+
+    # 4. Paginación
+    paginator = Paginator(cotizaciones, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'cotizaciones': page_obj,
+        'page_obj': page_obj,
+        'busqueda': busqueda,
+        'estado_filter': estado_filter,
+        'is_paginated': page_obj.has_other_pages(),
+    }
+    return render(request, 'pedidos/cotizacion_list.html', context)
+
+
+@login_required
+@transaccion_segura
+def crear_cotizacion(request):
+    # Inicializamos ClienteForm por si queremos crear cliente rápido (igual que en Pedidos)
+    cliente_form = ClienteForm()
+
+    if request.method == 'POST':
+        form = CotizacionForm(request.POST)
+        if form.is_valid():
+            cotizacion = form.save()
+            # Redirigimos al detalle para revisar antes de "enviar"
+            return redirect('detalle_cotizacion', pk=cotizacion.pk)
+    else:
+        form = CotizacionForm()
+
+    return render(request, 'pedidos/cotizacion_form.html', {
+        'form': form,
+        'cliente_form': cliente_form
+    })
+
+
+@login_required
+@transaccion_segura
+def editar_cotizacion(request, pk):
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+
+    # Regla de negocio: No editar si ya fue aceptada (convertida)
+    if cotizacion.estado == 'ACEPTADA':
+        return redirect('detalle_cotizacion', pk=pk)
+
+    if request.method == 'POST':
+        form = CotizacionForm(request.POST, instance=cotizacion)
+        if form.is_valid():
+            form.save()
+            return redirect('detalle_cotizacion', pk=pk)
+    else:
+        form = CotizacionForm(instance=cotizacion)
+
+    return render(request, 'pedidos/cotizacion_form.html', {'form': form})
+
+
+@login_required
+def detalle_cotizacion(request, pk):
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    return render(request, 'pedidos/cotizacion_detail.html', {'cotizacion': cotizacion})
+
+
+@login_required
+@transaccion_segura
+def eliminar_cotizacion(request, pk):
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    if request.method == 'POST':
+        cotizacion.delete()
+        return redirect('lista_cotizaciones')
+    return render(request, 'pedidos/cotizacion_confirm_delete.html', {'cotizacion': cotizacion})
+
+
+@login_required
+@transaccion_segura
+def convertir_a_pedido(request, pk):
+    """
+    Toma una cotización y crea un Pedido.
+    Pregunta por fecha de entrega y abono antes de proceder.
+    """
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+
+    if request.method == 'POST':
+        # 1. Capturar datos del formulario de conversión
+        fecha_entrega = request.POST.get('fecha_entrega')
+        abono = request.POST.get('valor_abonado', 0)
+
+        # 2. Crear el Pedido
+        pedido = Pedido.objects.create(
+            cliente=cotizacion.cliente,
+            resumen_pedido=cotizacion.resumen,
+            detalles_pedido=cotizacion.detalles,
+            valor_venta=cotizacion.valor_total,
+            valor_abonado=int(abono),
+            fecha_entrega=fecha_entrega,
+            estado='PENDIENTE',
+            # imagen_referencia: No la copiamos porque la cotización no tiene imagen (a menos que agreguemos el campo después)
+        )
+
+        # 3. Actualizar la Cotización
+        cotizacion.estado = 'ACEPTADA'
+        cotizacion.save()
+
+        # 4. Redirigir al nuevo pedido
+        return redirect('detalle_pedido', pk=pedido.pk)
+
+    # Si es GET, mostramos la pantalla intermedia para pedir Fecha y Abono
+    context = {
+        'cotizacion': cotizacion,
+        'fecha_sugerida': timezone.now().date() + timedelta(days=7) # Sugerimos 1 semana por defecto
+    }
+    return render(request, 'pedidos/cotizacion_convertir.html', context)
 
 def error_404(request, exception):
     return render(request, 'pedidos/errors/404.html', status=404)

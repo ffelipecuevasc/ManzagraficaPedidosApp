@@ -1,5 +1,5 @@
+{% load widget_tweaks %}
 {% extends 'pedidos/base.html' %}
-
 {% block title %}
     {% if form.instance.pk %}Editar Cliente{% else %}Nuevo Cliente{% endif %} - Manza Gráfica
 {% endblock %}
@@ -10,9 +10,11 @@
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
                 {% if form.instance.pk %}Editar Cliente{% else %}Registrar Nuevo Cliente{% endif %}
             </h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Completa la información para gestionar este cliente.</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Completa la información para gestionar este
+                cliente.</p>
         </div>
-        <a href="{% url 'lista_clientes' %}" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center text-sm font-medium">
+        <a href="{% url 'lista_clientes' %}"
+           class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center text-sm font-medium">
             <span class="material-icons-round mr-1 text-lg">arrow_back</span>
             Volver al listado
         </a>
@@ -35,31 +37,37 @@
 
                         <div class="space-y-5">
                             {% for field in form %}
-                            <div>
-                                <label for="{{ field.id_for_label }}" class="custom-label">
-                                    {{ field.label }}
-                                </label>
+                                <div>
+                                    <label for="{{ field.id_for_label }}" class="custom-label">
+                                        {{ field.label }}
+                                    </label>
 
-                                {{ field }}
+                                    {% if field.errors %}
+                                        {% render_field field class="form-control border-red-500 focus:ring-red-500" placeholder=field.label %}
+                                    {% else %}
+                                        {% render_field field class="form-control" placeholder=field.label %}
+                                    {% endif %}
 
-                                {% if field.help_text %}
-                                    <span class="helptext">{{ field.help_text }}</span>
-                                {% endif %}
+                                    {% if field.help_text %}
+                                        <span class="helptext">{{ field.help_text }}</span>
+                                    {% endif %}
 
-                                {% if field.errors %}
-                                    <div class="mt-1 text-sm text-red-500 font-medium">
-                                        {{ field.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
+                                    {% if field.errors %}
+                                        <div class="mt-1 text-sm text-red-500 font-medium">
+                                            {{ field.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
                             {% endfor %}
                         </div>
 
                         <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
-                            <a href="{% url 'lista_clientes' %}" class="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm">
+                            <a href="{% url 'lista_clientes' %}"
+                               class="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm">
                                 Cancelar
                             </a>
-                            <button type="submit" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-sm transition-colors text-sm uppercase tracking-wide flex items-center">
+                            <button type="submit"
+                                    class="px-5 py-2.5 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-sm transition-colors text-sm uppercase tracking-wide flex items-center">
                                 <span class="material-icons-round mr-2 text-lg">save</span>
                                 {% if form.instance.pk %}Guardar Cambios{% else %}Registrar Cliente{% endif %}
                             </button>

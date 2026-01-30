@@ -35,9 +35,33 @@
     </script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
-    <!-- Incorporación de estilos CSS propios -->
     <link href="{% static 'pedidos/css/index.css' %}" rel="stylesheet">
 
+    <style>
+        /* Scrollbar delgado y elegante para Webkit (Chrome, Safari, Edge) */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px; /* Ancho delgado */
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent; /* Fondo invisible */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1; /* Gris suave (slate-300) */
+            border-radius: 3px;
+        }
+        /* Scrollbar en modo oscuro */
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #404040; /* Gris oscuro (neutral-700) */
+        }
+        /* Hover del scrollbar */
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8; /* slate-400 */
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #525252; /* neutral-600 */
+        }
+    </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 h-screen flex overflow-hidden">
 
@@ -51,7 +75,7 @@
             </div>
         </div>
 
-        <nav class="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
+        <nav class="flex-1 px-4 space-y-2 mt-4 overflow-y-auto custom-scrollbar">
             <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'dashboard' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
                 <span class="material-icons-round mr-3">dashboard</span>
                 Panel de Control
@@ -61,12 +85,12 @@
                 <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestión Pedidos</p>
             </div>
 
-            <a href="{% url 'lista_pedidos' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark transition-colors">
+            <a href="{% url 'lista_pedidos' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if 'pedidos/lista' in request.path %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
                 <span class="material-icons-round mr-3">list_alt</span>
                 Listado de Pedidos
             </a>
 
-            <a href="{% url 'crear_pedido' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark transition-colors">
+            <a href="{% url 'crear_pedido' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'crear_pedido' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
                 <span class="material-icons-round mr-3">add_circle_outline</span>
                 Nuevo Pedido
             </a>
@@ -74,6 +98,19 @@
             <a href="{% url 'trabajo_semanal' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'trabajo_semanal' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
                 <span class="material-icons-round mr-3">calendar_view_week</span>
                 Trabajo Semanal
+            </a>
+
+            <div class="pt-4 pb-2">
+                <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestión Cotizaciones</p>
+            </div>
+
+            <a href="{% url 'crear_cotizacion' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if 'cotizaciones/nueva' in request.path %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
+                <span class="material-icons-round mr-3">post_add</span>
+                Nueva Cotización
+            </a>
+            <a href="{% url 'lista_cotizaciones' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if 'cotizaciones/lista' in request.path %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
+                <span class="material-icons-round mr-3">request_quote</span>
+                Listado Cotizaciones
             </a>
 
             <div class="pt-4 pb-2">
@@ -124,7 +161,7 @@
 
         <footer class="mt-12 py-6 border-t border-slate-200 dark:border-border-dark text-center">
             <p class="text-xs text-slate-500 dark:text-slate-500 uppercase tracking-widest font-medium">
-                © 2026 MANZA GRÁFICA - SISTEMA DESARROLLADO POR FELIPE CUEVAS
+                © 2026 MANZA GRÁFICA - SISTEMA DESARROLLADO POR <a href="https://www.linkedin.com/in/ffelipecuevasc" target="_blank">FELIPE CUEVAS</a>
             </p>
         </footer>
     </main>
