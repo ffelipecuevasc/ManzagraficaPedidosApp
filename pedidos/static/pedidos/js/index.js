@@ -72,8 +72,7 @@ function initPlugins() {
         });
     }
 
-    // B. Configuración Summernote (Editor de Texto) - GENERALIZADO
-    // AHORA BUSCAMOS POR LA CLASE .summernote-editor
+    // B. Configuración Summernote (Editor de Texto) - MEJORADO CON MODAL
     if ($('.summernote-editor').length) {
         let isDark = document.documentElement.classList.contains('dark');
 
@@ -81,7 +80,7 @@ function initPlugins() {
             placeholder: 'Escribe aquí las especificaciones (Solo texto, no imágenes)...',
             tabsize: 2,
             height: 200,
-            disableDragAndDrop: true,
+            disableDragAndDrop: true, // Deshabilita arrastrar archivos
             toolbar: [
                 ['style', ['bold', 'italic', 'clear']],
                 ['para', ['ul', 'ol']]
@@ -93,25 +92,31 @@ function initPlugins() {
                         $('.note-editor').css({'border-color': '#404040'});
                     }
                 },
-                // CANDADO 1: Bloqueo de subida directa
+                // CANDADO 1: Bloqueo de subida directa (Botón Imagen)
                 onImageUpload: function(files) {
-                    alert('⚠️ NO ESTÁ PERMITIDO pegar imágenes aquí.\n\nPor favor, usa el campo "Imagen de Referencia".');
+                    showGlobalAlert(
+                        'No se permiten imágenes aquí',
+                        'Para mantener el sistema rápido, por favor sube las imágenes en el campo <strong>"Imagen de Referencia"</strong> o envíalas por correo/WhatsApp.'
+                    );
                 },
-                // CANDADO 2: Bloqueo de Pegado (Ctrl+V)
+                // CANDADO 2: Bloqueo de Pegado (Ctrl+V) de imágenes
                 onPaste: function (e) {
-                    e.preventDefault();
-                    var bufferText = '';
-                    if (e.originalEvent && e.originalEvent.clipboardData) {
-                        bufferText = e.originalEvent.clipboardData.getData('text/plain');
-                    } else if (window.clipboardData) {
-                        bufferText = window.clipboardData.getData('Text');
-                    }
+                    var bufferText = ((e.originalEvent || e).clipboardData || window.clipboardData).getData('text/plain');
 
-                    if (bufferText && bufferText.trim().length > 0) {
-                        // Usamos $(this) para insertar texto en el editor actual
-                        $(this).summernote('insertText', bufferText);
+                    // Si hay texto plano, permitimos pegar (pero limpiamos formato)
+                    if (bufferText) {
+                        e.preventDefault();
+                        // Esperamos un momento para insertar solo el texto limpio
+                        setTimeout(function(){
+                            document.execCommand('insertText', false, bufferText);
+                        }, 10);
                     } else {
-                        alert('NO ESTÁ PERMITIDO pegar imágenes aquí.\n\nPor favor, usa el campo "Imagen de Referencia".');
+                        // Si no es texto (es imagen o archivo rico), bloqueamos y mostramos modal
+                        e.preventDefault();
+                        showGlobalAlert(
+                            'Pegado de imágenes bloqueado',
+                            'El editor solo acepta texto. <br><br>Si intentas pegar una imagen, por favor usa el campo <strong>"Imagen de Referencia"</strong>.'
+                        );
                     }
                 }
             }
@@ -327,5 +332,24 @@ function initDetailModals() {
 
     if(btnCancelar) {
         btnCancelar.addEventListener('click', closeModal);
+    }
+}
+
+/* =========================================
+   9. UTILIDAD: ALERTA GLOBAL (NUEVO)
+   ========================================= */
+function showGlobalAlert(titulo, mensaje) {
+    const modal = document.getElementById('modal-alerta-global');
+    if(!modal) return; // Si no está en el HTML, no hacemos nada (fallback silencioso)
+
+    document.getElementById('modal-alerta-titulo').innerText = titulo;
+    document.getElementById('modal-alerta-mensaje').innerHTML = mensaje;
+
+    modal.classList.remove('hidden');
+
+    // Configurar cierre
+    const btnCerrar = document.getElementById('btn-cerrar-alerta');
+    btnCerrar.onclick = function() {
+        modal.classList.add('hidden');
     }
 }

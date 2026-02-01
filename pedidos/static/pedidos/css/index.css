@@ -95,7 +95,8 @@ form textarea:focus,
    ========================================= */
 /* Padding extra para inputs con prefijo de moneda ($) */
 #id_valor_venta,
-#id_valor_abonado {
+#id_valor_abonado,
+#id_valor_total {
     padding-left: 2rem !important;
 }
 

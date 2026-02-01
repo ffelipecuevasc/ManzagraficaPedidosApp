@@ -142,12 +142,14 @@
                                 </div>
 
                                 <div>
-                                    <label class="custom-label" for="{{ form.validez.id_for_label }}">Validez (Días)</label>
+                                    <label class="custom-label" for="{{ form.validez.id_for_label }}">Validez de Cotización (Días)</label>
                                     <div class="relative">
                                         {% render_field form.validez class="form-control" placeholder="15" %}
-                                        <span class="absolute right-3 top-2.5 text-slate-400 text-xs select-none font-medium">DÍAS</span>
+
+                                        <span class="absolute right-10 top-2.5 text-slate-400 text-xs select-none font-medium pointer-events-none">
+                                            DÍAS
+                                        </span>
                                     </div>
-                                    <p class="text-[10px] text-slate-400 mt-1">Tiempo para mantener el precio.</p>
                                 </div>
 
                                 <div>
@@ -160,8 +162,8 @@
                         <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
                             <button type="submit"
                                     class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center">
-                                <span class="material-icons-round mr-2 text-xl">save</span>
-                                {% if form.instance.pk %}Actualizar Cotización{% else %}Guardar Cotización{% endif %}
+                                <span class="material-icons-round mr-2 text-xl">check_circle</span>
+                                {% if form.instance.pk %}Actualizar Cotización{% else %}Crear Cotización{% endif %}
                             </button>
                         </div>
                     </div>
