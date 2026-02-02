@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 # Cargar variables de entorno desde el archivo .env
 # 1. Primero definimos la Ruta Base (El mapa)
@@ -91,12 +92,31 @@ WSGI_APPLICATION = "PedidosApp.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# CONFIGURACIÓN DE BASE DE DATOS
+# ------------------------------------------------------
+# 1. Configuración Base: MySQL 8.0 (Para tu desarrollo local por defecto [Corriendo en Docker])
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'manzagrafica_local',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
     }
 }
+
+# CONFIGURACIÓN DE BASE DE DATOS
+# ------------------------------------------------------
+# 2. Configuración Producción (PythonAnywhere)
+# Si existe la variable DATABASE_URL en el entorno (solo en la nube), sobrescribimos la config.
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    DATABASES['default'] = dj_database_url.config(
+        default=database_url,
+        conn_max_age=600,
+        ssl_require=False
+    )
 
 
 # Password validation
