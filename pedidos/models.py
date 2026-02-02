@@ -86,3 +86,15 @@ class Pedido(models.Model):
 
     def __str__(self):
         return f"{self.resumen_pedido} - {self.cliente.nombre}"
+
+class Producto(models.Model):
+    """
+    Maestro de Productos / Servicios para el inventario.
+    """
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, null=True, help_text="Detalles técnicos o especificaciones base")
+    precio_venta = models.IntegerField(help_text="Precio unitario sugerido")
+    fecha_ingreso = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nombre

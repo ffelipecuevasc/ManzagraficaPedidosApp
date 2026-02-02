@@ -4,8 +4,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Pedido, Cliente, Cotizacion
-from .forms import PedidoForm, ClienteForm, CotizacionForm
+from .models import Pedido, Cliente, Cotizacion, Producto
+from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm
 from .decorators import transaccion_segura
 from django.utils import timezone
 from datetime import timedelta
@@ -507,6 +507,76 @@ def convertir_a_pedido(request, pk):
         'fecha_sugerida': timezone.now().date() + timedelta(days=7) # Sugerimos 1 semana por defecto
     }
     return render(request, 'pedidos/cotizacion_convertir.html', context)
+
+# ==========================================
+# GESTIÓN DE PRODUCTOS (INVENTARIO)
+# ==========================================
+
+@login_required
+def lista_productos(request):
+    # 1. Base QuerySet
+    productos = Producto.objects.all().order_by('-fecha_ingreso')
+
+    # 2. Búsqueda
+    busqueda = request.GET.get('busqueda')
+    if busqueda:
+        productos = productos.filter(
+            Q(nombre__icontains=busqueda) |
+            Q(descripcion__icontains=busqueda)
+        )
+
+    # 3. Paginación (10 productos por página)
+    paginator = Paginator(productos, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'productos': page_obj,
+        'page_obj': page_obj,
+        'busqueda': busqueda,
+        'total_productos': Producto.objects.count(),
+        'is_paginated': page_obj.has_other_pages(),
+    }
+    return render(request, 'pedidos/producto_list.html', context)
+
+
+@login_required
+@transaccion_segura
+def crear_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_productos')
+    else:
+        form = ProductoForm()
+
+    return render(request, 'pedidos/producto_form.html', {'form': form})
+
+
+@login_required
+@transaccion_segura
+def editar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, instance=producto)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_productos')
+    else:
+        form = ProductoForm(instance=producto)
+
+    return render(request, 'pedidos/producto_form.html', {'form': form})
+
+
+@login_required
+@transaccion_segura
+def eliminar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        producto.delete()
+        return redirect('lista_productos')
+    return render(request, 'pedidos/producto_confirm_delete.html', {'producto': producto})
 
 def error_404(request, exception):
     return render(request, 'pedidos/errors/404.html', status=404)

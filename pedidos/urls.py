@@ -29,4 +29,10 @@ urlpatterns = [
     path('cotizaciones/editar/<int:pk>/', views.editar_cotizacion, name='editar_cotizacion'),
     path('cotizaciones/eliminar/<int:pk>/', views.eliminar_cotizacion, name='eliminar_cotizacion'),
     path('cotizaciones/convertir/<int:pk>/', views.convertir_a_pedido, name='convertir_a_pedido'),
+
+    # PRODUCTOS
+    path('productos/lista/', views.lista_productos, name='lista_productos'),
+    path('productos/nuevo/', views.crear_producto, name='crear_producto'),
+    path('productos/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
+    path('productos/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
 ]

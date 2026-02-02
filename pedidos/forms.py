@@ -1,5 +1,5 @@
 from django import forms
-from .models import Pedido, Cliente, Cotizacion
+from .models import Pedido, Cliente, Cotizacion, Producto
 
 class ClienteForm(forms.ModelForm):
     class Meta:
@@ -39,3 +39,12 @@ class PedidoForm(forms.ModelForm):
                 self.add_error('valor_abonado', 'El abono no puede ser mayor al valor total del pedido.')
 
         return cleaned_data
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['nombre', 'descripcion', 'precio_venta']
+        widgets = {
+            'descripcion': forms.Textarea(attrs={'rows': 3}),  # Altura inicial para Summernote
+            'precio_venta': forms.NumberInput(attrs={'min': '0', 'placeholder': '0'}),
+        }

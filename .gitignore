@@ -3,6 +3,7 @@ venv/
 .venv/
 
 # Ignorar base de datos local
+*.sqlite3
 db.sqlite3
 
 # Ignorar archivos compilados
