@@ -98,3 +98,24 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre
+
+# Clase hecha para relacionar Productos con Pedidos y viceversa.
+class ItemPedido(models.Model):
+    """
+    Tabla intermedia para relacionar Pedidos con Productos.
+    Guarda el precio histórico al momento de la venta.
+    """
+    pedido = models.ForeignKey(Pedido, related_name='items', on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+    # Usamos PROTECT para que si borras un producto del catálogo, no se borren los pedidos históricos.
+
+    cantidad = models.PositiveIntegerField(default=1)
+    precio_unitario = models.IntegerField(help_text="Precio al momento de la venta")
+
+    # El subtotal se calcula, pero a veces es útil guardarlo o calcularlo al vuelo
+    @property
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario
+
+    def __str__(self):
+        return f"{self.cantidad}x {self.producto.nombre} en Pedido #{self.pedido.id}"

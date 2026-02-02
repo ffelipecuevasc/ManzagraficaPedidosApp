@@ -120,12 +120,106 @@
                     </div>
                 </div>
 
+                <div id="section-productos" class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+                    <div class="p-6 md:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+                            <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
+                            Items del Pedido
+                        </h2>
+
+                        <div class="bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-800 mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+
+                                <div class="md:col-span-6">
+                                    <label class="custom-label">Producto</label>
+                                    <select id="select-producto" class="form-select select2" data-placeholder="Buscar ítem...">
+                                        <option></option> {% for producto in productos_disponibles %}
+                                            <option value="{{ producto.id }}" data-precio="{{ producto.precio_venta }}">{{ producto.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="mt-2 text-right">
+                                        <button type="button" id="btn-toggle-crear-producto" class="text-xs font-bold text-primary hover:text-yellow-500 uppercase tracking-wide flex items-center justify-end w-full">
+                                            <span class="material-icons-round text-sm mr-1">add_circle</span> Crear Nuevo
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="custom-label">Cant.</label>
+                                    <input type="number" id="input-cantidad" class="form-control text-center" value="1" min="1">
+                                </div>
+
+                                <div class="md:col-span-3">
+                                    <label class="custom-label">Precio Venta</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
+                                        <input type="number" id="input-precio" class="form-control pl-8" placeholder="0">
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-1">
+                                    <button type="button" id="btn-agregar-item" class="w-full h-[46px] bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center hover:shadow-lg transition-all" title="Agregar a la lista">
+                                        <span class="material-icons-round">arrow_downward</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="form-crear-producto-rapido" class="hidden mt-4 pt-4 border-t border-slate-200 dark:border-neutral-700">
+                                <h4 class="text-xs font-bold text-slate-500 uppercase mb-3">Nuevo Producto</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div class="md:col-span-2">
+                                        <input type="text" id="new_prod_nombre" class="form-control text-sm" placeholder="Nombre del Producto (Ej: Pendón 2x1)">
+                                    </div>
+                                    <div>
+                                        <input type="number" id="new_prod_precio" class="form-control text-sm" placeholder="Precio Base">
+                                    </div>
+                                </div>
+                                <div class="flex justify-end gap-2 mt-3">
+                                    <button type="button" id="btn-cancelar-prod" class="text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-2">Cancelar</button>
+                                    <button type="button" id="btn-guardar-prod-api" data-url="{% url 'api_crear_producto_rapido' %}" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded flex items-center">
+                                        <span class="material-icons-round text-sm mr-1">save</span> Guardar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-200 dark:border-neutral-800 rounded-lg">
+                            <table class="w-full text-left text-sm" id="tabla-items">
+                                <thead class="bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs">
+                                    <tr>
+                                        <th class="px-4 py-3">Producto</th>
+                                        <th class="px-4 py-3 text-center w-20">Cant.</th>
+                                        <th class="px-4 py-3 text-right w-32">P. Unit</th>
+                                        <th class="px-4 py-3 text-right w-32">Total</th>
+                                        <th class="px-4 py-3 text-center w-16"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-neutral-800 bg-white dark:bg-card-dark text-slate-700 dark:text-slate-300">
+                                    <tr id="row-empty" class="text-slate-400 italic text-center">
+                                        <td colspan="5" class="py-6">No hay productos agregados al pedido.</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-slate-50 dark:bg-neutral-900/50 font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-neutral-800">
+                                    <tr>
+                                        <td colspan="3" class="px-4 py-3 text-right">TOTAL NETO:</td>
+                                        <td class="px-4 py-3 text-right" id="cell-total-pedido">$0</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <input type="hidden" name="items_json" id="input-items-json">
+                    </div>
+                </div>
+
                 <div id="section-detalles-pedido"
                      class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 dark:bg-neutral-700"></div>
                     <div class="p-6 md:p-8">
                         <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
-                            <span class="bg-slate-200 dark:bg-neutral-700 text-slate-600 dark:text-slate-300 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
+                            <span class="bg-slate-200 dark:bg-neutral-700 text-slate-600 dark:text-slate-300 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">3</span>
                             Detalles del Trabajo
                         </h2>
                         <div class="space-y-6">

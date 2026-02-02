@@ -4,12 +4,12 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Pedido, Cliente, Cotizacion, Producto
+from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm
 from .decorators import transaccion_segura
 from django.utils import timezone
 from datetime import timedelta
-
+import json
 
 @login_required
 def dashboard(request):
@@ -94,22 +94,54 @@ def dashboard(request):
 
     return render(request, 'pedidos/dashboard.html', context)
 
+
 @login_required
 @transaccion_segura
 def crear_pedido(request):
-    # CORRECCIÓN: Inicializamos el form de cliente FUERA de los bloques if/else
-    # Así garantizamos que la variable siempre exista, evitando el Error 500.
     cliente_form = ClienteForm()
+    # Necesario para llenar el Select2 de productos en el HTML
+    productos_disponibles = Producto.objects.all().order_by('nombre')
 
     if request.method == 'POST':
         form = PedidoForm(request.POST, request.FILES)
+
         if form.is_valid():
-            form.save()
+            # 1. Guardar el Pedido (Padre)
+            pedido = form.save()
+
+            # 2. Procesar los Ítems (Hijos) desde el JSON oculto
+            items_json = request.POST.get('items_json')
+
+            if items_json:
+                try:
+                    data_items = json.loads(items_json)
+
+                    for item in data_items:
+                        # item es un dict: {'producto_id': '5', 'cantidad': 2, 'precio_unitario': 15000, ...}
+                        producto_obj = Producto.objects.get(pk=item['producto_id'])
+
+                        ItemPedido.objects.create(
+                            pedido=pedido,
+                            producto=producto_obj,
+                            cantidad=int(item['cantidad']),
+                            precio_unitario=int(item['precio_unitario'])
+                        )
+                except Exception as e:
+                    # Si algo falla en el JSON, no rompemos el flujo principal,
+                    # pero podrías loguear el error: print(f"Error guardando items: {e}")
+                    pass
+
             return redirect('dashboard')
     else:
         form = PedidoForm()
 
-    return render(request, 'pedidos/pedido_form.html', {'form': form, 'cliente_form': cliente_form})
+    context = {
+        'form': form,
+        'cliente_form': cliente_form,
+        'productos_disponibles': productos_disponibles  # ¡Vital para que funcione el select!
+    }
+
+    return render(request, 'pedidos/pedido_form.html', context)
 
 @login_required
 @require_POST
@@ -122,6 +154,28 @@ def api_crear_cliente_rapido(request):
             'id': cliente.id,
             'nombre': cliente.nombre,
             'telefono': cliente.telefono
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        })
+
+@login_required
+@require_POST
+def api_crear_producto_rapido(request):
+    """
+    Endpoint AJAX para crear productos desde el formulario de pedido.
+    Retorna JSON con el nuevo ID y el precio para autocompletar.
+    """
+    form = ProductoForm(request.POST)
+    if form.is_valid():
+        producto = form.save()
+        return JsonResponse({
+            'success': True,
+            'id': producto.id,
+            'nombre': producto.nombre,
+            'precio': producto.precio_venta  # Importante para llenar el campo de precio automáticamente
         })
     else:
         return JsonResponse({
