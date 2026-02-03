@@ -356,7 +356,7 @@ function showGlobalAlert(titulo, mensaje) {
 }
 
 /* =========================================
-   10. LÓGICA DE ÍTEMS DEL PEDIDO (NUEVO)
+   10. LÓGICA DE ÍTEMS DEL PEDIDO (CORREGIDO)
    ========================================= */
 function initProductManager() {
     const $selectProd = $('#select-producto');
@@ -367,26 +367,48 @@ function initProductManager() {
     const rowEmpty = document.getElementById('row-empty');
     const cellTotal = document.getElementById('cell-total-pedido');
     const inputJson = document.getElementById('input-items-json');
-    const inputVentaTotal = document.getElementById('id_valor_venta'); // El campo del Formulario Django
+    const inputVentaTotal = document.getElementById('id_valor_venta');
 
     // Estado local de los ítems
     let items = [];
 
-    // A. Al seleccionar producto, poner precio sugerido
+    // A. LÓGICA DE PRECIO AUTOMÁTICO (ROBUSTA)
     $selectProd.on('select2:select', function(e) {
-        const precio = $(this).find(':selected').data('precio');
-        if(precio) inputPrecio.value = precio;
+        // Accedemos directamente al elemento <option> original a través del evento
+        const element = e.params.data.element;
+        // Leemos el atributo data-precio (jQuery lo parsea automáticamente)
+        const precio = $(element).data('precio');
+
+        // Validamos que precio no sea undefined (admitimos 0 como valor válido)
+        if (precio !== undefined && precio !== null) {
+            inputPrecio.value = precio;
+        } else {
+            inputPrecio.value = ''; // Limpiar si no hay precio
+        }
+
+        // Efecto visual opcional: resaltar el campo precio
+        inputPrecio.classList.add('bg-yellow-50', 'transition-colors');
+        setTimeout(() => inputPrecio.classList.remove('bg-yellow-50'), 500);
     });
 
     // B. Función Agregar Ítem
     btnAgregar.addEventListener('click', function() {
         const prodId = $selectProd.val();
-        const prodNombre = $selectProd.find(':selected').text();
+
+        // Validación de seguridad para obtener el texto
+        const selection = $selectProd.select2('data');
+        const prodNombre = selection && selection.length > 0 ? selection[0].text : '';
+
         const cantidad = parseInt(inputCant.value) || 1;
         const precio = parseInt(inputPrecio.value) || 0;
 
         if (!prodId) {
-            alert("Por favor selecciona un producto.");
+            // Usamos tu alerta global si está disponible, sino alert normal
+            if(window.showGlobalAlert) {
+                showGlobalAlert('Falta información', 'Por favor selecciona un producto de la lista.');
+            } else {
+                alert("Por favor selecciona un producto.");
+            }
             return;
         }
 
@@ -404,7 +426,7 @@ function initProductManager() {
     });
 
     // C. Renderizar Tabla
-    window.renderTable = function() { // Global para poder llamar desde eliminar
+    window.renderTable = function() {
         tableBody.innerHTML = '';
         let totalAcumulado = 0;
 
@@ -415,14 +437,14 @@ function initProductManager() {
                 totalAcumulado += item.subtotal;
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors";
+                tr.className = "hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors border-b border-slate-100 dark:border-neutral-800 last:border-0";
                 tr.innerHTML = `
-                    <td class="px-4 py-3 font-medium">${item.nombre}</td>
-                    <td class="px-4 py-3 text-center">${item.cantidad}</td>
-                    <td class="px-4 py-3 text-right">$${item.precio_unitario.toLocaleString('es-CL')}</td>
-                    <td class="px-4 py-3 text-right font-bold">$${item.subtotal.toLocaleString('es-CL')}</td>
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">${item.nombre}</td>
+                    <td class="px-4 py-3 text-center text-slate-600 dark:text-slate-400">${item.cantidad}</td>
+                    <td class="px-4 py-3 text-right text-slate-600 dark:text-slate-400">$${item.precio_unitario.toLocaleString('es-CL')}</td>
+                    <td class="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">$${item.subtotal.toLocaleString('es-CL')}</td>
                     <td class="px-4 py-3 text-center">
-                        <button type="button" onclick="eliminarItem(${index})" class="text-red-400 hover:text-red-600">
+                        <button type="button" onclick="eliminarItem(${index})" class="p-1 text-slate-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20">
                             <span class="material-icons-round text-lg">delete</span>
                         </button>
                     </td>
@@ -431,7 +453,7 @@ function initProductManager() {
             });
         }
 
-        // Actualizar Totales Visuales y Inputs
+        // Actualizar Totales Visuales
         cellTotal.innerText = '$' + totalAcumulado.toLocaleString('es-CL');
 
         // Actualizar JSON para Backend
@@ -440,12 +462,12 @@ function initProductManager() {
         // AUTO-LLENAR el campo "Valor Venta" del formulario original de Django
         if(inputVentaTotal) {
             inputVentaTotal.value = totalAcumulado;
-            // Disparar evento para que se valide el abono si ya estaba escrito
+            // Disparar evento para validaciones
             inputVentaTotal.dispatchEvent(new Event('input'));
         }
     };
 
-    // D. Eliminar Ítem (Global)
+    // D. Eliminar Ítem
     window.eliminarItem = function(index) {
         items.splice(index, 1);
         renderTable();
@@ -456,7 +478,6 @@ function initProductManager() {
         $selectProd.val(null).trigger('change');
         inputCant.value = 1;
         inputPrecio.value = '';
-        inputPrecio.placeholder = '0';
     }
 
     // F. Lógica de "Crear Producto Rápido" (API)
@@ -465,64 +486,79 @@ function initProductManager() {
     const btnCancelProd = document.getElementById('btn-cancelar-prod');
     const btnSaveProd = document.getElementById('btn-guardar-prod-api');
 
-    btnToggle.addEventListener('click', () => {
-        divFormProd.classList.remove('hidden');
-    });
-
-    btnCancelProd.addEventListener('click', () => {
-        divFormProd.classList.add('hidden');
-    });
-
-    btnSaveProd.addEventListener('click', function() {
-        const nombre = document.getElementById('new_prod_nombre').value;
-        const precio = document.getElementById('new_prod_precio').value;
-        const url = this.getAttribute('data-url');
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        if(!nombre) return alert("El nombre es obligatorio");
-
-        // UI Loading
-        const originalText = this.innerHTML;
-        this.innerHTML = 'Guardando...';
-        this.disabled = true;
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': csrfToken
-            },
-            body: new URLSearchParams({
-                'nombre': nombre,
-                'precio_venta': precio || 0,
-                'descripcion': 'Creado desde Pedido Rápido'
-            })
-        })
-        .then(r => r.json())
-        .then(data => {
-            if(data.success) {
-                // Agregar al select y seleccionarlo
-                const newOption = new Option(data.nombre, data.id, true, true);
-                // Guardar el precio en el data-attribute para que funcione la autoselección
-                $(newOption).data('precio', data.precio);
-
-                $selectProd.append(newOption).trigger('change');
-
-                // Disparar manualmente el evento de selección para que se llene el precio
-                inputPrecio.value = data.precio;
-
-                // Limpiar y ocultar
-                divFormProd.classList.add('hidden');
-                document.getElementById('new_prod_nombre').value = '';
-                document.getElementById('new_prod_precio').value = '';
-            } else {
-                alert("Error: " + JSON.stringify(data.errors));
-            }
-        })
-        .catch(err => console.error(err))
-        .finally(() => {
-            this.innerHTML = originalText;
-            this.disabled = false;
+    if(btnToggle) {
+        btnToggle.addEventListener('click', () => {
+            divFormProd.classList.remove('hidden');
+            // Auto focus al nombre
+            setTimeout(() => document.getElementById('new_prod_nombre').focus(), 100);
         });
-    });
+    }
+
+    if(btnCancelProd) {
+        btnCancelProd.addEventListener('click', () => {
+            divFormProd.classList.add('hidden');
+        });
+    }
+
+    if(btnSaveProd) {
+        btnSaveProd.addEventListener('click', function() {
+            const nombre = document.getElementById('new_prod_nombre').value;
+            const precio = document.getElementById('new_prod_precio').value;
+            const url = this.getAttribute('data-url');
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            if(!nombre) {
+                alert("El nombre del producto es obligatorio");
+                return;
+            }
+
+            const originalText = this.innerHTML;
+            this.innerHTML = '<span class="material-icons-round animate-spin text-sm mr-2">refresh</span> Guardando...';
+            this.disabled = true;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: new URLSearchParams({
+                    'nombre': nombre,
+                    'precio_venta': precio || 0,
+                    'descripcion': 'Creado desde Pedido Rápido'
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(data.success) {
+                    // Crear opción y seleccionarla
+                    const newOption = new Option(data.nombre, data.id, true, true);
+
+                    // IMPORTANTE: Escribir el atributo en el DOM para consistencia
+                    $(newOption).attr('data-precio', data.precio);
+                    $(newOption).data('precio', data.precio); // También en caché de jQuery
+
+                    $selectProd.append(newOption).trigger('change');
+
+                    // Llenar el input de precio manualmente
+                    inputPrecio.value = data.precio;
+
+                    // Limpiar y ocultar
+                    divFormProd.classList.add('hidden');
+                    document.getElementById('new_prod_nombre').value = '';
+                    document.getElementById('new_prod_precio').value = '';
+                } else {
+                    alert("Error: " + JSON.stringify(data.errors));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error de conexión al crear producto");
+            })
+            .finally(() => {
+                this.innerHTML = originalText;
+                this.disabled = false;
+            });
+        });
+    }
 }

@@ -121,11 +121,12 @@
                 </div>
 
                 <div id="section-productos" class="transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
-                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+
                     <div class="p-6 md:p-8">
                         <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
-                            <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
-                            Items del Pedido
+                            <span class="bg-primary text-black w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
+                            Productos del Pedido
                         </h2>
 
                         <div class="bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-800 mb-6">
@@ -134,7 +135,8 @@
                                 <div class="md:col-span-6">
                                     <label class="custom-label">Producto</label>
                                     <select id="select-producto" class="form-select select2" data-placeholder="Buscar ítem...">
-                                        <option></option> {% for producto in productos_disponibles %}
+                                        <option></option>
+                                        {% for producto in productos_disponibles %}
                                             <option value="{{ producto.id }}" data-precio="{{ producto.precio_venta }}">{{ producto.nombre }}</option>
                                         {% endfor %}
                                     </select>
@@ -147,14 +149,16 @@
 
                                 <div class="md:col-span-2">
                                     <label class="custom-label">Cant.</label>
-                                    <input type="number" id="input-cantidad" class="form-control text-center" value="1" min="1">
+                                    <input type="number" id="input-cantidad" class="form-control text-center h-[46px]" value="1" min="1">
                                 </div>
 
                                 <div class="md:col-span-3">
                                     <label class="custom-label">Precio Venta</label>
                                     <div class="relative">
-                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
-                                        <input type="number" id="input-precio" class="form-control pl-8" placeholder="0">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                            <span class="text-slate-500 font-bold">$</span>
+                                        </div>
+                                        <input type="number" id="input-precio" class="form-control !pl-12 h-[46px]" placeholder="0">
                                     </div>
                                 </div>
 
