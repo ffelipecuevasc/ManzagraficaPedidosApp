@@ -15,10 +15,10 @@
                 Volver
             </a>
             
-            <button disabled class="px-4 py-2 bg-slate-200 dark:bg-neutral-800 text-slate-400 dark:text-slate-500 font-bold rounded-lg cursor-not-allowed text-sm flex items-center shadow-none" title="Disponible en Fase B">
+            <a href="{% url 'exportar_cotizacion_pdf' cotizacion.id %}" target="_blank" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors text-sm flex items-center shadow-sm">
                 <span class="material-icons-round mr-2 text-lg">picture_as_pdf</span>
                 Descargar PDF
-            </button>
+            </a>
         </div>
     </div>
 
@@ -97,9 +97,14 @@
                     </div>
 
                     {% if cotizacion.estado != 'ACEPTADA' %}
-                        <div class="bg-slate-900 dark:bg-neutral-900 p-6 rounded-xl text-center border border-slate-800 dark:border-neutral-700 shadow-lg">
-                            <h4 class="text-white font-bold mb-2">¿Cliente Aprobó?</h4>
-                            <p class="text-slate-400 text-sm mb-4">Convierte esta cotización en una orden de trabajo oficial.</p>
+                        <div class="bg-yellow-50 dark:bg-yellow-900/10 p-6 rounded-xl text-center border border-yellow-200 dark:border-yellow-700/50 shadow-sm">
+                            <h4 class="text-yellow-800 dark:text-yellow-500 font-bold mb-2 flex items-center justify-center gap-2">
+                                <span class="material-icons-round">help_outline</span>
+                                ¿Cliente Aprobó la Cotización?
+                            </h4>
+                            <p class="text-yellow-700/80 dark:text-yellow-400/80 text-sm mb-4">
+                                Convierte esta cotización en un <strong>Pedido</strong> oficial.
+                            </p>
                             
                             <a href="{% url 'convertir_a_pedido' cotizacion.id %}" 
                                class="w-full py-3 px-4 bg-primary hover:bg-yellow-400 text-black font-black rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center uppercase tracking-wide text-sm transform hover:scale-105">

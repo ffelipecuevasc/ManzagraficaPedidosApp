@@ -44,12 +44,12 @@
                         <div>
                             <label for="fecha_entrega" class="custom-label mb-2 text-center w-full block">¿Para cuándo es el trabajo?</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-3 text-slate-400 pointer-events-none">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
                                     <span class="material-icons-round text-xl">event</span>
                                 </span>
                                 <input type="date" name="fecha_entrega" id="fecha_entrega" required
                                        value="{{ fecha_sugerida|date:'Y-m-d' }}"
-                                       class="form-control w-full pl-10 text-center font-bold text-slate-900 dark:text-white shadow-sm">
+                                       class="form-control w-full !pl-12 text-center font-bold text-slate-900 dark:text-white shadow-sm cursor-pointer">
                             </div>
                             <p class="text-xs text-slate-400 mt-2 text-center">
                                 Fecha sugerida automática (Hoy + 7 días)

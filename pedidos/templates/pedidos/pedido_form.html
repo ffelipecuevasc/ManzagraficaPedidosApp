@@ -82,7 +82,7 @@
                         <div id="section-crear-cliente"
                              class="hidden bg-slate-50 dark:bg-neutral-900/50 p-6 rounded-lg border border-slate-200 dark:border-neutral-800">
                             <h3 class="font-bold text-slate-800 dark:text-white mb-4 text-sm uppercase tracking-wide">
-                                Nuevo Cliente Rápido</h3>
+                                Crear Nuevo Cliente (Express)</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="custom-label">Nombre *</label>
@@ -132,28 +132,34 @@
                         <div class="bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-800 mb-6">
 
                             <div class="mb-4">
-                                <label class="custom-label">Producto / Servicio</label>
-                                <select id="select-producto" class="form-select select2" data-placeholder="Buscar ítem o servicio...">
+                                <label class="custom-label">Producto</label>
+                                <select id="select-producto" class="form-select select2" data-placeholder="Buscar productos...">
                                     <option></option>
                                     {% for producto in productos_disponibles %}
-                                        <option value="{{ producto.id }}" data-precio="{{ producto.valor_bruto }}">{{ producto.nombre }}</option>
+                                        <option value="{{ producto.id }}"
+                                                data-precio="{{ producto.valor_bruto|stringformat:'d' }}"
+                                                data-unidad="{{ producto.get_unidad_display }}">
+                                            {{ producto.nombre }}
+                                        </option>
                                     {% endfor %}
                                 </select>
 
-                                <div class="mt-2 text-right">
-                                    <button type="button" id="btn-toggle-crear-producto" class="text-xs font-bold text-primary hover:text-yellow-500 uppercase tracking-wide flex items-center justify-end w-full transition-colors">
-                                        <span class="material-icons-round text-sm mr-1">add_circle</span> Crear Nuevo Producto
+                                <div class="flex items-center justify-end gap-3 mt-4">
+                                    <span class="text-sm text-slate-500 dark:text-slate-400">¿No lo encuentras?</span>
+                                    <button type="button" id="btn-toggle-crear-producto" class="text-primary hover:text-yellow-400 font-bold text-sm uppercase tracking-wide flex items-center transition-colors">
+                                        <span class="material-icons-round mr-1 text-lg">add_circle</span>
+                                        Crear Nuevo Producto
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-12 gap-4 items-end">
+                            <div id="bloque-detalle-item" class="hidden opacity-0 transition-all duration-500 grid grid-cols-12 gap-4 items-end">
                                 <div class="col-span-3 md:col-span-2">
                                     <label class="custom-label">Cant.</label>
                                     <input type="number" id="input-cantidad" class="form-control text-center h-[46px]" value="1" min="1">
                                 </div>
 
-                                <div class="col-span-6 md:col-span-8">
+                                <div class="col-span-5 md:col-span-6">
                                     <label class="custom-label">Precio Final (Unitario)</label>
                                     <div class="relative">
                                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -163,52 +169,74 @@
                                     </div>
                                 </div>
 
-                                <div class="col-span-3 md:col-span-2">
-                                    <button type="button" id="btn-agregar-item" class="w-full h-[46px] bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center hover:shadow-lg transition-all" title="Agregar a la lista">
-                                        <span class="material-icons-round">arrow_downward</span>
+                                <div class="col-span-4 md:col-span-4">
+                                    <button type="button" id="btn-agregar-item" class="w-full h-[46px] bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center gap-2 hover:shadow-lg transition-all px-4" title="Agregar a la lista">
+                                        <span class="material-icons-round text-lg">add_shopping_cart</span>
+                                        <span class="font-bold text-xs uppercase tracking-wide hidden md:inline">Agregar al Pedido</span>
+                                        <span class="font-bold text-xs uppercase tracking-wide md:hidden">Agregar</span>
                                     </button>
                                 </div>
                             </div>
 
                             <div id="form-crear-producto-rapido" class="hidden mt-4 pt-4 border-t border-slate-200 dark:border-neutral-700">
-                                <h4 class="text-xs font-bold text-slate-500 uppercase mb-3">Nuevo Producto Express</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div class="md:col-span-2">
-                                        <input type="text" id="new_prod_nombre" class="form-control text-sm" placeholder="Nombre del Producto (Ej: Pendón 2x1)">
+                                <h4 class="text-xs font-bold text-slate-500 uppercase mb-3">Crear Nuevo Producto (Express)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                                    <div class="md:col-span-6">
+                                        <label class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Nombre</label>
+                                        <input type="text" id="new_prod_nombre" class="form-control text-sm" placeholder="Ej: Pendón Tela PVC">
                                     </div>
-                                    <div>
-                                        <input type="number" id="new_prod_precio" class="form-control text-sm" placeholder="Precio NETO">
-                                        <p class="text-[10px] text-slate-400 mt-1 text-right">+ IVA se calculará auto</p>
+                                    <div class="md:col-span-3">
+                                        <label class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Unidad</label>
+                                        <select id="new_prod_unidad" class="form-select text-sm w-full h-[38px] rounded-lg border-slate-300">
+                                            <option value="UNITARIO">Unitario</option>
+                                            <option value="METRO_CUADRADO">Metro Cuadrado (m²)</option>
+                                            <option value="METRO_LINEAL">Metro Lineal (ml)</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-3">
+                                        <label class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Precio Neto</label>
+                                        <input type="number" id="new_prod_precio" class="form-control text-sm" placeholder="$ 0">
+                                        <p class="text-[10px] text-slate-400 mt-1 text-right">+ IVA Automático</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-end gap-2 mt-3">
-                                    <button type="button" id="btn-cancelar-prod" class="text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-2">Cancelar</button>
-                                    <button type="button" id="btn-guardar-prod-api" data-url="{% url 'api_crear_producto_rapido' %}" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded flex items-center">
+                                    <button type="button" id="btn-cancelar-prod" class="text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-2 transition-colors">Cancelar</button>
+                                    <button type="button" id="btn-guardar-prod-api" data-url="{% url 'api_crear_producto_rapido' %}" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded flex items-center transition-colors shadow-sm">
                                         <span class="material-icons-round text-sm mr-1">save</span> Guardar
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="overflow-x-auto border border-slate-200 dark:border-neutral-800 rounded-lg">
+                        <div class="overflow-x-auto border border-slate-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-card-dark">
+                            <div class="p-4 bg-slate-50 dark:bg-neutral-900/30 border-b border-slate-200 dark:border-neutral-800">
+                                <h3 id="titulo-tabla-items" class="font-bold text-slate-700 dark:text-slate-300 text-sm flex items-center gap-2">
+                                    <span class="material-icons-round text-primary text-base">list_alt</span>
+                                    <span>Listado de Productos agregados al Pedido Actual</span>
+                                </h3>
+                            </div>
+
                             <table class="w-full text-left text-sm" id="tabla-items">
-                                <thead class="bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs">
+                                <thead class="bg-white dark:bg-card-dark text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100 dark:border-neutral-800">
                                     <tr>
                                         <th class="px-4 py-3">Producto</th>
+                                        <th class="px-4 py-3 text-center w-24">Unidad</th>
                                         <th class="px-4 py-3 text-center w-20">Cant.</th>
-                                        <th class="px-4 py-3 text-right w-32">P. Unit</th>
+                                        <th class="px-4 py-3 text-right w-32">$ Unit.</th>
                                         <th class="px-4 py-3 text-right w-32">Total</th>
                                         <th class="px-4 py-3 text-center w-16"></th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-200 dark:divide-neutral-800 bg-white dark:bg-card-dark text-slate-700 dark:text-slate-300">
-                                    <tr id="row-empty" class="text-slate-400 italic text-center">
-                                        <td colspan="5" class="py-6">No hay productos agregados al pedido.</td>
+                                <tbody class="divide-y divide-slate-100 dark:divide-neutral-800 text-slate-700 dark:text-slate-300">
+                                    <tr id="row-empty" class="text-slate-400 italic text-center text-xs">
+                                        <td colspan="6" class="py-8">
+                                            Aún no has agregado productos.<br>Selecciona uno arriba y dale al botón "Agregar".
+                                        </td>
                                     </tr>
                                 </tbody>
                                 <tfoot class="bg-slate-50 dark:bg-neutral-900/50 font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-neutral-800">
                                     <tr>
-                                        <td colspan="3" class="px-4 py-3 text-right">TOTAL A PAGAR:</td>
+                                        <td colspan="4" class="px-4 py-3 text-right">TOTAL DEL PEDIDO:</td>
                                         <td class="px-4 py-3 text-right" id="cell-total-pedido">$0</td>
                                         <td></td>
                                     </tr>
@@ -298,8 +326,10 @@
                                     <label class="custom-label" for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
                                     <div class="relative">
                                         <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
-                                        {% render_field form.valor_venta class="form-control pl-8" placeholder="0" %}
+                                        {% render_field form.valor_venta class="form-control pl-8 bg-slate-100 dark:bg-neutral-800 text-slate-500 cursor-not-allowed focus:ring-0" placeholder="0" readonly="readonly" tabindex="-1" %}
                                     </div>
+                                    <p class="text-[10px] text-slate-400 mt-1 text-right">Calculado automáticamente</p>
+
                                     {% if form.valor_venta.errors %}
                                         <p class="text-red-500 text-xs mt-1 font-bold flex items-center"><span
                                                 class="material-icons-round text-sm mr-1">error</span> {{ form.valor_venta.errors.0 }}

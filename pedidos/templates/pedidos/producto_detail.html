@@ -1,0 +1,108 @@
+{% extends 'pedidos/base.html' %}
+{% load humanize %}
+
+{% block title %}{{ producto.nombre }} - Detalle{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Ficha del Producto</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Información técnica y financiera del ítem.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'lista_productos' %}" class="px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-slate-700 dark:text-slate-300 font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm flex items-center">
+                <span class="material-icons-round mr-2 text-lg">arrow_back</span>
+                Volver
+            </a>
+            <a href="{% url 'editar_producto' producto.id %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors text-sm flex items-center shadow-sm">
+                <span class="material-icons-round mr-2 text-lg">edit</span>
+                Editar
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="lg:col-span-2 space-y-6">
+
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+                <div class="p-6 md:p-8 border-b border-slate-100 dark:border-neutral-800">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">Producto #{{ producto.id }}</span>
+                            <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">{{ producto.nombre }}</h2>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 dark:bg-neutral-700 dark:text-slate-300 border border-slate-200 dark:border-neutral-600 font-mono">
+                                Unidad: {{ producto.get_unidad_display }}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400 block mb-1">Fecha Creación</span>
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ producto.fecha_ingreso|date:"d M Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 md:p-8">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase mb-4 flex items-center">
+                        <span class="material-icons-round text-lg mr-2 text-primary">description</span>
+                        Descripción y Especificaciones
+                    </h3>
+
+                    {% if producto.descripcion %}
+                        <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-5 rounded-lg border border-slate-100 dark:border-neutral-800">
+                            {{ producto.descripcion|safe }}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8 bg-slate-50 dark:bg-neutral-900/30 rounded-lg border border-dashed border-slate-300 dark:border-neutral-700">
+                            <p class="text-slate-400 text-sm italic">Este producto no tiene descripción detallada.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-1 space-y-6">
+
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/50">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase flex items-center">
+                        <span class="material-icons-round text-lg mr-2 text-green-600">payments</span>
+                        Estructura de Precio
+                    </h3>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-neutral-800">
+                        <span class="text-sm text-slate-500 dark:text-slate-400">Valor Neto</span>
+                        <span class="text-lg font-medium text-slate-700 dark:text-slate-300 font-mono">${{ producto.valor_neto|intcomma }}</span>
+                    </div>
+
+                    <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-neutral-800">
+                        <span class="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            IVA (19%)
+                            <span class="material-icons-round text-xs text-slate-300" title="Impuesto al Valor Agregado">info</span>
+                        </span>
+                        <span class="text-lg font-medium text-slate-700 dark:text-slate-300 font-mono">+ ${{ producto.iva|intcomma }}</span>
+                    </div>
+
+                    <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-900/30 text-center">
+                        <span class="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wide block mb-1">Precio Final (Bruto)</span>
+                        <span class="text-3xl font-bold text-green-700 dark:text-green-300 font-mono block">${{ producto.valor_bruto|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-red-200 dark:border-red-900/30 shadow-sm overflow-hidden p-6">
+                <h3 class="text-xs font-bold text-red-500 uppercase mb-3">Zona de Riesgo</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                    Si eliminas este producto, desaparecerá del inventario pero los pedidos antiguos mantendrán su registro histórico.
+                </p>
+                <a href="{% url 'eliminar_producto' producto.id %}" class="w-full py-2 px-4 border border-red-200 dark:border-red-800/50 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm font-bold text-center block transition-colors">
+                    Eliminar Producto
+                </a>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

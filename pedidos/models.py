@@ -149,3 +149,18 @@ class ItemPedido(models.Model):
 
     def __str__(self):
         return f"{self.cantidad}x {self.producto.nombre} en Pedido #{self.pedido.id}"
+
+# Clase hecha para relacionar Productos con Cotizaciones y viceversa.
+class ItemCotizacion(models.Model):
+    cotizacion = models.ForeignKey(Cotizacion, related_name='items', on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+    cantidad = models.PositiveIntegerField(default=1)
+    # Guardamos el precio al momento de cotizar (por si sube después)
+    precio_unitario = models.IntegerField(help_text="Precio al momento de cotizar")
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre}"
+
+    @property
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario

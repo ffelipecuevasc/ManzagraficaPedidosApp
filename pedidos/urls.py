@@ -29,6 +29,7 @@ urlpatterns = [
     path('cotizaciones/editar/<int:pk>/', views.editar_cotizacion, name='editar_cotizacion'),
     path('cotizaciones/eliminar/<int:pk>/', views.eliminar_cotizacion, name='eliminar_cotizacion'),
     path('cotizaciones/convertir/<int:pk>/', views.convertir_a_pedido, name='convertir_a_pedido'),
+    path('cotizaciones/<int:pk>/pdf/', views.exportar_cotizacion_pdf, name='exportar_cotizacion_pdf'),
 
     # PRODUCTOS
     path('productos/lista/', views.lista_productos, name='lista_productos'),
@@ -36,4 +37,5 @@ urlpatterns = [
     path('productos/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
     path('productos/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
     path('api/producto/nuevo/', views.api_crear_producto_rapido, name='api_crear_producto_rapido'),
+    path('productos/<int:pk>/', views.detalle_producto, name='detalle_producto'),
 ]

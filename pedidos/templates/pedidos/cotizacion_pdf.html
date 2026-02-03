@@ -1,0 +1,335 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cotización #{{ cotizacion.id }}</title>
+    <style>
+        /* --- CONFIGURACIÓN GLOBAL (ESTILO TIPO TAILWIND) --- */
+        @page {
+            size: Letter;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif; /* Tipografía limpia */
+            font-size: 11px;
+            color: #1f2937; /* Slate-800 */
+            line-height: 1.5;
+        }
+
+        /* --- CABECERA --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #fbbf24; /* Amarillo Manza */
+            padding-bottom: 20px;
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: 900;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            margin: 0;
+        }
+
+        .company-slogan {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #b45309; /* Amber-700 */
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .company-details {
+            font-size: 10px;
+            color: #4b5563; /* Slate-600 */
+        }
+
+        /* CAJA DE ID COTIZACIÓN (MODERNA) */
+        .quote-badge {
+            background-color: #fbbf24; /* Primary Yellow */
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-align: right;
+        }
+        .quote-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+        .quote-number {
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        /* --- SECCIÓN CLIENTE (GRID LIMPIO) --- */
+        .client-box {
+            background-color: #f9fafb; /* Gray-50 */
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #e5e7eb; /* Gray-200 */
+        }
+
+        .client-table {
+            width: 100%;
+        }
+        .client-table td {
+            padding: 4px 0;
+            vertical-align: top;
+        }
+        .label {
+            font-weight: bold;
+            color: #9ca3af; /* Gray-400 */
+            text-transform: uppercase;
+            font-size: 9px;
+            width: 70px;
+        }
+        .value {
+            font-weight: 600;
+            color: #111827; /* Gray-900 */
+            font-size: 11px;
+        }
+
+        /* --- TABLA DE PRODUCTOS --- */
+        .items-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 10px;
+        }
+
+        .items-table th {
+            background-color: #111827; /* Black/Dark Slate */
+            color: #fff;
+            padding: 12px 10px;
+            text-align: left;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        /* Bordes redondeados en cabecera */
+        .items-table th:first-child { border-top-left-radius: 8px; }
+        .items-table th:last-child { border-top-right-radius: 8px; }
+
+        .items-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* --- SECCIÓN TOTALES --- */
+        .totals-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .total-box {
+            width: 40%;
+            background-color: #fffbeb; /* Yellow-50 */
+            border: 1px solid #fcd34d; /* Yellow-300 */
+            border-radius: 8px;
+            padding: 15px;
+            text-align: right;
+        }
+
+        .iva-notice {
+            font-size: 9px;
+            color: #d97706; /* Amber-600 */
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .total-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #4b5563;
+            margin-bottom: 2px;
+        }
+
+        .total-value {
+            font-size: 22px;
+            font-weight: 900;
+            color: #000;
+        }
+
+        /* --- PIE DE PÁGINA Y NOTAS --- */
+        .footer-section {
+            margin-top: 40px;
+            border-top: 1px dashed #e5e7eb;
+            padding-top: 20px;
+        }
+
+        .terms-title {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #000;
+            margin-bottom: 5px;
+        }
+
+        .terms-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 10px;
+            color: #6b7280;
+        }
+        .terms-list li {
+            margin-bottom: 3px;
+            position: relative;
+            padding-left: 12px;
+        }
+        .terms-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .final-footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Utilidades */
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .description-sub { font-size: 9px; color: #6b7280; margin-top: 2px; display: block;}
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="company-info">
+            <h1 class="company-name">MANZA GRÁFICA</h1>
+            <div class="company-slogan">Soluciones en Impresion y Publicidad</div>
+            <div class="company-details">
+                Calle Pedro de Valdivia #650, Local 21<br>
+                Villarrica, Chile<br>
+                <strong>Tel/WhatsApp:</strong> +56985097508<br>
+                <strong>Email:</strong> manzagrafica@gmail.com
+            </div>
+        </div>
+
+        <div class="quote-badge">
+            <div class="quote-title">Cotización N°</div>
+            <div class="quote-number">{{ cotizacion.id }}</div>
+        </div>
+    </div>
+
+    <div class="client-box">
+        <table class="client-table">
+            <tr>
+                <td class="label">CLIENTE</td>
+                <td class="value">{{ cotizacion.cliente.nombre|upper }}</td>
+
+                <td class="label text-right">EMISIÓN</td>
+                <td class="value text-right" style="width: 100px;">{{ cotizacion.fecha_emision|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+                <td class="label">TELÉFONO</td>
+                <td class="value">{{ cotizacion.cliente.telefono }}</td>
+
+                <td class="label text-right">VALIDEZ</td>
+                <td class="value text-right">{{ cotizacion.validez }} Días</td>
+            </tr>
+            <tr>
+                <td class="label">EMAIL</td>
+                <td class="value">{{ cotizacion.cliente.email|default:"--" }}</td>
+
+                <td class="label text-right">VENCE EL</td>
+                <td class="value text-right" style="color: #ef4444;">{{ cotizacion.fecha_vencimiento|date:"d/m/Y" }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 15px; padding-left: 5px;">
+        <span style="font-weight: bold; text-transform: uppercase; font-size: 10px; color: #6b7280;">Referencia del Trabajo:</span>
+        <br>
+        <span style="font-size: 14px; font-weight: bold;">{{ cotizacion.resumen }}</span>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 50%">Descripción / Producto</th>
+                <th class="text-center">Unidad</th>
+                <th class="text-center">Cant.</th>
+                <th class="text-right">Precio Unit.</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cotizacion.items.all %}
+            <tr>
+                <td>
+                    <strong>{{ item.producto.nombre }}</strong>
+                    {% if item.producto.descripcion %}
+                        <span class="description-sub">{{ item.producto.descripcion|striptags|truncatechars:120 }}</span>
+                    {% endif %}
+                </td>
+                <td class="text-center" style="font-size: 10px;">{{ item.producto.get_unidad_display }}</td>
+                <td class="text-center font-bold">{{ item.cantidad }}</td>
+                <td class="text-right font-mono">${{ item.precio_unitario|intcomma }}</td>
+                <td class="text-right font-mono"><strong>${{ item.subtotal|intcomma }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals-container">
+        <div class="total-box">
+            <div class="iva-notice">
+                <span style="background: #fcd34d; color: #000; padding: 2px 4px; border-radius: 4px; margin-right: 4px;">INFO</span>
+                El valor total a pagar ya incluye IVA
+            </div>
+            <div class="total-label">Valor Total a Pagar</div>
+            <div class="total-value">${{ cotizacion.valor_total|intcomma }}</div>
+        </div>
+    </div>
+
+    <div class="footer-section">
+
+        {% if cotizacion.detalles %}
+        <div style="margin-bottom: 20px;">
+            <div class="terms-title">Especificaciones Técnicas</div>
+            <div style="font-size: 10px; color: #4b5563; background: #f3f4f6; padding: 10px; border-radius: 6px;">
+                {{ cotizacion.detalles|striptags }}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="terms-title">Condiciones Comerciales</div>
+        <ul class="terms-list">
+            <li>Validez de la oferta: {{ cotizacion.validez }} días a partir de la fecha de emisión.</li>
+            <li>Tiempos de entrega a convenir según disponibilidad de taller.</li>
+        </ul>
+
+        <div class="final-footer">
+            Cotización de Manza Grafica
+        </div>
+    </div>
+
+</body>
+</html>

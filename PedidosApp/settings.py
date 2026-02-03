@@ -42,7 +42,6 @@ DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = ['manzagrafica.pythonanywhere.com']
 
-
 # Application definition
 
 INSTALLED_APPS = [

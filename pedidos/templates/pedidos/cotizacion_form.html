@@ -59,7 +59,7 @@
                             <div class="mb-4">
                                 <label class="custom-label">Buscar Cliente:</label>
                                 {% render_field form.cliente class="form-select select2" data-placeholder="Busque un cliente..." %}
-                                
+
                                 {% if form.cliente.errors %}
                                     <p class="text-red-500 text-xs mt-1 font-bold flex items-center">
                                         <span class="material-icons-round text-sm mr-1">warning</span> {{ form.cliente.errors.0 }}
@@ -67,11 +67,11 @@
                                 {% endif %}
                             </div>
                             <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-neutral-800">
-                                <span class="text-sm text-slate-500 dark:text-slate-400">¿Cliente nuevo?</span>
+                                <span class="text-sm text-slate-500 dark:text-slate-400">¿No lo encuentras?</span>
                                 <button type="button" id="btn-toggle-crear"
                                         class="text-primary hover:text-yellow-400 font-bold text-sm uppercase tracking-wide flex items-center transition-colors">
                                     <span class="material-icons-round mr-1 text-lg">person_add</span>
-                                    Crear Rápido
+                                    Crear Nuevo Cliente
                                 </button>
                             </div>
                         </div>
@@ -103,17 +103,145 @@
                     </div>
                 </div>
 
-                <div id="section-detalles-pedido" class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+                <div id="section-productos" class="hidden opacity-0 transition-all duration-700 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+
+                    <div class="p-6 md:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+                            <span class="bg-primary text-black w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
+                            Productos a Cotizar
+                        </h2>
+
+                        <div class="bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-800 mb-6">
+
+                            <div class="mb-4">
+                                <label class="custom-label">Producto</label>
+                                <select id="select-producto" class="form-select select2" data-placeholder="Buscar productos...">
+                                    <option></option>
+                                    {% for producto in productos_disponibles %}
+                                        <option value="{{ producto.id }}"
+                                                data-precio="{{ producto.valor_bruto|stringformat:'d' }}"
+                                                data-unidad="{{ producto.get_unidad_display }}">
+                                            {{ producto.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="flex items-center justify-end gap-3 mt-4">
+                                    <span class="text-sm text-slate-500 dark:text-slate-400">¿No lo encuentras?</span>
+                                    <button type="button" id="btn-toggle-crear-producto" class="text-primary hover:text-yellow-400 font-bold text-sm uppercase tracking-wide flex items-center transition-colors">
+                                        <span class="material-icons-round mr-1 text-lg">add_circle</span>
+                                        Crear Nuevo Producto
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="bloque-detalle-item" class="hidden opacity-0 transition-all duration-500 grid grid-cols-12 gap-4 items-end">
+                                <div class="col-span-3 md:col-span-2">
+                                    <label class="custom-label">Cant.</label>
+                                    <input type="number" id="input-cantidad" class="form-control text-center h-[46px]" value="1" min="1">
+                                </div>
+
+                                <div class="col-span-5 md:col-span-6">
+                                    <label class="custom-label">Precio Final (Unitario)</label>
+                                    <div class="relative">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                            <span class="text-slate-500 font-bold">$</span>
+                                        </div>
+                                        <input type="number" id="input-precio" class="form-control !pl-12 h-[46px]" placeholder="0">
+                                    </div>
+                                </div>
+
+                                <div class="col-span-4 md:col-span-4">
+                                    <button type="button" id="btn-agregar-item" class="w-full h-[46px] bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center gap-2 hover:shadow-lg transition-all px-4" title="Agregar a la lista">
+                                        <span class="material-icons-round text-lg">add_shopping_cart</span>
+                                        <span class="font-bold text-xs uppercase tracking-wide hidden md:inline">Agregar a Cotización</span>
+                                        <span class="font-bold text-xs uppercase tracking-wide md:hidden">Agregar</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="form-crear-producto-rapido" class="hidden mt-4 pt-4 border-t border-slate-200 dark:border-neutral-700">
+                                <h4 class="text-xs font-bold text-slate-500 uppercase mb-3">Crear Nuevo Producto (Express)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                                    <div class="md:col-span-6">
+                                        <label class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Nombre</label>
+                                        <input type="text" id="new_prod_nombre" class="form-control text-sm" placeholder="Ej: Pendón Tela PVC">
+                                    </div>
+                                    <div class="md:col-span-3">
+                                        <label class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Unidad</label>
+                                        <select id="new_prod_unidad" class="form-select text-sm w-full h-[38px] rounded-lg border-slate-300">
+                                            <option value="UNITARIO">Unitario</option>
+                                            <option value="METRO_CUADRADO">Metro Cuadrado (m²)</option>
+                                            <option value="METRO_LINEAL">Metro Lineal (ml)</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-3">
+                                        <label class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Precio Neto</label>
+                                        <input type="number" id="new_prod_precio" class="form-control text-sm" placeholder="$ 0">
+                                        <p class="text-[10px] text-slate-400 mt-1 text-right">+ IVA Automático</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end gap-2 mt-3">
+                                    <button type="button" id="btn-cancelar-prod" class="text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-2 transition-colors">Cancelar</button>
+                                    <button type="button" id="btn-guardar-prod-api" data-url="{% url 'api_crear_producto_rapido' %}" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded flex items-center transition-colors shadow-sm">
+                                        <span class="material-icons-round text-sm mr-1">save</span> Guardar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-card-dark">
+                            <div class="p-4 bg-slate-50 dark:bg-neutral-900/30 border-b border-slate-200 dark:border-neutral-800">
+                                <h3 id="titulo-tabla-items" class="font-bold text-slate-700 dark:text-slate-300 text-sm flex items-center gap-2">
+                                    <span class="material-icons-round text-primary text-base">list_alt</span>
+                                    <span>Productos en la Cotización</span>
+                                </h3>
+                            </div>
+
+                            <table class="w-full text-left text-sm" id="tabla-items">
+                                <thead class="bg-white dark:bg-card-dark text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100 dark:border-neutral-800">
+                                    <tr>
+                                        <th class="px-4 py-3">Producto</th>
+                                        <th class="px-4 py-3 text-center w-24">Unidad</th>
+                                        <th class="px-4 py-3 text-center w-20">Cant.</th>
+                                        <th class="px-4 py-3 text-right w-32">$ Unit.</th>
+                                        <th class="px-4 py-3 text-right w-32">Total</th>
+                                        <th class="px-4 py-3 text-center w-16"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-neutral-800 text-slate-700 dark:text-slate-300">
+                                    <tr id="row-empty" class="text-slate-400 italic text-center text-xs">
+                                        <td colspan="6" class="py-8">
+                                            Aún no has agregado productos.<br>Selecciona uno arriba y dale al botón "Agregar".
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-slate-50 dark:bg-neutral-900/50 font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-neutral-800">
+                                    <tr>
+                                        <td colspan="4" class="px-4 py-3 text-right">TOTAL NETO:</td>
+                                        <td class="px-4 py-3 text-right" id="cell-total-pedido">$0</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <input type="hidden" name="items_json" id="input-items-json">
+                    </div>
+                </div>
+
+                <div id="section-detalles-pedido" class="hidden opacity-0 transition-all duration-700 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 dark:bg-neutral-700"></div>
                     <div class="p-6 md:p-8">
                         <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
-                            <span class="bg-slate-200 dark:bg-neutral-700 text-slate-600 dark:text-slate-300 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">2</span>
+                            <span class="bg-slate-200 dark:bg-neutral-700 text-slate-600 dark:text-slate-300 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold">3</span>
                             Detalles de la Propuesta
                         </h2>
-                        
+
                         <div class="space-y-6">
                             <div>
-                                <label class="custom-label" for="{{ form.resumen.id_for_label }}">Título / Resumen</label>
+                                <label class="custom-label" for="{{ form.resumen.id_for_label }}">{{ form.resumen.label }}</label>
                                 {% render_field form.resumen class="form-control" placeholder="Ej: 1000 Volantes Corporativos" %}
                                 {% if form.resumen.errors %}
                                     <p class="text-red-500 text-xs mt-1 font-bold">{{ form.resumen.errors.0 }}</p>
@@ -121,7 +249,7 @@
                             </div>
 
                             <div>
-                                <label class="custom-label" for="{{ form.detalles.id_for_label }}">Descripción Técnica</label>
+                                <label class="custom-label" for="{{ form.detalles.id_for_label }}">{{ form.detalles.label }}</label>
                                 {% render_field form.detalles class="form-control summernote-editor" rows="4" %}
                                 {% if form.detalles.errors %}
                                     <p class="text-red-500 text-xs mt-1 font-bold">{{ form.detalles.errors.0 }}</p>
@@ -129,32 +257,41 @@
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 dark:bg-neutral-900/30 p-5 rounded-lg border border-slate-100 dark:border-neutral-800">
-                                
+
                                 <div>
-                                    <label class="custom-label text-primary" for="{{ form.valor_total.id_for_label }}">Valor Neto Total</label>
+                                    <label class="custom-label text-primary" for="{{ form.valor_total.id_for_label }}">Valor Total (Neto)</label>
                                     <div class="relative">
-                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
-                                        {% render_field form.valor_total class="form-control pl-8 font-bold text-lg" placeholder="0" %}
+                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none text-lg">$</span>
+                                        {% render_field form.valor_total id="id_valor_venta" class="form-control pl-8 font-bold text-lg bg-slate-100 dark:bg-neutral-800 cursor-not-allowed" placeholder="0" readonly="readonly" tabindex="-1" %}
                                     </div>
+                                    <p class="text-[10px] text-slate-400 mt-1 text-right">Calculado automáticamente</p>
                                     {% if form.valor_total.errors %}
                                         <p class="text-red-500 text-xs mt-1 font-bold">{{ form.valor_total.errors.0 }}</p>
                                     {% endif %}
                                 </div>
 
                                 <div>
-                                    <label class="custom-label" for="{{ form.validez.id_for_label }}">Validez de Cotización (Días)</label>
+                                    <label class="custom-label" for="{{ form.validez.id_for_label }}">{{ form.validez.label }}</label>
                                     <div class="relative">
-                                        {% render_field form.validez class="form-control" placeholder="15" %}
-
-                                        <span class="absolute right-10 top-2.5 text-slate-400 text-xs select-none font-medium pointer-events-none">
+                                        {% render_field form.validez class="form-control font-bold text-lg" placeholder="15" %}
+                                        <span class="absolute right-8 top-3 text-slate-400 text-xs select-none font-bold pointer-events-none">
                                             DÍAS
                                         </span>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="custom-label" for="{{ form.fecha_emision.id_for_label }}">Fecha Emisión</label>
-                                    {% render_field form.fecha_emision class="form-control" type="date" %}
+                                    <label class="custom-label" for="id_fecha_emision">Fecha Emisión</label>
+                                    <div class="relative">
+                                        <input type="text"
+                                               name="fecha_emision"
+                                               id="id_fecha_emision"
+                                               class="form-control bg-slate-100 dark:bg-neutral-800 text-slate-500 cursor-not-allowed font-bold text-lg text-center"
+                                               readonly
+                                               tabindex="-1"
+                                               value="{% if form.instance.pk %}{{ form.instance.fecha_emision|date:'Y-m-d' }}{% else %}{{ fecha_hoy }}{% endif %}">
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1 text-right">Automático (Hoy)</p>
                                 </div>
                             </div>
                         </div>

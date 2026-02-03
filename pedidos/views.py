@@ -4,11 +4,14 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido
+from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm
 from .decorators import transaccion_segura
 from django.utils import timezone
 from datetime import timedelta
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+import weasyprint
 import json
 
 @login_required
@@ -161,7 +164,6 @@ def api_crear_cliente_rapido(request):
             'errors': form.errors
         })
 
-
 @login_required
 @require_POST
 def api_crear_producto_rapido(request):
@@ -178,8 +180,10 @@ def api_crear_producto_rapido(request):
             'success': True,
             'id': producto.id,
             'nombre': producto.nombre,
-            # IMPORTANTE: Devolvemos el valor_bruto para que el JS llene el input de precio
-            'precio': producto.valor_bruto
+            # Devolvemos el valor_bruto para el JS
+            'precio': producto.valor_bruto,
+            # NUEVO: Devolvemos el nombre legible de la unidad para la tabla (ej: "Metro Cuadrado")
+            'unidad': producto.get_unidad_display()
         })
     else:
         return JsonResponse({
@@ -433,7 +437,7 @@ def trabajo_semanal(request):
     return render(request, 'pedidos/trabajo_semanal.html', context)
 
 # ==========================================
-# GESTIÓN DE COTIZACIONES (FASE A)
+# GESTIÓN DE COTIZACIONES
 # ==========================================
 
 @login_required
@@ -474,26 +478,51 @@ def lista_cotizaciones(request):
 def crear_cotizacion(request):
     # Inicializamos ClienteForm por si queremos crear cliente rápido (igual que en Pedidos)
     cliente_form = ClienteForm()
+    # NECESARIO: Cargar productos para que el Select2 funcione en el template
+    productos_disponibles = Producto.objects.all().order_by('nombre')
 
     if request.method == 'POST':
         form = CotizacionForm(request.POST)
         if form.is_valid():
             cotizacion = form.save()
+
+            # --- NUEVA LÓGICA: Guardar Ítems (Espejo de crear_pedido) ---
+            items_json = request.POST.get('items_json')
+            if items_json:
+                try:
+                    data_items = json.loads(items_json)
+                    for item in data_items:
+                        # item es: {'producto_id': '5', 'cantidad': 2, 'precio_unitario': 15000, ...}
+                        producto_obj = Producto.objects.get(pk=item['producto_id'])
+
+                        ItemCotizacion.objects.create(
+                            cotizacion=cotizacion,
+                            producto=producto_obj,
+                            cantidad=int(item['cantidad']),
+                            precio_unitario=int(item['precio_unitario'])
+                        )
+                except Exception as e:
+                    # En producción podrías loguear esto
+                    pass
+            # -------------------------------------------------------------
+
             # Redirigimos al detalle para revisar antes de "enviar"
             return redirect('detalle_cotizacion', pk=cotizacion.pk)
     else:
-        form = CotizacionForm()
+        form = CotizacionForm(initial={'fecha_emision': timezone.now().date()})
 
     return render(request, 'pedidos/cotizacion_form.html', {
         'form': form,
-        'cliente_form': cliente_form
+        'cliente_form': cliente_form,
+        'productos_disponibles': productos_disponibles,
+        'fecha_hoy': timezone.now().strftime('%Y-%m-%d')
     })
-
 
 @login_required
 @transaccion_segura
 def editar_cotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    productos_disponibles = Producto.objects.all().order_by('nombre') # Necesario para el HTML
 
     # Regla de negocio: No editar si ya fue aceptada (convertida)
     if cotizacion.estado == 'ACEPTADA':
@@ -503,12 +532,17 @@ def editar_cotizacion(request, pk):
         form = CotizacionForm(request.POST, instance=cotizacion)
         if form.is_valid():
             form.save()
+            # NOTA: Aquí implementaremos la lógica de actualización de ítems en el futuro
+            # si decides permitir editar el detalle de una cotización ya creada.
             return redirect('detalle_cotizacion', pk=pk)
     else:
         form = CotizacionForm(instance=cotizacion)
 
-    return render(request, 'pedidos/cotizacion_form.html', {'form': form})
-
+    return render(request, 'pedidos/cotizacion_form.html', {
+        'form': form,
+        'productos_disponibles': productos_disponibles,
+        'fecha_hoy': timezone.now().strftime('%Y-%m-%d')
+    })
 
 @login_required
 def detalle_cotizacion(request, pk):
@@ -525,13 +559,12 @@ def eliminar_cotizacion(request, pk):
         return redirect('lista_cotizaciones')
     return render(request, 'pedidos/cotizacion_confirm_delete.html', {'cotizacion': cotizacion})
 
-
 @login_required
 @transaccion_segura
 def convertir_a_pedido(request, pk):
     """
     Toma una cotización y crea un Pedido.
-    Pregunta por fecha de entrega y abono antes de proceder.
+    Copia el cliente, datos y AHORA TAMBIÉN LOS PRODUCTOS.
     """
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
 
@@ -540,7 +573,7 @@ def convertir_a_pedido(request, pk):
         fecha_entrega = request.POST.get('fecha_entrega')
         abono = request.POST.get('valor_abonado', 0)
 
-        # 2. Crear el Pedido
+        # 2. Crear el Pedido (Cabecera)
         pedido = Pedido.objects.create(
             cliente=cotizacion.cliente,
             resumen_pedido=cotizacion.resumen,
@@ -549,22 +582,55 @@ def convertir_a_pedido(request, pk):
             valor_abonado=int(abono),
             fecha_entrega=fecha_entrega,
             estado='PENDIENTE',
-            # imagen_referencia: No la copiamos porque la cotización no tiene imagen (a menos que agreguemos el campo después)
         )
 
-        # 3. Actualizar la Cotización
+        # 3. --- NUEVO: TRASPASAR PRODUCTOS (Clonación de Ítems) ---
+        # Recorremos los ítems de la cotización y creamos sus gemelos en el pedido
+        for item_cot in cotizacion.items.all():
+            ItemPedido.objects.create(
+                pedido=pedido,
+                producto=item_cot.producto,
+                cantidad=item_cot.cantidad,
+                precio_unitario=item_cot.precio_unitario
+            )
+        # ------------------------------------------------------------
+
+        # 4. Actualizar la Cotización
         cotizacion.estado = 'ACEPTADA'
         cotizacion.save()
 
-        # 4. Redirigir al nuevo pedido
+        # 5. Redirigir al nuevo pedido
         return redirect('detalle_pedido', pk=pedido.pk)
 
-    # Si es GET, mostramos la pantalla intermedia para pedir Fecha y Abono
     context = {
         'cotizacion': cotizacion,
-        'fecha_sugerida': timezone.now().date() + timedelta(days=7) # Sugerimos 1 semana por defecto
+        'fecha_sugerida': timezone.now().date() + timedelta(days=7)
     }
     return render(request, 'pedidos/cotizacion_convertir.html', context)
+
+@login_required
+def exportar_cotizacion_pdf(request, pk):
+    # 1. Obtener la cotización
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+
+    # 2. Renderizar el HTML con los datos
+    html_string = render_to_string('pedidos/cotizacion_pdf.html', {
+        'cotizacion': cotizacion
+    })
+
+    # 3. Crear el objeto HTML de WeasyPrint
+    html = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri())
+
+    # 4. Generar el PDF
+    result = html.write_pdf()
+
+    # 5. Crear la respuesta HTTP con el tipo de contenido PDF
+    response = HttpResponse(content_type='application/pdf')
+    # 'inline' para ver en navegador, 'attachment' para descargar directo
+    response['Content-Disposition'] = f'inline; filename="Cotizacion_{cotizacion.id}.pdf"'
+    response.write(result)
+
+    return response
 
 # ==========================================
 # GESTIÓN DE PRODUCTOS (INVENTARIO)
@@ -635,6 +701,11 @@ def eliminar_producto(request, pk):
         producto.delete()
         return redirect('lista_productos')
     return render(request, 'pedidos/producto_confirm_delete.html', {'producto': producto})
+
+@login_required
+def detalle_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    return render(request, 'pedidos/producto_detail.html', {'producto': producto})
 
 def error_404(request, exception):
     return render(request, 'pedidos/errors/404.html', status=404)

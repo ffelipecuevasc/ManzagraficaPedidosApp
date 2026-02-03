@@ -21,7 +21,8 @@
     </div>
 
     <div class="flex justify-center">
-        <div class="w-full max-w-3xl"> <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+        <div class="w-full max-w-3xl">
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
 
                 <div class="p-6 md:p-8">
                     <div class="mb-6 pb-4 border-b border-slate-100 dark:border-neutral-800">
@@ -35,7 +36,7 @@
                         {% csrf_token %}
 
                         <div class="space-y-6">
-                            
+
                             <div>
                                 <label for="{{ form.nombre.id_for_label }}" class="custom-label">
                                     {{ form.nombre.label }}
@@ -56,24 +57,36 @@
                                 {% endif %}
                             </div>
 
-                            <div>
-                                <label for="{{ form.valor_neto.id_for_label }}" class="custom-label">
-                                    {{ form.valor_neto.label }}
-                                </label>
-                                <div class="relative mt-1 rounded-md shadow-sm">
-                                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                        <span class="text-slate-500 font-bold sm:text-sm">$</span>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-neutral-900/30 rounded-lg border border-slate-200 dark:border-neutral-800">
+
+                                <div>
+                                    <label for="{{ form.valor_neto.id_for_label }}" class="custom-label">
+                                        {{ form.valor_neto.label }} (Sin IVA)
+                                    </label>
+                                    <div class="relative mt-1">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                            <span class="text-slate-500 font-bold sm:text-sm">$</span>
+                                        </div>
+                                        {% render_field form.valor_neto id="input-neto" class="form-control !pl-12 font-bold text-blue-600 dark:text-blue-400" placeholder="0" %}
                                     </div>
-                                    {% render_field form.valor_neto class="form-control !pl-12" placeholder="0" %}
-                                </div>
-                                <div class="flex items-center gap-2 mt-2">
-                                    <span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2 py-0.5 rounded">Auto-Calculado</span>
-                                    <p class="text-xs text-slate-400 mb-0">Ingresa el valor neto. El sistema calculará automáticamente el IVA (19%) y el Total Bruto al guardar.</p>
+                                    {% if form.valor_neto.errors %}
+                                        <div class="mt-1 text-sm text-red-500 font-medium">{{ form.valor_neto.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
 
-                                {% if form.valor_neto.errors %}
-                                    <div class="mt-1 text-sm text-red-500 font-medium">{{ form.valor_neto.errors.0 }}</div>
-                                {% endif %}
+                                <div>
+                                    <label class="custom-label text-slate-400">Precio Final (Con IVA)</label>
+                                    <div class="relative mt-1">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                            <span class="text-slate-400 font-bold sm:text-sm">$</span>
+                                        </div>
+                                        <input type="text" id="input-bruto-visual"
+                                               class="form-control !pl-12 bg-slate-200 dark:bg-neutral-700 text-slate-600 dark:text-slate-300 font-bold cursor-not-allowed"
+                                               readonly
+                                               value="0">
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1 text-right">Cálculo automático (Neto + 19%)</p>
+                                </div>
                             </div>
 
                             <div>
@@ -81,7 +94,7 @@
                                     {{ form.descripcion.label }}
                                 </label>
                                 {% render_field form.descripcion class="form-control summernote-editor" %}
-                                
+
                                 <div class="mt-2 flex items-start gap-2 text-xs text-yellow-600 dark:text-yellow-500 bg-yellow-50 dark:bg-yellow-900/10 p-2 rounded border border-yellow-100 dark:border-yellow-900/30">
                                     <span class="material-icons-round text-sm mt-0.5">info</span>
                                     <p>Recuerda: Este campo es solo para texto y listas. <strong>No pegues imágenes aquí</strong>.</p>
@@ -110,4 +123,27 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputNeto = document.getElementById('input-neto');
+            const inputBruto = document.getElementById('input-bruto-visual');
+
+            function calcularBruto() {
+                const neto = parseInt(inputNeto.value) || 0;
+                // Cálculo simple de IVA: Neto * 1.19
+                const bruto = Math.round(neto * 1.19);
+
+                // Formatear a pesos chilenos
+                inputBruto.value = bruto.toLocaleString('es-CL');
+            }
+
+            if(inputNeto && inputBruto) {
+                inputNeto.addEventListener('input', calcularBruto);
+                inputNeto.addEventListener('change', calcularBruto);
+                // Calcular al inicio por si es edición y ya trae valor
+                calcularBruto();
+            }
+        });
+    </script>
 {% endblock %}

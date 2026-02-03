@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // B. Inicializar Plugins
     initPlugins();
 
-    // C. Formulario Pedidos
+    // C. Formulario Pedidos / Cotizaciones
+    // (Usamos el mismo ID 'pedidoForm' para ambos casos para reutilizar lógica)
     if (document.getElementById('pedidoForm')) {
         initPedidoForm();
         initProductManager();
@@ -51,7 +52,6 @@ function initThemeToggle() {
                 localStorage.setItem('color-theme', 'dark');
             }
 
-            // ACTUALIZACIÓN: Destruir y recrear Summernote buscando por CLASE
             if ($('.summernote-editor').length) {
                 $('.summernote-editor').summernote('destroy');
                 initPlugins();
@@ -64,16 +64,19 @@ function initThemeToggle() {
    3. CONFIGURACIÓN DE PLUGINS (JQUERY)
    ========================================= */
 function initPlugins() {
-    // A. Configuración Select2
     if ($('.select2').length) {
         $('.select2').select2({
             width: '100%',
             placeholder: "Seleccione una opción...",
-            allowClear: true
+            allowClear: true,
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                }
+            }
         });
     }
 
-    // B. Configuración Summernote (Editor de Texto) - MEJORADO CON MODAL
     if ($('.summernote-editor').length) {
         let isDark = document.documentElement.classList.contains('dark');
 
@@ -81,7 +84,7 @@ function initPlugins() {
             placeholder: 'Escribe aquí las especificaciones (Solo texto, no imágenes)...',
             tabsize: 2,
             height: 200,
-            disableDragAndDrop: true, // Deshabilita arrastrar archivos
+            disableDragAndDrop: true,
             toolbar: [
                 ['style', ['bold', 'italic', 'clear']],
                 ['para', ['ul', 'ol']]
@@ -93,26 +96,20 @@ function initPlugins() {
                         $('.note-editor').css({'border-color': '#404040'});
                     }
                 },
-                // CANDADO 1: Bloqueo de subida directa (Botón Imagen)
                 onImageUpload: function(files) {
                     showGlobalAlert(
                         'No se permiten imágenes aquí',
                         'Para mantener el sistema rápido, por favor sube las imágenes en el campo <strong>"Imagen de Referencia"</strong> o envíalas por correo/WhatsApp.'
                     );
                 },
-                // CANDADO 2: Bloqueo de Pegado (Ctrl+V) de imágenes
                 onPaste: function (e) {
                     var bufferText = ((e.originalEvent || e).clipboardData || window.clipboardData).getData('text/plain');
-
-                    // Si hay texto plano, permitimos pegar (pero limpiamos formato)
                     if (bufferText) {
                         e.preventDefault();
-                        // Esperamos un momento para insertar solo el texto limpio
                         setTimeout(function(){
                             document.execCommand('insertText', false, bufferText);
                         }, 10);
                     } else {
-                        // Si no es texto (es imagen o archivo rico), bloqueamos y mostramos modal
                         e.preventDefault();
                         showGlobalAlert(
                             'Pegado de imágenes bloqueado',
@@ -126,14 +123,14 @@ function initPlugins() {
 }
 
 /* =========================================
-   4. LÓGICA DEL FORMULARIO PEDIDOS (AJAX)
+   4. LÓGICA DEL FORMULARIO (PEDIDOS Y COTIZACIONES)
    ========================================= */
 function initPedidoForm() {
     const $selectCliente = $('#id_cliente');
 
-    // Referencias a las secciones nuevas
     const sectionProductos = document.getElementById('section-productos');
     const sectionDetalles = document.getElementById('section-detalles-pedido');
+    const tituloTabla = document.getElementById('titulo-tabla-items');
 
     const sectionBuscar = document.getElementById('section-buscar-cliente');
     const sectionCrear = document.getElementById('section-crear-cliente');
@@ -142,28 +139,36 @@ function initPedidoForm() {
     const btnGuardarApi = document.getElementById('btn-guardar-cliente-api');
 
     function checkClienteSeleccionado() {
-        if ($selectCliente.val()) {
-            // 1. Mostrar Sección Productos (Efecto Fade In)
-            if(sectionProductos) {
-                sectionProductos.classList.remove('hidden');
-                // Pequeño delay para permitir que el navegador procese el "display: block" antes de la opacidad
-                setTimeout(() => {
-                    sectionProductos.classList.remove('opacity-0');
-                }, 50);
+        const clienteId = $selectCliente.val();
+
+        // DETECCIÓN DE CONTEXTO: ¿Es Cotización o Pedido?
+        // Si existe el campo "validez" (propio de cotización), cambiamos el texto.
+        const isCotizacion = document.querySelector('[name="validez"]');
+        const tipoDoc = isCotizacion ? "Cotización" : "Pedido";
+
+        if (clienteId) {
+            const nombreCliente = $("#id_cliente option:selected").text().trim();
+
+            // Texto dinámico según el tipo de documento
+            if(tituloTabla) {
+                tituloTabla.innerHTML = `
+                    <span class="material-icons-round text-primary text-base mr-2">list_alt</span>
+                    Productos en ${tipoDoc} para: <span class="text-primary font-bold ml-1">${nombreCliente}</span>
+                `;
             }
 
-            // 2. Mostrar Sección Detalles (Con un poco de retraso para efecto cascada)
+            if(sectionProductos) {
+                sectionProductos.classList.remove('hidden');
+                setTimeout(() => { sectionProductos.classList.remove('opacity-0'); }, 50);
+            }
             if(sectionDetalles) {
                 sectionDetalles.classList.remove('hidden');
-                setTimeout(() => {
-                    sectionDetalles.classList.remove('opacity-0');
-                }, 300);
+                setTimeout(() => { sectionDetalles.classList.remove('opacity-0'); }, 300);
             }
         } else {
-            // Ocultar el contenido si se deselecciona
             if(sectionProductos) {
                 sectionProductos.classList.add('opacity-0');
-                setTimeout(() => sectionProductos.classList.add('hidden'), 500); // Esperar animación
+                setTimeout(() => sectionProductos.classList.add('hidden'), 500);
             }
             if(sectionDetalles) {
                 sectionDetalles.classList.add('opacity-0');
@@ -172,12 +177,9 @@ function initPedidoForm() {
         }
     }
 
-    // Escuchar cambios
     $selectCliente.on('change', checkClienteSeleccionado);
-    // Verificar estado inicial (por si es edición)
     checkClienteSeleccionado();
 
-    // --- LÓGICA DE CREAR CLIENTE (Se mantiene igual) ---
     if(btnToggleCrear) {
         btnToggleCrear.addEventListener('click', () => {
             sectionBuscar.classList.add('hidden');
@@ -226,13 +228,14 @@ function initPedidoForm() {
                 if(data.success) {
                     const newOption = new Option(data.nombre, data.id, true, true);
                     $selectCliente.append(newOption).trigger('change');
+
                     sectionCrear.classList.add('hidden');
                     sectionBuscar.classList.remove('hidden');
-                    // Limpiar campos
+
                     document.getElementById('new_client_nombre').value = '';
                     document.getElementById('new_client_telefono').value = '';
                     document.getElementById('new_client_email').value = '';
-                    // Forzar actualización de UI
+
                     checkClienteSeleccionado();
                 } else {
                     const errorDiv = document.getElementById('cliente-api-error');
@@ -251,6 +254,7 @@ function initPedidoForm() {
             });
         });
     }
+
     initMoneyValidation();
 }
 
@@ -279,6 +283,8 @@ function initTableSorting() {
    7. VALIDACIÓN MONETARIA EN VIVO
    ========================================= */
 function initMoneyValidation() {
+    // Nota: En Cotizaciones, 'id_valor_abonado' no existe, así que esta función
+    // retornará de inmediato (return), lo cual es el comportamiento deseado.
     const inputVenta = document.getElementById('id_valor_venta');
     const inputAbono = document.getElementById('id_valor_abonado');
     const btnSubmit = document.getElementById('btn-submit-pedido');
@@ -298,7 +304,7 @@ function initMoneyValidation() {
             const p = document.createElement('p');
             p.id = 'error-monto-js';
             p.className = 'text-red-500 text-xs mt-1 font-bold flex items-center animate-pulse';
-            p.innerHTML = '<span class="material-icons-round text-sm mr-1">cancel</span> El abono no puede ser mayor al valor total del pedido.';
+            p.innerHTML = '<span class="material-icons-round text-sm mr-1">cancel</span> El abono no puede ser mayor al valor total.';
             inputAbono.parentNode.appendChild(p);
 
             if(btnSubmit) {
@@ -333,7 +339,6 @@ function initDetailModals() {
     const btnConfirmar = document.getElementById('modal-btn-confirmar');
     const btnCancelar = document.getElementById('modal-btn-cancelar');
 
-    // 1. Abrir Modal (Delegación para botones con data-confirm="true")
     const triggers = document.querySelectorAll('[data-confirm="true"]');
     triggers.forEach(btn => {
         btn.addEventListener('click', function(e) {
@@ -341,7 +346,6 @@ function initDetailModals() {
             const url = this.getAttribute('data-url');
             const tipo = this.getAttribute('data-type');
 
-            // Configurar contenido
             if (tipo === 'TERMINAR') {
                 titulo.textContent = '¿Finalizar y Pagar Pedido?';
                 mensaje.innerHTML = 'Estás a punto de marcar este trabajo como <strong>TERMINADO</strong>.<br><br>El sistema registrará automáticamente que el <strong>TOTAL HA SIDO PAGADO ($0 deuda)</strong>.<br>¿Confirmas esta acción?';
@@ -357,7 +361,6 @@ function initDetailModals() {
         });
     });
 
-    // 2. Cerrar Modal
     function closeModal() {
         modal.classList.add('hidden');
     }
@@ -368,18 +371,16 @@ function initDetailModals() {
 }
 
 /* =========================================
-   9. UTILIDAD: ALERTA GLOBAL (NUEVO)
+   9. UTILIDAD: ALERTA GLOBAL
    ========================================= */
 function showGlobalAlert(titulo, mensaje) {
     const modal = document.getElementById('modal-alerta-global');
-    if(!modal) return; // Si no está en el HTML, no hacemos nada (fallback silencioso)
+    if(!modal) return;
 
     document.getElementById('modal-alerta-titulo').innerText = titulo;
     document.getElementById('modal-alerta-mensaje').innerHTML = mensaje;
-
     modal.classList.remove('hidden');
 
-    // Configurar cierre
     const btnCerrar = document.getElementById('btn-cerrar-alerta');
     btnCerrar.onclick = function() {
         modal.classList.add('hidden');
@@ -387,10 +388,11 @@ function showGlobalAlert(titulo, mensaje) {
 }
 
 /* =========================================
-   10. LÓGICA DE ÍTEMS DEL PEDIDO (CORREGIDO FINAL)
+   10. LÓGICA DE ÍTEMS DEL PEDIDO (FINAL UX MEJORADA - TABLA EDITABLE)
    ========================================= */
 function initProductManager() {
     const $selectProd = $('#select-producto');
+    const $bloqueDetalle = $('#bloque-detalle-item');
     const inputCant = document.getElementById('input-cantidad');
     const inputPrecio = document.getElementById('input-precio');
     const btnAgregar = document.getElementById('btn-agregar-item');
@@ -400,56 +402,87 @@ function initProductManager() {
     const inputJson = document.getElementById('input-items-json');
     const inputVentaTotal = document.getElementById('id_valor_venta');
 
-    // Estado local de los ítems
     let items = [];
+    let unidadActual = '';
 
-    // A. LÓGICA DE PRECIO AUTOMÁTICO (ROBUSTA)
+    // --- HELPER: OCULTAR Y LIMPIAR BLOQUE DETALLE ---
+    function ocultarBloqueDetalle() {
+        $selectProd.val(null).trigger('change');
+        $bloqueDetalle.addClass('opacity-0');
+        setTimeout(() => {
+            $bloqueDetalle.addClass('hidden');
+            inputCant.value = 1;
+            inputPrecio.value = '';
+            unidadActual = '';
+        }, 500);
+    }
+
+    // A. AUTO-POBLAR PRECIO Y UNIDAD
     $selectProd.on('select2:select', function(e) {
-        const element = e.params.data.element;
-        const precio = $(element).data('precio');
+        if($bloqueDetalle.hasClass('hidden')) {
+            $bloqueDetalle.removeClass('hidden');
+            setTimeout(() => $bloqueDetalle.removeClass('opacity-0'), 50);
+        }
 
-        if (precio !== undefined && precio !== null) {
-            inputPrecio.value = precio;
+        const element = e.params.data.element;
+        const precioRaw = $(element).attr('data-precio') || $(element).data('precio');
+        unidadActual = $(element).attr('data-unidad') || $(element).data('unidad') || '-';
+
+        if (precioRaw) {
+            inputPrecio.value = parseInt(precioRaw);
+            inputPrecio.classList.add('bg-green-50', 'transition-colors');
+            setTimeout(() => inputPrecio.classList.remove('bg-green-50'), 500);
         } else {
             inputPrecio.value = '';
         }
 
-        inputPrecio.classList.add('bg-yellow-50', 'transition-colors');
-        setTimeout(() => inputPrecio.classList.remove('bg-yellow-50'), 500);
+        setTimeout(() => {
+             if(inputPrecio.value) inputCant.focus();
+             else inputPrecio.focus();
+        }, 100);
     });
 
-    // B. Función Agregar Ítem
+    $selectProd.on('select2:clear', function(e) {
+        ocultarBloqueDetalle();
+    });
+
+    // B. SOPORTE TECLA ENTER (PARA AGREGAR)
+    [inputCant, inputPrecio].forEach(input => {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnAgregar.click();
+            }
+        });
+    });
+
+    // C. AGREGAR ÍTEM
     btnAgregar.addEventListener('click', function() {
         const prodId = $selectProd.val();
+        if (!prodId) {
+            showGlobalAlert('Falta información', 'Por favor selecciona un producto de la lista.');
+            return;
+        }
 
         const selection = $selectProd.select2('data');
         const prodNombre = selection && selection.length > 0 ? selection[0].text : '';
-
         const cantidad = parseInt(inputCant.value) || 1;
         const precio = parseInt(inputPrecio.value) || 0;
-
-        if (!prodId) {
-            if(window.showGlobalAlert) {
-                showGlobalAlert('Falta información', 'Por favor selecciona un producto de la lista.');
-            } else {
-                alert("Por favor selecciona un producto.");
-            }
-            return;
-        }
 
         items.push({
             producto_id: prodId,
             nombre: prodNombre,
+            unidad: unidadActual,
             cantidad: cantidad,
             precio_unitario: precio,
             subtotal: cantidad * precio
         });
 
         renderTable();
-        resetForm();
+        ocultarBloqueDetalle();
     });
 
-    // C. Renderizar Tabla
+    // D. RENDERIZAR TABLA (CON PRECIO EDITABLE)
     window.renderTable = function() {
         tableBody.innerHTML = '';
         let totalAcumulado = 0;
@@ -462,10 +495,26 @@ function initProductManager() {
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors border-b border-slate-100 dark:border-neutral-800 last:border-0";
+
                 tr.innerHTML = `
                     <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">${item.nombre}</td>
-                    <td class="px-4 py-3 text-center text-slate-600 dark:text-slate-400">${item.cantidad}</td>
-                    <td class="px-4 py-3 text-right text-slate-600 dark:text-slate-400">$${item.precio_unitario.toLocaleString('es-CL')}</td>
+                    <td class="px-4 py-3 text-center text-xs text-slate-500 font-mono bg-slate-50 dark:bg-neutral-800 rounded mx-2">${item.unidad}</td>
+                    <td class="px-4 py-3 text-center text-slate-600 dark:text-slate-400 font-bold">${item.cantidad}</td>
+                    
+                    <td class="px-4 py-3 text-right w-32">
+                        <div class="relative rounded-md shadow-sm">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+                                <span class="text-slate-400 sm:text-xs font-bold">$</span>
+                            </div>
+                            <input type="number" 
+                                   class="block w-full rounded border-0 py-1.5 pl-6 pr-2 text-right text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 dark:bg-neutral-800 dark:text-white dark:ring-neutral-700" 
+                                   value="${item.precio_unitario}"
+                                   onchange="updateItemPrice(${index}, this.value)"
+                                   onkeydown="if(event.key === 'Enter') { this.blur(); event.preventDefault(); }"
+                            >
+                        </div>
+                    </td>
+
                     <td class="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">$${item.subtotal.toLocaleString('es-CL')}</td>
                     <td class="px-4 py-3 text-center">
                         <button type="button" onclick="eliminarItem(${index})" class="p-1 text-slate-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20">
@@ -486,20 +535,20 @@ function initProductManager() {
         }
     };
 
-    // D. Eliminar Ítem
+    // E. FUNCIÓN PARA ACTUALIZAR PRECIO (NUEVA)
+    window.updateItemPrice = function(index, nuevoPrecio) {
+        const precio = parseInt(nuevoPrecio) || 0;
+        items[index].precio_unitario = precio;
+        items[index].subtotal = items[index].cantidad * precio;
+        renderTable();
+    };
+
     window.eliminarItem = function(index) {
         items.splice(index, 1);
         renderTable();
     };
 
-    // E. Resetear el mini-formulario
-    function resetForm() {
-        $selectProd.val(null).trigger('change');
-        inputCant.value = 1;
-        inputPrecio.value = '';
-    }
-
-    // F. Lógica de "Crear Producto Rápido" (API ACTUALIZADA)
+    // F. CREAR PRODUCTO RÁPIDO (Lógica API)
     const btnToggle = document.getElementById('btn-toggle-crear-producto');
     const divFormProd = document.getElementById('form-crear-producto-rapido');
     const btnCancelProd = document.getElementById('btn-cancelar-prod');
@@ -521,7 +570,9 @@ function initProductManager() {
     if(btnSaveProd) {
         btnSaveProd.addEventListener('click', function() {
             const nombre = document.getElementById('new_prod_nombre').value;
-            const precio = document.getElementById('new_prod_precio').value; // ESTE ES EL NETO AHORA
+            const precio = document.getElementById('new_prod_precio').value;
+            const unidad = document.getElementById('new_prod_unidad').value;
+
             const url = this.getAttribute('data-url');
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
@@ -540,11 +591,10 @@ function initProductManager() {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-CSRFToken': csrfToken
                 },
-                // CORRECCIÓN CRÍTICA: Cambiamos 'precio_venta' por 'valor_neto'
                 body: new URLSearchParams({
                     'nombre': nombre,
-                    'valor_neto': precio || 0, // <--- CAMBIO AQUÍ
-                    'unidad': 'UNITARIO', // Default seguro
+                    'valor_neto': precio || 0,
+                    'unidad': unidad,
                     'descripcion': 'Creado desde Pedido Rápido'
                 })
             })
@@ -553,16 +603,28 @@ function initProductManager() {
                 if(data.success) {
                     const newOption = new Option(data.nombre, data.id, true, true);
 
-                    // Aquí recibimos el 'precio' (Bruto) calculado por el backend
                     $(newOption).attr('data-precio', data.precio);
                     $(newOption).data('precio', data.precio);
+                    $(newOption).attr('data-unidad', data.unidad);
+                    $(newOption).data('unidad', data.unidad);
 
                     $selectProd.append(newOption).trigger('change');
-                    inputPrecio.value = data.precio;
+
+                    $selectProd.trigger({
+                        type: 'select2:select',
+                        params: {
+                            data: {
+                                element: newOption,
+                                id: data.id,
+                                text: data.nombre
+                            }
+                        }
+                    });
 
                     divFormProd.classList.add('hidden');
                     document.getElementById('new_prod_nombre').value = '';
                     document.getElementById('new_prod_precio').value = '';
+                    document.getElementById('new_prod_unidad').value = 'UNITARIO';
                 } else {
                     alert("Error: " + JSON.stringify(data.errors));
                 }
