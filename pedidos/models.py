@@ -87,17 +87,47 @@ class Pedido(models.Model):
     def __str__(self):
         return f"{self.resumen_pedido} - {self.cliente.nombre}"
 
+
 class Producto(models.Model):
     """
-    Maestro de Productos / Servicios para el inventario.
+    Maestro de Productos / Servicios (Refactorizado con IVA 19%).
     """
+    UNIDAD_CHOICES = [
+        ('UNITARIO', 'Unitario'),
+        ('METRO_CUADRADO', 'Metro Cuadrado (m2)'),
+        ('METRO_LINEAL', 'Metro Lineal (ml)'),
+    ]
+
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True, help_text="Detalles técnicos o especificaciones base")
-    precio_venta = models.IntegerField(help_text="Precio unitario sugerido")
+
+    # Nuevo campo: Unidad de medida
+    unidad = models.CharField(max_length=20, choices=UNIDAD_CHOICES, default='UNITARIO')
+
+    # Nuevo campo: Precio Base (Neto)
+    valor_neto = models.IntegerField(help_text="Valor base sin impuestos")
+
+    # Campos Calculados (Se llenan solos en el save)
+    iva = models.IntegerField(help_text="19% del valor neto", editable=False)
+    valor_bruto = models.IntegerField(help_text="Precio final con IVA (Neto + IVA)", editable=False)
+
     fecha_ingreso = models.DateTimeField(auto_now_add=True)
 
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribimos el guardar para calcular IVA y Bruto automáticamente.
+        """
+        # Calcular IVA (19%) - Usamos round para redondear matemáticamente antes de convertir a entero
+        self.iva = int(round(self.valor_neto * 0.19))
+
+        # Calcular Bruto
+        self.valor_bruto = self.valor_neto + self.iva
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.nombre
+        # Mostramos el precio final en el admin/selects para facilitar la vida
+        return f"{self.nombre} (${self.valor_bruto} IVA inc.)"
 
 # Clase hecha para relacionar Productos con Pedidos y viceversa.
 class ItemPedido(models.Model):

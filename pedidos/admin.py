@@ -16,7 +16,6 @@ class PedidoAdmin(admin.ModelAdmin):
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'precio_venta', 'fecha_ingreso')
+    list_display = ('nombre', 'unidad', 'valor_neto', 'iva', 'valor_bruto', 'fecha_ingreso')
     search_fields = ('nombre',)
-    list_filter = ('fecha_ingreso',)
-    ordering = ('-fecha_ingreso',)
+    readonly_fields = ('iva', 'valor_bruto')

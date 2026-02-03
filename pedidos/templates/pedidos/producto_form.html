@@ -47,17 +47,32 @@
                             </div>
 
                             <div>
-                                <label for="{{ form.precio_venta.id_for_label }}" class="custom-label">
-                                    {{ form.precio_venta.label }}
+                                <label for="{{ form.unidad.id_for_label }}" class="custom-label">
+                                    {{ form.unidad.label }}
+                                </label>
+                                {% render_field form.unidad class="form-select select2" %}
+                                {% if form.unidad.errors %}
+                                    <div class="mt-1 text-sm text-red-500 font-medium">{{ form.unidad.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.valor_neto.id_for_label }}" class="custom-label">
+                                    {{ form.valor_neto.label }}
                                 </label>
                                 <div class="relative mt-1 rounded-md shadow-sm">
                                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                         <span class="text-slate-500 font-bold sm:text-sm">$</span>
                                     </div>
-                                    {% render_field form.precio_venta class="form-control !pl-12" placeholder="0" %}
+                                    {% render_field form.valor_neto class="form-control !pl-12" placeholder="0" %}
                                 </div>
-                                {% if form.precio_venta.errors %}
-                                    <div class="mt-1 text-sm text-red-500 font-medium">{{ form.precio_venta.errors.0 }}</div>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2 py-0.5 rounded">Auto-Calculado</span>
+                                    <p class="text-xs text-slate-400 mb-0">Ingresa el valor neto. El sistema calculará automáticamente el IVA (19%) y el Total Bruto al guardar.</p>
+                                </div>
+
+                                {% if form.valor_neto.errors %}
+                                    <div class="mt-1 text-sm text-red-500 font-medium">{{ form.valor_neto.errors.0 }}</div>
                                 {% endif %}
                             </div>
 

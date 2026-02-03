@@ -161,21 +161,25 @@ def api_crear_cliente_rapido(request):
             'errors': form.errors
         })
 
+
 @login_required
 @require_POST
 def api_crear_producto_rapido(request):
     """
     Endpoint AJAX para crear productos desde el formulario de pedido.
-    Retorna JSON con el nuevo ID y el precio para autocompletar.
+    Recibe 'valor_neto', deja que el modelo calcule el IVA/Bruto,
+    y retorna el 'valor_bruto' como precio sugerido.
     """
     form = ProductoForm(request.POST)
     if form.is_valid():
-        producto = form.save()
+        producto = form.save()  # El modelo calcula iva y valor_bruto aquí
+
         return JsonResponse({
             'success': True,
             'id': producto.id,
             'nombre': producto.nombre,
-            'precio': producto.precio_venta  # Importante para llenar el campo de precio automáticamente
+            # IMPORTANTE: Devolvemos el valor_bruto para que el JS llene el input de precio
+            'precio': producto.valor_bruto
         })
     else:
         return JsonResponse({

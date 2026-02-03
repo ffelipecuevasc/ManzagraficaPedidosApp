@@ -43,8 +43,14 @@ class PedidoForm(forms.ModelForm):
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['nombre', 'descripcion', 'precio_venta']
+        fields = ['nombre', 'unidad', 'valor_neto', 'descripcion']
         widgets = {
-            'descripcion': forms.Textarea(attrs={'rows': 3}),  # Altura inicial para Summernote
-            'precio_venta': forms.NumberInput(attrs={'min': '0', 'placeholder': '0'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Tarjetas de Visita'}),
+            'unidad': forms.Select(attrs={'class': 'form-select select2'}), # Select estilizado
+            'valor_neto': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control summernote-editor', 'rows': 3}),
+        }
+        labels = {
+            'valor_neto': 'Valor Neto (Sin IVA)',
+            'unidad': 'Unidad de Medida',
         }

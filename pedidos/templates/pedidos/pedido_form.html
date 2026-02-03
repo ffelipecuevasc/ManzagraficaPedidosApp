@@ -120,7 +120,7 @@
                     </div>
                 </div>
 
-                <div id="section-productos" class="transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
+                <div id="section-productos" class="hidden opacity-0 transition-all duration-700 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden mb-6 relative">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
 
                     <div class="p-6 md:p-8">
@@ -130,30 +130,31 @@
                         </h2>
 
                         <div class="bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-200 dark:border-neutral-800 mb-6">
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
 
-                                <div class="md:col-span-6">
-                                    <label class="custom-label">Producto</label>
-                                    <select id="select-producto" class="form-select select2" data-placeholder="Buscar ítem...">
-                                        <option></option>
-                                        {% for producto in productos_disponibles %}
-                                            <option value="{{ producto.id }}" data-precio="{{ producto.precio_venta }}">{{ producto.nombre }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="mt-2 text-right">
-                                        <button type="button" id="btn-toggle-crear-producto" class="text-xs font-bold text-primary hover:text-yellow-500 uppercase tracking-wide flex items-center justify-end w-full">
-                                            <span class="material-icons-round text-sm mr-1">add_circle</span> Crear Nuevo
-                                        </button>
-                                    </div>
+                            <div class="mb-4">
+                                <label class="custom-label">Producto / Servicio</label>
+                                <select id="select-producto" class="form-select select2" data-placeholder="Buscar ítem o servicio...">
+                                    <option></option>
+                                    {% for producto in productos_disponibles %}
+                                        <option value="{{ producto.id }}" data-precio="{{ producto.valor_bruto }}">{{ producto.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="mt-2 text-right">
+                                    <button type="button" id="btn-toggle-crear-producto" class="text-xs font-bold text-primary hover:text-yellow-500 uppercase tracking-wide flex items-center justify-end w-full transition-colors">
+                                        <span class="material-icons-round text-sm mr-1">add_circle</span> Crear Nuevo Producto
+                                    </button>
                                 </div>
+                            </div>
 
-                                <div class="md:col-span-2">
+                            <div class="grid grid-cols-12 gap-4 items-end">
+                                <div class="col-span-3 md:col-span-2">
                                     <label class="custom-label">Cant.</label>
                                     <input type="number" id="input-cantidad" class="form-control text-center h-[46px]" value="1" min="1">
                                 </div>
 
-                                <div class="md:col-span-3">
-                                    <label class="custom-label">Precio Venta</label>
+                                <div class="col-span-6 md:col-span-8">
+                                    <label class="custom-label">Precio Final (Unitario)</label>
                                     <div class="relative">
                                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                             <span class="text-slate-500 font-bold">$</span>
@@ -162,7 +163,7 @@
                                     </div>
                                 </div>
 
-                                <div class="md:col-span-1">
+                                <div class="col-span-3 md:col-span-2">
                                     <button type="button" id="btn-agregar-item" class="w-full h-[46px] bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center hover:shadow-lg transition-all" title="Agregar a la lista">
                                         <span class="material-icons-round">arrow_downward</span>
                                     </button>
@@ -170,13 +171,14 @@
                             </div>
 
                             <div id="form-crear-producto-rapido" class="hidden mt-4 pt-4 border-t border-slate-200 dark:border-neutral-700">
-                                <h4 class="text-xs font-bold text-slate-500 uppercase mb-3">Nuevo Producto</h4>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase mb-3">Nuevo Producto Express</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <div class="md:col-span-2">
                                         <input type="text" id="new_prod_nombre" class="form-control text-sm" placeholder="Nombre del Producto (Ej: Pendón 2x1)">
                                     </div>
                                     <div>
-                                        <input type="number" id="new_prod_precio" class="form-control text-sm" placeholder="Precio Base">
+                                        <input type="number" id="new_prod_precio" class="form-control text-sm" placeholder="Precio NETO">
+                                        <p class="text-[10px] text-slate-400 mt-1 text-right">+ IVA se calculará auto</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-end gap-2 mt-3">
@@ -206,7 +208,7 @@
                                 </tbody>
                                 <tfoot class="bg-slate-50 dark:bg-neutral-900/50 font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-neutral-800">
                                     <tr>
-                                        <td colspan="3" class="px-4 py-3 text-right">TOTAL NETO:</td>
+                                        <td colspan="3" class="px-4 py-3 text-right">TOTAL A PAGAR:</td>
                                         <td class="px-4 py-3 text-right" id="cell-total-pedido">$0</td>
                                         <td></td>
                                     </tr>
@@ -219,7 +221,7 @@
                 </div>
 
                 <div id="section-detalles-pedido"
-                     class="hidden opacity-50 transition-all duration-500 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+                     class="hidden opacity-0 transition-all duration-700 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 dark:bg-neutral-700"></div>
                     <div class="p-6 md:p-8">
                         <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">

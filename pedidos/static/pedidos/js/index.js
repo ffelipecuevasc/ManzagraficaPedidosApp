@@ -130,7 +130,11 @@ function initPlugins() {
    ========================================= */
 function initPedidoForm() {
     const $selectCliente = $('#id_cliente');
+
+    // Referencias a las secciones nuevas
+    const sectionProductos = document.getElementById('section-productos');
     const sectionDetalles = document.getElementById('section-detalles-pedido');
+
     const sectionBuscar = document.getElementById('section-buscar-cliente');
     const sectionCrear = document.getElementById('section-crear-cliente');
     const btnToggleCrear = document.getElementById('btn-toggle-crear');
@@ -139,16 +143,41 @@ function initPedidoForm() {
 
     function checkClienteSeleccionado() {
         if ($selectCliente.val()) {
-            sectionDetalles.classList.remove('hidden', 'opacity-50');
-            sectionDetalles.classList.add('opacity-100');
+            // 1. Mostrar Sección Productos (Efecto Fade In)
+            if(sectionProductos) {
+                sectionProductos.classList.remove('hidden');
+                // Pequeño delay para permitir que el navegador procese el "display: block" antes de la opacidad
+                setTimeout(() => {
+                    sectionProductos.classList.remove('opacity-0');
+                }, 50);
+            }
+
+            // 2. Mostrar Sección Detalles (Con un poco de retraso para efecto cascada)
+            if(sectionDetalles) {
+                sectionDetalles.classList.remove('hidden');
+                setTimeout(() => {
+                    sectionDetalles.classList.remove('opacity-0');
+                }, 300);
+            }
         } else {
-            sectionDetalles.classList.add('hidden', 'opacity-50');
-            sectionDetalles.classList.remove('opacity-100');
+            // Ocultar el contenido si se deselecciona
+            if(sectionProductos) {
+                sectionProductos.classList.add('opacity-0');
+                setTimeout(() => sectionProductos.classList.add('hidden'), 500); // Esperar animación
+            }
+            if(sectionDetalles) {
+                sectionDetalles.classList.add('opacity-0');
+                setTimeout(() => sectionDetalles.classList.add('hidden'), 500);
+            }
         }
     }
+
+    // Escuchar cambios
     $selectCliente.on('change', checkClienteSeleccionado);
+    // Verificar estado inicial (por si es edición)
     checkClienteSeleccionado();
 
+    // --- LÓGICA DE CREAR CLIENTE (Se mantiene igual) ---
     if(btnToggleCrear) {
         btnToggleCrear.addEventListener('click', () => {
             sectionBuscar.classList.add('hidden');
@@ -199,9 +228,11 @@ function initPedidoForm() {
                     $selectCliente.append(newOption).trigger('change');
                     sectionCrear.classList.add('hidden');
                     sectionBuscar.classList.remove('hidden');
+                    // Limpiar campos
                     document.getElementById('new_client_nombre').value = '';
                     document.getElementById('new_client_telefono').value = '';
                     document.getElementById('new_client_email').value = '';
+                    // Forzar actualización de UI
                     checkClienteSeleccionado();
                 } else {
                     const errorDiv = document.getElementById('cliente-api-error');
@@ -356,7 +387,7 @@ function showGlobalAlert(titulo, mensaje) {
 }
 
 /* =========================================
-   10. LÓGICA DE ÍTEMS DEL PEDIDO (CORREGIDO)
+   10. LÓGICA DE ÍTEMS DEL PEDIDO (CORREGIDO FINAL)
    ========================================= */
 function initProductManager() {
     const $selectProd = $('#select-producto');
@@ -374,19 +405,15 @@ function initProductManager() {
 
     // A. LÓGICA DE PRECIO AUTOMÁTICO (ROBUSTA)
     $selectProd.on('select2:select', function(e) {
-        // Accedemos directamente al elemento <option> original a través del evento
         const element = e.params.data.element;
-        // Leemos el atributo data-precio (jQuery lo parsea automáticamente)
         const precio = $(element).data('precio');
 
-        // Validamos que precio no sea undefined (admitimos 0 como valor válido)
         if (precio !== undefined && precio !== null) {
             inputPrecio.value = precio;
         } else {
-            inputPrecio.value = ''; // Limpiar si no hay precio
+            inputPrecio.value = '';
         }
 
-        // Efecto visual opcional: resaltar el campo precio
         inputPrecio.classList.add('bg-yellow-50', 'transition-colors');
         setTimeout(() => inputPrecio.classList.remove('bg-yellow-50'), 500);
     });
@@ -395,7 +422,6 @@ function initProductManager() {
     btnAgregar.addEventListener('click', function() {
         const prodId = $selectProd.val();
 
-        // Validación de seguridad para obtener el texto
         const selection = $selectProd.select2('data');
         const prodNombre = selection && selection.length > 0 ? selection[0].text : '';
 
@@ -403,7 +429,6 @@ function initProductManager() {
         const precio = parseInt(inputPrecio.value) || 0;
 
         if (!prodId) {
-            // Usamos tu alerta global si está disponible, sino alert normal
             if(window.showGlobalAlert) {
                 showGlobalAlert('Falta información', 'Por favor selecciona un producto de la lista.');
             } else {
@@ -412,7 +437,6 @@ function initProductManager() {
             return;
         }
 
-        // Agregar al array
         items.push({
             producto_id: prodId,
             nombre: prodNombre,
@@ -453,16 +477,11 @@ function initProductManager() {
             });
         }
 
-        // Actualizar Totales Visuales
         cellTotal.innerText = '$' + totalAcumulado.toLocaleString('es-CL');
-
-        // Actualizar JSON para Backend
         inputJson.value = JSON.stringify(items);
 
-        // AUTO-LLENAR el campo "Valor Venta" del formulario original de Django
         if(inputVentaTotal) {
             inputVentaTotal.value = totalAcumulado;
-            // Disparar evento para validaciones
             inputVentaTotal.dispatchEvent(new Event('input'));
         }
     };
@@ -480,7 +499,7 @@ function initProductManager() {
         inputPrecio.value = '';
     }
 
-    // F. Lógica de "Crear Producto Rápido" (API)
+    // F. Lógica de "Crear Producto Rápido" (API ACTUALIZADA)
     const btnToggle = document.getElementById('btn-toggle-crear-producto');
     const divFormProd = document.getElementById('form-crear-producto-rapido');
     const btnCancelProd = document.getElementById('btn-cancelar-prod');
@@ -489,7 +508,6 @@ function initProductManager() {
     if(btnToggle) {
         btnToggle.addEventListener('click', () => {
             divFormProd.classList.remove('hidden');
-            // Auto focus al nombre
             setTimeout(() => document.getElementById('new_prod_nombre').focus(), 100);
         });
     }
@@ -503,7 +521,7 @@ function initProductManager() {
     if(btnSaveProd) {
         btnSaveProd.addEventListener('click', function() {
             const nombre = document.getElementById('new_prod_nombre').value;
-            const precio = document.getElementById('new_prod_precio').value;
+            const precio = document.getElementById('new_prod_precio').value; // ESTE ES EL NETO AHORA
             const url = this.getAttribute('data-url');
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
@@ -522,28 +540,26 @@ function initProductManager() {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-CSRFToken': csrfToken
                 },
+                // CORRECCIÓN CRÍTICA: Cambiamos 'precio_venta' por 'valor_neto'
                 body: new URLSearchParams({
                     'nombre': nombre,
-                    'precio_venta': precio || 0,
+                    'valor_neto': precio || 0, // <--- CAMBIO AQUÍ
+                    'unidad': 'UNITARIO', // Default seguro
                     'descripcion': 'Creado desde Pedido Rápido'
                 })
             })
             .then(r => r.json())
             .then(data => {
                 if(data.success) {
-                    // Crear opción y seleccionarla
                     const newOption = new Option(data.nombre, data.id, true, true);
 
-                    // IMPORTANTE: Escribir el atributo en el DOM para consistencia
+                    // Aquí recibimos el 'precio' (Bruto) calculado por el backend
                     $(newOption).attr('data-precio', data.precio);
-                    $(newOption).data('precio', data.precio); // También en caché de jQuery
+                    $(newOption).data('precio', data.precio);
 
                     $selectProd.append(newOption).trigger('change');
-
-                    // Llenar el input de precio manualmente
                     inputPrecio.value = data.precio;
 
-                    // Limpiar y ocultar
                     divFormProd.classList.add('hidden');
                     document.getElementById('new_prod_nombre').value = '';
                     document.getElementById('new_prod_precio').value = '';
@@ -553,7 +569,7 @@ function initProductManager() {
             })
             .catch(err => {
                 console.error(err);
-                alert("Error de conexión al crear producto");
+                alert("Error de conexión");
             })
             .finally(() => {
                 this.innerHTML = originalText;
