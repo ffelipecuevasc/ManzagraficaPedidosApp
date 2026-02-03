@@ -12,7 +12,8 @@
 
                 <div class="p-8 text-center">
                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 mb-6">
-                        <span class="material-icons-round text-4xl">inventory_2</span> </div>
+                        <span class="material-icons-round text-4xl">inventory_2</span>
+                    </div>
 
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">
                         ¿Eliminar Producto del Inventario?
@@ -23,25 +24,44 @@
                         <span class="font-bold text-slate-900 dark:text-white text-lg">"{{ producto.nombre }}"</span>
                     </p>
 
-                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-lg p-4 mb-8 text-sm text-red-700 dark:text-red-300 text-left flex items-start">
-                        <span class="material-icons-round text-base mr-2 mt-0.5 flex-shrink-0">info</span>
-                        <div>
-                            <strong>Nota:</strong> Si eliminas este producto, desaparecerá del catálogo para futuros pedidos, pero los registros históricos que lo usaron no se verán afectados (porque aún no implementamos la relación fuerte, así que es seguro borrar).
+                    {% if error %}
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg mb-6 text-left animate-pulse">
+                            <div class="flex items-start">
+                                <span class="material-icons-round text-red-600 text-xl mr-2">gpp_bad</span>
+                                <div>
+                                    <h3 class="text-sm font-bold text-red-800 dark:text-red-400">Acción Denegada</h3>
+                                    <p class="text-xs text-red-600 dark:text-red-300 mt-1 leading-relaxed">
+                                        {{ error }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <form method="post" class="flex flex-col sm:flex-row gap-3 justify-center">
-                        {% csrf_token %}
-
-                        <a href="{% url 'lista_productos' %}" class="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
-                            Cancelar
+                        <a href="{% url 'lista_productos' %}" class="w-full block px-5 py-3 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-black font-bold text-center transition-transform hover:scale-105">
+                            Entendido, Volver
                         </a>
 
-                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center">
-                            <span class="material-icons-round text-lg mr-2">delete_forever</span>
-                            Sí, Eliminar
-                        </button>
-                    </form>
+                    {% else %}
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30 rounded-lg p-4 mb-8 text-sm text-yellow-800 dark:text-yellow-400 text-left flex items-start">
+                            <span class="material-icons-round text-base mr-2 mt-0.5 flex-shrink-0">warning</span>
+                            <div>
+                                <strong>Nota:</strong> Solo podrás eliminar productos que <b>NUNCA</b> hayan sido usados en un pedido o cotización.
+                            </div>
+                        </div>
+
+                        <form method="post" class="flex flex-col sm:flex-row gap-3 justify-center">
+                            {% csrf_token %}
+
+                            <a href="{% url 'lista_productos' %}" class="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
+                                Cancelar
+                            </a>
+
+                            <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center">
+                                <span class="material-icons-round text-lg mr-2">delete_forever</span>
+                                Sí, Eliminar
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

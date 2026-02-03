@@ -11,6 +11,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.template.loader import render_to_string
 from django.http import HttpResponse
+from django.db.models import ProtectedError
 import weasyprint
 import json
 
@@ -697,10 +698,20 @@ def editar_producto(request, pk):
 @transaccion_segura
 def eliminar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
+    error_message = None # Variable para guardar el mensaje de error
+
     if request.method == 'POST':
-        producto.delete()
-        return redirect('lista_productos')
-    return render(request, 'pedidos/producto_confirm_delete.html', {'producto': producto})
+        try:
+            producto.delete()
+            return redirect('lista_productos')
+        except ProtectedError:
+            # Aquí capturamos el bloqueo de seguridad
+            error_message = "No se puede eliminar este producto porque ya forma parte de Pedidos o Cotizaciones históricas. Para mantener la integridad de los datos, no está permitido borrarlo."
+
+    return render(request, 'pedidos/producto_confirm_delete.html', {
+        'producto': producto,
+        'error': error_message # Pasamos el error al HTML
+    })
 
 @login_required
 def detalle_producto(request, pk):

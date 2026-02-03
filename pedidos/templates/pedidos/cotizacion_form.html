@@ -242,7 +242,7 @@
                         <div class="space-y-6">
                             <div>
                                 <label class="custom-label" for="{{ form.resumen.id_for_label }}">{{ form.resumen.label }}</label>
-                                {% render_field form.resumen class="form-control" placeholder="Ej: 1000 Volantes Corporativos" %}
+                                {% render_field form.resumen class="form-control bg-white dark:bg-neutral-900" placeholder="Ej: 1000 Volantes Corporativos" %}
                                 {% if form.resumen.errors %}
                                     <p class="text-red-500 text-xs mt-1 font-bold">{{ form.resumen.errors.0 }}</p>
                                 {% endif %}
