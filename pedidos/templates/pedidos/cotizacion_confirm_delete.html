@@ -1,0 +1,46 @@
+{% extends 'pedidos/base.html' %}
+
+{% block title %}Eliminar Cotización - Manza Gráfica{% endblock %}
+
+{% block content %}
+    <div class="flex items-center justify-center min-h-[60vh]">
+        <div class="w-full max-w-md">
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-red-200 dark:border-red-900/50 shadow-xl overflow-hidden relative">
+                <div class="h-2 bg-red-500 w-full absolute top-0 left-0"></div>
+
+                <div class="p-8 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 mb-6">
+                        <span class="material-icons-round text-4xl">delete_forever</span>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        ¿Eliminar Cotización?
+                    </h2>
+
+                    <p class="text-slate-500 dark:text-slate-400 mb-6">
+                        Estás a punto de borrar la cotización <strong class="text-slate-900 dark:text-white">#{{ cotizacion.id }}</strong> de 
+                        <span class="text-primary font-bold">{{ cotizacion.cliente.nombre }}</span>.
+                    </p>
+
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30 rounded-lg p-4 mb-8 text-sm text-yellow-800 dark:text-yellow-400 text-left flex items-start">
+                        <span class="material-icons-round text-base mr-2 mt-0.5 flex-shrink-0">warning</span>
+                        <div>
+                            <strong>Atención:</strong> Esta acción es irreversible. Se eliminará el registro y sus detalles asociados.
+                        </div>
+                    </div>
+
+                    <form method="post" class="flex flex-col sm:flex-row gap-3 justify-center">
+                        {% csrf_token %}
+                        <a href="{% url 'lista_cotizaciones' %}" class="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center">
+                            <span class="material-icons-round text-lg mr-2">delete</span>
+                            Confirmar Eliminación
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
