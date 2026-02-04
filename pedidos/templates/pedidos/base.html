@@ -8,7 +8,8 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'pedidos/img/favicon.svg' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
@@ -33,93 +34,170 @@
             },
         };
     </script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
 
     <link href="{% static 'pedidos/css/index.css' %}" rel="stylesheet">
 </head>
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 h-screen flex overflow-hidden">
 
-    <aside class="w-64 border-r border-slate-200 dark:border-border-dark flex flex-col fixed h-full bg-white dark:bg-background-dark z-50 transition-colors duration-300">
-        <div class="p-6">
-            <div class="flex flex-col">
+<aside class="w-64 border-r border-slate-200 dark:border-border-dark flex flex-col fixed h-full bg-white dark:bg-background-dark z-50 transition-colors duration-300">
+    <div class="p-6">
+        <div class="flex flex-col">
                 <span class="display-font text-3xl tracking-tight text-slate-900 dark:text-white">
                     MANZA <span class="bg-primary text-black px-1">GRÁFICA</span>
                 </span>
-                <span class="text-[10px] tracking-[0.2em] font-medium opacity-60 mt-1 text-slate-500 dark:text-slate-400">DISEÑO Y PUBLICIDAD</span>
+            <span class="text-[10px] tracking-[0.2em] font-medium opacity-60 mt-1 text-slate-500 dark:text-slate-400">DISEÑO Y PUBLICIDAD</span>
+        </div>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-1 mt-4 overflow-y-auto custom-scrollbar">
+        <a href="{% url 'dashboard' %}"
+           class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors mb-2 {% if request.resolver_match.url_name == 'dashboard' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
+            <span class="material-icons-round mr-3">dashboard</span>
+            Panel de Control
+        </a>
+
+        <div class="pt-2">
+            <button type="button"
+                    class="btn-accordion w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-card-dark/50 rounded-md transition-all group"
+                    data-target="#menu-pedidos">
+                <div class="flex items-center">
+                    <span class="material-icons-round text-lg mr-2 group-hover:text-primary transition-colors">assignment</span>
+                    <span>Pedidos</span>
+                </div>
+                <span class="material-icons-round text-lg transition-transform duration-200 text-slate-400 group-hover:text-primary chevron-icon">expand_more</span>
+            </button>
+
+            <div id="menu-pedidos" class="accordion-content hidden space-y-1 mt-1">
+                <a href="{% url 'lista_pedidos' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'lista_pedidos' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">toc</span>
+                    Listado Pedidos
+                </a>
+                <a href="{% url 'crear_pedido' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'crear_pedido' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">add_circle_outline</span>
+                    Nuevo Pedido
+                </a>
+                <a href="{% url 'trabajo_semanal' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'trabajo_semanal' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">calendar_view_week</span>
+                    Trabajo Semanal
+                </a>
             </div>
         </div>
 
-        <nav class="flex-1 px-4 space-y-2 mt-4 overflow-y-auto custom-scrollbar">
-            <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'dashboard' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">dashboard</span>
-                Panel de Control
-            </a>
+        <div class="pt-2">
+            <button type="button"
+                    class="btn-accordion w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-card-dark/50 rounded-md transition-all group"
+                    data-target="#menu-cotizaciones">
+                <div class="flex items-center">
+                    <span class="material-icons-round text-lg mr-2 group-hover:text-primary transition-colors">request_quote</span>
+                    <span>Cotizaciones</span>
+                </div>
+                <span class="material-icons-round text-lg transition-transform duration-200 text-slate-400 group-hover:text-primary chevron-icon">expand_more</span>
+            </button>
 
-            <div class="pt-4 pb-2">
-                <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestión Pedidos</p>
+            <div id="menu-cotizaciones" class="accordion-content hidden space-y-1 mt-1">
+                <a href="{% url 'lista_cotizaciones' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'lista_cotizaciones' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">request_quote</span>
+                    Listado Cotizaciones
+                </a>
+                <a href="{% url 'crear_cotizacion' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'crear_cotizacion' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">post_add</span>
+                    Nueva Cotización
+                </a>
             </div>
+        </div>
 
-            <a href="{% url 'lista_pedidos' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'lista_pedidos' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">list_alt</span>
-                Listado Pedidos
-            </a>
-
-            <a href="{% url 'crear_pedido' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'crear_pedido' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">add_circle_outline</span>
-                Nuevo Pedido
-            </a>
-
-            <a href="{% url 'trabajo_semanal' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'trabajo_semanal' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">calendar_view_week</span>
-                Trabajo Semanal
-            </a>
-
-            <div class="pt-4 pb-2">
-                <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestión Cotizaciones</p>
+        <div class="pt-2">
+            <button type="button"
+                    class="btn-accordion w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-card-dark/50 rounded-md transition-all group"
+                    data-target="#menu-productos">
+                <div class="flex items-center">
+                    <span class="material-icons-round text-lg mr-2 group-hover:text-primary transition-colors">inventory_2</span>
+                    <span>Productos</span>
+                </div>
+                <span class="material-icons-round text-lg transition-transform duration-200 text-slate-400 group-hover:text-primary chevron-icon">expand_more</span>
+            </button>
+            <div id="menu-productos" class="accordion-content hidden space-y-1 mt-1">
+                <a href="{% url 'lista_productos' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'lista_productos' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">inventory_2</span>
+                    Listado Productos
+                </a>
+                <a href="{% url 'crear_producto' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'crear_producto' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">library_add</span>
+                    Nuevo Producto
+                </a>
             </div>
+        </div>
 
-            <a href="{% url 'lista_cotizaciones' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'lista_cotizaciones' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">request_quote</span>
-                Listado Cotizaciones
-            </a>
-
-            <a href="{% url 'crear_cotizacion' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'crear_cotizacion' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">post_add</span>
-                Nueva Cotización
-            </a>
-
-            <div class="pt-4 pb-2">
-                <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestión Productos</p>
+        <div class="pt-2">
+            <button type="button"
+                    class="btn-accordion w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-card-dark/50 rounded-md transition-all group"
+                    data-target="#menu-clientes">
+                <div class="flex items-center">
+                    <span class="material-icons-round text-lg mr-2 group-hover:text-primary transition-colors">contacts</span>
+                    <span>Clientes</span>
+                </div>
+                <span class="material-icons-round text-lg transition-transform duration-200 text-slate-400 group-hover:text-primary chevron-icon">expand_more</span>
+            </button>
+            <div id="menu-clientes" class="accordion-content hidden space-y-1 mt-1">
+                <a href="{% url 'lista_clientes' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'lista_clientes' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">groups</span>
+                    Directorio Clientes
+                </a>
+                <a href="{% url 'crear_cliente' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'crear_cliente' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">person_add_alt</span>
+                    Agregar Cliente
+                </a>
             </div>
+        </div>
 
-            <a href="{% url 'lista_productos' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'lista_productos' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">inventory_2</span>
-                Listado Productos
-            </a>
-
-            <a href="{% url 'crear_producto' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'crear_producto' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">add_box</span>
-                Nuevo Producto
-            </a>
-
-            <div class="pt-4 pb-2">
-                <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestión Clientes</p>
+        <div class="pt-2">
+            <button type="button"
+                    class="btn-accordion w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-card-dark/50 rounded-md transition-all group"
+                    data-target="#menu-configuracion">
+                <div class="flex items-center">
+                    <span class="material-icons-round text-lg mr-2 group-hover:text-primary transition-colors">settings</span>
+                    <span>Configuración</span>
+                </div>
+                <span class="material-icons-round text-lg transition-transform duration-200 text-slate-400 group-hover:text-primary chevron-icon">expand_more</span>
+            </button>
+            <div id="menu-configuracion" class="accordion-content hidden space-y-1 mt-1">
+                <a href="#"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group/item">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">storage</span>
+                    Respaldar BD
+                </a>
+                <a href="#"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group/item">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">settings_backup_restore</span>
+                    Restaurar BD
+                </a>
+                <a href="#"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group/item">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">groups</span>
+                    Listado Usuarios
+                </a>
+                <a href="#"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group/item">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">person_add</span>
+                    Agregar Usuario
+                </a>
             </div>
+        </div>
+    </nav>
 
-            <a href="{% url 'lista_clientes' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'lista_clientes' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">people</span>
-                Directorio Clientes
-            </a>
-
-            <a href="{% url 'crear_cliente' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-card-dark transition-colors {% if request.resolver_match.url_name == 'crear_cliente' %}bg-primary/10 text-primary{% else %}text-slate-600 dark:text-slate-400{% endif %}">
-                <span class="material-icons-round mr-3">person_add</span>
-                Agregar Cliente
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-card-dark/50">
-            {% if user.is_authenticated %}
+    <div class="p-4 border-t border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-card-dark/50">
+        {% if user.is_authenticated %}
             <div class="flex items-center mb-4 px-2">
                 <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs mr-3">
                     {{ user.username|slice:":2"|upper }}
@@ -128,79 +206,86 @@
                     <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ user.username }}</p>
                     <form action="{% url 'logout' %}" method="post" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="text-xs text-slate-500 hover:text-red-500 transition-colors">Cerrar Sesión</button>
+                        <button type="submit" class="text-xs text-slate-500 hover:text-red-500 transition-colors">Cerrar
+                            Sesión
+                        </button>
                     </form>
                 </div>
             </div>
-            {% else %}
-            <a href="{% url 'login' %}" class="block text-center py-2 px-4 border border-slate-300 dark:border-border-dark rounded-md text-sm font-medium hover:bg-slate-100 dark:hover:bg-card-dark transition-colors">
+        {% else %}
+            <a href="{% url 'login' %}"
+               class="block text-center py-2 px-4 border border-slate-300 dark:border-border-dark rounded-md text-sm font-medium hover:bg-slate-100 dark:hover:bg-card-dark transition-colors">
                 Iniciar Sesión
             </a>
-            {% endif %}
+        {% endif %}
 
-            <button id="theme-toggle" class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-card-dark rounded-md transition-colors">
-                <span class="material-icons-round mr-2 text-lg dark:hidden">dark_mode</span>
-                <span class="material-icons-round mr-2 text-lg hidden dark:block">light_mode</span>
-                <span class="dark:hidden">Modo Oscuro</span>
-                <span class="hidden dark:block">Modo Claro</span>
-            </button>
-        </div>
-    </aside>
+        <button id="theme-toggle"
+                class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-card-dark rounded-md transition-colors">
+            <span class="material-icons-round mr-2 text-lg dark:hidden">dark_mode</span>
+            <span class="material-icons-round mr-2 text-lg hidden dark:block">light_mode</span>
+            <span class="dark:hidden">Modo Oscuro</span>
+            <span class="hidden dark:block">Modo Claro</span>
+        </button>
+    </div>
+</aside>
 
-    <main class="ml-64 flex-1 h-full overflow-y-auto bg-background-light dark:bg-background-dark p-8 transition-colors duration-300">
-        {% block content %}
-        {% endblock %}
+<main class="ml-64 flex-1 h-full overflow-y-auto bg-background-light dark:bg-background-dark p-8 transition-colors duration-300">
+    {% block content %}
+    {% endblock %}
 
-        <footer class="mt-12 py-6 border-t border-slate-200 dark:border-border-dark text-center">
-            <p class="text-xs text-slate-500 dark:text-slate-500 uppercase tracking-widest font-medium">
-                © 2026 MANZA GRÁFICA - SISTEMA DESARROLLADO POR <a href="https://www.linkedin.com/in/ffelipecuevasc" target="_blank">FELIPE CUEVAS</a>
-            </p>
-        </footer>
-    </main>
+    <footer class="mt-12 py-6 border-t border-slate-200 dark:border-border-dark text-center">
+        <p class="text-xs text-slate-500 dark:text-slate-500 uppercase tracking-widest font-medium">
+            © 2026 MANZA GRÁFICA - SISTEMA DESARROLLADO POR <a href="https://www.linkedin.com/in/ffelipecuevasc"
+                                                               target="_blank">FELIPE CUEVAS</a>
+        </p>
+    </footer>
+</main>
 
-    <div id="modal-alerta-global" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-slate-900/75 transition-opacity backdrop-blur-sm"></div>
+<div id="modal-alerta-global" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog"
+     aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/75 transition-opacity backdrop-blur-sm"></div>
 
-        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-neutral-700">
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-neutral-700">
 
-                    <div class="bg-white dark:bg-neutral-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 sm:mx-0 sm:h-10 sm:w-10">
-                                <span class="material-icons-round text-red-600 dark:text-red-400 text-2xl">gpp_bad</span>
-                            </div>
+                <div class="bg-white dark:bg-neutral-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 sm:mx-0 sm:h-10 sm:w-10">
+                            <span class="material-icons-round text-red-600 dark:text-red-400 text-2xl">gpp_bad</span>
+                        </div>
 
-                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                                <h3 class="text-lg font-bold leading-6 text-slate-900 dark:text-white" id="modal-alerta-titulo">
-                                    Acción No Permitida
-                                </h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-slate-500 dark:text-slate-400" id="modal-alerta-mensaje">
-                                        Mensaje de error aquí...
-                                    </p>
-                                </div>
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                            <h3 class="text-lg font-bold leading-6 text-slate-900 dark:text-white"
+                                id="modal-alerta-titulo">
+                                Acción No Permitida
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-slate-500 dark:text-slate-400" id="modal-alerta-mensaje">
+                                    Mensaje de error aquí...
+                                </p>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="bg-slate-50 dark:bg-neutral-900/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        <button type="button" id="btn-cerrar-alerta"
-                                class="inline-flex w-full justify-center rounded-lg bg-red-600 hover:bg-red-700 px-3 py-2 text-sm font-bold text-white shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide">
-                            Entendido
-                        </button>
-                    </div>
+                <div class="bg-slate-50 dark:bg-neutral-900/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" id="btn-cerrar-alerta"
+                            class="inline-flex w-full justify-center rounded-lg bg-red-600 hover:bg-red-700 px-3 py-2 text-sm font-bold text-white shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide">
+                        Entendido
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
 
-    <script src="{% static 'pedidos/js/index.js' %}"></script>
+<script src="{% static 'pedidos/js/index.js' %}"></script>
 
-    {% block scripts %}{% endblock %}
+{% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,7 +1,7 @@
 /* =========================================
    1. INICIALIZACIÓN GLOBAL (Se ejecuta al cargar)
    ========================================= */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // A. Gestión del Modo Oscuro
     initThemeToggle();
 
@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('modal-confirmacion')) {
         initDetailModals();
     }
+
+    // G. Efecto acordeón de la Barra de Navegación Lateral
+    initSidebarAccordions();
 });
 
 /* =========================================
@@ -34,7 +37,7 @@ function initThemeToggle() {
     const htmlElement = document.documentElement;
 
     const isDark = localStorage.getItem('color-theme') === 'dark' ||
-                   (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     if (isDark) {
         htmlElement.classList.add('dark');
@@ -43,7 +46,7 @@ function initThemeToggle() {
     }
 
     if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', function() {
+        themeToggleBtn.addEventListener('click', function () {
             if (htmlElement.classList.contains('dark')) {
                 htmlElement.classList.remove('dark');
                 localStorage.setItem('color-theme', 'light');
@@ -70,7 +73,7 @@ function initPlugins() {
             placeholder: "Seleccione una opción...",
             allowClear: true,
             language: {
-                noResults: function() {
+                noResults: function () {
                     return "No se encontraron resultados";
                 }
             }
@@ -90,13 +93,13 @@ function initPlugins() {
                 ['para', ['ul', 'ol']]
             ],
             callbacks: {
-                onInit: function() {
-                    if(isDark) {
+                onInit: function () {
+                    if (isDark) {
                         $('.note-editable').css({'background-color': '#262626', 'color': 'white'});
                         $('.note-editor').css({'border-color': '#404040'});
                     }
                 },
-                onImageUpload: function(files) {
+                onImageUpload: function (files) {
                     showGlobalAlert(
                         'No se permiten imágenes aquí',
                         'Para mantener el sistema rápido, por favor sube las imágenes en el campo <strong>"Imagen de Referencia"</strong> o envíalas por correo/WhatsApp.'
@@ -106,7 +109,7 @@ function initPlugins() {
                     var bufferText = ((e.originalEvent || e).clipboardData || window.clipboardData).getData('text/plain');
                     if (bufferText) {
                         e.preventDefault();
-                        setTimeout(function(){
+                        setTimeout(function () {
                             document.execCommand('insertText', false, bufferText);
                         }, 10);
                     } else {
@@ -150,27 +153,31 @@ function initPedidoForm() {
             const nombreCliente = $("#id_cliente option:selected").text().trim();
 
             // Texto dinámico según el tipo de documento
-            if(tituloTabla) {
+            if (tituloTabla) {
                 tituloTabla.innerHTML = `
                     <span class="material-icons-round text-primary text-base mr-2">list_alt</span>
                     Productos en ${tipoDoc} para: <span class="text-primary font-bold ml-1">${nombreCliente}</span>
                 `;
             }
 
-            if(sectionProductos) {
+            if (sectionProductos) {
                 sectionProductos.classList.remove('hidden');
-                setTimeout(() => { sectionProductos.classList.remove('opacity-0'); }, 50);
+                setTimeout(() => {
+                    sectionProductos.classList.remove('opacity-0');
+                }, 50);
             }
-            if(sectionDetalles) {
+            if (sectionDetalles) {
                 sectionDetalles.classList.remove('hidden');
-                setTimeout(() => { sectionDetalles.classList.remove('opacity-0'); }, 300);
+                setTimeout(() => {
+                    sectionDetalles.classList.remove('opacity-0');
+                }, 300);
             }
         } else {
-            if(sectionProductos) {
+            if (sectionProductos) {
                 sectionProductos.classList.add('opacity-0');
                 setTimeout(() => sectionProductos.classList.add('hidden'), 500);
             }
-            if(sectionDetalles) {
+            if (sectionDetalles) {
                 sectionDetalles.classList.add('opacity-0');
                 setTimeout(() => sectionDetalles.classList.add('hidden'), 500);
             }
@@ -180,14 +187,14 @@ function initPedidoForm() {
     $selectCliente.on('change', checkClienteSeleccionado);
     checkClienteSeleccionado();
 
-    if(btnToggleCrear) {
+    if (btnToggleCrear) {
         btnToggleCrear.addEventListener('click', () => {
             sectionBuscar.classList.add('hidden');
             sectionCrear.classList.remove('hidden');
         });
     }
 
-    if(btnCancelarCrear) {
+    if (btnCancelarCrear) {
         btnCancelarCrear.addEventListener('click', () => {
             sectionCrear.classList.add('hidden');
             sectionBuscar.classList.remove('hidden');
@@ -196,12 +203,12 @@ function initPedidoForm() {
     }
 
     if (btnGuardarApi) {
-        btnGuardarApi.addEventListener('click', function() {
+        btnGuardarApi.addEventListener('click', function () {
             const nombre = document.getElementById('new_client_nombre').value;
             const telefono = document.getElementById('new_client_telefono').value;
             const email = document.getElementById('new_client_email').value;
 
-            if(!nombre || !telefono) {
+            if (!nombre || !telefono) {
                 const errorDiv = document.getElementById('cliente-api-error');
                 errorDiv.innerText = 'Nombre y Teléfono son obligatorios';
                 errorDiv.classList.remove('hidden');
@@ -221,37 +228,37 @@ function initPedidoForm() {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-CSRFToken': csrfToken
                 },
-                body: new URLSearchParams({ 'nombre': nombre, 'telefono': telefono, 'email': email })
+                body: new URLSearchParams({'nombre': nombre, 'telefono': telefono, 'email': email})
             })
-            .then(response => response.json())
-            .then(data => {
-                if(data.success) {
-                    const newOption = new Option(data.nombre, data.id, true, true);
-                    $selectCliente.append(newOption).trigger('change');
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const newOption = new Option(data.nombre, data.id, true, true);
+                        $selectCliente.append(newOption).trigger('change');
 
-                    sectionCrear.classList.add('hidden');
-                    sectionBuscar.classList.remove('hidden');
+                        sectionCrear.classList.add('hidden');
+                        sectionBuscar.classList.remove('hidden');
 
-                    document.getElementById('new_client_nombre').value = '';
-                    document.getElementById('new_client_telefono').value = '';
-                    document.getElementById('new_client_email').value = '';
+                        document.getElementById('new_client_nombre').value = '';
+                        document.getElementById('new_client_telefono').value = '';
+                        document.getElementById('new_client_email').value = '';
 
-                    checkClienteSeleccionado();
-                } else {
-                    const errorDiv = document.getElementById('cliente-api-error');
-                    errorDiv.innerText = 'Error: ' + JSON.stringify(data.errors);
-                    errorDiv.classList.remove('hidden');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('cliente-api-error').innerText = 'Error de conexión';
-                document.getElementById('cliente-api-error').classList.remove('hidden');
-            })
-            .finally(() => {
-                btnGuardarApi.disabled = false;
-                btnGuardarApi.innerHTML = originalText;
-            });
+                        checkClienteSeleccionado();
+                    } else {
+                        const errorDiv = document.getElementById('cliente-api-error');
+                        errorDiv.innerText = 'Error: ' + JSON.stringify(data.errors);
+                        errorDiv.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('cliente-api-error').innerText = 'Error de conexión';
+                    document.getElementById('cliente-api-error').classList.remove('hidden');
+                })
+                .finally(() => {
+                    btnGuardarApi.disabled = false;
+                    btnGuardarApi.innerHTML = originalText;
+                });
         });
     }
 
@@ -307,12 +314,12 @@ function initMoneyValidation() {
             p.innerHTML = '<span class="material-icons-round text-sm mr-1">cancel</span> El abono no puede ser mayor al valor total.';
             inputAbono.parentNode.appendChild(p);
 
-            if(btnSubmit) {
+            if (btnSubmit) {
                 btnSubmit.disabled = true;
                 btnSubmit.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
             }
         } else {
-            if(btnSubmit) {
+            if (btnSubmit) {
                 btnSubmit.disabled = false;
                 btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
             }
@@ -341,7 +348,7 @@ function initDetailModals() {
 
     const triggers = document.querySelectorAll('[data-confirm="true"]');
     triggers.forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
             const url = this.getAttribute('data-url');
             const tipo = this.getAttribute('data-type');
@@ -365,7 +372,7 @@ function initDetailModals() {
         modal.classList.add('hidden');
     }
 
-    if(btnCancelar) {
+    if (btnCancelar) {
         btnCancelar.addEventListener('click', closeModal);
     }
 }
@@ -375,20 +382,20 @@ function initDetailModals() {
    ========================================= */
 function showGlobalAlert(titulo, mensaje) {
     const modal = document.getElementById('modal-alerta-global');
-    if(!modal) return;
+    if (!modal) return;
 
     document.getElementById('modal-alerta-titulo').innerText = titulo;
     document.getElementById('modal-alerta-mensaje').innerHTML = mensaje;
     modal.classList.remove('hidden');
 
     const btnCerrar = document.getElementById('btn-cerrar-alerta');
-    btnCerrar.onclick = function() {
+    btnCerrar.onclick = function () {
         modal.classList.add('hidden');
     }
 }
 
 /* =========================================
-   10. LÓGICA DE ÍTEMS DEL PEDIDO (FINAL UX MEJORADA - TABLA EDITABLE)
+   10. LÓGICA DE ÍTEMS DEL PEDIDO (FINAL UX MEJORADA - TABLA EDITABLE + VALIDACIÓN DECIMALES)
    ========================================= */
 function initProductManager() {
     const $selectProd = $('#select-producto');
@@ -403,7 +410,20 @@ function initProductManager() {
     const inputVentaTotal = document.getElementById('id_valor_venta');
 
     let items = [];
-    let unidadActual = '';
+    let unidadActual = '';       // Texto legible (Ej: "Metro Cuadrado")
+    let codigoUnidadActual = ''; // Código interno (Ej: "METRO_CUADRADO" o "UNITARIO")
+
+    // --- NUEVO: CARGAR DATOS SI ESTAMOS EDITANDO ---
+    if (inputJson && inputJson.value) {
+        try {
+            items = JSON.parse(inputJson.value);
+            setTimeout(() => {
+                renderTable();
+            }, 100);
+        } catch (e) {
+            console.error("Error al cargar ítems existentes:", e);
+        }
+    }
 
     // --- HELPER: OCULTAR Y LIMPIAR BLOQUE DETALLE ---
     function ocultarBloqueDetalle() {
@@ -414,19 +434,25 @@ function initProductManager() {
             inputCant.value = 1;
             inputPrecio.value = '';
             unidadActual = '';
+            codigoUnidadActual = ''; // Limpiamos también el código
         }, 500);
     }
 
-    // A. AUTO-POBLAR PRECIO Y UNIDAD
-    $selectProd.on('select2:select', function(e) {
-        if($bloqueDetalle.hasClass('hidden')) {
+    // A. AUTO-POBLAR PRECIO Y UNIDAD (Y CAPTURAR CÓDIGO)
+    $selectProd.on('select2:select', function (e) {
+        if ($bloqueDetalle.hasClass('hidden')) {
             $bloqueDetalle.removeClass('hidden');
             setTimeout(() => $bloqueDetalle.removeClass('opacity-0'), 50);
         }
 
         const element = e.params.data.element;
         const precioRaw = $(element).attr('data-precio') || $(element).data('precio');
+
+        // Capturamos el texto legible para la tabla
         unidadActual = $(element).attr('data-unidad') || $(element).data('unidad') || '-';
+
+        // --- NUEVO: Capturamos el código interno para la validación ---
+        codigoUnidadActual = $(element).attr('data-codigo-unidad') || '';
 
         if (precioRaw) {
             inputPrecio.value = parseInt(precioRaw);
@@ -437,58 +463,82 @@ function initProductManager() {
         }
 
         setTimeout(() => {
-             if(inputPrecio.value) inputCant.focus();
-             else inputPrecio.focus();
+            if (inputPrecio.value) inputCant.focus();
+            else inputPrecio.focus();
         }, 100);
     });
 
-    $selectProd.on('select2:clear', function(e) {
+    $selectProd.on('select2:clear', function (e) {
         ocultarBloqueDetalle();
     });
 
-    // B. SOPORTE TECLA ENTER (PARA AGREGAR)
-    [inputCant, inputPrecio].forEach(input => {
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                btnAgregar.click();
+    // B. SOPORTE TECLA ENTER
+    if (inputCant && inputPrecio) {
+        [inputCant, inputPrecio].forEach(input => {
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnAgregar.click();
+                }
+            });
+        });
+    }
+
+    // C. AGREGAR ÍTEM (CON VALIDACIÓN DE DECIMALES)
+    if (btnAgregar) {
+        btnAgregar.addEventListener('click', function () {
+            const prodId = $selectProd.val();
+            if (!prodId) {
+                showGlobalAlert('Falta información', 'Por favor selecciona un producto de la lista.');
+                return;
             }
+
+            const selection = $selectProd.select2('data');
+            const prodNombre = selection && selection.length > 0 ? selection[0].text : 'Producto';
+
+            const cantidad = parseFloat(inputCant.value) || 0;
+            const precio = parseInt(inputPrecio.value) || 0;
+
+            if (cantidad <= 0) {
+                showGlobalAlert('Cantidad Inválida', 'La cantidad debe ser mayor a 0.');
+                return;
+            }
+
+            // --- VALIDACIÓN DE NEGOCIO: NO DECIMALES EN UNITARIO ---
+            // Si la cantidad tiene decimales (el resto de dividir por 1 no es 0)
+            if (cantidad % 1 !== 0) {
+                // Y el producto es UNITARIO
+                if (codigoUnidadActual === 'UNITARIO') {
+                    showGlobalAlert(
+                        'Cantidad Inválida',
+                        `El producto <strong>${prodNombre}</strong> se vende por unidades.<br><br>No puedes ingresar cantidades decimales (como ${cantidad}) para este producto, solo números enteros.`
+                    );
+                    return;
+                }
+            }
+            // -------------------------------------------------------
+
+            items.push({
+                producto_id: prodId,
+                nombre: prodNombre,
+                unidad: unidadActual,
+                cantidad: cantidad,
+                precio_unitario: precio,
+                subtotal: Math.round(cantidad * precio)
+            });
+
+            renderTable();
+            ocultarBloqueDetalle();
         });
-    });
+    }
 
-    // C. AGREGAR ÍTEM
-    btnAgregar.addEventListener('click', function() {
-        const prodId = $selectProd.val();
-        if (!prodId) {
-            showGlobalAlert('Falta información', 'Por favor selecciona un producto de la lista.');
-            return;
-        }
-
-        const selection = $selectProd.select2('data');
-        const prodNombre = selection && selection.length > 0 ? selection[0].text : '';
-        const cantidad = parseInt(inputCant.value) || 1;
-        const precio = parseInt(inputPrecio.value) || 0;
-
-        items.push({
-            producto_id: prodId,
-            nombre: prodNombre,
-            unidad: unidadActual,
-            cantidad: cantidad,
-            precio_unitario: precio,
-            subtotal: cantidad * precio
-        });
-
-        renderTable();
-        ocultarBloqueDetalle();
-    });
-
-    // D. RENDERIZAR TABLA (CON PRECIO EDITABLE)
-    window.renderTable = function() {
+    // D. RENDERIZAR TABLA
+    window.renderTable = function () {
         tableBody.innerHTML = '';
         let totalAcumulado = 0;
 
         if (items.length === 0) {
-            if(rowEmpty) tableBody.appendChild(rowEmpty);
+            if (rowEmpty) tableBody.appendChild(rowEmpty);
         } else {
             items.forEach((item, index) => {
                 totalAcumulado += item.subtotal;
@@ -526,24 +576,24 @@ function initProductManager() {
             });
         }
 
-        cellTotal.innerText = '$' + totalAcumulado.toLocaleString('es-CL');
-        inputJson.value = JSON.stringify(items);
+        if (cellTotal) cellTotal.innerText = '$' + totalAcumulado.toLocaleString('es-CL');
+        if (inputJson) inputJson.value = JSON.stringify(items);
 
-        if(inputVentaTotal) {
+        if (inputVentaTotal) {
             inputVentaTotal.value = totalAcumulado;
             inputVentaTotal.dispatchEvent(new Event('input'));
         }
     };
 
-    // E. FUNCIÓN PARA ACTUALIZAR PRECIO (NUEVA)
-    window.updateItemPrice = function(index, nuevoPrecio) {
+    // E. ACTUALIZAR PRECIO
+    window.updateItemPrice = function (index, nuevoPrecio) {
         const precio = parseInt(nuevoPrecio) || 0;
         items[index].precio_unitario = precio;
-        items[index].subtotal = items[index].cantidad * precio;
+        items[index].subtotal = Math.round(items[index].cantidad * precio);
         renderTable();
     };
 
-    window.eliminarItem = function(index) {
+    window.eliminarItem = function (index) {
         items.splice(index, 1);
         renderTable();
     };
@@ -554,21 +604,21 @@ function initProductManager() {
     const btnCancelProd = document.getElementById('btn-cancelar-prod');
     const btnSaveProd = document.getElementById('btn-guardar-prod-api');
 
-    if(btnToggle) {
+    if (btnToggle) {
         btnToggle.addEventListener('click', () => {
             divFormProd.classList.remove('hidden');
             setTimeout(() => document.getElementById('new_prod_nombre').focus(), 100);
         });
     }
 
-    if(btnCancelProd) {
+    if (btnCancelProd) {
         btnCancelProd.addEventListener('click', () => {
             divFormProd.classList.add('hidden');
         });
     }
 
-    if(btnSaveProd) {
-        btnSaveProd.addEventListener('click', function() {
+    if (btnSaveProd) {
+        btnSaveProd.addEventListener('click', function () {
             const nombre = document.getElementById('new_prod_nombre').value;
             const precio = document.getElementById('new_prod_precio').value;
             const unidad = document.getElementById('new_prod_unidad').value;
@@ -576,7 +626,7 @@ function initProductManager() {
             const url = this.getAttribute('data-url');
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-            if(!nombre) {
+            if (!nombre) {
                 alert("El nombre del producto es obligatorio");
                 return;
             }
@@ -598,45 +648,114 @@ function initProductManager() {
                     'descripcion': 'Creado desde Pedido Rápido'
                 })
             })
-            .then(r => r.json())
-            .then(data => {
-                if(data.success) {
-                    const newOption = new Option(data.nombre, data.id, true, true);
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const newOption = new Option(data.nombre, data.id, true, true);
 
-                    $(newOption).attr('data-precio', data.precio);
-                    $(newOption).data('precio', data.precio);
-                    $(newOption).attr('data-unidad', data.unidad);
-                    $(newOption).data('unidad', data.unidad);
+                        $(newOption).attr('data-precio', data.precio);
+                        $(newOption).data('precio', data.precio);
 
-                    $selectProd.append(newOption).trigger('change');
+                        $(newOption).attr('data-unidad', data.unidad); // Texto
+                        $(newOption).data('unidad', data.unidad);
 
-                    $selectProd.trigger({
-                        type: 'select2:select',
-                        params: {
-                            data: {
-                                element: newOption,
-                                id: data.id,
-                                text: data.nombre
+                        // Aseguramos que el producto rápido también tenga su código (asumimos que viene del backend o lo inferimos)
+                        // Nota: Para productos rápidos creados al vuelo, idealmente el backend debe devolver el código también.
+                        // Por ahora, como el select de "crear rápido" tiene values en mayúsculas (UNITARIO), podemos usar eso.
+                        $(newOption).attr('data-codigo-unidad', unidad);
+
+                        $selectProd.append(newOption).trigger('change');
+
+                        $selectProd.trigger({
+                            type: 'select2:select',
+                            params: {
+                                data: {
+                                    element: newOption,
+                                    id: data.id,
+                                    text: data.nombre
+                                }
                             }
-                        }
-                    });
+                        });
 
-                    divFormProd.classList.add('hidden');
-                    document.getElementById('new_prod_nombre').value = '';
-                    document.getElementById('new_prod_precio').value = '';
-                    document.getElementById('new_prod_unidad').value = 'UNITARIO';
-                } else {
-                    alert("Error: " + JSON.stringify(data.errors));
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Error de conexión");
-            })
-            .finally(() => {
-                this.innerHTML = originalText;
-                this.disabled = false;
-            });
+                        divFormProd.classList.add('hidden');
+                        document.getElementById('new_prod_nombre').value = '';
+                        document.getElementById('new_prod_precio').value = '';
+                        document.getElementById('new_prod_unidad').value = 'UNITARIO';
+                    } else {
+                        alert("Error: " + JSON.stringify(data.errors));
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Error de conexión");
+                })
+                .finally(() => {
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                });
         });
+    }
+}
+
+/* =========================================
+   11. LÓGICA ACORDEONES SIDEBAR (NUEVO)
+   ========================================= */
+function initSidebarAccordions() {
+    console.log("Iniciando Acordeones..."); // <--- AGREGA ESTA LÍNEA PARA VERIFICAR
+
+    const triggers = document.querySelectorAll('.btn-accordion');
+
+    if (triggers.length === 0) {
+        console.warn("No se encontraron botones de acordeón (.btn-accordion)");
+        return;
+    }
+
+    // 1. Manejo del Click
+    triggers.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const targetId = this.getAttribute('data-target');
+            const content = document.querySelector(targetId);
+            const icon = this.querySelector('.chevron-icon');
+
+            // Toggle visibilidad
+            content.classList.toggle('hidden');
+
+            // Rotar icono (clase rotate-180 de Tailwind o CSS estándar)
+            if (content.classList.contains('hidden')) {
+                icon.classList.remove('rotate-180');
+                // Opcional: quitar color activo al título si se cierra
+                this.classList.remove('text-primary');
+            } else {
+                icon.classList.add('rotate-180');
+                // Opcional: dar color al título si se abre
+                // this.classList.add('text-primary');
+            }
+        });
+    });
+
+    // 2. Auto-apertura basada en la URL actual (Mejora UX)
+    // Buscamos el enlace que tiene la clase "text-primary" (el activo según Django)
+    // Nota: Usamos contains porque Tailwind puede tener muchas clases.
+    // En tu HTML pusiste: {% if ... %}text-primary font-bold{% endif %}
+
+    const activeLink = document.querySelector('.accordion-content a.text-primary');
+
+    if (activeLink) {
+        // Encontramos el contenedor padre (el div hidden)
+        const parentAccordion = activeLink.closest('.accordion-content');
+        if (parentAccordion) {
+            // Lo abrimos
+            parentAccordion.classList.remove('hidden');
+
+            // Buscamos el botón que controla este acordeón para rotar su icono
+            const targetId = '#' + parentAccordion.id;
+            const correspondingBtn = document.querySelector(`[data-target="${targetId}"]`);
+
+            if (correspondingBtn) {
+                const icon = correspondingBtn.querySelector('.chevron-icon');
+                if (icon) icon.classList.add('rotate-180');
+                // correspondingBtn.classList.add('text-primary'); // Opcional
+            }
+        }
     }
 }

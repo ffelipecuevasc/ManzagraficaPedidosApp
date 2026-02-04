@@ -15,6 +15,9 @@ from django.db.models import ProtectedError
 import weasyprint
 import json
 
+# ==========================================
+# PANEL DE CONTROL
+# ==========================================
 @login_required
 def dashboard(request):
     # ==========================================
@@ -98,6 +101,9 @@ def dashboard(request):
 
     return render(request, 'pedidos/dashboard.html', context)
 
+# ==========================================
+# GESTIÓN DE PEDIDOS
+# ==========================================
 
 @login_required
 @transaccion_segura
@@ -127,7 +133,7 @@ def crear_pedido(request):
                         ItemPedido.objects.create(
                             pedido=pedido,
                             producto=producto_obj,
-                            cantidad=int(item['cantidad']),
+                            cantidad=float(item['cantidad']),
                             precio_unitario=int(item['precio_unitario'])
                         )
                 except Exception as e:
@@ -135,7 +141,8 @@ def crear_pedido(request):
                     # pero podrías loguear el error: print(f"Error guardando items: {e}")
                     pass
 
-            return redirect('dashboard')
+            # Redirigir al detalle del pedido recién creado
+            return redirect('detalle_pedido', pk=pedido.pk)
     else:
         form = PedidoForm()
 
@@ -148,63 +155,54 @@ def crear_pedido(request):
     return render(request, 'pedidos/pedido_form.html', context)
 
 @login_required
-@require_POST
-def api_crear_cliente_rapido(request):
-    form = ClienteForm(request.POST)
-    if form.is_valid():
-        cliente = form.save()
-        return JsonResponse({
-            'success': True,
-            'id': cliente.id,
-            'nombre': cliente.nombre,
-            'telefono': cliente.telefono
-        })
-    else:
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors
-        })
-
-@login_required
-@require_POST
-def api_crear_producto_rapido(request):
-    """
-    Endpoint AJAX para crear productos desde el formulario de pedido.
-    Recibe 'valor_neto', deja que el modelo calcule el IVA/Bruto,
-    y retorna el 'valor_bruto' como precio sugerido.
-    """
-    form = ProductoForm(request.POST)
-    if form.is_valid():
-        producto = form.save()  # El modelo calcula iva y valor_bruto aquí
-
-        return JsonResponse({
-            'success': True,
-            'id': producto.id,
-            'nombre': producto.nombre,
-            # Devolvemos el valor_bruto para el JS
-            'precio': producto.valor_bruto,
-            # NUEVO: Devolvemos el nombre legible de la unidad para la tabla (ej: "Metro Cuadrado")
-            'unidad': producto.get_unidad_display()
-        })
-    else:
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors
-        })
-
-@login_required
 @transaccion_segura
 def editar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
+    productos_disponibles = Producto.objects.all().order_by('nombre')
+
     if request.method == 'POST':
         form = PedidoForm(request.POST, request.FILES, instance=pedido)
         if form.is_valid():
-            form.save()
-            return redirect('dashboard')
+            pedido = form.save()
+
+            items_json = request.POST.get('items_json')
+            if items_json:
+                try:
+                    pedido.items.all().delete() # Borrón
+                    data_items = json.loads(items_json)
+                    for item in data_items:
+                        producto_obj = Producto.objects.get(pk=item['producto_id'])
+                        ItemPedido.objects.create(
+                            pedido=pedido,
+                            producto=producto_obj,
+                            cantidad=float(item['cantidad']),
+                            precio_unitario=int(item['precio_unitario'])
+                        )
+                except Exception:
+                    pass
+            # Redirigir al detalle del pedido editado
+            return redirect('detalle_pedido', pk=pedido.pk)
     else:
         form = PedidoForm(instance=pedido)
-    
-    return render(request, 'pedidos/pedido_form.html', {'form': form})
+
+    # --- NUEVO: PRE-CARGA DE ÍTEMS PARA EL FRONTEND ---
+    items_list = []
+    for item in pedido.items.all():
+        items_list.append({
+            'producto_id': item.producto.id,
+            'nombre': item.producto.nombre,
+            'unidad': item.producto.get_unidad_display(),
+            'cantidad': float(item.cantidad),
+            'precio_unitario': item.precio_unitario,
+            'subtotal': int(round(item.cantidad * item.precio_unitario))
+        })
+    # --------------------------------------------------
+
+    return render(request, 'pedidos/pedido_form.html', {
+        'form': form,
+        'productos_disponibles': productos_disponibles,
+        'items_json': json.dumps(items_list) # ¡Aquí enviamos los datos al HTML!
+    })
 
 @login_required
 @transaccion_segura
@@ -237,74 +235,6 @@ def cambiar_estado_pedido(request, pk, nuevo_estado):
         pedido.save()
 
     return redirect('detalle_pedido', pk=pk)
-
-@login_required
-def lista_clientes(request):
-    # Anotar clientes con el total de pedidos
-    clientes = Cliente.objects.annotate(total_pedidos=Count('pedido'))
-    
-    # Búsqueda
-    busqueda = request.GET.get('busqueda')
-    if busqueda:
-        clientes = clientes.filter(
-            Q(nombre__icontains=busqueda) | 
-            Q(email__icontains=busqueda) |
-            Q(telefono__icontains=busqueda)
-        )
-    
-    # Calcular clientes activos (aquellos con más de 0 pedidos)
-    # Nota: Usamos la lista anotada para filtrar en Python o hacemos otra query.
-    # Para eficiencia, podemos contar sobre el QuerySet anotado:
-    clientes_activos = clientes.filter(total_pedidos__gt=0).count()
-    
-    # Obtener el cliente top (con más pedidos)
-    top_cliente = clientes.order_by('-total_pedidos').first()
-    
-    context = {
-        'clientes': clientes,
-        'clientes_activos': clientes_activos,
-        'clientes_nuevos': 0, # Placeholder
-        'top_cliente': top_cliente,
-        'busqueda': busqueda,
-    }
-    return render(request, 'pedidos/cliente_list.html', context)
-
-@login_required
-@transaccion_segura
-def crear_cliente(request):
-    if request.method == 'POST':
-        form = ClienteForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_clientes')
-    else:
-        form = ClienteForm()
-    
-    return render(request, 'pedidos/cliente_form.html', {'form': form})
-
-@login_required
-@transaccion_segura
-def editar_cliente(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
-    if request.method == 'POST':
-        form = ClienteForm(request.POST, instance=cliente)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_clientes')
-    else:
-        form = ClienteForm(instance=cliente)
-    
-    return render(request, 'pedidos/cliente_form.html', {'form': form})
-
-@login_required
-@transaccion_segura
-def eliminar_cliente(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
-    if request.method == 'POST':
-        cliente.delete()
-        return redirect('lista_clientes')
-    return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente})
-
 
 @login_required
 def lista_pedidos(request):
@@ -390,6 +320,93 @@ def duplicar_pedido(request, pk):
     # 4. Redirigir al detalle del nuevo pedido clonado
     return redirect('detalle_pedido', pk=nuevo_pedido.pk)
 
+# ==========================================
+# GESTIÓN DE CLIENTES
+# ==========================================
+@login_required
+def lista_clientes(request):
+    # Anotar clientes con el total de pedidos
+    clientes = Cliente.objects.annotate(total_pedidos=Count('pedido'))
+    
+    # Búsqueda
+    busqueda = request.GET.get('busqueda')
+    if busqueda:
+        clientes = clientes.filter(
+            Q(nombre__icontains=busqueda) | 
+            Q(email__icontains=busqueda) |
+            Q(telefono__icontains=busqueda)
+        )
+    
+    # Calcular clientes activos (aquellos con más de 0 pedidos)
+    # Nota: Usamos la lista anotada para filtrar en Python o hacemos otra query.
+    # Para eficiencia, podemos contar sobre el QuerySet anotado:
+    clientes_activos = clientes.filter(total_pedidos__gt=0).count()
+    
+    # Obtener el cliente top (con más pedidos)
+    top_cliente = clientes.order_by('-total_pedidos').first()
+    
+    context = {
+        'clientes': clientes,
+        'clientes_activos': clientes_activos,
+        'clientes_nuevos': 0, # Placeholder
+        'top_cliente': top_cliente,
+        'busqueda': busqueda,
+    }
+    return render(request, 'pedidos/cliente_list.html', context)
+
+@login_required
+@transaccion_segura
+def crear_cliente(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_clientes')
+    else:
+        form = ClienteForm()
+    
+    return render(request, 'pedidos/cliente_form.html', {'form': form})
+
+@login_required
+@transaccion_segura
+def editar_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, instance=cliente)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_clientes')
+    else:
+        form = ClienteForm(instance=cliente)
+    
+    return render(request, 'pedidos/cliente_form.html', {'form': form})
+
+@login_required
+@transaccion_segura
+def eliminar_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    if request.method == 'POST':
+        cliente.delete()
+        return redirect('lista_clientes')
+    return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente})
+
+@login_required
+@require_POST
+def api_crear_cliente_rapido(request):
+    form = ClienteForm(request.POST)
+    if form.is_valid():
+        cliente = form.save()
+        return JsonResponse({
+            'success': True,
+            'id': cliente.id,
+            'nombre': cliente.nombre,
+            'telefono': cliente.telefono
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        })
 
 @login_required
 def trabajo_semanal(request):
@@ -499,7 +516,7 @@ def crear_cotizacion(request):
                         ItemCotizacion.objects.create(
                             cotizacion=cotizacion,
                             producto=producto_obj,
-                            cantidad=int(item['cantidad']),
+                            cantidad=float(item['cantidad']),
                             precio_unitario=int(item['precio_unitario'])
                         )
                 except Exception as e:
@@ -523,26 +540,53 @@ def crear_cotizacion(request):
 @transaccion_segura
 def editar_cotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
-    productos_disponibles = Producto.objects.all().order_by('nombre') # Necesario para el HTML
+    productos_disponibles = Producto.objects.all().order_by('nombre')
 
-    # Regla de negocio: No editar si ya fue aceptada (convertida)
     if cotizacion.estado == 'ACEPTADA':
         return redirect('detalle_cotizacion', pk=pk)
 
     if request.method == 'POST':
         form = CotizacionForm(request.POST, instance=cotizacion)
         if form.is_valid():
-            form.save()
-            # NOTA: Aquí implementaremos la lógica de actualización de ítems en el futuro
-            # si decides permitir editar el detalle de una cotización ya creada.
+            cotizacion = form.save()
+
+            items_json = request.POST.get('items_json')
+            if items_json:
+                try:
+                    cotizacion.items.all().delete()
+                    data_items = json.loads(items_json)
+                    for item in data_items:
+                        producto_obj = Producto.objects.get(pk=item['producto_id'])
+                        ItemCotizacion.objects.create(
+                            cotizacion=cotizacion,
+                            producto=producto_obj,
+                            cantidad=float(item['cantidad']),
+                            precio_unitario=int(item['precio_unitario'])
+                        )
+                except Exception:
+                    pass
             return redirect('detalle_cotizacion', pk=pk)
     else:
         form = CotizacionForm(instance=cotizacion)
 
+    # --- NUEVO: PRE-CARGA DE ÍTEMS ---
+    items_list = []
+    for item in cotizacion.items.all():
+        items_list.append({
+            'producto_id': item.producto.id,
+            'nombre': item.producto.nombre,
+            'unidad': item.producto.get_unidad_display(),
+            'cantidad': float(item.cantidad),
+            'precio_unitario': item.precio_unitario,
+            'subtotal': int(round(item.cantidad * item.precio_unitario))
+        })
+    # ---------------------------------
+
     return render(request, 'pedidos/cotizacion_form.html', {
         'form': form,
         'productos_disponibles': productos_disponibles,
-        'fecha_hoy': timezone.now().strftime('%Y-%m-%d')
+        'fecha_hoy': timezone.now().strftime('%Y-%m-%d'),
+        'items_json': json.dumps(items_list) # ¡Enviamos los datos!
     })
 
 @login_required
@@ -717,6 +761,37 @@ def eliminar_producto(request, pk):
 def detalle_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
     return render(request, 'pedidos/producto_detail.html', {'producto': producto})
+
+@login_required
+@require_POST
+def api_crear_producto_rapido(request):
+    """
+    Endpoint AJAX para crear productos desde el formulario de pedido.
+    Recibe 'valor_neto', deja que el modelo calcule el IVA/Bruto,
+    y retorna el 'valor_bruto' como precio sugerido.
+    """
+    form = ProductoForm(request.POST)
+    if form.is_valid():
+        producto = form.save()  # El modelo calcula iva y valor_bruto aquí
+
+        return JsonResponse({
+            'success': True,
+            'id': producto.id,
+            'nombre': producto.nombre,
+            # Devolvemos el valor_bruto para el JS
+            'precio': producto.valor_bruto,
+            # NUEVO: Devolvemos el nombre legible de la unidad para la tabla (ej: "Metro Cuadrado")
+            'unidad': producto.get_unidad_display()
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        })
+
+# ==========================================
+# GESTIÓN DE ERRORES HTTP
+# ==========================================
 
 def error_404(request, exception):
     return render(request, 'pedidos/errors/404.html', status=404)

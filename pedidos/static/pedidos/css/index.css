@@ -274,3 +274,21 @@ input[type="file"] {
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: #525252; /* neutral-600 */
 }
+
+/* =========================================
+   7. UTILIDADES EXTRA (ACORDEÓN SIDEBAR)
+   ========================================= */
+/* Forzamos que 'hidden' oculte de verdad, ganando a cualquier otro estilo */
+.accordion-content.hidden {
+    display: none !important;
+}
+
+/* Regla para rotar el icono cuando el menú está abierto */
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* Opcional: Transición suave para el icono */
+.chevron-icon {
+    transition: transform 0.2s ease-in-out;
+}

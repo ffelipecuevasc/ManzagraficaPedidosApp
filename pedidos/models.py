@@ -139,7 +139,7 @@ class ItemPedido(models.Model):
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
     # Usamos PROTECT para que si borras un producto del catálogo, no se borren los pedidos históricos.
 
-    cantidad = models.PositiveIntegerField(default=1)
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     precio_unitario = models.IntegerField(help_text="Precio al momento de la venta")
 
     # El subtotal se calcula, pero a veces es útil guardarlo o calcularlo al vuelo
@@ -154,7 +154,7 @@ class ItemPedido(models.Model):
 class ItemCotizacion(models.Model):
     cotizacion = models.ForeignKey(Cotizacion, related_name='items', on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
-    cantidad = models.PositiveIntegerField(default=1)
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     # Guardamos el precio al momento de cotizar (por si sube después)
     precio_unitario = models.IntegerField(help_text="Precio al momento de cotizar")
 
