@@ -1,8 +1,9 @@
 from django.urls import path
+from .views import respaldar_bd, generar_respaldo_bd
 from . import views
 
 urlpatterns = [
-    # DASHBOARD
+    # PANEL DE CONTROL
     path('', views.dashboard, name='dashboard'),
 
     # PEDIDOS
@@ -38,4 +39,8 @@ urlpatterns = [
     path('productos/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
     path('api/producto/nuevo/', views.api_crear_producto_rapido, name='api_crear_producto_rapido'),
     path('productos/<int:pk>/', views.detalle_producto, name='detalle_producto'),
+
+    # GESTIÓN DE BD
+    path('configuracion/respaldar_bd/', views.respaldar_bd, name='respaldar_bd'), # El Panel Visual
+    path('configuracion/respaldar_bd/accion/', views.generar_respaldo_bd, name='generar_respaldo_bd'), # El Botón Funcional
 ]

@@ -1,0 +1,122 @@
+{% extends 'pedidos/base.html' %}
+
+{% block title %}Respaldo de Base de Datos - Manza Gráfica{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="material-icons-round text-blue-500 text-3xl">dns</span>
+                Gestión de Base de Datos
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">
+                Monitoreo de registros y copias de seguridad del sistema.
+            </p>
+        </div>
+        
+        <a href="{% url 'generar_respaldo_bd' %}"
+           class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all flex items-center gap-2 transform hover:-translate-y-1">
+            <span class="material-icons-round animate-bounce">cloud_download</span>
+            Generar Nuevo Respaldo Ahora
+        </a>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Pedidos</h3>
+                <span class="material-icons-round text-primary bg-primary/10 p-1.5 rounded-lg">shopping_cart</span>
+            </div>
+            <p class="text-3xl font-black text-slate-800 dark:text-white">{{ metricas.total_pedidos }}</p>
+            <p class="text-xs text-slate-400 mt-1">Registros totales</p>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Clientes</h3>
+                <span class="material-icons-round text-green-500 bg-green-500/10 p-1.5 rounded-lg">groups</span>
+            </div>
+            <p class="text-3xl font-black text-slate-800 dark:text-white">{{ metricas.total_clientes }}</p>
+            <p class="text-xs text-slate-400 mt-1">Cartera de clientes</p>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Cotizaciones</h3>
+                <span class="material-icons-round text-purple-500 bg-purple-500/10 p-1.5 rounded-lg">request_quote</span>
+            </div>
+            <p class="text-3xl font-black text-slate-800 dark:text-white">{{ metricas.total_cotizaciones }}</p>
+            <p class="text-xs text-slate-400 mt-1">Histórico completo</p>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Productos</h3>
+                <span class="material-icons-round text-orange-500 bg-orange-500/10 p-1.5 rounded-lg">inventory_2</span>
+            </div>
+            <p class="text-3xl font-black text-slate-800 dark:text-white">{{ metricas.total_productos }}</p>
+            <p class="text-xs text-slate-400 mt-1">Catálogo activo</p>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between">
+            <h2 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <span class="material-icons-round text-slate-400">history</span>
+                Historial de Respaldos (En Servidor)
+            </h2>
+            <span class="text-xs font-mono bg-slate-100 dark:bg-neutral-800 text-slate-500 px-2 py-1 rounded">
+                Carpeta: /backups/
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 dark:bg-neutral-900/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-xs">
+                    <tr>
+                        <th class="px-6 py-3">Archivo</th>
+                        <th class="px-6 py-3">Fecha de Creación</th>
+                        <th class="px-6 py-3 text-right">Tamaño</th>
+                        <th class="px-6 py-3 text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-neutral-800">
+                    {% for backup in backups %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors">
+                        <td class="px-6 py-4 font-mono text-slate-700 dark:text-slate-300">
+                            <div class="flex items-center gap-2">
+                                <span class="material-icons-round text-slate-400 text-sm">description</span>
+                                {{ backup.nombre }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">
+                            {{ backup.fecha|date:"d M Y, H:i" }}
+                        </td>
+                        <td class="px-6 py-4 text-right font-mono text-slate-600 dark:text-slate-400">
+                            {{ backup.size_kb }} KB
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                Disponible
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-slate-400 italic">
+                            No hay respaldos generados todavía.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="bg-slate-50 dark:bg-neutral-900/30 px-6 py-3 border-t border-slate-200 dark:border-neutral-800 text-xs text-slate-500 flex justify-between">
+            <span>* Se conservan automáticamente los últimos 5 archivos.</span>
+            <span>** Al generar uno nuevo, se descargará copia a tu PC.</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

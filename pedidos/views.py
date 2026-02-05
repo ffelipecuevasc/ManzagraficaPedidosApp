@@ -1,19 +1,21 @@
+from PedidosApp import settings
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum, F
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.http import require_POST
 from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm
 from .decorators import transaccion_segura
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.template.loader import render_to_string
-from django.http import HttpResponse
 from django.db.models import ProtectedError
+from .utils import generar_respaldo_mysql
 import weasyprint
 import json
+import os
 
 # ==========================================
 # PANEL DE CONTROL
@@ -788,6 +790,69 @@ def api_crear_producto_rapido(request):
             'success': False,
             'errors': form.errors
         })
+
+# ==========================================
+# GESTIÓN DE SISTEMA (RESPALDOS)
+# ==========================================
+
+def es_superusuario(user):
+    return user.is_superuser
+
+@login_required
+@user_passes_test(es_superusuario)
+def respaldar_bd(request):
+    """
+    Vista Dashboard: Muestra métricas y listado de backups existentes.
+    """
+    # 1. Recopilar Métricas de la BD actual
+    metricas = {
+        'total_pedidos': Pedido.objects.count(),
+        'total_clientes': Cliente.objects.count(),
+        'total_cotizaciones': Cotizacion.objects.count(),
+        'total_productos': Producto.objects.count(),
+    }
+
+    # 2. Listar archivos en la carpeta 'backups'
+    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    lista_backups = []
+
+    if os.path.exists(backup_dir):
+        with os.scandir(backup_dir) as entries:
+            for entry in entries:
+                if entry.is_file() and entry.name.endswith('.sql') and entry.name != '.gitkeep':
+                    # Obtener stats del archivo
+                    stats = entry.stat()
+                    fecha_mod = datetime.fromtimestamp(stats.st_mtime)
+
+                    lista_backups.append({
+                        'nombre': entry.name,
+                        'fecha': fecha_mod,
+                        'size_kb': round(stats.st_size / 1024, 2)  # Peso en KB
+                    })
+
+    # 3. Ordenar: El más reciente primero
+    lista_backups.sort(key=lambda x: x['fecha'], reverse=True)
+
+    return render(request, 'pedidos/respaldar_bd.html', {
+        'metricas': metricas,
+        'backups': lista_backups
+    })
+
+@login_required
+@user_passes_test(es_superusuario)
+def generar_respaldo_bd(request):
+    """
+    Acción: Genera el .sql y fuerza la descarga.
+    """
+    try:
+        ruta_archivo = generar_respaldo_mysql()
+        archivo = open(ruta_archivo, 'rb')
+        response = FileResponse(archivo)
+        nombre_archivo = os.path.basename(ruta_archivo)
+        response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+        return response
+    except Exception as e:
+        return HttpResponse(f"Error crítico: {str(e)}")
 
 # ==========================================
 # GESTIÓN DE ERRORES HTTP
