@@ -13,3 +13,7 @@ __pycache__/
 
 # Ignorar la configuración (SECRETOS) del .env
 .env
+
+# Ignorar contenido de backups, pero mantener la carpeta
+backups/*
+!backups/.gitkeep
