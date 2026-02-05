@@ -827,7 +827,7 @@ def respaldar_bd(request):
                     lista_backups.append({
                         'nombre': entry.name,
                         'fecha': fecha_mod,
-                        'size_kb': round(stats.st_size / 1024, 2)  # Peso en KB
+                        'size_mb': round(stats.st_size / (1024 * 1024), 2) # Peso en MB
                     })
 
     # 3. Ordenar: El más reciente primero
