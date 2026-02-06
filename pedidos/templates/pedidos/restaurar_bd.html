@@ -3,7 +3,7 @@
 {% block title %}Restaurar Base de Datos - Manza Gráfica{% endblock %}
 
 {% block content %}
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-6xl mx-auto">
 
         <div class="mb-8 text-center md:text-left">
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center justify-center md:justify-start gap-2">
@@ -12,12 +12,12 @@
             </h1>
             <p class="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-2xl">
                 Esta acción permite <strong>sobrescribir</strong> toda la información actual del sistema utilizando un
-                archivo de respaldo (.sql).
+                archivo de respaldo (.sql).<br />
                 <span class="text-red-500 font-bold">Proceda con extrema precaución.</span>
             </p>
         </div>
 
-        <div class="bg-white dark:bg-card-dark rounded-xl border-l-4 border-red-500 shadow-lg overflow-hidden">
+        <div class="max-w-4xl bg-white dark:bg-card-dark rounded-xl border-l-4 border-red-500 shadow-lg overflow-hidden">
             <div class="p-8">
 
                 <div class="flex flex-col md:flex-row gap-8 items-start">
@@ -58,8 +58,9 @@
                                 </button>
                             </div>
 
-                            <!-- JS utilizado para que el botón 'Iniciar Restauración' emita una alerta con diseño personalizado a través de SweetAlert2,
-                                 librería que fue importada vía CDN en el archivo base.html -->
+                            <!-- JS incrustado para darle estilo al botón de confirmación que aparece luego de presionar el
+                                 botón 'Iniciar Restauración'. Este JS muestra un botón de advertencia con estilos usando
+                                 la librería SweetAlert2 que está siendo importada por CDN en el archivo base.html -->
                             <script>
                                 document.getElementById('btn-alerta-restaurar').addEventListener('click', function () {
                                     Swal.fire({
@@ -67,21 +68,20 @@
                                         text: "Estás a punto de reemplazar TODA la base de datos. Esta acción es irreversible y borrará los pedidos recientes.",
                                         icon: 'warning',
                                         showCancelButton: true,
-                                        confirmButtonColor: '#ce0000',    // Rojo peligroso para confirmar
-                                        cancelButtonColor: '#1e293b',  // Oscuro (Slate-800) para cancelar
+                                        confirmButtonColor: '#d50000',
+                                        cancelButtonColor: '#1e293b',
                                         confirmButtonText: 'Sí, restaurar ahora',
                                         cancelButtonText: 'Cancelar',
-                                        background: '#fff',            // Fondo blanco
-                                        color: '#000',                 // Texto negro
-                                        focusCancel: true,             // Pone el foco en cancelar por seguridad
+                                        background: '#fff',
+                                        color: '#000',
+                                        focusCancel: true,
                                         customClass: {
-                                            popup: 'rounded-xl border-2 border-red-500', // Bordes redondeados y alerta roja
+                                            popup: 'rounded-xl border-2 border-red-500',
                                             title: 'font-bold text-slate-800',
                                             htmlContainer: 'text-slate-600'
                                         }
                                     }).then((result) => {
                                         if (result.isConfirmed) {
-                                            // Si el usuario confirma, enviamos el formulario manualmente
                                             document.getElementById('form-restaurar').submit();
                                         }
                                     })
