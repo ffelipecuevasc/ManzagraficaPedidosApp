@@ -4,7 +4,6 @@ from datetime import datetime
 from django.conf import settings
 import glob
 
-
 def generar_respaldo_mysql():
     """
     Genera un respaldo .sql de la base de datos MySQL configurada en 'default'.
