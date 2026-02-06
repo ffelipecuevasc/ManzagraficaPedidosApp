@@ -21,7 +21,7 @@ def generar_respaldo_mysql():
 
     # 2. Definir rutas y nombre de archivo
     backup_dir = os.path.join(settings.BASE_DIR, 'backups')
-    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    timestamp = datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
     filename = f"respaldo_{timestamp}.sql"
     filepath = os.path.join(backup_dir, filename)
 
@@ -62,7 +62,6 @@ def generar_respaldo_mysql():
 
     return filepath
 
-
 def limpiar_backups_antiguos(directorio, mantener=5):
     """
     Busca archivos .sql en el directorio, los ordena por fecha
@@ -86,3 +85,50 @@ def limpiar_backups_antiguos(directorio, mantener=5):
                 print(f"Respaldo antiguo eliminado: {archivo}")
             except OSError as e:
                 print(f"Error al borrar respaldo antiguo {archivo}: {e}")
+
+def restaurar_bd_mysql(ruta_archivo_sql):
+    """
+    Restaura la base de datos configurada en 'default' usando un archivo .sql.
+    ADVERTENCIA: Esta acción sobrescribe los datos actuales con los del archivo.
+    """
+    # 1. Validar existencia del archivo
+    if not os.path.exists(ruta_archivo_sql):
+        raise FileNotFoundError(f"No se encontró el archivo de respaldo: {ruta_archivo_sql}")
+
+    # 2. Obtener credenciales (Reutilizamos la lógica segura de settings)
+    db_config = settings.DATABASES['default']
+    db_name = db_config['NAME']
+    db_user = db_config['USER']
+    db_password = db_config['PASSWORD']
+    db_host = db_config['HOST']
+
+    # 3. Construir comando de restauración
+    # Estructura: mysql -h host -u user --password=pass nombre_bd
+    # Nota: No pasamos el archivo aquí, lo pasaremos vía 'stdin' (entrada estándar)
+    restore_cmd = [
+        'mysql',
+        f'-h{db_host}',
+        f'-u{db_user}',
+        f'--password={db_password}',
+        db_name
+    ]
+
+    try:
+        # Abrimos el archivo SQL en modo lectura
+        with open(ruta_archivo_sql, 'r') as f:
+            # Ejecutamos 'mysql' inyectándole el contenido del archivo como si escribiéramos en la consola
+            # Esto evita el uso de 'shell=True' y es más seguro contra inyecciones
+            subprocess.run(restore_cmd, stdin=f, check=True)
+
+    except FileNotFoundError:
+        # Este error ocurre si el sistema operativo no encuentra el ejecutable 'mysql'
+        # Común en Windows si no está en las Variables de Entorno (PATH)
+        raise Exception(
+            "Error de Sistema: No se encontró el comando 'mysql'. "
+            "Si estás en local (Windows), asegúrate de que la carpeta 'bin' de MySQL Server esté en tu PATH."
+        )
+    except subprocess.CalledProcessError as e:
+        # Este error ocurre si MySQL intenta ejecutar el SQL y falla (ej: archivo corrupto)
+        raise Exception(f"Error al ejecutar la restauración en MySQL: El proceso falló.")
+
+    return True

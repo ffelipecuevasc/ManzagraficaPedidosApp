@@ -1,18 +1,20 @@
-from PedidosApp import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
+from django.contrib import messages
+from django.core.files.storage import FileSystemStorage
 from django.db.models import Q, Count, Sum, F
 from django.http import JsonResponse, FileResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from django.template.loader import render_to_string
+from django.db.models import ProtectedError
 from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm
 from .decorators import transaccion_segura
-from django.utils import timezone
+from .utils import generar_respaldo_mysql, restaurar_bd_mysql
 from datetime import timedelta, datetime
-from django.template.loader import render_to_string
-from django.db.models import ProtectedError
-from .utils import generar_respaldo_mysql
+from PedidosApp import settings
 import weasyprint
 import json
 import os
@@ -792,7 +794,7 @@ def api_crear_producto_rapido(request):
         })
 
 # ==========================================
-# GESTIÓN DE SISTEMA (RESPALDOS)
+# BASE DE DATOS - RESPALDOS & RESTAURACIONES
 # ==========================================
 
 def es_superusuario(user):
@@ -853,6 +855,71 @@ def generar_respaldo_bd(request):
         return response
     except Exception as e:
         return HttpResponse(f"Error crítico: {str(e)}")
+
+@login_required
+@user_passes_test(es_superusuario)
+def restaurar_bd(request):
+    """
+    Vista delicada:
+    1. GET: Muestra el formulario de advertencia y carga.
+    2. POST: Recibe el archivo, hace un respaldo de emergencia y restaura la BD.
+    """
+    if request.method == 'POST':
+        # 1. Validar que se envió un archivo
+        if 'archivo_sql' not in request.FILES:
+            messages.error(request, "No se seleccionó ningún archivo.")
+            return redirect('restaurar_bd')
+
+        archivo = request.FILES['archivo_sql']
+
+        # 2. Validar extensión
+        if not archivo.name.endswith('.sql'):
+            messages.error(request, "Error: El archivo debe tener extensión .sql")
+            return redirect('restaurar_bd')
+
+        try:
+            # 3. Guardar el archivo temporalmente en 'backups/tmp/'
+            # (Usamos FileSystemStorage para manejar la subida de forma segura)
+            ruta_tmp = os.path.join(settings.BASE_DIR, 'backups', 'tmp')
+            if not os.path.exists(ruta_tmp):
+                os.makedirs(ruta_tmp)
+
+            fs = FileSystemStorage(location=ruta_tmp)
+            nombre_archivo = fs.save(archivo.name, archivo)
+            ruta_absoluta = fs.path(nombre_archivo)
+
+            # ====================================================
+            # EL AIRBAG: Respaldo de Emergencia Automático
+            # ====================================================
+            try:
+                generar_respaldo_mysql()  # Si esto falla, NO restauramos
+            except Exception as e:
+                # Si no podemos hacer el respaldo de seguridad, ABORTAMOS la misión.
+                # Es mejor no restaurar que restaurar sin red de seguridad.
+                if os.path.exists(ruta_absoluta): os.remove(ruta_absoluta)  # Limpieza
+                messages.error(request,
+                               f"Operación abortada: No se pudo crear el respaldo de seguridad previo ({str(e)}).")
+                return redirect('restaurar_bd')
+
+            # ====================================================
+            # LA RESTAURACIÓN: El momento de la verdad
+            # ====================================================
+            restaurar_bd_mysql(ruta_absoluta)
+
+            # Si llegamos aquí, es porque salió bien
+            messages.success(request, f"¡Éxito! La base de datos fue restaurada con el archivo: {archivo.name}")
+
+            # Limpieza: Borrar el archivo que subimos para restaurar
+            if os.path.exists(ruta_absoluta):
+                os.remove(ruta_absoluta)
+
+        except Exception as e:
+            messages.error(request, f"Error crítico al restaurar: {str(e)}")
+
+        return redirect('restaurar_bd')
+
+    # Si es GET, solo mostramos el formulario
+    return render(request, 'pedidos/restaurar_bd.html')
 
 # ==========================================
 # GESTIÓN DE ERRORES HTTP

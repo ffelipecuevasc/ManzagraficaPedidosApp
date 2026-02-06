@@ -177,7 +177,7 @@
                     <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">storage</span>
                     Respaldar BD
                 </a>
-                <a href="#"
+                <a href="{% url 'restaurar_bd' %}"
                    class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group/item">
                     <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">settings_backup_restore</span>
                     Restaurar BD
@@ -283,7 +283,7 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{% static 'pedidos/js/index.js' %}"></script>
 
 {% block scripts %}{% endblock %}

@@ -145,7 +145,7 @@ LANGUAGE_CODE = 'es-cl' # Usamos 'es-cl' (Chile) o 'es' genérico por el términ
 
 # 2. Zona Horaria (CRÍTICO para "Fechas exactas")
 # Es vital para que cuando guardes un pedido a las 15:00, no se guarde como las 19:00 UTC.
-TIME_ZONE = 'America/Santiago' # O tu zona horaria local correcta.
+TIME_ZONE = 'America/Santiago'
 
 # 3. Internacionalización
 USE_I18N = True
