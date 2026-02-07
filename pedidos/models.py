@@ -2,6 +2,7 @@ from django.db import models
 from datetime import timedelta
 from django.utils import timezone
 
+# Clase básica de Clientes
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
     telefono = models.CharField(max_length=20, help_text='Formato WhatsApp')
@@ -22,47 +23,7 @@ class Cliente(models.Model):
     def __str__(self):
         return self.nombre
 
-
-class Cotizacion(models.Model):
-    """
-    Modelo espejo de Pedido para la Fase A: Gestión de Cotizaciones.
-    """
-    ESTADO_COTIZACION_CHOICES = [
-        ('BORRADOR', 'Borrador'),  # Aún editando
-        ('ENVIADA', 'Enviada'),  # Esperando respuesta
-        ('ACEPTADA', 'Aceptada'),  # Se convirtió en pedido
-        ('EXPIRADA', 'Expirada'),  # Pasó la fecha sin acción
-        ('RECHAZADA', 'Rechazada'),  # Cliente no quiso
-    ]
-
-    # Relaciones y Datos Básicos
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    resumen = models.CharField(max_length=100, help_text="Título corto del trabajo")
-    detalles = models.TextField(help_text="Detalles técnicos (Summernote)")
-
-    # Datos Económicos y Temporales
-    valor_total = models.IntegerField(help_text="Precio neto propuesto")
-    fecha_emision = models.DateField(default=timezone.now)  # Editable si se requiere, por defecto hoy
-    validez = models.IntegerField(default=15, help_text="Días de validez de la oferta")
-
-    estado = models.CharField(max_length=20, choices=ESTADO_COTIZACION_CHOICES, default='BORRADOR')
-
-    # Timestamps de control interno
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    @property
-    def fecha_vencimiento(self):
-        # Ojo: fecha_emision es Date, timedelta es tiempo. Funciona directo.
-        return self.fecha_emision + timedelta(days=self.validez)
-
-    @property
-    def esta_vencida(self):
-        return self.estado == 'ENVIADA' and self.fecha_vencimiento < timezone.now().date()
-
-    def __str__(self):
-        return f"Cotización #{self.id} - {self.cliente.nombre}"
-
+# Clase de Pedidos hecha a la medida
 class Pedido(models.Model):
     ESTADO_CHOICES = [
         ('PENDIENTE', 'Pendiente'),
@@ -87,7 +48,7 @@ class Pedido(models.Model):
     def __str__(self):
         return f"{self.resumen_pedido} - {self.cliente.nombre}"
 
-
+# Clase minimizada de Productos
 class Producto(models.Model):
     """
     Maestro de Productos / Servicios (Refactorizado con IVA 19%).
@@ -129,6 +90,47 @@ class Producto(models.Model):
         # Mostramos el precio final en el admin/selects para facilitar la vida
         return f"{self.nombre} (${self.valor_bruto} IVA inc.)"
 
+# Clase de Cotizaciones, espejo de Pedidos
+class Cotizacion(models.Model):
+    """
+    Modelo espejo de Pedido para la Fase A: Gestión de Cotizaciones.
+    """
+    ESTADO_COTIZACION_CHOICES = [
+        ('BORRADOR', 'Borrador'),  # Aún editando
+        ('ENVIADA', 'Enviada'),  # Esperando respuesta
+        ('ACEPTADA', 'Aceptada'),  # Se convirtió en pedido
+        ('EXPIRADA', 'Expirada'),  # Pasó la fecha sin acción
+        ('RECHAZADA', 'Rechazada'),  # Cliente no quiso
+    ]
+
+    # Relaciones y Datos Básicos
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    resumen = models.CharField(max_length=100, help_text="Título corto del trabajo")
+    detalles = models.TextField(help_text="Detalles técnicos (Summernote)")
+
+    # Datos Económicos y Temporales
+    valor_total = models.IntegerField(help_text="Precio neto propuesto")
+    fecha_emision = models.DateField(default=timezone.now)  # Editable si se requiere, por defecto hoy
+    validez = models.IntegerField(default=15, help_text="Días de validez de la oferta")
+
+    estado = models.CharField(max_length=20, choices=ESTADO_COTIZACION_CHOICES, default='BORRADOR')
+
+    # Timestamps de control interno
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def fecha_vencimiento(self):
+        # Ojo: fecha_emision es Date, timedelta es tiempo. Funciona directo.
+        return self.fecha_emision + timedelta(days=self.validez)
+
+    @property
+    def esta_vencida(self):
+        return self.estado == 'ENVIADA' and self.fecha_vencimiento < timezone.now().date()
+
+    def __str__(self):
+        return f"Cotización #{self.id} - {self.cliente.nombre}"
+
 # Clase hecha para relacionar Productos con Pedidos y viceversa.
 class ItemPedido(models.Model):
     """
@@ -164,3 +166,21 @@ class ItemCotizacion(models.Model):
     @property
     def subtotal(self):
         return self.cantidad * self.precio_unitario
+
+# Clase preparada para guardar estadísticas de uso de la base de datos
+class HistorialBD(models.Model):
+    """
+    Modelo técnico para registrar el crecimiento de la base de datos a lo largo del tiempo.
+    Se llena automáticamente una vez al día para generar gráficos de tendencia.
+    """
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    tamano_mb = models.DecimalField(max_digits=10, decimal_places=2, help_text="Tamaño ocupado en Megabytes")
+
+    # Métricas de contexto (para correlacionar crecimiento con actividad)
+    total_pedidos = models.IntegerField(default=0)
+    total_clientes = models.IntegerField(default=0)
+    total_cotizaciones = models.IntegerField(default=0)
+    total_productos = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.fecha_registro.strftime('%d/%m/%Y')} - {self.tamano_mb} MB"

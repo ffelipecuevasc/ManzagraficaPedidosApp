@@ -9,10 +9,10 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.db.models import ProtectedError
-from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion
+from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion, HistorialBD
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm
 from .decorators import transaccion_segura
-from .utils import generar_respaldo_mysql, restaurar_bd_mysql
+from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
 from datetime import timedelta, datetime
 from PedidosApp import settings
 import weasyprint
@@ -24,6 +24,14 @@ import os
 # ==========================================
 @login_required
 def dashboard(request):
+    # ==========================================
+    # 0. GATILLO DE ESTADÍSTICAS (¡NUEVO!)
+    # ==========================================
+    # Llamada automática a la función que guarda la info de la BD para estadísticas.
+    # Verifica si hoy ya se guardó el peso de la BD. Si no, lo hace ahora.
+    registrar_metricas_diarias()
+
+
     # ==========================================
     # 1. KPIs FINANCIEROS (Dinero)
     # ==========================================
@@ -221,7 +229,6 @@ def eliminar_pedido(request, pk):
 def detalle_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     return render(request, 'pedidos/pedido_detail.html', {'pedido': pedido})
-
 
 @login_required
 def cambiar_estado_pedido(request, pk, nuevo_estado):
@@ -494,7 +501,6 @@ def lista_cotizaciones(request):
     }
     return render(request, 'pedidos/cotizacion_list.html', context)
 
-
 @login_required
 @transaccion_segura
 def crear_cotizacion(request):
@@ -597,7 +603,6 @@ def editar_cotizacion(request, pk):
 def detalle_cotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
     return render(request, 'pedidos/cotizacion_detail.html', {'cotizacion': cotizacion})
-
 
 @login_required
 @transaccion_segura
@@ -712,7 +717,6 @@ def lista_productos(request):
     }
     return render(request, 'pedidos/producto_list.html', context)
 
-
 @login_required
 @transaccion_segura
 def crear_producto(request):
@@ -725,7 +729,6 @@ def crear_producto(request):
         form = ProductoForm()
 
     return render(request, 'pedidos/producto_form.html', {'form': form})
-
 
 @login_required
 @transaccion_segura
@@ -740,7 +743,6 @@ def editar_producto(request, pk):
         form = ProductoForm(instance=producto)
 
     return render(request, 'pedidos/producto_form.html', {'form': form})
-
 
 @login_required
 @transaccion_segura
@@ -920,6 +922,148 @@ def restaurar_bd(request):
 
     # Si es GET, solo mostramos el formulario
     return render(request, 'pedidos/restaurar_bd.html')
+
+@login_required
+@user_passes_test(es_superusuario)
+def estadisticas_bd(request):
+    """
+    Vista de Análisis de Base de Datos.
+    Calcula KPIs de crecimiento y genera las coordenadas para el gráfico SVG.
+    """
+    # 0. GATILLO: Asegurar que tenemos el dato de hoy
+    registrar_metricas_diarias()
+
+    # ==========================================
+    # 1. KPI: ÚLTIMO RESPALDO (Lectura de Disco)
+    # ==========================================
+    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    ultimo_respaldo_fecha = None
+    ultimo_respaldo_status = "No hay respaldos"
+
+    if os.path.exists(backup_dir):
+        # Buscamos el archivo .sql más reciente
+        archivos = [
+            os.path.join(backup_dir, f)
+            for f in os.listdir(backup_dir)
+            if f.endswith('.sql')
+        ]
+        if archivos:
+            mas_reciente = max(archivos, key=os.path.getmtime)
+            timestamp = os.path.getmtime(mas_reciente)
+            ultimo_respaldo_fecha = datetime.fromtimestamp(timestamp)
+            ultimo_respaldo_status = "Copia de seguridad exitosa"
+
+    # ==========================================
+    # 2. KPI: CRECIMIENTO Y TAMAÑO ACTUAL
+    # ==========================================
+    # Obtenemos el historial completo ordenado cronológicamente
+    historial = HistorialBD.objects.all().order_by('fecha_registro')
+
+    if historial.exists():
+        ultimo_registro = historial.last()
+        tamano_actual_mb = ultimo_registro.tamano_mb
+
+        # Crecimiento vs mes anterior (aprox 30 registros atrás)
+        count = historial.count()
+        if count > 30:
+            registro_anterior = historial[count - 30]
+            peso_anterior = registro_anterior.tamano_mb
+            if peso_anterior > 0:
+                crecimiento_pct = ((tamano_actual_mb - peso_anterior) / peso_anterior) * 100
+            else:
+                crecimiento_pct = 100
+        else:
+            # Si hay menos de un mes, comparamos con el primero que tengamos
+            primer_registro = historial.first()
+            peso_inicial = primer_registro.tamano_mb
+            if peso_inicial > 0 and peso_inicial != tamano_actual_mb:
+                crecimiento_pct = ((tamano_actual_mb - peso_inicial) / peso_inicial) * 100
+            else:
+                crecimiento_pct = 0
+    else:
+        # Valores por defecto si es el primer día de uso
+        tamano_actual_mb = 0
+        crecimiento_pct = 0
+
+    # ==========================================
+    # 3. LÓGICA DEL GRÁFICO SVG (GEOMETRÍA)
+    # ==========================================
+    # Tomamos los últimos 6 registros para el gráfico (o los que haya)
+    datos_grafico = historial.order_by('-fecha_registro')[:6][::-1]
+
+    puntos_svg = ""  # Para la línea <path d="...">
+    area_svg = ""  # Para el relleno degradado
+    lista_puntos = []  # Para los círculos interactivos
+    max_y = 100  # Valor máximo del eje Y (por defecto)
+
+    if datos_grafico:
+        # 1. Determinar Escala Vertical (Eje Y)
+        valores = [float(d.tamano_mb) for d in datos_grafico]
+        max_val = max(valores)
+        # Le damos un 20% de aire arriba para que el punto más alto no toque el techo
+        max_y = max_val * 1.2 if max_val > 0 else 10
+
+        # 2. Configuración del Canvas SVG (según code.html)
+        # viewBox="0 0 1000 400"
+        canvas_height = 400
+        canvas_width = 1000
+        # Margenes internos para que no se corte el gráfico
+        padding_top = 50
+        padding_bottom = 50
+        util_height = canvas_height - padding_top - padding_bottom
+
+        # 3. Calcular coordenadas X, Y para cada punto
+        coords = []
+        cantidad_puntos = len(datos_grafico)
+        step_x = canvas_width / (cantidad_puntos - 1) if cantidad_puntos > 1 else canvas_width / 2
+
+        for i, dato in enumerate(datos_grafico):
+            # EJE X: Distribuido uniformemente
+            if cantidad_puntos == 1:
+                cx = 500  # Si es uno solo, al centro
+            else:
+                cx = i * step_x
+
+            # EJE Y: Regla de tres inversa (0 está arriba en SVG)
+            # Valor 0 MB -> Y = 350 (Abajo)
+            # Valor Max MB -> Y = 50 (Arriba)
+            valor = float(dato.tamano_mb)
+            cy = (canvas_height - padding_bottom) - ((valor / max_y) * util_height)
+
+            coords.append(f"{cx},{cy}")
+
+            # Guardamos datos para los círculos/tooltips en el HTML
+            lista_puntos.append({
+                'x': cx,
+                'y': cy,
+                'label': dato.fecha_registro.strftime("%d %b"),  # Ej: "06 Feb"
+                'valor': valor
+            })
+
+        # 4. Construir el Path SVG (Comando 'd')
+        # M = Mover a, L = Línea a
+        puntos_svg = "M " + " L ".join(coords)
+
+        # 5. Construir el Área de Relleno (Cerrar el shape hacia abajo)
+        # Bajamos verticalmente al fondo (V 400), volvemos al inicio (H 0) y cerramos (Z)
+        area_svg = f"{puntos_svg} V {canvas_height} H 0 Z"
+
+    context = {
+        # KPIs
+        'tamano_actual_mb': tamano_actual_mb,
+        'crecimiento_pct': round(crecimiento_pct, 1),
+        'ultimo_respaldo_fecha': ultimo_respaldo_fecha,
+        'ultimo_respaldo_status': ultimo_respaldo_status,
+
+        # Gráfico SVG
+        'puntos_svg': puntos_svg,  # Línea amarilla
+        'area_svg': area_svg,  # Relleno degradado
+        'lista_puntos': lista_puntos,  # Círculos
+        'max_y_label': round(max_y, 1),  # Etiqueta superior del eje Y
+        'mitad_y_label': round(max_y / 2, 1)  # Etiqueta media
+    }
+
+    return render(request, 'pedidos/estadisticas_bd.html', context)
 
 # ==========================================
 # GESTIÓN DE ERRORES HTTP

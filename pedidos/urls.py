@@ -41,7 +41,8 @@ urlpatterns = [
     path('productos/<int:pk>/', views.detalle_producto, name='detalle_producto'),
 
     # GESTIÓN DE BD
-    path('configuracion/respaldar_bd/', views.respaldar_bd, name='respaldar_bd'),
-    path('configuracion/respaldar_bd/accion/', views.generar_respaldo_bd, name='generar_respaldo_bd'),
-    path('configuracion/restaurar_bd/', views.restaurar_bd, name='restaurar_bd'),
+    path('base_datos/respaldar_bd/', views.respaldar_bd, name='respaldar_bd'),
+    path('base_datos/respaldar_bd/accion/', views.generar_respaldo_bd, name='generar_respaldo_bd'),
+    path('base_datos/restaurar_bd/', views.restaurar_bd, name='restaurar_bd'),
+    path('base_datos/estadisticas_bd/', views.estadisticas_bd, name='estadisticas_bd'),
 ]

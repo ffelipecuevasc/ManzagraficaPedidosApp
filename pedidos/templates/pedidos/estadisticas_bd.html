@@ -1,0 +1,150 @@
+{% extends 'pedidos/base.html' %}
+{% load humanize %}
+
+{% block title %}Monitoreo de Base de Datos - Manza Gráfica{% endblock %}
+
+{% block content %}
+    <div class="max-w-6xl mx-auto animate-fade-in-up">
+
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    Database Monitoring Dashboard
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                    Métricas técnicas y estado del servidor de datos MySQL.
+                </p>
+            </div>
+
+            <div class="flex items-center space-x-4 bg-white dark:bg-card-dark p-2 rounded-lg border border-slate-200 dark:border-border-dark shadow-sm">
+                <div class="flex flex-col items-end mr-2">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-green-500 flex items-center gap-1">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    Servidor Online
+                </span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400">MySQL 8.0</span>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center border border-slate-200 dark:border-neutral-700">
+                    <span class="material-icons-round text-slate-600 dark:text-slate-400">dns</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Tamaño Actual de BD</span>
+                    <span class="material-icons-round text-slate-400">database</span>
+                </div>
+                <div class="text-3xl font-bold text-slate-900 dark:text-white">
+                    {{ tamano_actual_mb }} <span class="text-lg text-slate-500">MB</span>
+                </div>
+                <div class="text-[10px] text-slate-500 mt-2 uppercase tracking-tighter">Espacio total ocupado (Data +
+                    Índices)
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-border-dark border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Crecimiento (30 días)</span>
+                    <span class="material-icons-round text-primary">trending_up</span>
+                </div>
+                <div class="text-3xl font-bold text-primary">
+                    {% if crecimiento_pct > 0 %}+{% endif %}{{ crecimiento_pct }}%
+                </div>
+                <div class="text-[10px] text-slate-500 mt-2 uppercase tracking-tighter">Tendencia de almacenamiento
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Último Respaldo</span>
+                    <span class="material-icons-round text-slate-400">backup</span>
+                </div>
+                <div class="text-2xl font-bold text-slate-900 dark:text-white truncate">
+                    {% if ultimo_respaldo_fecha %}
+                        {{ ultimo_respaldo_fecha|date:"d M, H:i" }}
+                    {% else %}
+                        --/--
+                    {% endif %}
+                </div>
+                <div class="text-[10px] {% if ultimo_respaldo_fecha %}text-green-500{% else %}text-red-500{% endif %} mt-2 flex items-center font-bold uppercase tracking-tighter">
+                <span class="material-icons-round text-[10px] mr-1">
+                    {% if ultimo_respaldo_fecha %}check_circle{% else %}error{% endif %}
+                </span>
+                    {{ ultimo_respaldo_status }}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-8 rounded-xl border border-slate-200 dark:border-border-dark shadow-sm">
+            <div class="flex justify-between items-center mb-10">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Tendencia de Crecimiento</h2>
+                    <p class="text-xs text-slate-500">Visualización histórica del volumen de datos (Últimos 6
+                        registros)</p>
+                </div>
+                <div class="flex space-x-2">
+                <span class="flex items-center text-[10px] font-bold text-slate-400 uppercase">
+                    <span class="w-3 h-1 bg-primary mr-2 rounded-full"></span> Megabytes (MB)
+                </span>
+                </div>
+            </div>
+
+            <div class="relative h-[400px] w-full chart-grid rounded-lg border border-slate-100 dark:border-border-dark/50 overflow-hidden">
+
+                <svg class="absolute inset-0 w-full h-full p-4" preserveAspectRatio="none" viewBox="0 0 1000 400">
+                    <line stroke="#262626" stroke-width="0.5" stroke-opacity="0.1" x1="0" x2="1000" y1="320"
+                          y2="320"></line>
+                    <line stroke="#262626" stroke-width="0.5" stroke-opacity="0.1" x1="0" x2="1000" y1="240"
+                          y2="240"></line>
+                    <line stroke="#262626" stroke-width="0.5" stroke-opacity="0.1" x1="0" x2="1000" y1="160"
+                          y2="160"></line>
+                    <line stroke="#262626" stroke-width="0.5" stroke-opacity="0.1" x1="0" x2="1000" y1="80"
+                          y2="80"></line>
+
+                    <defs>
+                        <linearGradient id="gradientArea" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#FBBF24; stop-opacity:0.2"/>
+                            <stop offset="100%" style="stop-color:#FBBF24; stop-opacity:0"/>
+                        </linearGradient>
+                    </defs>
+
+                    <path d="{{ area_svg }}" fill="url(#gradientArea)" stroke="none"></path>
+
+                    <path class="line-curve"
+                          d="{{ puntos_svg }}"
+                          fill="none"
+                          stroke="#FBBF24"
+                          stroke-linecap="round"
+                          stroke-width="3">
+                    </path>
+
+                    {% for punto in lista_puntos %}
+                        <g class="chart-point" style="animation-delay: {{ forloop.counter|add:"0.5" }}s">
+                            <circle cx="{{ punto.x }}" cy="{{ punto.y }}" fill="#171717" r="6" stroke="#FBBF24"
+                                    stroke-width="2"></circle>
+
+                        </g>
+                    {% endfor %}
+                </svg>
+
+                <div class="absolute bottom-4 left-4 right-4 flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4">
+                    {% for punto in lista_puntos %}
+                        <span>{{ punto.label }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="absolute left-4 top-4 bottom-12 flex flex-col justify-between text-[10px] font-bold text-slate-500/50 h-full py-4">
+                    <span>{{ max_y_label }} MB</span>
+                    <span>{{ mitad_y_label }} MB</span>
+                    <span>0 MB</span>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,8 +1,11 @@
-import os
-import subprocess
+from django.db import connection
+from django.utils import timezone
+from .models import HistorialBD, Pedido, Cliente, Cotizacion, Producto
 from datetime import datetime
 from django.conf import settings
 import glob
+import subprocess
+import os
 
 def generar_respaldo_mysql():
     """
@@ -131,3 +134,68 @@ def restaurar_bd_mysql(ruta_archivo_sql):
         raise Exception(f"Error al ejecutar la restauración en MySQL: El proceso falló.")
 
     return True
+
+# ==========================================
+# GESTIÓN DE ESTADÍSTICAS (PESO BD)
+# ==========================================
+
+def obtener_peso_real_bd():
+    """
+    Consulta directamente a MySQL (information_schema) el peso real en disco
+    de la base de datos (Datos + Índices).
+    Retorna el valor en MB (float).
+    """
+    # Obtenemos el nombre real de la BD desde settings
+    db_name = settings.DATABASES['default']['NAME']
+
+    # Query técnica para sumar el tamaño de datos e índices de todas las tablas
+    sql = """
+          SELECT SUM(data_length + index_length)
+          FROM information_schema.TABLES
+          WHERE table_schema = %s \
+          """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [db_name])
+        resultado = cursor.fetchone()
+
+    # Si hay resultado, convertimos Bytes a Megabytes
+    if resultado and resultado[0]:
+        bytes_total = resultado[0]
+        mb_total = round(bytes_total / (1024 * 1024), 2)
+        return mb_total
+
+    return 0.00
+
+def registrar_metricas_diarias():
+    """
+    Función inteligente:
+    1. Verifica si YA registramos el peso HOY.
+    2. Si NO, calcula el peso y guarda una foto del estado actual.
+    3. Si SI, no hace nada (para no llenar la tabla de duplicados).
+    """
+    hoy = timezone.now().date()
+
+    # 1. Check de duplicados (¿Ya existe un registro con fecha de hoy?)
+    if HistorialBD.objects.filter(fecha_registro__date=hoy).exists():
+        return False  # Ya se corrió hoy, no hacemos nada
+
+    # 2. Calcular Peso Real
+    peso_mb = obtener_peso_real_bd()
+
+    # 3. Recopilar métricas de negocio
+    total_pedidos = Pedido.objects.count()
+    total_clientes = Cliente.objects.count()
+    total_cotizaciones = Cotizacion.objects.count()
+    total_productos = Producto.objects.count()
+
+    # 4. Guardar la "foto" en el historial
+    HistorialBD.objects.create(
+        tamano_mb=peso_mb,
+        total_pedidos=total_pedidos,
+        total_clientes=total_clientes,
+        total_cotizaciones=total_cotizaciones,
+        total_productos=total_productos
+    )
+
+    return True  # Se creó un nuevo registro exitosamente
