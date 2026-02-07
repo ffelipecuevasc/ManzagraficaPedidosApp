@@ -70,6 +70,11 @@
             </button>
 
             <div id="menu-pedidos" class="accordion-content hidden space-y-1 mt-1">
+                <a href="{% url 'estadisticas_pedidos' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'estadisticas_pedidos' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">analytics</span>
+                    Estadísticas Pedidos
+                </a>
                 <a href="{% url 'lista_pedidos' %}"
                    class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'lista_pedidos' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
                     <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">toc</span>
@@ -177,13 +182,11 @@
                     <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">analytics</span>
                     Estadísticas BD
                 </a>
-
                 <a href="{% url 'respaldar_bd' %}"
                    class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'respaldar_bd' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
                     <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">backup</span>
                     Respaldar BD
                 </a>
-
                 <a href="{% url 'restaurar_bd' %}"
                    class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'restaurar_bd' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
                     <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">settings_backup_restore</span>

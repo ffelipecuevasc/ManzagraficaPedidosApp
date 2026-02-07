@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.db.models import Q, Count, Sum, F
+from django.db.models.functions import TruncMonth
 from django.http import JsonResponse, FileResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
@@ -330,6 +331,135 @@ def duplicar_pedido(request, pk):
 
     # 4. Redirigir al detalle del nuevo pedido clonado
     return redirect('detalle_pedido', pk=nuevo_pedido.pk)
+
+@login_required
+def estadisticas_pedidos(request):
+    """
+    Vista de Analítica de Ventas y Pedidos.
+    FASE 1 COMPLETADA: Fechas + Queries + Gráfico SVG.
+    """
+    # 1. Definir el "Ahora"
+    hoy = timezone.now()
+
+    # ---------------------------------------------------------
+    # A. DEFINICIÓN DE RANGOS TEMPORALES
+    # ---------------------------------------------------------
+    inicio_mes_actual = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    fin_mes_anterior = inicio_mes_actual - timedelta(seconds=1)
+    inicio_mes_anterior = fin_mes_anterior.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    fecha_corte_anual = (inicio_mes_actual - timedelta(days=365)).replace(day=1)
+
+    # ---------------------------------------------------------
+    # B. CONSULTAS (KPIs)
+    # ---------------------------------------------------------
+
+    # KPI 1: TOTAL PEDIDOS MES ACTUAL
+    pedidos_mes_actual = Pedido.objects.filter(fecha_solicitud__gte=inicio_mes_actual)
+    total_mes_actual = pedidos_mes_actual.count()
+
+    # KPI 2: CRECIMIENTO VS MES ANTERIOR
+    pedidos_mes_anterior = Pedido.objects.filter(
+        fecha_solicitud__range=[inicio_mes_anterior, fin_mes_anterior]
+    ).count()
+
+    if pedidos_mes_anterior > 0:
+        crecimiento_pct = ((total_mes_actual - pedidos_mes_anterior) / pedidos_mes_anterior) * 100
+    else:
+        crecimiento_pct = 100 if total_mes_actual > 0 else 0
+
+    # KPI 3: TASA DE EFICIENCIA (COMPLETADOS VS TOTALES DEL MES)
+    # Cuántos de los pedidos de ESTE mes ya están terminados
+    completados_mes = pedidos_mes_actual.filter(estado='TERMINADO').count()
+
+    if total_mes_actual > 0:
+        eficiencia_pct = (completados_mes / total_mes_actual) * 100
+    else:
+        eficiencia_pct = 0
+
+    # ---------------------------------------------------------
+    # C. DATOS PARA EL GRÁFICO (Últimos 12 Meses)
+    # ---------------------------------------------------------
+    # Agrupamos por mes y contamos IDs
+    datos_grafico = (
+        Pedido.objects
+        .filter(fecha_solicitud__gte=fecha_corte_anual)
+        .annotate(mes=TruncMonth('fecha_solicitud'))  # Truncamos la fecha al día 1 del mes
+        .values('mes')  # Agrupamos por ese mes
+        .annotate(total=Count('id'))  # Contamos pedidos en ese grupo
+        .order_by('mes')  # Orden cronológico
+    )
+
+    # ---------------------------------------------------------
+    # D. LÓGICA SVG (GEOMETRÍA) - Reutilizada de estadisticas_bd
+    # ---------------------------------------------------------
+    puntos_svg = ""
+    area_svg = ""
+    lista_puntos = []
+    max_y = 10  # Valor por defecto mínimo
+
+    if datos_grafico:
+        # 1. Escala Vertical
+        valores = [d['total'] for d in datos_grafico]
+        max_val = max(valores)
+        max_y = max_val * 1.2 if max_val > 0 else 10  # 20% de aire arriba
+
+        # 2. Configuración Canvas (1000x400)
+        canvas_height = 400
+        canvas_width = 1000
+        padding_top = 50
+        padding_bottom = 50
+        util_height = canvas_height - padding_top - padding_bottom
+
+        # 3. Calcular Coordenadas
+        cantidad_puntos = len(datos_grafico)
+        # Si hay solo 1 punto, lo centramos. Si hay más, distribuimos.
+        step_x = canvas_width / (cantidad_puntos - 1) if cantidad_puntos > 1 else canvas_width / 2
+
+        coords = []
+
+        for i, dato in enumerate(datos_grafico):
+            # Eje X
+            if cantidad_puntos == 1:
+                cx = 500
+            else:
+                cx = i * step_x
+
+            # Eje Y (Invertido)
+            valor = float(dato['total'])
+            cy = (canvas_height - padding_bottom) - ((valor / max_y) * util_height)
+
+            coords.append(f"{cx},{cy}")
+
+            # Datos para los puntos interactivos (círculos)
+            # dato['mes'] es un datetime, lo formateamos a "Ene", "Feb"
+            lista_puntos.append({
+                'x': cx,
+                'y': cy,
+                'label': dato['mes'].strftime("%b"),  # Ej: "Feb"
+                'valor': int(valor),  # Cantidad de pedidos (entero)
+                'full_date': dato['mes'].strftime("%B %Y")  # Ej: "Febrero 2026"
+            })
+
+        # 4. Construir Path
+        puntos_svg = "M " + " L ".join(coords)
+        area_svg = f"{puntos_svg} V {canvas_height} H 0 Z"
+
+    context = {
+        # KPIs
+        'total_mes_actual': total_mes_actual,
+        'crecimiento_pct': round(crecimiento_pct, 1),
+        'eficiencia_pct': round(eficiencia_pct, 1),
+
+        # Gráfico
+        'puntos_svg': puntos_svg,
+        'area_svg': area_svg,
+        'lista_puntos': lista_puntos,
+        'max_y_label': int(max_y),  # Eje Y tope (entero)
+        'mitad_y_label': int(max_y / 2)  # Eje Y medio
+    }
+
+    # render provisional (aún no creamos el HTML, fallará si lo cargas)
+    return render(request, 'pedidos/estadisticas_pedidos.html', context)
 
 # ==========================================
 # GESTIÓN DE CLIENTES

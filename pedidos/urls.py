@@ -7,7 +7,7 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
 
     # PEDIDOS
-    path('nuevo/', views.crear_pedido, name='crear_pedido'),
+    path('pedidos/nuevo/', views.crear_pedido, name='crear_pedido'),
     path('pedidos/lista/', views.lista_pedidos, name='lista_pedidos'),
     path('<int:pk>/', views.detalle_pedido, name='detalle_pedido'),
     path('pedido/<int:pk>/cambiar/<str:nuevo_estado>/', views.cambiar_estado_pedido, name='cambiar_estado'),
@@ -15,10 +15,11 @@ urlpatterns = [
     path('pedido/editar/<int:pk>/', views.editar_pedido, name='editar_pedido'),
     path('pedido/eliminar/<int:pk>/', views.eliminar_pedido, name='eliminar_pedido'),
     path('pedidos/trabajo-semanal/', views.trabajo_semanal, name='trabajo_semanal'),
+    path('pedidos/estadisticas/', views.estadisticas_pedidos, name='estadisticas_pedidos'),
 
     # CLIENTES
     path('api/cliente/nuevo/', views.api_crear_cliente_rapido, name='api_crear_cliente_rapido'),
-    path('clientes/', views.lista_clientes, name='lista_clientes'),
+    path('clientes/lista/', views.lista_clientes, name='lista_clientes'),
     path('clientes/nuevo/', views.crear_cliente, name='crear_cliente'),
     path('clientes/editar/<int:pk>/', views.editar_cliente, name='editar_cliente'),
     path('clientes/eliminar/<int:pk>/', views.eliminar_cliente, name='eliminar_cliente'),
