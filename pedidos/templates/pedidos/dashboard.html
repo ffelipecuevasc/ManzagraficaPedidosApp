@@ -21,68 +21,95 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
         <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span class="material-icons-round text-8xl text-green-500">payments</span>
+                <span class="material-icons-round text-8xl text-emerald-500">cloud_done</span>
             </div>
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-2">
-                    <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg text-green-600 dark:text-green-400">
-                        <span class="material-icons-round text-xl">payments</span>
+                    <div class="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400">
+                        <span class="material-icons-round text-xl">save</span>
                     </div>
-                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ingresos Totales</h3>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Seguridad BD</h3>
                 </div>
-                <div class="text-3xl font-bold text-slate-900 dark:text-white">
-                    ${{ ingresos_totales|intcomma }}
+                <div class="text-2xl font-bold text-slate-900 dark:text-white truncate">
+                    {% if ultimo_respaldo_fecha %}
+                        {{ ultimo_respaldo_fecha|date:"d M H:i" }}
+                    {% else %}
+                        <span class="text-red-500 text-lg">Sin Copias</span>
+                    {% endif %}
                 </div>
-                <p class="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">
-                    <span class="material-icons-round text-xs align-middle">check_circle</span>
-                    Pedidos Terminados
+                <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium flex items-center gap-1">
+                    <span class="material-icons-round text-xs">check_circle</span>
+                    Último respaldo de la Base de Datos
                 </p>
             </div>
         </div>
 
         <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span class="material-icons-round text-8xl text-orange-500">account_balance_wallet</span>
+                <span class="material-icons-round text-8xl text-rose-500">warning</span>
             </div>
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-2">
-                    <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
-                        <span class="material-icons-round text-xl">account_balance_wallet</span>
+                    <div class="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg text-rose-600 dark:text-rose-400">
+                        <span class="material-icons-round text-xl">gpp_bad</span>
                     </div>
-                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Por Cobrar</h3>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Zona Crítica</h3>
                 </div>
                 <div class="text-3xl font-bold text-slate-900 dark:text-white">
-                    ${{ por_cobrar|intcomma }}
+                    {{ criticos_count }}
                 </div>
-                <p class="text-xs text-orange-600 dark:text-orange-400 mt-2 font-medium">
-                    <span class="material-icons-round text-xs align-middle">pending</span>
-                    Pedidos Pendientes y En Proceso
+                <p class="text-xs text-rose-600 dark:text-rose-400 mt-2 font-medium flex items-center gap-1">
+                    {% if criticos_count > 0 %}
+                        <span class="material-icons-round text-xs">error</span> Atención requerida
+                    {% else %}
+                        <span class="material-icons-round text-xs">sentiment_satisfied</span> Todo al día
+                    {% endif %}
                 </p>
             </div>
         </div>
 
         <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span class="material-icons-round text-8xl text-blue-500">groups</span>
+                <span class="material-icons-round text-8xl text-amber-500">timer</span>
+            </div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600 dark:text-amber-400">
+                        <span class="material-icons-round text-xl">priority_high</span>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Zona Urgente</h3>
+                </div>
+                <div class="text-3xl font-bold text-slate-900 dark:text-white">
+                    {{ urgentes_count }}
+                </div>
+                <p class="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium flex items-center gap-1">
+                    <span class="material-icons-round text-xs">calendar_today</span>
+                    Vencen esta semana
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="material-icons-round text-8xl text-blue-500">trending_up</span>
             </div>
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                        <span class="material-icons-round text-xl">groups</span>
+                        <span class="material-icons-round text-xl">add_chart</span>
                     </div>
-                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Clientes</h3>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pedidos al Mes</h3>
                 </div>
                 <div class="text-3xl font-bold text-slate-900 dark:text-white">
-                    {{ total_clientes }}
+                    {{ pedidos_mes_count }}
                 </div>
-                <p class="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
-                    <a href="{% url 'lista_clientes' %}" class="hover:underline flex items-center gap-1">
-                        Ver directorio <span class="material-icons-round text-xs">arrow_forward</span>
-                    </a>
+                <p class="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium flex items-center gap-1">
+                    <span class="material-icons-round text-xs">insights</span>
+                    Volumen de entrada
                 </p>
             </div>
         </div>

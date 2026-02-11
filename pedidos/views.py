@@ -26,53 +26,80 @@ import os
 @login_required
 def dashboard(request):
     # ==========================================
-    # 0. GATILLO DE ESTADÍSTICAS (¡NUEVO!)
+    # 0. GATILLO DE ESTADÍSTICAS
     # ==========================================
-    # Llamada automática a la función que guarda la info de la BD para estadísticas.
-    # Verifica si hoy ya se guardó el peso de la BD. Si no, lo hace ahora.
+    # Registra el peso de la BD y métricas diarias si no se ha hecho hoy.
     registrar_metricas_diarias()
 
+    # Definimos fechas de referencia
+    ahora = timezone.now()
+    hoy = ahora.date()
 
     # ==========================================
-    # 1. KPIs FINANCIEROS (Dinero)
+    # 1. TARJETAS SUPERIORES (KPIs OPERATIVOS)
     # ==========================================
-    ingresos_totales = Pedido.objects.filter(estado='TERMINADO').aggregate(
-        total=Sum('valor_venta')
-    )['total'] or 0
 
-    por_cobrar = Pedido.objects.filter(
-        estado__in=['PENDIENTE', 'EN_PROCESO']
-    ).aggregate(
-        total=Sum(F('valor_venta') - F('valor_abonado'))
-    )['total'] or 0
+    # --- TARJETA 1 (VERDE): ÚLTIMO RESPALDO BD ---
+    # Lógica extraída de: estadisticas_bd / utils.py
+    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    ultimo_respaldo_fecha = None
+
+    if os.path.exists(backup_dir):
+        # Listamos archivos .sql y buscamos el más reciente por fecha de modificación
+        archivos = [
+            os.path.join(backup_dir, f)
+            for f in os.listdir(backup_dir)
+            if f.endswith('.sql')
+        ]
+        if archivos:
+            mas_reciente = max(archivos, key=os.path.getmtime)
+            # Convertimos timestamp a datetime consciente de la zona horaria si es necesario
+            ultimo_respaldo_fecha = datetime.fromtimestamp(os.path.getmtime(mas_reciente))
+
+    # --- TARJETA 2 (ROJA): PEDIDOS ATRASADOS ---
+    # Lógica extraída de: trabajo_semanal (Zona Crítica)
+    # Pedidos NO terminados cuya fecha de entrega ya pasó (< hoy)
+    criticos_count = Pedido.objects.exclude(estado='TERMINADO').filter(
+        fecha_entrega__lt=hoy
+    ).count()
+
+    # --- TARJETA 3 (AMARILLA): PEDIDOS URGENTES (Próximos 7 días) ---
+    # Lógica extraída de: trabajo_semanal (Zona Urgente)
+    # Pedidos NO terminados con entrega entre hoy y hoy+7 días
+    limite_semana = hoy + timedelta(days=7)
+    urgentes_count = Pedido.objects.exclude(estado='TERMINADO').filter(
+        fecha_entrega__range=[hoy, limite_semana]
+    ).count()
+
+    # --- TARJETA 4 (AZUL): VOLUMEN MES ACTUAL ---
+    # Lógica extraída de: estadisticas_pedidos
+    # Total de pedidos recibidos desde el día 1 del mes actual hasta ahora
+    inicio_mes_actual = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    pedidos_mes_count = Pedido.objects.filter(
+        fecha_solicitud__gte=inicio_mes_actual
+    ).count()
 
     # ==========================================
-    # 2. MÉTRICAS OPERATIVAS
+    # 2. DATOS PARA GRÁFICOS (Mantenemos lógica existente)
     # ==========================================
-    total_clientes = Cliente.objects.count()
 
+    # Métricas generales necesarias para el gráfico de dona
     total_pedidos = Pedido.objects.count()
     pendientes = Pedido.objects.filter(estado='PENDIENTE').count()
     en_proceso = Pedido.objects.filter(estado='EN_PROCESO').count()
     completados = Pedido.objects.filter(estado='TERMINADO').count()
 
-    # ==========================================
-    # 3. CÁLCULOS PARA GRÁFICOS HTML (CSS PURO)
-    # ==========================================
-
-    # A. Datos para Gráfico de Dona (Conic Gradient)
-    # Calculamos los puntos de corte del gradiente (acumulados)
+    # A. Datos para Gráfico de Dona (Conic Gradient CSS)
     if total_pedidos > 0:
         pct_pendientes = (pendientes / total_pedidos) * 100
         pct_en_proceso = (en_proceso / total_pedidos) * 100
-        # Puntos de parada para el CSS conic-gradient
         stop_1 = pct_pendientes
         stop_2 = pct_pendientes + pct_en_proceso
     else:
         stop_1 = 0
         stop_2 = 0
 
-    # Porcentajes individuales para mostrar en texto
+    # Porcentajes texto
     pct_text_pendientes = round((pendientes / total_pedidos * 100)) if total_pedidos > 0 else 0
     pct_text_proceso = round((en_proceso / total_pedidos * 100)) if total_pedidos > 0 else 0
     pct_text_completados = round((completados / total_pedidos * 100)) if total_pedidos > 0 else 0
@@ -82,32 +109,28 @@ def dashboard(request):
         num_pedidos=Count('pedido')
     ).order_by('-num_pedidos')[:5]
 
-    # Obtener el valor máximo para calcular el ancho de las barras (width %)
     max_pedidos = top_clientes[0].num_pedidos if top_clientes else 1
 
     # ==========================================
-    # 4. CONTEXTO
+    # 3. CONTEXTO
     # ==========================================
     context = {
-        # KPIs
-        'ingresos_totales': ingresos_totales,
-        'por_cobrar': por_cobrar,
-        'total_clientes': total_clientes,
-        'total_pedidos': total_pedidos,  # Necesario para el centro de la dona
+        # Nuevas KPIs Operativas (Tarjetas Superiores)
+        'ultimo_respaldo_fecha': ultimo_respaldo_fecha,  # Tarjeta 1
+        'criticos_count': criticos_count,  # Tarjeta 2
+        'urgentes_count': urgentes_count,  # Tarjeta 3
+        'pedidos_mes_count': pedidos_mes_count,  # Tarjeta 4
 
-        # Datos Crudos
+        # Datos para Gráficos (Dona y Barras - Sección Inferior)
+        'total_pedidos': total_pedidos,
         'pendientes': pendientes,
         'en_proceso': en_proceso,
         'completados': completados,
-
-        # Porcentajes Visuales (Donut)
         'donut_stop_1': stop_1,
         'donut_stop_2': stop_2,
         'pct_pendientes': pct_text_pendientes,
         'pct_proceso': pct_text_proceso,
         'pct_completados': pct_text_completados,
-
-        # Datos Visuales (Barras)
         'top_clientes': top_clientes,
         'max_pedidos': max_pedidos,
     }
