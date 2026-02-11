@@ -14,7 +14,7 @@
     <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Prioridad de Pedidos</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Panel de Control operativo semanal.</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Tablero que organiza los pedidos de acuerdo a sus fechas de entrega para establecer prioridad.</p>
         </div>
         <div class="flex items-center space-x-4">
             <a href="{% url 'crear_pedido' %}" class="bg-primary hover:opacity-90 text-black px-4 py-2 rounded-md font-semibold text-sm flex items-center shadow-sm transition-opacity">
@@ -66,20 +66,28 @@
         </div>
     </div>
 
-    <div class="space-y-8">
+    <div class="space-y-12"> <section>
+            <div class="flex flex-col md:flex-row justify-between items-end mb-4 border-b-2 border-red-100 dark:border-red-900/30 pb-2">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-round text-red-600 dark:text-red-500 text-4xl">gpp_bad</span>
+                    <div>
+                        <h2 class="font-black uppercase tracking-tighter text-3xl text-red-600 dark:text-red-500">
+                            Zona Crítica
+                        </h2>
+                        <p class="text-xs text-red-400 font-bold uppercase tracking-widest">Pedidos con Máxima Prioridad</p>
+                    </div>
+                </div>
 
-        <section>
-            <div class="flex items-center space-x-2 mb-4">
-                <h2 class="font-black uppercase tracking-tight text-red-600 dark:text-red-500 text-lg flex items-center">
-                    ZONA CRÍTICA
-                </h2>
-                <span class="bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-500 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 dark:border-red-500/20">
-                    N° Pedidos Atrasados: {{ criticos.count }}
-                </span>
+                <div class="text-right mt-4 md:mt-0 animate-pulse">
+                    <p class="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1">Total Atrasados</p>
+                    <div class="text-5xl font-black text-red-600 dark:text-red-500 leading-none">
+                        {{ criticos.count }}
+                    </div>
+                </div>
             </div>
 
             {% if criticos %}
-            <div class="overflow-hidden rounded-xl border border-red-200 dark:border-red-900/30 bg-white dark:bg-card-dark transition-colors duration-300">
+            <div class="overflow-hidden rounded-xl border border-red-200 dark:border-red-900/30 bg-white dark:bg-card-dark transition-colors duration-300 shadow-sm">
                 <table class="min-w-full text-left border-collapse">
                     <thead>
                     <tr class="bg-red-50 dark:bg-red-500/10 border-b border-red-100 dark:border-red-900/30">
@@ -116,24 +124,35 @@
                 </table>
             </div>
             {% else %}
-                <div class="p-6 text-center border-2 border-dashed border-slate-200 dark:border-neutral-800 rounded-xl text-slate-400 text-sm">
-                    ¡Excelente! No hay pedidos atrasados.
+                <div class="p-8 text-center border-2 border-dashed border-slate-200 dark:border-neutral-800 rounded-xl">
+                    <span class="material-icons-round text-4xl text-slate-300 mb-2">thumb_up</span>
+                    <p class="text-slate-400 font-medium">¡Excelente! No hay pedidos atrasados.</p>
                 </div>
             {% endif %}
         </section>
 
         <section>
-            <div class="flex items-center space-x-2 mb-4">
-                <h2 class="font-black uppercase tracking-tight text-yellow-600 dark:text-yellow-500 text-lg flex items-center">
-                    ZONA URGENTE
-                </h2>
-                <span class="bg-yellow-100 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-500 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-200 dark:border-yellow-500/20">
-                    N° Pedidos para Entregar esta Semana: {{ urgentes.count }}
-                </span>
+            <div class="flex flex-col md:flex-row justify-between items-end mb-4 border-b-2 border-yellow-100 dark:border-yellow-900/30 pb-2">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-round text-yellow-500 text-4xl">timer</span>
+                    <div>
+                        <h2 class="font-black uppercase tracking-tighter text-3xl text-yellow-600 dark:text-yellow-500">
+                            Zona Urgente
+                        </h2>
+                        <p class="text-xs text-yellow-600/70 dark:text-yellow-500/70 font-bold uppercase tracking-widest">Pedidos de esta Semana</p>
+                    </div>
+                </div>
+
+                <div class="text-right mt-4 md:mt-0 animate-pulse">
+                    <p class="text-[10px] font-bold text-yellow-600/70 dark:text-yellow-500/70 uppercase tracking-widest mb-1">Total Semanal</p>
+                    <div class="text-5xl font-black text-yellow-600 dark:text-yellow-500 leading-none">
+                        {{ urgentes.count }}
+                    </div>
+                </div>
             </div>
 
             {% if urgentes %}
-            <div class="overflow-hidden rounded-xl border border-yellow-200 dark:border-yellow-900/30 bg-white dark:bg-card-dark transition-colors duration-300">
+            <div class="overflow-hidden rounded-xl border border-yellow-200 dark:border-yellow-900/30 bg-white dark:bg-card-dark transition-colors duration-300 shadow-sm">
                 <table class="min-w-full text-left border-collapse">
                     <thead>
                     <tr class="bg-yellow-50 dark:bg-yellow-500/10 border-b border-yellow-100 dark:border-yellow-900/30">
@@ -176,22 +195,34 @@
                 </table>
             </div>
             {% else %}
-                <p class="text-slate-500 text-sm italic ml-2">No hay entregas urgentes para esta semana.</p>
+                <div class="p-6 text-center border border-slate-100 dark:border-neutral-800 rounded-xl bg-slate-50 dark:bg-card-dark/50">
+                    <p class="text-slate-500 text-sm">No hay pedidos urgentes para esta semana.</p>
+                </div>
             {% endif %}
         </section>
 
         <section>
-            <div class="flex items-center space-x-2 mb-4">
-                <h2 class="font-black uppercase tracking-tight text-emerald-600 dark:text-emerald-500 text-lg flex items-center">
-                    ZONA NORMAL
-                </h2>
-                <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-500 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-500/20">
-                    Pedidos Futuros
-                </span>
+            <div class="flex flex-col md:flex-row justify-between items-end mb-4 border-b-2 border-emerald-100 dark:border-emerald-900/30 pb-2">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-round text-emerald-600 dark:text-emerald-500 text-4xl">event_available</span>
+                    <div>
+                        <h2 class="font-black uppercase tracking-tighter text-3xl text-emerald-600 dark:text-emerald-500">
+                            Zona Normal
+                        </h2>
+                        <p class="text-xs text-emerald-600/70 dark:text-emerald-500/70 font-bold uppercase tracking-widest">Pedidos futuros con prioridad baja</p>
+                    </div>
+                </div>
+
+                <div class="text-right mt-4 md:mt-0 animate-pulse">
+                    <p class="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500/70 uppercase tracking-widest mb-1">Total Futuros</p>
+                    <div class="text-5xl font-black text-emerald-600 dark:text-emerald-500 leading-none">
+                        {{ normales.count }}
+                    </div>
+                </div>
             </div>
 
             {% if normales %}
-            <div class="overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900/30 bg-white dark:bg-card-dark transition-colors duration-300">
+            <div class="overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900/30 bg-white dark:bg-card-dark transition-colors duration-300 shadow-sm">
                 <table class="min-w-full text-left border-collapse">
                     <thead>
                     <tr class="bg-emerald-50 dark:bg-emerald-500/10 border-b border-emerald-100 dark:border-emerald-900/30">
@@ -228,8 +259,11 @@
                 </table>
             </div>
             {% else %}
-                <p class="text-slate-500 text-sm italic ml-2">No hay trabajos programados para el futuro lejano.</p>
+                <div class="p-6 text-center border border-slate-100 dark:border-neutral-800 rounded-xl bg-slate-50 dark:bg-card-dark/50">
+                    <p class="text-slate-500 text-sm">No hay pedidos programados para el futuro.</p>
+                </div>
             {% endif %}
         </section>
+
     </div>
 {% endblock %}

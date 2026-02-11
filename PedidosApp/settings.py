@@ -38,10 +38,10 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # ADVERTENCIA: No subir el proyecto al Servidor PythonAnywhere con esta configuración TRUE
 # Sólo para desarrollo (pruebas) el atributo puede estar en TRUE para reconocer los estáticos (CSS + JS)
 # Para la producción (despliegue) el archivo debe estar en FALSE para que el servidor pueda intervenir
-DEBUG = os.getenv('DEBUG') == 'True'
-
-ALLOWED_HOSTS = ['manzagrafica.pythonanywhere.com']
-
+# DEBUG = os.getenv('DEBUG') == 'True'
+DEBUG = True
+#ALLOWED_HOSTS = ['manzagrafica.pythonanywhere.com']
+ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
