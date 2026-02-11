@@ -30,9 +30,9 @@
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400">
-                        <span class="material-icons-round text-xl">save</span>
+                        <span class="material-icons-round text-xl">cloud_done</span>
                     </div>
-                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Seguridad BD</h3>
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Seguridad MySQL BD</h3>
                 </div>
                 <div class="text-2xl font-bold text-slate-900 dark:text-white truncate">
                     {% if ultimo_respaldo_fecha %}
@@ -50,7 +50,7 @@
 
         <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span class="material-icons-round text-8xl text-rose-500">warning</span>
+                <span class="material-icons-round text-8xl text-rose-500">gpp_bad</span>
             </div>
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-2">
@@ -64,7 +64,7 @@
                 </div>
                 <p class="text-xs text-rose-600 dark:text-rose-400 mt-2 font-medium flex items-center gap-1">
                     {% if criticos_count > 0 %}
-                        <span class="material-icons-round text-xs">error</span> Atención requerida
+                        <span class="material-icons-round text-xs">error</span> Cantidad de Pedidos Atrasados
                     {% else %}
                         <span class="material-icons-round text-xs">sentiment_satisfied</span> Todo al día
                     {% endif %}
@@ -79,7 +79,7 @@
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600 dark:text-amber-400">
-                        <span class="material-icons-round text-xl">priority_high</span>
+                        <span class="material-icons-round text-xl">timer</span>
                     </div>
                     <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Zona Urgente</h3>
                 </div>
@@ -88,7 +88,7 @@
                 </div>
                 <p class="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium flex items-center gap-1">
                     <span class="material-icons-round text-xs">calendar_today</span>
-                    Vencen esta semana
+                    Pedidos que vencen en 7 días
                 </p>
             </div>
         </div>
@@ -100,7 +100,7 @@
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                        <span class="material-icons-round text-xl">add_chart</span>
+                        <span class="material-icons-round text-xl">trending_up</span>
                     </div>
                     <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pedidos al Mes</h3>
                 </div>
@@ -109,7 +109,7 @@
                 </div>
                 <p class="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium flex items-center gap-1">
                     <span class="material-icons-round text-xs">insights</span>
-                    Volumen de entrada
+                    Cantidad de Pedidos este Mes
                 </p>
             </div>
         </div>
