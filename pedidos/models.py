@@ -45,10 +45,6 @@ class Pedido(models.Model):
     fecha_entrega = models.DateField(verbose_name="Fecha de Entrega", blank=True, null=True)
 
     valor_venta = models.PositiveIntegerField(verbose_name="Valor Total ($)", default=0)
-
-    # --- CAMPO LEGACY (NO BORRAR AÚN) ---
-    valor_abonado = models.PositiveIntegerField(verbose_name="Abono Inicial (LEGACY)", default=0)
-
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE', verbose_name="Estado Operativo")
 
     ESTADO_PAGO_CHOICES = [

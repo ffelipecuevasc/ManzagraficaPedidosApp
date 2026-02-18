@@ -23,6 +23,37 @@
             </div>
         </header>
 
+        <div class="w-full bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900/30 rounded-xl p-5 mb-8 flex items-center justify-between shadow-sm relative overflow-hidden h-[120px] group">
+
+            <div class="absolute right-0 -top-4 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
+                <span class="material-icons-round text-9xl text-emerald-600">payments</span>
+            </div>
+
+            <div class="flex items-center gap-6 relative z-10">
+                <div class="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-200 dark:border-emerald-800">
+                    <span class="material-icons-round text-4xl">payments</span>
+                </div>
+
+                <div>
+                    <p class="text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-widest mb-1">
+                        Total de Ingresos ({{ hoy|date:"F" }})
+                    </p>
+                    <h2 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                        ${{ ingresos_mes_actual|intcomma }}
+                    </h2>
+                    <p class="text-xs text-emerald-700 dark:text-emerald-500 font-medium mt-1 flex items-center gap-1">
+                        <span class="material-icons-round text-xs">check_circle</span>
+                        Dinero total ingresado por pagos de pedidos este mes.
+                    </p>
+                </div>
+            </div>
+
+            <div class="hidden md:flex flex-col items-end justify-center relative z-10 h-full border-l border-emerald-100 dark:border-emerald-900/30 pl-6 mr-10">
+                <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Estado Financiero</span>
+                <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">Mes en Curso</span>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
             <div class="bg-red-50 dark:bg-red-900/10 p-6 rounded-xl border border-red-200 dark:border-red-900/30 relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -39,7 +70,7 @@
                     </div>
                     <div class="flex items-center mt-2 text-sm font-medium text-red-600 dark:text-red-400">
                         <span class="material-icons-round text-sm mr-1">error_outline</span>
-                        {{ deuda_critica_cantidad }} pedidos terminados sin retirar
+                        {{ deuda_critica_cantidad }} pedidos terminados Sin Pagar
                     </div>
                     <div class="mt-4 pt-4 border-t border-red-200 dark:border-red-900/30">
                         <p class="text-[10px] text-red-600/70 dark:text-red-400/70 uppercase font-bold tracking-widest">
@@ -75,7 +106,7 @@
 
             <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 hover:shadow-md transition-shadow">
                 <div class="flex justify-between items-start mb-4">
-                    <span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Proyección de Cobro</span>
+                    <span class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Proyección de Ingresos</span>
                     <span class="material-icons-round text-green-500 bg-green-50 dark:bg-green-900/20 p-1.5 rounded-lg">show_chart</span>
                 </div>
                 <div>
@@ -84,7 +115,7 @@
                     </div>
                     <div class="flex items-center mt-2 text-sm font-medium text-green-600 dark:text-green-500">
                         <span class="material-icons-round text-sm mr-1">check_circle</span>
-                        Deuda Total de Pedidos Activos (Pendientes & En Proceso)
+                        Deuda Total de Pedidos Activos
                     </div>
                     <div class="mt-4 pt-4 border-t border-slate-100 dark:border-neutral-800">
                         <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">

@@ -1,7 +1,6 @@
 from django import forms
 from .models import Pedido, Cliente, Cotizacion, Producto, Pago
 
-
 class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
@@ -11,7 +10,6 @@ class ClienteForm(forms.ModelForm):
             'email': forms.TextInput(attrs={'placeholder': 'Ej: correo@ejemplo.com o "No registrado"'}),
         }
 
-
 class CotizacionForm(forms.ModelForm):
     class Meta:
         model = Cotizacion
@@ -20,7 +18,6 @@ class CotizacionForm(forms.ModelForm):
             # Solo definimos el TIPO de input para que el navegador sepa qué calendario mostrar
             'fecha_emision': forms.DateInput(attrs={'type': 'date'}),
         }
-
 
 class PedidoForm(forms.ModelForm):
     # CAMPO VIRTUAL: No existe en el modelo Pedido, sirve para crear el Pago automáticamente
@@ -34,7 +31,7 @@ class PedidoForm(forms.ModelForm):
 
     class Meta:
         model = Pedido
-        exclude = ['fecha_solicitud', 'creado_por', 'valor_abonado', 'estado_pago', 'estado', 'prioridad']
+        exclude = ['fecha_solicitud', 'creado_por', 'estado_pago', 'estado', 'prioridad']
 
         widgets = {
             'cliente': forms.Select(attrs={'class': 'form-select select2'}),
@@ -58,7 +55,6 @@ class PedidoForm(forms.ModelForm):
             raise forms.ValidationError("El abono inicial no puede ser mayor al valor total del pedido.")
         return abono
 
-
 class PagoForm(forms.ModelForm):
     class Meta:
         model = Pago
@@ -74,7 +70,6 @@ class PagoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Opcional: ordenar pedidos por ID descendente para facilitar búsqueda
         self.fields['pedido'].queryset = Pedido.objects.all().order_by('-id')
-
 
 class ProductoForm(forms.ModelForm):
     class Meta:

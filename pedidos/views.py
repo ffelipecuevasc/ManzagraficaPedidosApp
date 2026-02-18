@@ -175,7 +175,6 @@ def crear_pedido(request):
             with transaction.atomic():
                 # 1. Guardar el Pedido (Padre) - REGLA DE ORO: Legacy en 0
                 pedido = form.save(commit=False)
-                pedido.valor_abonado = 0  # Siempre 0, campo obsoleto
                 pedido.creado_por = request.user
 
                 # Calculamos el estado de pago inicial (PENDIENTE por defecto)
@@ -296,7 +295,6 @@ def editar_pedido(request, pk):
         'items_json': json.dumps(items_list)  # ¡Aquí enviamos los datos al HTML!
     })
 
-
 @login_required
 @transaccion_segura
 def eliminar_pedido(request, pk):
@@ -306,12 +304,10 @@ def eliminar_pedido(request, pk):
         return redirect('lista_pedidos')
     return render(request, 'pedidos/pedido_confirm_delete.html', {'pedido': pedido})
 
-
 @login_required
 def detalle_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     return render(request, 'pedidos/pedido_detail.html', {'pedido': pedido})
-
 
 @login_required
 def cambiar_estado_pedido(request, pk, nuevo_estado):
@@ -325,7 +321,6 @@ def cambiar_estado_pedido(request, pk, nuevo_estado):
         pedido.save()
 
     return redirect('detalle_pedido', pk=pk)
-
 
 @login_required
 def lista_pedidos(request):
@@ -387,7 +382,6 @@ def lista_pedidos(request):
 
     return render(request, 'pedidos/pedido_list.html', context)
 
-
 @login_required
 @transaccion_segura
 def duplicar_pedido(request, pk):
@@ -400,7 +394,6 @@ def duplicar_pedido(request, pk):
         resumen_pedido=original.resumen_pedido,
         detalles_pedido=original.detalles_pedido,
         valor_venta=original.valor_venta,
-        valor_abonado=0,  # IMPORTANTE: La deuda nace en 0
         estado='PENDIENTE',  # IMPORTANTE: Nace pendiente
         fecha_entrega=original.fecha_entrega,  # Mantenemos fecha ref, usuario editará si quiere
         imagen_referencia=original.imagen_referencia  # Mantenemos la imagen si tenía
@@ -411,7 +404,6 @@ def duplicar_pedido(request, pk):
 
     # 4. Redirigir al detalle del nuevo pedido clonado
     return redirect('detalle_pedido', pk=nuevo_pedido.pk)
-
 
 @login_required
 def estadisticas_pedidos(request):
@@ -542,7 +534,6 @@ def estadisticas_pedidos(request):
     # render provisional (aún no creamos el HTML, fallará si lo cargas)
     return render(request, 'pedidos/estadisticas_pedidos.html', context)
 
-
 # ==========================================
 # GESTIÓN DE CLIENTES
 # ==========================================
@@ -577,7 +568,6 @@ def lista_clientes(request):
     }
     return render(request, 'pedidos/cliente_list.html', context)
 
-
 @login_required
 @transaccion_segura
 def crear_cliente(request):
@@ -590,7 +580,6 @@ def crear_cliente(request):
         form = ClienteForm()
 
     return render(request, 'pedidos/cliente_form.html', {'form': form})
-
 
 @login_required
 @transaccion_segura
@@ -606,7 +595,6 @@ def editar_cliente(request, pk):
 
     return render(request, 'pedidos/cliente_form.html', {'form': form})
 
-
 @login_required
 @transaccion_segura
 def eliminar_cliente(request, pk):
@@ -615,7 +603,6 @@ def eliminar_cliente(request, pk):
         cliente.delete()
         return redirect('lista_clientes')
     return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente})
-
 
 @login_required
 @require_POST
@@ -634,7 +621,6 @@ def api_crear_cliente_rapido(request):
             'success': False,
             'errors': form.errors
         })
-
 
 @login_required
 def trabajo_semanal(request):
@@ -682,7 +668,6 @@ def trabajo_semanal(request):
 
     return render(request, 'pedidos/trabajo_semanal.html', context)
 
-
 # ==========================================
 # GESTIÓN DE COTIZACIONES
 # ==========================================
@@ -718,7 +703,6 @@ def lista_cotizaciones(request):
         'is_paginated': page_obj.has_other_pages(),
     }
     return render(request, 'pedidos/cotizacion_list.html', context)
-
 
 @login_required
 @transaccion_segura
@@ -764,7 +748,6 @@ def crear_cotizacion(request):
         'productos_disponibles': productos_disponibles,
         'fecha_hoy': timezone.now().strftime('%Y-%m-%d')
     })
-
 
 @login_required
 @transaccion_segura
@@ -819,12 +802,10 @@ def editar_cotizacion(request, pk):
         'items_json': json.dumps(items_list)  # ¡Enviamos los datos!
     })
 
-
 @login_required
 def detalle_cotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
     return render(request, 'pedidos/cotizacion_detail.html', {'cotizacion': cotizacion})
-
 
 @login_required
 @transaccion_segura
@@ -834,7 +815,6 @@ def eliminar_cotizacion(request, pk):
         cotizacion.delete()
         return redirect('lista_cotizaciones')
     return render(request, 'pedidos/cotizacion_confirm_delete.html', {'cotizacion': cotizacion})
-
 
 @login_required
 @transaccion_segura
@@ -861,10 +841,9 @@ def convertir_a_pedido(request, pk):
             resumen_pedido=cotizacion.resumen,
             detalles_pedido=cotizacion.detalles,
             valor_venta=cotizacion.valor_total,
-            valor_abonado=0,  # Se actualizará al crear el Pago
             fecha_entrega=fecha_entrega,
             estado='PENDIENTE',
-            creado_por=request.user  # Es buena práctica registrar quién lo creó
+            creado_por=request.user
         )
 
         # 3. Traspasar Productos
@@ -889,9 +868,6 @@ def convertir_a_pedido(request, pk):
                 nota=f'Abono inicial por conversión de Cotización #{cotizacion.id}'
             )
 
-            # B. Actualizar el pedido (Legacy + Estado)
-            pedido.valor_abonado = abono
-
             # Calcular estado financiero
             if pedido.saldo_pendiente <= 0:
                 pedido.estado_pago = 'PAGADO'
@@ -914,7 +890,6 @@ def convertir_a_pedido(request, pk):
         'fecha_sugerida': timezone.now().date() + timedelta(days=7)
     }
     return render(request, 'pedidos/cotizacion_convertir.html', context)
-
 
 @login_required
 def exportar_cotizacion_pdf(request, pk):
@@ -939,7 +914,6 @@ def exportar_cotizacion_pdf(request, pk):
     response.write(result)
 
     return response
-
 
 # ==========================================
 # GESTIÓN DE PRODUCTOS (INVENTARIO)
@@ -972,7 +946,6 @@ def lista_productos(request):
     }
     return render(request, 'pedidos/producto_list.html', context)
 
-
 @login_required
 @transaccion_segura
 def crear_producto(request):
@@ -985,7 +958,6 @@ def crear_producto(request):
         form = ProductoForm()
 
     return render(request, 'pedidos/producto_form.html', {'form': form})
-
 
 @login_required
 @transaccion_segura
@@ -1000,7 +972,6 @@ def editar_producto(request, pk):
         form = ProductoForm(instance=producto)
 
     return render(request, 'pedidos/producto_form.html', {'form': form})
-
 
 @login_required
 @transaccion_segura
@@ -1021,12 +992,10 @@ def eliminar_producto(request, pk):
         'error': error_message  # Pasamos el error al HTML
     })
 
-
 @login_required
 def detalle_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
     return render(request, 'pedidos/producto_detail.html', {'producto': producto})
-
 
 @login_required
 @require_POST
@@ -1055,14 +1024,12 @@ def api_crear_producto_rapido(request):
             'errors': form.errors
         })
 
-
 # ==========================================
 # BASE DE DATOS - RESPALDOS & RESTAURACIONES
 # ==========================================
 
 def es_superusuario(user):
     return user.is_superuser
-
 
 @login_required
 @user_passes_test(es_superusuario)
@@ -1104,7 +1071,6 @@ def respaldar_bd(request):
         'backups': lista_backups
     })
 
-
 @login_required
 @user_passes_test(es_superusuario)
 def generar_respaldo_bd(request):
@@ -1120,7 +1086,6 @@ def generar_respaldo_bd(request):
         return response
     except Exception as e:
         return HttpResponse(f"Error crítico: {str(e)}")
-
 
 @login_required
 @user_passes_test(es_superusuario)
@@ -1186,7 +1151,6 @@ def restaurar_bd(request):
 
     # Si es GET, solo mostramos el formulario
     return render(request, 'pedidos/restaurar_bd.html')
-
 
 @login_required
 @user_passes_test(es_superusuario)
@@ -1330,7 +1294,6 @@ def estadisticas_bd(request):
 
     return render(request, 'pedidos/estadisticas_bd.html', context)
 
-
 # ==========================================
 # GESTIÓN DE PAGOS
 # ==========================================
@@ -1394,7 +1357,6 @@ def ingresar_pago(request, pedido_id=None):
 
             # Recalculamos el total pagado sumando todos los pagos (incluyendo el nuevo)
             total_pagado = pedido_relacionado.pagos.aggregate(Sum('monto'))['monto__sum'] or 0
-            pedido_relacionado.valor_abonado = total_pagado  # Actualizamos el campo caché/legacy
 
             # Determinamos estado (si existe el campo estado_pago)
             if hasattr(pedido_relacionado, 'estado_pago'):
@@ -1476,7 +1438,6 @@ def detalle_pago(request, pk):
     pago = get_object_or_404(Pago, pk=pk)
     return render(request, 'pedidos/pago_detail.html', {'pago': pago})
 
-
 @login_required
 def estadisticas_pagos(request):
     """
@@ -1555,6 +1516,16 @@ def estadisticas_pagos(request):
     hoy = timezone.now().date()
 
     # =========================================================================
+    # NUEVO KPI: INGRESOS REALES DEL MES EN CURSO (Caja Verde Horizontal)
+    # =========================================================================
+    ahora = timezone.now()
+    inicio_mes = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Sumamos la tabla PAGO filtrando por fecha de pago >= inicio de este mes.
+    # Esto muestra el dinero real que entró a la caja, sin importar si el pedido es viejo o nuevo.
+    ingresos_mes_actual = Pago.objects.filter(fecha__gte=inicio_mes).aggregate(total=Sum('monto'))['total'] or 0
+
+    # =========================================================================
     # CONTEXTO FINAL
     # =========================================================================
     context = {
@@ -1564,6 +1535,7 @@ def estadisticas_pagos(request):
         'riesgo_total_monto': riesgo_total_monto,
         'riesgo_cantidad': riesgo_cantidad,
         'proyeccion_total': proyeccion_total,
+        'ingresos_mes_actual': ingresos_mes_actual,
 
         # Barras de Progreso
         'pct_pagados': pct_pagados,
@@ -1586,7 +1558,6 @@ def estadisticas_pagos(request):
 
 def error_404(request, exception):
     return render(request, 'pedidos/errors/404.html', status=404)
-
 
 def error_500(request):
     return render(request, 'pedidos/errors/500.html', status=500)
