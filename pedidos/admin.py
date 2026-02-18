@@ -8,7 +8,7 @@ class ClienteAdmin(admin.ModelAdmin):
 
 @admin.register(Pedido)
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'cliente', 'resumen_pedido', 'estado', 'fecha_entrega', 'valor_pendiente')
+    list_display = ('id', 'cliente', 'resumen_pedido', 'estado', 'fecha_entrega', 'saldo_pendiente')
     list_filter = ('estado', 'fecha_entrega')
     search_fields = ('cliente__nombre', 'resumen_pedido')
     list_editable = ('estado',)

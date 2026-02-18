@@ -1,6 +1,8 @@
 from django.db import models
 from datetime import timedelta
 from django.utils import timezone
+from django.db.models import Sum
+from django.contrib.auth.models import User
 
 # Clase básica de Clientes
 class Cliente(models.Model):
@@ -29,24 +31,83 @@ class Pedido(models.Model):
         ('PENDIENTE', 'Pendiente'),
         ('EN_PROCESO', 'En Proceso'),
         ('TERMINADO', 'Terminado'),
+        ('ENTREGADO', 'Entregado'),
     ]
 
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    resumen_pedido = models.CharField(max_length=100)
-    detalles_pedido = models.TextField()
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-    valor_venta = models.IntegerField()
-    valor_abonado = models.IntegerField(default=0)
-    fecha_solicitud = models.DateTimeField(auto_now_add=True)
-    fecha_entrega = models.DateField()
-    imagen_referencia = models.ImageField(upload_to='pedidos/', blank=True, null=True)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, verbose_name="Cliente")
 
-    @property
-    def valor_pendiente(self):
-        return self.valor_venta - self.valor_abonado
+    # --- TUS CAMPOS ORIGINALES RESTAURADOS ---
+    resumen_pedido = models.CharField(max_length=150, verbose_name="Resumen del Pedido")
+    detalles_pedido = models.TextField(verbose_name="Detalles Técnicos", blank=True, null=True)
+    imagen_referencia = models.ImageField(upload_to='referencias/', blank=True, null=True, verbose_name="Imagen Referencia")
+
+    fecha_solicitud = models.DateTimeField(default=timezone.now, verbose_name="Fecha Solicitud")
+    fecha_entrega = models.DateField(verbose_name="Fecha de Entrega", blank=True, null=True)
+
+    valor_venta = models.PositiveIntegerField(verbose_name="Valor Total ($)", default=0)
+
+    # --- CAMPO LEGACY (NO BORRAR AÚN) ---
+    valor_abonado = models.PositiveIntegerField(verbose_name="Abono Inicial (LEGACY)", default=0)
+
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE', verbose_name="Estado Operativo")
+
+    ESTADO_PAGO_CHOICES = [
+        ('PENDIENTE', 'Pendiente de Pago'),
+        ('PARCIAL', 'Abono Parcial'),
+        ('PAGADO', 'Pagado Total'),
+    ]
+    estado_pago = models.CharField(max_length=20, choices=ESTADO_PAGO_CHOICES, default='PENDIENTE', verbose_name="Estado Financiero")
+
+    prioridad = models.IntegerField(default=1, verbose_name="Prioridad (1-3)")
+    creado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.resumen_pedido} - {self.cliente.nombre}"
+        return f"Pedido #{self.id} - {self.cliente.nombre}"
+
+    # --- NUEVAS PROPIEDADES CALCULADAS (CON TUS NOMBRES CORRECTOS) ---
+
+    @property
+    def total_pagado_real(self):
+        """Suma todos los registros de la tabla Pago relacionados a este pedido."""
+        total = self.pagos.aggregate(total=Sum('monto'))['total']
+        return total if total is not None else 0
+
+    @property
+    def saldo_pendiente(self):
+        """Calcula cuánto falta por pagar."""
+        # Corregido para usar 'valor_venta' en lugar de 'precio_total'
+        return self.valor_venta - self.total_pagado_real
+
+    @property
+    def porcentaje_pagado(self):
+        """Para barras de progreso."""
+        if self.valor_venta == 0: return 100
+        return int((self.total_pagado_real / self.valor_venta) * 100)
+
+# Clase de Pagos (Nueva)
+class Pago(models.Model):
+    METODOS_PAGO = [
+        ('EFECTIVO', 'Efectivo'),
+        ('TRANSFERENCIA', 'Transferencia Bancaria'),
+        ('DEBITO', 'Tarjeta Débito'),
+        ('CREDITO', 'Tarjeta Crédito'),
+    ]
+
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='pagos', verbose_name="Pedido Asociado")
+    monto = models.PositiveIntegerField(verbose_name="Monto ($)")
+    fecha = models.DateTimeField(default=timezone.now, verbose_name="Fecha y Hora")
+    metodo = models.CharField(max_length=50, choices=METODOS_PAGO, default='EFECTIVO', verbose_name="Método de Pago")
+    nota = models.TextField(blank=True, null=True, verbose_name="Nota Interna")
+    registrado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                       verbose_name="Registrado por")
+
+    class Meta:
+        ordering = ['-fecha']
+        verbose_name = "Pago"
+        verbose_name_plural = "Pagos"
+
+    def __str__(self):
+        return f"Pago #{self.id} - ${self.monto} ({self.get_metodo_display()})"
 
 # Clase minimizada de Productos
 class Producto(models.Model):

@@ -2,7 +2,6 @@ from functools import wraps
 from django.shortcuts import render
 import sys
 
-
 def transaccion_segura(view_func):
     """
     Decorador que envuelve una vista en un bloque try-except.

@@ -4,263 +4,366 @@
 {% block title %}Pedido #{{ pedido.id }} - Manza Gráfica{% endblock %}
 
 {% block content %}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 print:hidden">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Detalle del Pedido</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Detalles del Pedido</h1>
             <p class="text-slate-500 dark:text-slate-400 text-sm">Información completa y seguimiento del trabajo.</p>
         </div>
-        <div class="flex gap-3">
-            <a href="{% url 'lista_pedidos' %}" class="px-4 py-2 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-card-dark text-slate-700 dark:text-slate-300 font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors text-sm flex items-center">
-                <span class="material-icons-round mr-2 text-lg">arrow_back</span>
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <a href="{% url 'lista_pedidos' %}"
+               class="bg-white dark:bg-card-dark border border-slate-200 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center transition-colors shadow-sm">
+                <span class="material-icons-round text-base mr-2">arrow_back</span>
                 Volver
             </a>
-            <button onclick="window.print()" class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors text-sm flex items-center shadow-sm">
-                <span class="material-icons-round mr-2 text-lg">print</span>
-                Imprimir Recibo
+            <button onclick="window.print()"
+                    class="bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-black px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-center shadow-md transition-colors">
+                <span class="material-icons-round text-base mr-2">print</span>
+                Imprimir Orden
             </button>
         </div>
-    </div>
+    </header>
 
-    <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden print:shadow-none print:border-0 print:dark:bg-white print:dark:text-black">
+    <div class="space-y-6">
 
-        <div class="bg-slate-50 dark:bg-neutral-900/50 border-b border-slate-200 dark:border-neutral-800 p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:bg-white print:border-b-2 print:border-black">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    Pedido <span class="text-primary print:text-black">#{{ pedido.id }}</span>
-                </h2>
-                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                    Solicitado el {{ pedido.fecha_solicitud|date:"d de F Y, H:i" }}
-                </p>
-            </div>
+        <section
+                class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 overflow-hidden shadow-sm">
 
-            <div class="print:hidden">
-                {% if pedido.estado == 'PENDIENTE' %}
-                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50">
-                        <span class="material-icons-round mr-1.5 text-base">pending_actions</span> PENDIENTE
-                    </span>
-                {% elif pedido.estado == 'EN_PROCESO' %}
-                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800/50">
-                        <span class="material-icons-round mr-1.5 text-base">cached</span> EN PROCESO
-                    </span>
-                {% elif pedido.estado == 'TERMINADO' %}
-                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50">
-                        <span class="material-icons-round mr-1.5 text-base">check_circle</span> TERMINADO
-                    </span>
-                {% else %}
-                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400">
-                        {{ pedido.estado }}
-                    </span>
-                {% endif %}
-            </div>
-            <div class="hidden print:block text-right">
-                <p class="font-bold uppercase text-sm border border-black px-3 py-1">{{ pedido.estado }}</p>
-            </div>
-        </div>
+            <div class="p-6 border-b border-slate-200 dark:border-neutral-800 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-50/50 dark:bg-neutral-900/30">
 
-        <div class="p-6 md:p-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-12">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            Pedido <span class="font-mono text-slate-500 dark:text-slate-400">#{{ pedido.id }}</span>
+                        </h2>
 
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
-                        Información del Cliente
-                    </h3>
-                    <div class="bg-slate-50 dark:bg-neutral-900/30 rounded-lg p-5 border border-slate-100 dark:border-neutral-800 print:bg-white print:border-0 print:p-0">
-                        <p class="text-lg font-bold text-slate-900 dark:text-white mb-1">{{ pedido.cliente.nombre }}</p>
-
-                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 mb-2 text-sm">
-                            <span class="material-icons-round text-base text-slate-400">phone</span>
-                            {{ pedido.cliente.telefono }}
-                        </div>
-
-                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm">
-                            <span class="material-icons-round text-base text-slate-400">email</span>
-                            {{ pedido.cliente.email|default:"No registrado" }}
-                        </div>
-
-                        {% if pedido.cliente.telefono_whatsapp %}
-                        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-neutral-700 print:hidden">
-                            <a href="https://wa.me/{{ pedido.cliente.telefono_whatsapp }}?text=Hola {{ pedido.cliente.nombre }}! Te escribo de Manza Gráfica por el pedido de: {{ pedido.resumen_pedido }}."
-                               target="_blank"
-                               class="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center text-sm">
-                                <span class="material-icons-round mr-2 text-lg">chat</span>
-                                Enviar WhatsApp
-                            </a>
-                        </div>
+                        {% if pedido.estado == 'PENDIENTE' %}
+                            <span class="bg-red-100 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wide flex items-center gap-1">
+                                <span class="material-icons-round text-sm">pending_actions</span> Pendiente
+                            </span>
+                        {% elif pedido.estado == 'EN_PROCESO' %}
+                            <span class="bg-yellow-100 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800 px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wide flex items-center gap-1">
+                                <span class="material-icons-round text-sm">cached</span> En Proceso
+                            </span>
+                        {% elif pedido.estado == 'TERMINADO' %}
+                            <span class="bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800 px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wide flex items-center gap-1">
+                                <span class="material-icons-round text-sm">check_circle</span> Terminado
+                            </span>
                         {% endif %}
                     </div>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                        <span class="material-icons-round text-sm">calendar_today</span>
+                        Solicitado el {{ pedido.fecha_solicitud|date:"d M, Y" }}
+                        {% if pedido.fecha_entrega %}
+                            • <span class="material-icons-round text-sm">event</span> Entrega:
+                            {{ pedido.fecha_entrega|date:"d M, Y" }}
+                        {% endif %}
+                    </p>
+                </div>
 
-                    <div class="mt-8 print:hidden">
-                        <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
-                            Gestionar Estado
-                        </h3>
+                <div class="flex flex-wrap items-center gap-2 print:hidden w-full lg:w-auto">
 
-                        <div class="flex flex-col gap-3">
-                            {% if pedido.estado == 'PENDIENTE' %}
-                                <a href="{% url 'cambiar_estado' pedido.id 'EN_PROCESO' %}" class="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center">
-                                    <span class="material-icons-round mr-2">play_arrow</span>
-                                    Iniciar Trabajo (En Proceso)
-                                </a>
-                            {% elif pedido.estado == 'EN_PROCESO' %}
-                                <a href="#"
-                                   data-confirm="true"
-                                   data-url="{% url 'cambiar_estado' pedido.id 'TERMINADO' %}"
-                                   data-type="TERMINAR"
-                                   class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center">
-                                    <span class="material-icons-round mr-2">done_all</span>
-                                    Marcar como Terminado (Pagar y Cerrar)
-                                </a>
-                            {% elif pedido.estado == 'TERMINADO' %}
-                                <div class="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-4 rounded-lg text-center text-sm font-medium border border-green-100 dark:border-green-900/30 mb-2">
-                                    <span class="material-icons-round block text-2xl mb-1">verified</span>
-                                    Este trabajo ha sido finalizado y pagado.
-                                </div>
-                                <a href="#"
-                                   data-confirm="true"
-                                   data-url="{% url 'duplicar_pedido' pedido.id %}"
-                                   data-type="CLONAR"
-                                   class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-sm flex items-center justify-center py-2 transition-colors">
-                                    <span class="material-icons-round mr-1 text-base">refresh</span>
-                                    Reabrir Pedido
-                                </a>
+                    {% if pedido.estado == 'PENDIENTE' %}
+                        <a href="{% url 'cambiar_estado' pedido.id 'EN_PROCESO' %}"
+                           class="flex-1 lg:flex-none px-4 py-2 text-sm font-bold bg-yellow-400 hover:bg-yellow-500 text-black rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
+                            <span class="material-icons-round">play_arrow</span>
+                            Iniciar Pedido (En Proceso)
+                        </a>
+
+                    {% elif pedido.estado == 'EN_PROCESO' %}
+                        <a href="{% url 'cambiar_estado' pedido.id 'TERMINADO' %}"
+                           class="px-4 py-2 text-xs font-bold bg-green-600 hover:bg-green-700 text-white rounded-lg border border-green-700 shadow-sm transition-all flex items-center gap-2">
+                            <span class="material-icons-round text-lg">done_all</span>
+                            TERMINAR PEDIDO
+                        </a>
+
+                    {% elif pedido.estado == 'TERMINADO' %}
+                        <button data-confirm="true"
+                                data-url="{% url 'duplicar_pedido' pedido.id %}"
+                                data-type="CLONAR"
+                                class="flex-1 lg:flex-none px-4 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
+                            <span class="material-icons-round">refresh</span>
+                            Reabrir Pedido
+                        </button>
+                    {% endif %}
+
+                    <a href="{% url 'editar_pedido' pedido.id %}"
+                       class="px-3 py-2 text-sm font-bold bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-neutral-700 transition-colors flex items-center justify-center gap-1 shadow-sm">
+                        <span class="material-icons-round text-sm">edit</span> Editar
+                    </a>
+
+                    <a href="{% url 'eliminar_pedido' pedido.id %}"
+                       class="px-3 py-2 text-sm font-bold bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg border border-red-100 dark:border-red-900/30 transition-colors flex items-center justify-center gap-1">
+                        <span class="material-icons-round text-sm">delete</span> Eliminar
+                    </a>
+                </div>
+            </div>
+
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <div class="lg:col-span-2 space-y-8">
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 dark:border-neutral-800 pb-1">
+                            Resumen del Pedido</h3>
+                        <p class="text-lg font-bold text-slate-900 dark:text-white">{{ pedido.resumen_pedido }}</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 dark:border-neutral-800 pb-1">
+                            Detalles del Pedido</h3>
+
+                        <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-100 dark:border-neutral-800">
+                            {{ pedido.detalles_pedido|safe|default:"Sin especificaciones adicionales." }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-1">
+                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 dark:border-neutral-800 pb-1">
+                        Imagen de Referencia</h3>
+
+                    {% if pedido.imagen_referencia %}
+                        <a href="{{ pedido.imagen_referencia.url }}" target="_blank"
+                           class="group block relative aspect-video w-full bg-slate-100 dark:bg-black/40 rounded-lg border border-slate-200 dark:border-neutral-800 overflow-hidden cursor-zoom-in">
+                            <img src="{{ pedido.imagen_referencia.url }}" alt="Referencia"
+                                 class="w-full h-full object-contain p-2 transition-transform group-hover:scale-105">
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs gap-1">
+                                <span class="material-icons-round text-lg">open_in_new</span> Ver Original
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="aspect-video w-full bg-slate-50 dark:bg-neutral-900/30 rounded-lg border border-slate-200 dark:border-neutral-800 border-dashed flex flex-col items-center justify-center text-slate-400 dark:text-slate-600">
+                            <span class="material-icons-round text-3xl mb-1 opacity-50">image_not_supported</span>
+                            <span class="text-xs font-medium">Sin imagen adjunta</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 dark:border-neutral-800">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 dark:bg-neutral-900/50 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200 dark:border-neutral-800">
+                        <tr>
+                            <th class="px-6 py-3">Producto / Servicio</th>
+                            <th class="px-6 py-3 text-center">Unidad</th>
+                            <th class="px-6 py-3 text-right">Cantidad</th>
+                            <th class="px-6 py-3 text-right">Precio Unit.</th>
+                            <th class="px-6 py-3 text-right">Subtotal</th>
+                        </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-neutral-800 bg-white dark:bg-card-dark">
+                        {% for item in pedido.items.all %}
+                            <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors">
+                                <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">
+                                    {{ item.producto.nombre }}
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-block px-2 py-0.5 rounded bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-slate-400 text-[10px] font-mono border border-slate-200 dark:border-neutral-700 uppercase">
+                                        {{ item.producto.get_unidad_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right text-slate-700 dark:text-slate-300 font-mono">
+                                    {{ item.cantidad }}
+                                </td>
+                                <td class="px-6 py-4 text-right text-slate-500 dark:text-slate-400 font-mono">
+                                    ${{ item.precio_unitario|intcomma }}
+                                </td>
+                                <td class="px-6 py-4 text-right font-bold text-slate-900 dark:text-white font-mono">
+                                    ${{ item.subtotal|intcomma }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-400 text-xs italic">
+                                    No hay productos detallados en este pedido (Precio manual).
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                        <tr class="bg-slate-50 dark:bg-neutral-900/30 font-bold border-t border-slate-200 dark:border-neutral-800">
+                            <td class="px-6 py-4 text-right text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider"
+                                colspan="4">Total Pedido
+                            </td>
+                            <td class="px-6 py-4 text-right text-lg text-slate-900 dark:text-white font-mono">
+                                ${{ pedido.valor_venta|intcomma }}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+            <section
+                    class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 p-6 xl:col-span-1 h-full flex flex-col shadow-sm">
+                <h3 class="font-bold text-lg mb-6 flex items-center text-slate-900 dark:text-white">
+                    <span class="material-icons-round mr-2 text-primary">person</span>
+                    Información del Cliente
+                </h3>
+
+                <div class="space-y-6 flex-1">
+                    <div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mb-1">
+                            Nombre</p>
+                        <p class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                            {{ pedido.cliente.nombre }}
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-5">
+                        <div class="group">
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mb-1">
+                                Teléfono</p>
+                            {% if pedido.cliente.telefono %}
+                                <p class="font-mono text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                    <span class="material-icons-round text-slate-300 text-sm">phone</span>
+                                    {{ pedido.cliente.telefono }}
+                                </p>
+                            {% else %}
+                                <span class="text-sm text-slate-400 italic">No registrado</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="group">
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mb-1">
+                                Email</p>
+                            {% if pedido.cliente.email %}
+                                <p class="font-mono text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2 break-all">
+                                    <span class="material-icons-round text-slate-300 text-sm">email</span>
+                                    <a href="mailto:{{ pedido.cliente.email }}"
+                                       class="hover:text-primary transition-colors">
+                                        {{ pedido.cliente.email }}
+                                    </a>
+                                </p>
+                            {% else %}
+                                <span class="text-sm text-slate-400 italic">No registrado</span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-neutral-800 pb-2">
-                        Detalles del Trabajo
+                {% if pedido.cliente.telefono_whatsapp %}
+                    <a href="https://wa.me/{{ pedido.cliente.telefono_whatsapp }}?text=Hola {{ pedido.cliente.nombre }}! Te escribo de Manza Gráfica por el pedido #{{ pedido.id }}: {{ pedido.resumen_pedido }}."
+                       target="_blank"
+                       class="w-full mt-8 bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 rounded-lg font-bold flex items-center justify-center transition-all shadow-sm hover:shadow-md text-sm uppercase tracking-wide">
+                        <span class="material-icons-round mr-2 text-xl">chat</span>
+                        Enviar WhatsApp
+                    </a>
+                {% endif %}
+            </section>
+
+            <section
+                    class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-neutral-800 p-6 xl:col-span-2 flex flex-col shadow-sm relative overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-lg flex items-center text-slate-900 dark:text-white">
+                        <span class="material-icons-round mr-2 text-primary">payments</span>
+                        Finanzas y Pagos
                     </h3>
 
-                    <div class="mb-6">
-                        <label class="text-xs text-slate-500 uppercase mb-1 block">Resumen</label>
-                        <p class="text-xl font-bold text-slate-900 dark:text-white leading-tight">
-                            {{ pedido.resumen_pedido }}
-                        </p>
-                    </div>
-
-                    {% if pedido.imagen_referencia %}
-                    <div class="mb-6">
-                        <label class="text-xs text-slate-500 uppercase mb-1 block">Referencia Visual</label>
-                        <div class="bg-slate-50 dark:bg-neutral-900/30 p-2 rounded-lg border border-slate-100 dark:border-neutral-800 inline-block">
-                            <a href="{{ pedido.imagen_referencia.url }}" target="_blank">
-                                <img src="{{ pedido.imagen_referencia.url }}" alt="Referencia Visual" class="max-w-xs h-auto max-h-48 rounded shadow-sm hover:opacity-90 transition-opacity object-contain bg-white">
-                            </a>
-                            <a href="{{ pedido.imagen_referencia.url }}" target="_blank" class="block text-center text-xs text-primary mt-2 font-bold hover:underline">
-                                <span class="material-icons-round text-sm align-middle mr-1">open_in_new</span>
-                                Ver Imagen Original
-                            </a>
-                        </div>
-                    </div>
+                    {% if pedido.saldo_pendiente > 0 %}
+                        <a href="{% url 'ingresar_pago' pedido.id %}"
+                           class="bg-primary hover:bg-yellow-400 text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all shadow-sm flex items-center gap-1">
+                            <span class="material-icons-round text-sm">add</span> Ingresar Pago
+                        </a>
+                    {% else %}
+                        <span class="bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide border border-green-200 dark:border-green-800 flex items-center gap-1">
+                            <span class="material-icons-round text-sm">check</span> Pagado
+                        </span>
                     {% endif %}
+                </div>
 
-                    <div class="mb-6">
-                        <label class="text-xs text-slate-500 uppercase mb-1 block">Especificaciones</label>
-                        <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-100 dark:border-neutral-800 print:bg-white print:border-0 print:p-0">
-                            {{ pedido.detalles_pedido|safe }}
-                        </div>
+                <div class="grid grid-cols-3 gap-4 mb-8">
+                    <div class="bg-slate-50 dark:bg-neutral-900/50 p-4 rounded-xl border border-slate-100 dark:border-neutral-800">
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold mb-1 tracking-wider">
+                            Valor Total</p>
+                        <p class="text-xl md:text-2xl font-black font-mono text-slate-900 dark:text-white">
+                            ${{ pedido.valor_venta|intcomma }}</p>
                     </div>
-
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="material-icons-round text-slate-400">event</span>
-                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Fecha de Entrega:</span>
-                        <span class="text-sm text-slate-900 dark:text-white">{{ pedido.fecha_entrega|date:"d/m/Y" }}</span>
+                    <div class="bg-green-50 dark:bg-green-900/10 p-4 rounded-xl border border-green-100 dark:border-green-900/20">
+                        <p class="text-[10px] text-green-600 dark:text-green-400 uppercase font-bold mb-1 tracking-wider">
+                            Pagado</p>
+                        <p class="text-xl md:text-2xl font-black font-mono text-green-700 dark:text-green-400">
+                            ${{ pedido.total_pagado_real|intcomma }}</p>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-900/10 p-4 rounded-xl border border-red-100 dark:border-red-900/20">
+                        <p class="text-[10px] text-red-600 dark:text-red-400 uppercase font-bold mb-1 tracking-wider">
+                            Pendiente</p>
+                        <p class="text-xl md:text-2xl font-black font-mono text-red-700 dark:text-red-400">
+                            ${{ pedido.saldo_pendiente|intcomma }}</p>
                     </div>
                 </div>
-            </div>
 
-            {% if pedido.items.all %}
-            <div class="mb-8 pt-8 border-t border-slate-200 dark:border-neutral-800 print:border-black print:mt-4">
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
-                    <span class="material-icons-round mr-2 text-primary">list_alt</span>
-                    Detalle de Productos
-                </h3>
+                <div class="flex-1 flex flex-col">
+                    <h4 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 pl-1">
+                        Historial de Transacciones</h4>
 
-                <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-neutral-800 print:border-black">
-                    <table class="min-w-full divide-y divide-slate-200 dark:divide-neutral-800 print:divide-black">
-                        <thead class="bg-slate-50 dark:bg-neutral-900/50 print:bg-gray-100">
+                    <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-neutral-800 flex-1">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 dark:bg-neutral-900/50 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider print:text-black">Producto</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider print:text-black">Unidad</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider print:text-black">Cant.</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider print:text-black">P. Unit</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider print:text-black">Total</th>
+                                <th class="px-4 py-3">Fecha</th>
+                                <th class="px-4 py-3">Método</th>
+                                <th class="px-4 py-3">Nota / Ref.</th>
+                                <th class="px-4 py-3 text-right">Monto</th>
+                                <th class="px-2 py-3 text-center w-10"></th>
                             </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-card-dark divide-y divide-slate-200 dark:divide-neutral-800 print:divide-black">
-                            {% for item in pedido.items.all %}
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
-                                    {{ item.producto.nombre }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-500 dark:text-slate-400">
-                                    <span class="inline-block px-2 py-0.5 rounded bg-slate-100 dark:bg-neutral-800 text-xs font-mono border border-slate-200 dark:border-neutral-700">
-                                        {{ item.producto.get_unidad_display }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-slate-700 dark:text-slate-300">
-                                    {{ item.cantidad }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-600 dark:text-slate-400">
-                                    ${{ item.precio_unitario|intcomma }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-slate-900 dark:text-white">
-                                    ${{ item.subtotal|intcomma }}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="pt-4 border-t-2 border-slate-100 dark:border-neutral-800 print:border-black print:border-t-2">
-                <div class="flex flex-col md:flex-row justify-end">
-                    <div class="w-full md:w-1/2 lg:w-1/3">
-                        <table class="min-w-full">
+                            </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-neutral-800">
+                            {% for pago in pedido.pagos.all %}
+                                <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/50 group transition-colors">
+                                    <td class="px-4 py-3 text-slate-600 dark:text-slate-300 font-mono text-xs">
+                                        {{ pago.fecha|date:"d/m/Y" }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                                            {% if pago.metodo == 'EFECTIVO' %}
+                                                <span class="material-icons-round text-green-500 text-sm">attach_money</span>
+                                            {% elif pago.metodo == 'TRANSFERENCIA' %}
+                                                <span class="material-icons-round text-blue-500 text-sm">account_balance</span>
+                                            {% else %}
+                                                <span class="material-icons-round text-slate-400 text-sm">credit_card</span>
+                                            {% endif %}
+                                            {{ pago.get_metodo_display }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-slate-500 text-xs italic max-w-[150px] truncate">
+                                        {{ pago.nota|default:"-" }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                        ${{ pago.monto|intcomma }}
+                                    </td>
+                                    <td class="px-2 py-3 text-center">
+                                        <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <a href="{% url 'editar_pago' pago.id %}"
+                                               class="text-slate-400 hover:text-blue-500" title="Editar">
+                                                <span class="material-icons-round text-sm">edit</span>
+                                            </a>
+                                            <a href="{% url 'eliminar_pago' pago.id %}"
+                                               class="text-slate-400 hover:text-red-500" title="Eliminar">
+                                                <span class="material-icons-round text-sm">delete</span>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
                                 <tr>
-                                    <td class="py-3 text-right text-sm font-medium text-slate-500 dark:text-slate-400">Total Pedido:</td>
-                                    <td class="py-3 text-right text-xl font-bold text-slate-900 dark:text-white pl-6">
-                                        ${{ pedido.valor_venta|intcomma }}
+                                    <td colspan="5" class="px-4 py-8 text-center text-slate-400 text-xs italic">
+                                        No se han registrado pagos para este pedido.
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td class="py-3 text-right text-sm font-medium text-slate-500 dark:text-slate-400">Abonado:</td>
-                                    <td class="py-3 text-right text-lg font-medium text-green-600 dark:text-green-400 pl-6">
-                                        - ${{ pedido.valor_abonado|intcomma }}
-                                    </td>
-                                </tr>
-                                <tr class="bg-slate-50 dark:bg-neutral-900/50 rounded-lg">
-                                    <td class="py-4 px-4 text-right text-sm font-bold text-slate-700 dark:text-slate-300 rounded-l-lg">SALDO PENDIENTE:</td>
-                                    <td class="py-4 px-4 text-right pl-6 rounded-r-lg">
-                                        {% if pedido.valor_pendiente > 0 %}
-                                            <span class="text-2xl font-black text-red-600 dark:text-red-400">
-                                                ${{ pedido.valor_pendiente|intcomma }}
-                                            </span>
-                                        {% else %}
-                                            <span class="text-xl font-bold text-green-600 dark:text-green-400 flex items-center justify-end gap-1">
-                                                <span class="material-icons-round text-lg">check_circle</span> PAGADO
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-
-            <div class="hidden print:block mt-12 pt-8 border-t-2 border-dashed border-gray-300 text-center">
-                <h1 class="font-bold text-xl mb-1">MANZA GRÁFICA</h1>
-                <p class="text-sm text-gray-600">Diseño y Publicidad</p>
-                <p class="text-xs text-gray-500 mt-4">Gracias por su preferencia</p>
-            </div>
+            </section>
         </div>
     </div>
 
-    <div id="modal-confirmacion" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="modal-confirmacion" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog"
+         aria-modal="true">
         <div class="fixed inset-0 bg-slate-900/75 transition-opacity backdrop-blur-sm"></div>
 
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -274,7 +377,8 @@
                             </div>
 
                             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                                <h3 class="text-lg font-bold leading-6 text-slate-900 dark:text-white" id="modal-titulo">
+                                <h3 class="text-lg font-bold leading-6 text-slate-900 dark:text-white"
+                                    id="modal-titulo">
                                     Confirmar Acción
                                 </h3>
                                 <div class="mt-2">
@@ -287,10 +391,12 @@
                     </div>
 
                     <div class="bg-slate-50 dark:bg-neutral-900/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
-                        <a id="modal-btn-confirmar" href="#" class="inline-flex w-full justify-center rounded-lg bg-primary hover:bg-yellow-400 px-3 py-2 text-sm font-bold text-black shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide">
+                        <a id="modal-btn-confirmar" href="#"
+                           class="inline-flex w-full justify-center rounded-lg bg-primary hover:bg-yellow-400 px-3 py-2 text-sm font-bold text-black shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide">
                             Confirmar
                         </a>
-                        <button type="button" id="modal-btn-cancelar" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-700 sm:mt-0 sm:w-auto transition-colors">
+                        <button type="button" id="modal-btn-cancelar"
+                                class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-slate-300 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-700 sm:mt-0 sm:w-auto transition-colors">
                             Cancelar
                         </button>
                     </div>

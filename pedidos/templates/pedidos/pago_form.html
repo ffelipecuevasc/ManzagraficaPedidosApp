@@ -1,0 +1,152 @@
+{% extends 'pedidos/base.html' %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Pago #{{ form.instance.id }}{% else %}Registrar Pago{% endif %} - Manza Gráfica
+{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+                {% if form.instance.pk %}
+                    Editar Pago <span class="text-emerald-600">#{{ form.instance.id }}</span>
+                {% else %}
+                    Registrar Nuevo Ingreso
+                {% endif %}
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Gestiona los flujos de dinero asociados a los
+                pedidos.</p>
+        </div>
+
+        <a href="
+                {% if pedido_obj %}{% url 'detalle_pedido' pedido_obj.id %}{% else %}{% url 'lista_pagos' %}{% endif %}"
+           class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center text-sm font-medium">
+            <span class="material-icons-round mr-1 text-lg">arrow_back</span>
+            Cancelar y Volver
+        </a>
+    </div>
+
+    <div class="flex justify-center">
+        <div class="w-full max-w-3xl">
+
+            {% if pedido_obj %}
+                <div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-xl p-6 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-500 uppercase tracking-wider">Abonando al Pedido</span>
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            #{{ pedido_obj.id }} - {{ pedido_obj.cliente.nombre }}
+                        </h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">{{ pedido_obj.resumen_pedido }}</p>
+                    </div>
+                    <div class="text-right bg-white dark:bg-card-dark px-4 py-2 rounded-lg border border-blue-100 dark:border-blue-800 shadow-sm">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Saldo Pendiente</span>
+                        <div class="text-2xl font-black text-rose-600 dark:text-rose-400">
+                            ${{ pedido_obj.saldo_pendiente|intcomma }}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post"
+                  class="bg-white dark:bg-card-dark shadow-sm rounded-xl border border-slate-200 dark:border-neutral-800 overflow-hidden">
+                {% csrf_token %}
+
+                <div class="px-8 py-6 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/30">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center">
+                        <span class="material-icons-round text-emerald-500 mr-2">attach_money</span>
+                        Detalles de la Transacción
+                    </h3>
+                </div>
+
+                <div class="p-8 space-y-6">
+
+                    {% if form.non_field_errors %}
+                        <div class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg text-sm mb-4">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div>
+                        <label class="custom-label" for="{{ form.pedido.id_for_label }}">Pedido Asociado</label>
+
+                        {% if pedido_obj and not form.instance.pk %}
+                            <input type="text" class="form-control bg-slate-100 dark:bg-neutral-800 cursor-not-allowed"
+                                   value="Pedido #{{ pedido_obj.id }} - {{ pedido_obj.cliente.nombre }}" disabled>
+                            <input type="hidden" name="pedido" value="{{ pedido_obj.id }}">
+                        {% else %}
+                            {% render_field form.pedido class="form-select select2" %}
+                            {% if form.pedido.errors %}
+                                <p class="text-red-500 text-xs mt-1 font-bold">{{ form.pedido.errors.0 }}</p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="custom-label" for="{{ form.monto.id_for_label }}">Monto ($)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 dark:text-slate-500 font-bold text-lg">$</span>
+                                </div>
+                                {% render_field form.monto class="form-control !pl-12 text-lg font-bold text-emerald-700 dark:text-emerald-400" placeholder="0" %}
+                            </div>
+                            {% if form.monto.errors %}
+                                <p class="text-red-500 text-xs mt-1 font-bold">{{ form.monto.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label class="custom-label" for="{{ form.metodo.id_for_label }}">Método de Pago</label>
+                            {% render_field form.metodo class="form-select h-[46px] w-full rounded-lg border-slate-300" %} {% if form.metodo.errors %}
+                            <p class="text-red-500 text-xs mt-1 font-bold">{{ form.metodo.errors.0 }}</p>
+                        {% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="custom-label" for="{{ form.nota.id_for_label }}">Nota Interna (Opcional)</label>
+                        {% render_field form.nota class="form-control" rows="3" placeholder="Ej: Abono dejado en recepción..." %}
+                        <div class="flex justify-between items-center mt-1">
+                            <p class="text-xs text-slate-400">Detalles adicionales para referencia futura.</p>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                                <span class="material-icons-round text-xs align-middle mr-1">event</span>
+                                Fecha: Automática (Hoy)
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="px-8 py-6 bg-slate-50 dark:bg-neutral-800/50 border-t border-slate-100 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-end gap-3">
+                    <a href="
+                            {% if pedido_obj %}{% url 'detalle_pedido' pedido_obj.id %}{% else %}{% url 'lista_pagos' %}{% endif %}"
+                       class="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-white dark:hover:bg-neutral-800 transition-colors text-center">
+                        Cancelar
+                    </a>
+
+                    <button type="submit"
+                            class="w-full sm:w-auto px-8 py-2.5 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center uppercase tracking-wide text-sm">
+                        <span class="material-icons-round mr-2 text-lg">save</span>
+                        {% if form.instance.pk %}Actualizar Pago{% else %}Ingresar Pago{% endif %}
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Inicializar Select2 solo si el campo no está deshabilitado/oculto
+            if ($('.select2').length && !$('.select2').prop('disabled')) {
+                $('.select2').select2({
+                    placeholder: "Buscar pedido...",
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
+        });
+    </script>
+{% endblock %}

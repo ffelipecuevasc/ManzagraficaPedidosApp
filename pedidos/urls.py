@@ -46,4 +46,13 @@ urlpatterns = [
     path('base_datos/respaldar_bd/accion/', views.generar_respaldo_bd, name='generar_respaldo_bd'),
     path('base_datos/restaurar_bd/', views.restaurar_bd, name='restaurar_bd'),
     path('base_datos/estadisticas_bd/', views.estadisticas_bd, name='estadisticas_bd'),
+
+    # PAGOS
+    path('pagos/lista', views.lista_pagos, name='lista_pagos'),
+    path('pagos/ingresar/', views.ingresar_pago, name='ingresar_pago_general'),
+    path('pagos/ingresar/<int:pedido_id>/', views.ingresar_pago, name='ingresar_pago'),
+    path('pagos/detalle/<int:pk>/', views.detalle_pago, name='detalle_pago'),
+    path('pagos/editar/<int:pk>/', views.editar_pago, name='editar_pago'),
+    path('pagos/eliminar/<int:pk>/', views.eliminar_pago, name='eliminar_pago'),
+    path('pagos/estadisticas/', views.estadisticas_pagos, name='estadisticas_pagos'),
 ]

@@ -118,9 +118,9 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-neutral-800 flex flex-col shadow-sm">
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center capitalize">
                 <span class="material-icons-round text-primary mr-2">pie_chart</span>
-                Distribución de Pedidos
+                Distribución de Pedidos - {{ fecha_actual|date:"F" }}
             </h2>
 
             <div class="flex-1 flex flex-col items-center justify-center">

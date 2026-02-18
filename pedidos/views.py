@@ -3,15 +3,15 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
-from django.db.models import Q, Count, Sum, F
-from django.db.models.functions import TruncMonth
+from django.db.models import Q, Count, Sum, F, ProtectedError, F, Value, IntegerField
+from django.db.models.functions import TruncMonth, Coalesce
 from django.http import JsonResponse, FileResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.template.loader import render_to_string
-from django.db.models import ProtectedError
-from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion, HistorialBD
-from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm
+from django.db import transaction
+from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion, HistorialBD, Pago
+from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm
 from .decorators import transaccion_segura
 from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
 from datetime import timedelta, datetime
@@ -19,6 +19,7 @@ from PedidosApp import settings
 import weasyprint
 import json
 import os
+
 
 # ==========================================
 # PANEL DE CONTROL
@@ -80,16 +81,19 @@ def dashboard(request):
     ).count()
 
     # ==========================================
-    # 2. DATOS PARA GRÁFICOS (Mantenemos lógica existente)
+    # 2. DATOS PARA GRÁFICOS
     # ==========================================
 
-    # Métricas generales necesarias para el gráfico de dona
-    total_pedidos = Pedido.objects.count()
-    pendientes = Pedido.objects.filter(estado='PENDIENTE').count()
-    en_proceso = Pedido.objects.filter(estado='EN_PROCESO').count()
-    completados = Pedido.objects.filter(estado='TERMINADO').count()
+    # A. Datos para Gráfico de Dona (AHORA FILTRADO POR MES ACTUAL)
+    # Reutilizamos 'inicio_mes_actual' definido arriba para filtrar la torta
+    queryset_mes = Pedido.objects.filter(fecha_solicitud__gte=inicio_mes_actual)
 
-    # A. Datos para Gráfico de Dona (Conic Gradient CSS)
+    total_pedidos = queryset_mes.count()  # Total solo del mes
+    pendientes = queryset_mes.filter(estado='PENDIENTE').count()
+    en_proceso = queryset_mes.filter(estado='EN_PROCESO').count()
+    completados = queryset_mes.filter(estado='TERMINADO').count()
+
+    # Cálculo de Porcentajes (Conic Gradient CSS)
     if total_pedidos > 0:
         pct_pendientes = (pendientes / total_pedidos) * 100
         pct_en_proceso = (en_proceso / total_pedidos) * 100
@@ -99,12 +103,13 @@ def dashboard(request):
         stop_1 = 0
         stop_2 = 0
 
-    # Porcentajes texto
+    # Porcentajes texto (Redondeados para visualización)
     pct_text_pendientes = round((pendientes / total_pedidos * 100)) if total_pedidos > 0 else 0
     pct_text_proceso = round((en_proceso / total_pedidos * 100)) if total_pedidos > 0 else 0
     pct_text_completados = round((completados / total_pedidos * 100)) if total_pedidos > 0 else 0
 
-    # B. Datos para Gráfico de Barras (Top Clientes)
+    # B. Datos para Gráfico de Barras (Top Clientes - ESTE SE MANTIENE HISTÓRICO)
+    # No aplicamos filtro de fecha aquí para mantener la fidelidad histórica
     top_clientes = Cliente.objects.annotate(
         num_pedidos=Count('pedido')
     ).order_by('-num_pedidos')[:5]
@@ -122,6 +127,7 @@ def dashboard(request):
         'pedidos_mes_count': pedidos_mes_count,  # Tarjeta 4
 
         # Datos para Gráficos (Dona y Barras - Sección Inferior)
+        'fecha_actual': ahora,
         'total_pedidos': total_pedidos,
         'pendientes': pendientes,
         'en_proceso': en_proceso,
@@ -137,6 +143,20 @@ def dashboard(request):
 
     return render(request, 'pedidos/dashboard.html', context)
 
+
+# ==========================================
+# FUNCIÓN AUXILIAR - Para determinar estado de pago
+# ==========================================
+def actualizar_estado_pago_pedido(pedido):
+    """Recalcula y guarda el estado financiero del pedido basado en sus pagos."""
+    if pedido.saldo_pendiente <= 0:
+        pedido.estado_pago = 'PAGADO'
+    elif pedido.total_pagado_real > 0:
+        pedido.estado_pago = 'PARCIAL'
+    else:
+        pedido.estado_pago = 'PENDIENTE'
+    pedido.save()
+
 # ==========================================
 # GESTIÓN DE PEDIDOS
 # ==========================================
@@ -145,47 +165,83 @@ def dashboard(request):
 @transaccion_segura
 def crear_pedido(request):
     cliente_form = ClienteForm()
-    # Necesario para llenar el Select2 de productos en el HTML
     productos_disponibles = Producto.objects.all().order_by('nombre')
+    clientes = Cliente.objects.all()
 
     if request.method == 'POST':
         form = PedidoForm(request.POST, request.FILES)
 
         if form.is_valid():
-            # 1. Guardar el Pedido (Padre)
-            pedido = form.save()
+            with transaction.atomic():
+                # 1. Guardar el Pedido (Padre) - REGLA DE ORO: Legacy en 0
+                pedido = form.save(commit=False)
+                pedido.valor_abonado = 0  # Siempre 0, campo obsoleto
+                pedido.creado_por = request.user
 
-            # 2. Procesar los Ítems (Hijos) desde el JSON oculto
-            items_json = request.POST.get('items_json')
+                # Calculamos el estado de pago inicial (PENDIENTE por defecto)
+                # Como el abono va a la tabla Pago, el pedido nace "debiendo el 100%" técnicamente
+                # hasta que consultemos la tabla Pago, pero por ahora lo dejamos limpio.
+                pedido.estado_pago = 'PENDIENTE'
 
-            if items_json:
-                try:
-                    data_items = json.loads(items_json)
+                pedido.save()
 
-                    for item in data_items:
-                        # item es un dict: {'producto_id': '5', 'cantidad': 2, 'precio_unitario': 15000, ...}
-                        producto_obj = Producto.objects.get(pk=item['producto_id'])
+                # 2. Procesar los Ítems (Hijos)
+                items_json = request.POST.get('items_json')
+                if items_json:
+                    try:
+                        data_items = json.loads(items_json)
+                        for item in data_items:
+                            producto_obj = Producto.objects.get(pk=item['producto_id'])
+                            ItemPedido.objects.create(
+                                pedido=pedido,
+                                producto=producto_obj,
+                                cantidad=float(item['cantidad']),
+                                precio_unitario=int(item['precio_unitario'])
+                            )
+                    except Exception as e:
+                        print(f"Error procesando items: {e}")
+                        # No detenemos el proceso, los items son recuperables o editables
 
-                        ItemPedido.objects.create(
-                            pedido=pedido,
-                            producto=producto_obj,
-                            cantidad=float(item['cantidad']),
-                            precio_unitario=int(item['precio_unitario'])
-                        )
-                except Exception as e:
-                    # Si algo falla en el JSON, no rompemos el flujo principal,
-                    # pero podrías loguear el error: print(f"Error guardando items: {e}")
-                    pass
+                # 3. Lógica de Pago (CORREGIDA: Variable segura y flujo directo)
+                # Extraemos el valor del formulario de manera segura
+                abono_inicial = form.cleaned_data.get('abono_inicial')
 
-            # Redirigir al detalle del pedido recién creado
+                # Si el usuario ingresó un monto, creamos el registro en la tabla Pago
+                if abono_inicial and abono_inicial > 0:
+                    # Capturar el metodo desde el HTML
+                    metodo_seleccionado = request.POST.get('metodo_pago', 'EFECTIVO')
+
+                    # Crear el registro de Pago (Aquí vive el dato real)
+                    Pago.objects.create(
+                        pedido=pedido,
+                        monto=abono_inicial,
+                        metodo=metodo_seleccionado,
+                        fecha=timezone.now(),
+                        registrado_por=request.user,
+                        nota='Abono inicial al crear pedido'
+                    )
+
+                    # OJO: NO actualizamos pedido.valor_abonado.
+                    # Se mantiene en 0 como solicitaste.
+
             return redirect('detalle_pedido', pk=pedido.pk)
+
+        else:
+            # Debugging en consola si falla la validación
+            print("\n" + "=" * 30)
+            print("❌ ERROR DE VALIDACIÓN DETECTADO [CREACIÓN DE PEDIDO]:")
+            print(form.errors)
+            print("=" * 30 + "\n")
+
     else:
         form = PedidoForm()
 
     context = {
         'form': form,
         'cliente_form': cliente_form,
-        'productos_disponibles': productos_disponibles  # ¡Vital para que funcione el select!
+        'productos_disponibles': productos_disponibles,
+        'clientes': clientes,
+        'productos': productos_disponibles,
     }
 
     return render(request, 'pedidos/pedido_form.html', context)
@@ -204,7 +260,7 @@ def editar_pedido(request, pk):
             items_json = request.POST.get('items_json')
             if items_json:
                 try:
-                    pedido.items.all().delete() # Borrón
+                    pedido.items.all().delete()  # Borrón
                     data_items = json.loads(items_json)
                     for item in data_items:
                         producto_obj = Producto.objects.get(pk=item['producto_id'])
@@ -237,8 +293,9 @@ def editar_pedido(request, pk):
     return render(request, 'pedidos/pedido_form.html', {
         'form': form,
         'productos_disponibles': productos_disponibles,
-        'items_json': json.dumps(items_list) # ¡Aquí enviamos los datos al HTML!
+        'items_json': json.dumps(items_list)  # ¡Aquí enviamos los datos al HTML!
     })
+
 
 @login_required
 @transaccion_segura
@@ -246,13 +303,15 @@ def eliminar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     if request.method == 'POST':
         pedido.delete()
-        return redirect('dashboard')
+        return redirect('lista_pedidos')
     return render(request, 'pedidos/pedido_confirm_delete.html', {'pedido': pedido})
+
 
 @login_required
 def detalle_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     return render(request, 'pedidos/pedido_detail.html', {'pedido': pedido})
+
 
 @login_required
 def cambiar_estado_pedido(request, pk, nuevo_estado):
@@ -262,14 +321,11 @@ def cambiar_estado_pedido(request, pk, nuevo_estado):
     opciones_validas = [opcion[0] for opcion in Pedido.ESTADO_CHOICES]
 
     if nuevo_estado in opciones_validas:
-        # REGLA DE NEGOCIO: Si se termina, se asume pagado
-        if nuevo_estado == 'TERMINADO':
-            pedido.valor_abonado = pedido.valor_venta
-
         pedido.estado = nuevo_estado
         pedido.save()
 
     return redirect('detalle_pedido', pk=pk)
+
 
 @login_required
 def lista_pedidos(request):
@@ -331,6 +387,7 @@ def lista_pedidos(request):
 
     return render(request, 'pedidos/pedido_list.html', context)
 
+
 @login_required
 @transaccion_segura
 def duplicar_pedido(request, pk):
@@ -354,6 +411,7 @@ def duplicar_pedido(request, pk):
 
     # 4. Redirigir al detalle del nuevo pedido clonado
     return redirect('detalle_pedido', pk=nuevo_pedido.pk)
+
 
 @login_required
 def estadisticas_pedidos(request):
@@ -484,6 +542,7 @@ def estadisticas_pedidos(request):
     # render provisional (aún no creamos el HTML, fallará si lo cargas)
     return render(request, 'pedidos/estadisticas_pedidos.html', context)
 
+
 # ==========================================
 # GESTIÓN DE CLIENTES
 # ==========================================
@@ -491,32 +550,33 @@ def estadisticas_pedidos(request):
 def lista_clientes(request):
     # Anotar clientes con el total de pedidos
     clientes = Cliente.objects.annotate(total_pedidos=Count('pedido'))
-    
+
     # Búsqueda
     busqueda = request.GET.get('busqueda')
     if busqueda:
         clientes = clientes.filter(
-            Q(nombre__icontains=busqueda) | 
+            Q(nombre__icontains=busqueda) |
             Q(email__icontains=busqueda) |
             Q(telefono__icontains=busqueda)
         )
-    
+
     # Calcular clientes activos (aquellos con más de 0 pedidos)
     # Nota: Usamos la lista anotada para filtrar en Python o hacemos otra query.
     # Para eficiencia, podemos contar sobre el QuerySet anotado:
     clientes_activos = clientes.filter(total_pedidos__gt=0).count()
-    
+
     # Obtener el cliente top (con más pedidos)
     top_cliente = clientes.order_by('-total_pedidos').first()
-    
+
     context = {
         'clientes': clientes,
         'clientes_activos': clientes_activos,
-        'clientes_nuevos': 0, # Placeholder
+        'clientes_nuevos': 0,  # Placeholder
         'top_cliente': top_cliente,
         'busqueda': busqueda,
     }
     return render(request, 'pedidos/cliente_list.html', context)
+
 
 @login_required
 @transaccion_segura
@@ -528,8 +588,9 @@ def crear_cliente(request):
             return redirect('lista_clientes')
     else:
         form = ClienteForm()
-    
+
     return render(request, 'pedidos/cliente_form.html', {'form': form})
+
 
 @login_required
 @transaccion_segura
@@ -542,8 +603,9 @@ def editar_cliente(request, pk):
             return redirect('lista_clientes')
     else:
         form = ClienteForm(instance=cliente)
-    
+
     return render(request, 'pedidos/cliente_form.html', {'form': form})
+
 
 @login_required
 @transaccion_segura
@@ -553,6 +615,7 @@ def eliminar_cliente(request, pk):
         cliente.delete()
         return redirect('lista_clientes')
     return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente})
+
 
 @login_required
 @require_POST
@@ -571,6 +634,7 @@ def api_crear_cliente_rapido(request):
             'success': False,
             'errors': form.errors
         })
+
 
 @login_required
 def trabajo_semanal(request):
@@ -618,6 +682,7 @@ def trabajo_semanal(request):
 
     return render(request, 'pedidos/trabajo_semanal.html', context)
 
+
 # ==========================================
 # GESTIÓN DE COTIZACIONES
 # ==========================================
@@ -653,6 +718,7 @@ def lista_cotizaciones(request):
         'is_paginated': page_obj.has_other_pages(),
     }
     return render(request, 'pedidos/cotizacion_list.html', context)
+
 
 @login_required
 @transaccion_segura
@@ -698,6 +764,7 @@ def crear_cotizacion(request):
         'productos_disponibles': productos_disponibles,
         'fecha_hoy': timezone.now().strftime('%Y-%m-%d')
     })
+
 
 @login_required
 @transaccion_segura
@@ -749,13 +816,15 @@ def editar_cotizacion(request, pk):
         'form': form,
         'productos_disponibles': productos_disponibles,
         'fecha_hoy': timezone.now().strftime('%Y-%m-%d'),
-        'items_json': json.dumps(items_list) # ¡Enviamos los datos!
+        'items_json': json.dumps(items_list)  # ¡Enviamos los datos!
     })
+
 
 @login_required
 def detalle_cotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
     return render(request, 'pedidos/cotizacion_detail.html', {'cotizacion': cotizacion})
+
 
 @login_required
 @transaccion_segura
@@ -766,33 +835,39 @@ def eliminar_cotizacion(request, pk):
         return redirect('lista_cotizaciones')
     return render(request, 'pedidos/cotizacion_confirm_delete.html', {'cotizacion': cotizacion})
 
+
 @login_required
 @transaccion_segura
 def convertir_a_pedido(request, pk):
     """
     Toma una cotización y crea un Pedido.
-    Copia el cliente, datos y AHORA TAMBIÉN LOS PRODUCTOS.
+    Copia el cliente, datos, productos y GENERA EL PAGO INICIAL SI EXISTE.
     """
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
 
     if request.method == 'POST':
-        # 1. Capturar datos del formulario de conversión
+        # 1. Capturar datos del formulario
         fecha_entrega = request.POST.get('fecha_entrega')
-        abono = request.POST.get('valor_abonado', 0)
+        abono_input = request.POST.get('valor_abonado', 0)
+        try:
+            abono = int(abono_input)
+        except ValueError:
+            abono = 0
 
         # 2. Crear el Pedido (Cabecera)
+        # IMPORTANTE: Inicializamos valor_abonado en 0. Si hay abono, lo sumará la lógica de Pago.
         pedido = Pedido.objects.create(
             cliente=cotizacion.cliente,
             resumen_pedido=cotizacion.resumen,
             detalles_pedido=cotizacion.detalles,
             valor_venta=cotizacion.valor_total,
-            valor_abonado=int(abono),
+            valor_abonado=0,  # Se actualizará al crear el Pago
             fecha_entrega=fecha_entrega,
             estado='PENDIENTE',
+            creado_por=request.user  # Es buena práctica registrar quién lo creó
         )
 
-        # 3. --- NUEVO: TRASPASAR PRODUCTOS (Clonación de Ítems) ---
-        # Recorremos los ítems de la cotización y creamos sus gemelos en el pedido
+        # 3. Traspasar Productos
         for item_cot in cotizacion.items.all():
             ItemPedido.objects.create(
                 pedido=pedido,
@@ -800,13 +875,38 @@ def convertir_a_pedido(request, pk):
                 cantidad=item_cot.cantidad,
                 precio_unitario=item_cot.precio_unitario
             )
-        # ------------------------------------------------------------
 
-        # 4. Actualizar la Cotización
+        # 4. --- LÓGICA DE PAGO INICIAL (CORREGIDA) ---
+        if abono > 0:
+            metodo = request.POST.get('metodo_pago', 'TRANSFERENCIA')
+            # A. Crear el registro en la tabla Pago
+            Pago.objects.create(
+                pedido=pedido,
+                monto=abono,
+                metodo=metodo,
+                fecha=timezone.now(),
+                registrado_por=request.user,
+                nota=f'Abono inicial por conversión de Cotización #{cotizacion.id}'
+            )
+
+            # B. Actualizar el pedido (Legacy + Estado)
+            pedido.valor_abonado = abono
+
+            # Calcular estado financiero
+            if pedido.saldo_pendiente <= 0:
+                pedido.estado_pago = 'PAGADO'
+            else:
+                pedido.estado_pago = 'PARCIAL'
+
+            pedido.save()
+        # ---------------------------------------------
+
+        # 5. Cerrar la Cotización
         cotizacion.estado = 'ACEPTADA'
         cotizacion.save()
 
-        # 5. Redirigir al nuevo pedido
+        # 6. Redirigir al nuevo pedido
+        messages.success(request, f"Cotización convertida exitosamente en el Pedido #{pedido.id}")
         return redirect('detalle_pedido', pk=pedido.pk)
 
     context = {
@@ -814,6 +914,7 @@ def convertir_a_pedido(request, pk):
         'fecha_sugerida': timezone.now().date() + timedelta(days=7)
     }
     return render(request, 'pedidos/cotizacion_convertir.html', context)
+
 
 @login_required
 def exportar_cotizacion_pdf(request, pk):
@@ -838,6 +939,7 @@ def exportar_cotizacion_pdf(request, pk):
     response.write(result)
 
     return response
+
 
 # ==========================================
 # GESTIÓN DE PRODUCTOS (INVENTARIO)
@@ -870,6 +972,7 @@ def lista_productos(request):
     }
     return render(request, 'pedidos/producto_list.html', context)
 
+
 @login_required
 @transaccion_segura
 def crear_producto(request):
@@ -882,6 +985,7 @@ def crear_producto(request):
         form = ProductoForm()
 
     return render(request, 'pedidos/producto_form.html', {'form': form})
+
 
 @login_required
 @transaccion_segura
@@ -897,11 +1001,12 @@ def editar_producto(request, pk):
 
     return render(request, 'pedidos/producto_form.html', {'form': form})
 
+
 @login_required
 @transaccion_segura
 def eliminar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
-    error_message = None # Variable para guardar el mensaje de error
+    error_message = None  # Variable para guardar el mensaje de error
 
     if request.method == 'POST':
         try:
@@ -913,13 +1018,15 @@ def eliminar_producto(request, pk):
 
     return render(request, 'pedidos/producto_confirm_delete.html', {
         'producto': producto,
-        'error': error_message # Pasamos el error al HTML
+        'error': error_message  # Pasamos el error al HTML
     })
+
 
 @login_required
 def detalle_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
     return render(request, 'pedidos/producto_detail.html', {'producto': producto})
+
 
 @login_required
 @require_POST
@@ -948,12 +1055,14 @@ def api_crear_producto_rapido(request):
             'errors': form.errors
         })
 
+
 # ==========================================
 # BASE DE DATOS - RESPALDOS & RESTAURACIONES
 # ==========================================
 
 def es_superusuario(user):
     return user.is_superuser
+
 
 @login_required
 @user_passes_test(es_superusuario)
@@ -984,7 +1093,7 @@ def respaldar_bd(request):
                     lista_backups.append({
                         'nombre': entry.name,
                         'fecha': fecha_mod,
-                        'size_mb': round(stats.st_size / (1024 * 1024), 2) # Peso en MB
+                        'size_mb': round(stats.st_size / (1024 * 1024), 2)  # Peso en MB
                     })
 
     # 3. Ordenar: El más reciente primero
@@ -994,6 +1103,7 @@ def respaldar_bd(request):
         'metricas': metricas,
         'backups': lista_backups
     })
+
 
 @login_required
 @user_passes_test(es_superusuario)
@@ -1010,6 +1120,7 @@ def generar_respaldo_bd(request):
         return response
     except Exception as e:
         return HttpResponse(f"Error crítico: {str(e)}")
+
 
 @login_required
 @user_passes_test(es_superusuario)
@@ -1075,6 +1186,7 @@ def restaurar_bd(request):
 
     # Si es GET, solo mostramos el formulario
     return render(request, 'pedidos/restaurar_bd.html')
+
 
 @login_required
 @user_passes_test(es_superusuario)
@@ -1218,12 +1330,263 @@ def estadisticas_bd(request):
 
     return render(request, 'pedidos/estadisticas_bd.html', context)
 
+
+# ==========================================
+# GESTIÓN DE PAGOS
+# ==========================================
+
+@login_required
+def lista_pagos(request):
+    """
+    Vista para listar el historial de pagos.
+    """
+    # 1. Organizamos los pagos por ID para mostrarlos de forma descendente
+    pagos = Pago.objects.select_related('pedido', 'pedido__cliente').all().order_by('-id')
+
+    # 2. Paginación (10 por página)
+    paginator = Paginator(pagos, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 3. Renderizado
+    return render(request, 'pedidos/pago_list.html', {'pagos': page_obj})
+
+@login_required
+@transaccion_segura
+def ingresar_pago(request, pedido_id=None):
+    """
+    Vista para registrar un nuevo pago.
+    Puede venir con un pedido pre-seleccionado (desde el detalle) o vacío.
+    """
+    pedido_obj = None
+    initial_data = {}
+
+    # 1. Lógica GET (Pre-llenado)
+    if pedido_id:
+        pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
+        initial_data = {
+            'pedido': pedido_obj,
+            'monto': pedido_obj.saldo_pendiente  # Sugerimos pagar el total restante
+        }
+
+    if request.method == 'POST':
+        form = PagoForm(request.POST)
+        if form.is_valid():
+            # 2. Guardar el Pago
+            pago = form.save(commit=False)
+            pago.registrado_por = request.user
+            pago.save()
+
+            # 3. ACTUALIZACIÓN AUTOMÁTICA DEL PEDIDO
+            pedido_relacionado = pago.pedido
+
+            # Recalcular estado financiero
+            # (Asumiendo que el modelo Pedido tiene propiedades o métodos para esto,
+            #  o que actualizamos campos manuales como valor_abonado)
+
+            # Opción A: Si usamos el campo legacy 'valor_abonado'
+            # pedido_relacionado.valor_abonado += pago.monto 
+
+            # Opción B: Si usamos propiedades calculadas en el modelo, 
+            # solo necesitamos actualizar el estado 'estado_pago' si existe.
+            # Aquí usaremos la función auxiliar definida arriba si aplica, 
+            # o lógica directa simple:
+
+            # Recalculamos el total pagado sumando todos los pagos (incluyendo el nuevo)
+            total_pagado = pedido_relacionado.pagos.aggregate(Sum('monto'))['monto__sum'] or 0
+            pedido_relacionado.valor_abonado = total_pagado  # Actualizamos el campo caché/legacy
+
+            # Determinamos estado (si existe el campo estado_pago)
+            if hasattr(pedido_relacionado, 'estado_pago'):
+                if pedido_relacionado.saldo_pendiente <= 0:
+                    pedido_relacionado.estado_pago = 'PAGADO'
+                elif total_pagado > 0:
+                    pedido_relacionado.estado_pago = 'PARCIAL'
+                else:
+                    pedido_relacionado.estado_pago = 'PENDIENTE'
+
+            pedido_relacionado.save()
+
+            messages.success(request, f"Pago de ${pago.monto} registrado correctamente.")
+            return redirect('lista_pagos')
+    else:
+        form = PagoForm(initial=initial_data)
+
+    return render(request, 'pedidos/pago_form.html', {
+        'form': form,
+        'pedido_obj': pedido_obj
+    })
+
+@login_required
+@transaccion_segura
+def editar_pago(request, pk):
+    """
+    Permite modificar un pago existente (ej: corregir monto o metodo).
+    Recalcula la deuda del pedido al guardar.
+    """
+    pago = get_object_or_404(Pago, pk=pk)
+    pedido_asociado = pago.pedido
+
+    if request.method == 'POST':
+        form = PagoForm(request.POST, instance=pago)
+        if form.is_valid():
+            pago_guardado = form.save()
+
+            # CRÍTICO: Recalcular estado del pedido porque el monto pudo cambiar
+            actualizar_estado_pago_pedido(pago_guardado.pedido)
+
+            messages.success(request, 'Pago actualizado correctamente.')
+            return redirect('detalle_pedido', pago_guardado.pedido.id)
+    else:
+        form = PagoForm(instance=pago)
+
+    return render(request, 'pedidos/pago_form.html', {
+        'form': form,
+        'pedido_obj': pedido_asociado,
+        'titulo': f'Editar Pago #{pago.id}'  # Para cambiar el título en el HTML
+    })
+
+@login_required
+@transaccion_segura
+def eliminar_pago(request, pk):
+    """
+    Elimina un pago y actualiza el estado del pedido asociado.
+    (Ej: Si borras el pago que completaba la deuda, el pedido vuelve a 'PARCIAL').
+    """
+    pago = get_object_or_404(Pago, pk=pk)
+    pedido = pago.pedido  # Guardamos la referencia antes de borrarlo
+
+    if request.method == 'POST':
+        monto_eliminado = pago.monto
+        pago.delete()
+
+        # CRÍTICO: Recalcular estado del pedido tras la eliminación
+        actualizar_estado_pago_pedido(pedido)
+
+        messages.warning(request, f'Se eliminó el pago de ${monto_eliminado}. El saldo del pedido ha sido actualizado.')
+        return redirect('detalle_pedido', pedido.id)
+
+    return render(request, 'pedidos/pago_confirm_delete.html', {'pago': pago})
+
+@login_required
+def detalle_pago(request, pk):
+    """
+    Vista para ver el comprobante/detalle de un pago específico.
+    """
+    pago = get_object_or_404(Pago, pk=pk)
+    return render(request, 'pedidos/pago_detail.html', {'pago': pago})
+
+
+@login_required
+def estadisticas_pagos(request):
+    """
+    Vista de Dashboard Financiero.
+    Calcula KPIs, Barras de Progreso y Tabla de Deudores.
+    """
+
+    # =========================================================================
+    # PASO 0: PREPARAR EL TERRENO (La "Query Maestra")
+    # =========================================================================
+    # Calculamos lo pagado y el saldo a nivel de base de datos para filtrar rápido.
+    pedidos_financieros = Pedido.objects.annotate(
+        pagado_db=Coalesce(Sum('pagos__monto'), Value(0), output_field=IntegerField())
+    ).annotate(
+        saldo_db=F('valor_venta') - F('pagado_db')
+    )
+
+    # =========================================================================
+    # SECCIÓN 1: KPIs (TARJETAS SUPERIORES) - YA IMPLEMENTADO
+    # =========================================================================
+
+    # KPI 1: DEUDA CRÍTICA (Terminados sin pagar)
+    kpi_critico_qs = pedidos_financieros.filter(estado='TERMINADO', saldo_db__gt=0)
+    deuda_critica_total = kpi_critico_qs.aggregate(Sum('saldo_db'))['saldo_db__sum'] or 0
+    deuda_critica_cantidad = kpi_critico_qs.count()
+
+    # KPI 2: RIESGO OPERATIVO (En Proceso sin abono)
+    kpi_riesgo_qs = pedidos_financieros.filter(estado='EN_PROCESO', pagado_db=0)
+    riesgo_total_monto = kpi_riesgo_qs.aggregate(Sum('valor_venta'))['valor_venta__sum'] or 0
+    riesgo_cantidad = kpi_riesgo_qs.count()
+
+    # KPI 3: PROYECCIÓN (Dinero en la calle)
+    proyeccion_qs = pedidos_financieros.filter(saldo_db__gt=0)
+    proyeccion_total = proyeccion_qs.aggregate(Sum('saldo_db'))['saldo_db__sum'] or 0
+
+    # =========================================================================
+    # SECCIÓN 2: BARRAS DE PROGRESO (Estado de los Pedidos Activos)
+    # =========================================================================
+    # Consideramos "Activos" aquellos que NO estén entregados/archivados.
+    activos_qs = pedidos_financieros.exclude(estado='ENTREGADO')
+    total_activos = activos_qs.count()
+
+    if total_activos > 0:
+        # A. Pagados (Saldo <= 0)
+        pagados_count = activos_qs.filter(saldo_db__lte=0).count()
+        pct_pagados = int((pagados_count / total_activos) * 100)
+
+        # B. Sin Abono (Pagado == 0)
+        sin_abono_count = activos_qs.filter(pagado_db=0).count()
+        pct_sin_abono = int((sin_abono_count / total_activos) * 100)
+
+        # C. Parciales (El resto: tiene abono pero tiene deuda)
+        # Lógica: Total - (Pagados + Sin Abono) para que sume 100% exacto visualmente
+        parcial_count = total_activos - (pagados_count + sin_abono_count)
+        pct_parcial = 100 - (pct_pagados + pct_sin_abono)
+
+        # Ajuste de seguridad por si da negativo en casos raros
+        if pct_parcial < 0: pct_parcial = 0
+
+    else:
+        pct_pagados = 0
+        pct_sin_abono = 0
+        pct_parcial = 0
+        pagados_count = 0
+        sin_abono_count = 0
+        parcial_count = 0
+
+    # =========================================================================
+    # SECCIÓN 3: TABLA DE GESTIÓN (TOP DEUDORES)
+    # =========================================================================
+    # Reutilizamos el QuerySet de 'Deuda Crítica' (Terminados con deuda).
+    # Ordenamos por fecha de entrega ascendente (los más viejos primero = más urgencia).
+    deudores_list = kpi_critico_qs.order_by('fecha_entrega')
+
+    # Para calcular los "Días de Atraso" usaremos la fecha de hoy en el template
+    hoy = timezone.now().date()
+
+    # =========================================================================
+    # CONTEXTO FINAL
+    # =========================================================================
+    context = {
+        # KPIs
+        'deuda_critica_total': deuda_critica_total,
+        'deuda_critica_cantidad': deuda_critica_cantidad,
+        'riesgo_total_monto': riesgo_total_monto,
+        'riesgo_cantidad': riesgo_cantidad,
+        'proyeccion_total': proyeccion_total,
+
+        # Barras de Progreso
+        'pct_pagados': pct_pagados,
+        'count_pagados': pagados_count,
+        'pct_parcial': pct_parcial,
+        'count_parcial': parcial_count,
+        'pct_sin_abono': pct_sin_abono,
+        'count_sin_abono': sin_abono_count,
+
+        # Tabla y Utilidades
+        'deudores_list': deudores_list,
+        'hoy': hoy,
+    }
+
+    return render(request, 'pedidos/estadisticas_pagos.html', context)
+
 # ==========================================
 # GESTIÓN DE ERRORES HTTP
 # ==========================================
 
 def error_404(request, exception):
     return render(request, 'pedidos/errors/404.html', status=404)
+
 
 def error_500(request):
     return render(request, 'pedidos/errors/500.html', status=500)

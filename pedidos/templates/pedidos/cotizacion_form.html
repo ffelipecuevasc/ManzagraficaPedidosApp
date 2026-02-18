@@ -329,8 +329,7 @@
                                                class="form-control bg-slate-100 dark:bg-neutral-800 text-slate-500 cursor-not-allowed font-bold text-lg text-center"
                                                readonly
                                                tabindex="-1"
-                                               value="
-                                                       {% if form.instance.pk %}{{ form.instance.fecha_emision|date:'Y-m-d' }}{% else %}{{ fecha_hoy }}{% endif %}">
+                                               value="{% if form.instance.pk %}{{ form.instance.fecha_emision|date:'Y-m-d' }}{% else %}{{ fecha_hoy }}{% endif %}">
                                     </div>
                                     <p class="text-[10px] text-slate-400 mt-1 text-right">Automático (Hoy)</p>
                                 </div>

@@ -27,6 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // G. Efecto acordeón de la Barra de Navegación Lateral
     initSidebarAccordions();
+
+    // H. Lógica de Pago Inicial (Conversión o Nuevo Pedido)
+    if (document.getElementById('valor_abonado') || document.getElementById('id_valor_abonado')) {
+        initConversionLogic();
+    }
 });
 
 /* =========================================
@@ -353,11 +358,7 @@ function initDetailModals() {
             const url = this.getAttribute('data-url');
             const tipo = this.getAttribute('data-type');
 
-            if (tipo === 'TERMINAR') {
-                titulo.textContent = '¿Finalizar y Pagar Pedido?';
-                mensaje.innerHTML = 'Estás a punto de marcar este trabajo como <strong>TERMINADO</strong>.<br><br>El sistema registrará automáticamente que el <strong>TOTAL HA SIDO PAGADO ($0 deuda)</strong>.<br>¿Confirmas esta acción?';
-                btnConfirmar.className = "inline-flex w-full justify-center rounded-lg bg-green-600 hover:bg-green-700 px-3 py-2 text-sm font-bold text-white shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide";
-            } else if (tipo === 'CLONAR') {
+            if (tipo === 'CLONAR') {
                 titulo.textContent = '¿Reabrir Pedido?';
                 mensaje.innerHTML = 'Se creará un <strong>NUEVO PEDIDO</strong> idéntico a este, con estado PENDIENTE y deuda inicial.<br><br>El pedido actual no se modificará y quedará guardado en la BD.';
                 btnConfirmar.className = "inline-flex w-full justify-center rounded-lg bg-primary hover:bg-yellow-400 px-3 py-2 text-sm font-bold text-black shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide";
@@ -758,4 +759,44 @@ function initSidebarAccordions() {
             }
         }
     }
+}
+
+/* =========================================
+   12. LÓGICA DE ABONO Y METODO DE PAGO
+   (Funciona en Crear Pedido y Convertir Cotización)
+   ========================================= */
+function initConversionLogic() {
+    // Intentamos buscar por el ID de Django (id_valor_abonado) o el manual (valor_abonado)
+    const inputAbono = document.getElementById('id_valor_abonado') || document.getElementById('valor_abonado');
+    const selectMetodo = document.getElementById('metodo_pago');
+    const containerMetodo = document.getElementById('container-metodo');
+
+    if (!inputAbono || !selectMetodo) return;
+
+    function toggleMetodo() {
+        const monto = parseFloat(inputAbono.value) || 0;
+
+        if (monto > 0) {
+            // HABILITAR
+            selectMetodo.disabled = false;
+            selectMetodo.classList.remove('cursor-not-allowed', 'bg-slate-100');
+            selectMetodo.classList.add('bg-white', 'dark:bg-neutral-800'); // Añadido soporte dark mode
+
+            if (containerMetodo) containerMetodo.classList.remove('opacity-50');
+        } else {
+            // DESHABILITAR
+            selectMetodo.disabled = true;
+            selectMetodo.classList.add('cursor-not-allowed', 'bg-slate-100');
+            selectMetodo.classList.remove('bg-white', 'dark:bg-neutral-800');
+
+            if (containerMetodo) containerMetodo.classList.add('opacity-50');
+        }
+    }
+
+    // Escuchar eventos
+    inputAbono.addEventListener('input', toggleMetodo);
+    inputAbono.addEventListener('change', toggleMetodo);
+
+    // Ejecutar al inicio
+    toggleMetodo();
 }

@@ -349,43 +349,65 @@
                                 {% endif %}
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <label class="custom-label"
-                                           for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
-                                    <div class="relative">
-                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
-                                        {% render_field form.valor_venta class="form-control pl-8 bg-slate-100 dark:bg-neutral-800 text-slate-500 cursor-not-allowed focus:ring-0" placeholder="0" readonly="readonly" tabindex="-1" %}
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 text-right">Calculado automáticamente</p>
+                            <div class="bg-slate-50 dark:bg-neutral-900/30 p-5 rounded-lg border border-slate-100 dark:border-neutral-800 space-y-6">
 
-                                    {% if form.valor_venta.errors %}
-                                        <p class="text-red-500 text-xs mt-1 font-bold flex items-center"><span
-                                                class="material-icons-round text-sm mr-1">error</span> {{ form.valor_venta.errors.0 }}
-                                        </p>
-                                    {% endif %}
-                                </div>
-                                <div>
-                                    <label class="custom-label"
-                                           for="{{ form.valor_abonado.id_for_label }}">{{ form.valor_abonado.label }}</label>
-                                    <div class="relative">
-                                        <span class="absolute left-3 top-2.5 text-slate-400 select-none">$</span>
-                                        {% render_field form.valor_abonado class="form-control pl-8" placeholder="0" %}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="custom-label" for="{{ form.valor_venta.id_for_label }}">{{ form.valor_venta.label }}</label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-2.5 text-slate-400 select-none text-lg">$</span>
+                                            {% render_field form.valor_venta class="form-control pl-8 bg-slate-100 dark:bg-neutral-800 text-slate-500 cursor-not-allowed focus:ring-0 font-bold" placeholder="0" readonly="readonly" tabindex="-1" %}
+                                        </div>
+                                        <p class="text-[10px] text-slate-400 mt-1 text-right">Calculado automáticamente</p>
                                     </div>
-                                    {% if form.valor_abonado.errors %}
-                                        <p class="text-red-500 text-xs mt-1 font-bold flex items-center animate-pulse">
-                                            <span class="material-icons-round text-sm mr-1">cancel</span>
-                                            {{ form.valor_abonado.errors.0 }}
-                                        </p>
-                                    {% endif %}
+
+                                    <div>
+                                        <label class="custom-label" for="{{ form.fecha_entrega.id_for_label }}">{{ form.fecha_entrega.label }}</label>
+                                        {% render_field form.fecha_entrega class="form-control" %}
+
+                                        {% if form.fecha_entrega.errors %}
+                                            <p class="text-red-500 text-xs mt-1 font-bold">{{ form.fecha_entrega.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="custom-label"
-                                           for="{{ form.fecha_entrega.id_for_label }}">{{ form.fecha_entrega.label }}</label>
-                                    {% render_field form.fecha_entrega class="form-control" type="date" %}
-                                    {% if form.fecha_entrega.errors %}
-                                        <p class="text-red-500 text-xs mt-1 font-bold">{{ form.fecha_entrega.errors.0 }}</p>
-                                    {% endif %}
+
+                                <div class="pt-4 border-t border-slate-200 dark:border-neutral-700">
+                                    <h4 class="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+                                        <span class="material-icons-round text-primary text-lg">payments</span>
+                                        Pago Inicial (Opcional)
+                                    </h4>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="custom-label text-yellow-700 dark:text-primary" for="id_valor_abonado">Monto a Abonar</label>
+                                            <div class="relative">
+                                                <span class="absolute left-3 top-2.5 text-slate-400 select-none text-lg">$</span>
+
+                                                <input type="number"
+                                                       name="abono_inicial"
+                                                       id="id_valor_abonado"
+                                                       class="form-control pl-8 border-yellow-300 focus:border-primary focus:ring-primary dark:border-yellow-900/50 dark:focus:border-primary font-bold text-lg"
+                                                       placeholder="0"
+                                                       min="0">
+                                            </div>
+                                            {% if form.abono_inicial.errors %}
+                                                <p class="text-red-500 text-xs mt-1 font-bold">{{ form.abono_inicial.errors.0 }}</p>
+                                            {% endif %}
+                                        </div>
+
+                                        <div id="container-metodo" class="opacity-50 transition-opacity">
+                                            <label class="custom-label" for="metodo_pago">Método de Pago</label>
+                                            <div class="relative">
+                                                <select name="metodo_pago" id="metodo_pago" disabled
+                                                        class="form-select w-full h-[46px] rounded-lg border-slate-300 dark:border-neutral-600 bg-slate-100 cursor-not-allowed">
+                                                    <option value="EFECTIVO">Efectivo</option>
+                                                    <option value="TRANSFERENCIA">Transferencia</option>
+                                                    <option value="DEBITO">Tarjeta Débito</option>
+                                                    <option value="CREDITO">Tarjeta Crédito</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

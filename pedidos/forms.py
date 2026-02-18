@@ -1,5 +1,6 @@
 from django import forms
-from .models import Pedido, Cliente, Cotizacion, Producto
+from .models import Pedido, Cliente, Cotizacion, Producto, Pago
+
 
 class ClienteForm(forms.ModelForm):
     class Meta:
@@ -10,6 +11,7 @@ class ClienteForm(forms.ModelForm):
             'email': forms.TextInput(attrs={'placeholder': 'Ej: correo@ejemplo.com o "No registrado"'}),
         }
 
+
 class CotizacionForm(forms.ModelForm):
     class Meta:
         model = Cotizacion
@@ -19,26 +21,60 @@ class CotizacionForm(forms.ModelForm):
             'fecha_emision': forms.DateInput(attrs={'type': 'date'}),
         }
 
+
 class PedidoForm(forms.ModelForm):
+    # CAMPO VIRTUAL: No existe en el modelo Pedido, sirve para crear el Pago automáticamente
+    abono_inicial = forms.IntegerField(
+        required=False,
+        initial=0,
+        label="Abono Inicial ($)",
+        min_value=0,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0'})
+    )
+
     class Meta:
         model = Pedido
-        fields = ['cliente', 'resumen_pedido', 'detalles_pedido', 'valor_venta', 'valor_abonado', 'fecha_entrega', 'imagen_referencia']
+        exclude = ['fecha_solicitud', 'creado_por', 'valor_abonado', 'estado_pago', 'estado', 'prioridad']
+
         widgets = {
-            # Solo definimos el TIPO de input para que el navegador sepa qué calendario mostrar
-            'fecha_entrega': forms.DateInput(attrs={'type': 'date'}),
+            'cliente': forms.Select(attrs={'class': 'form-select select2'}),
+            'resumen_pedido': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Ej: Tarjetas de Presentación'}),
+            'detalles_pedido': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+
+            # Aseguramos que sea DateInput para que coincida con tu BD DateField
+            'fecha_entrega': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+
+            'valor_venta': forms.NumberInput(attrs={'class': 'form-control'}),
+            # 'estado' y 'prioridad' se eliminan de widgets porque ya no están en el form
         }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        valor_venta = cleaned_data.get('valor_venta')
-        valor_abonado = cleaned_data.get('valor_abonado')
+    def clean_abono_inicial(self):
+        """Validar que el abono no sea mayor al total."""
+        abono = self.cleaned_data.get('abono_inicial') or 0
+        total = self.cleaned_data.get('valor_venta') or 0
 
-        # Validar que el abono no supere el total
-        if valor_venta is not None and valor_abonado is not None:
-            if valor_abonado > valor_venta:
-                self.add_error('valor_abonado', 'El abono no puede ser mayor al valor total del pedido.')
+        if total > 0 and abono > total:
+            raise forms.ValidationError("El abono inicial no puede ser mayor al valor total del pedido.")
+        return abono
 
-        return cleaned_data
+
+class PagoForm(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['pedido', 'monto', 'metodo', 'nota']
+        widgets = {
+            'pedido': forms.Select(attrs={'class': 'form-select select2'}),
+            'monto': forms.NumberInput(attrs={'class': 'form-control'}),
+            'metodo': forms.Select(attrs={'class': 'form-select'}),
+            'nota': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Detalles opcionales...'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Opcional: ordenar pedidos por ID descendente para facilitar búsqueda
+        self.fields['pedido'].queryset = Pedido.objects.all().order_by('-id')
+
 
 class ProductoForm(forms.ModelForm):
     class Meta:
@@ -46,7 +82,7 @@ class ProductoForm(forms.ModelForm):
         fields = ['nombre', 'unidad', 'valor_neto', 'descripcion']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Tarjetas de Visita'}),
-            'unidad': forms.Select(attrs={'class': 'form-select select2'}), # Select estilizado
+            'unidad': forms.Select(attrs={'class': 'form-select select2'}),  # Select estilizado
             'valor_neto': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control summernote-editor', 'rows': 3}),
         }

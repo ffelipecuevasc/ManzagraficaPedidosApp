@@ -96,6 +96,36 @@
         <div class="pt-2">
             <button type="button"
                     class="btn-accordion w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-card-dark/50 rounded-md transition-all group"
+                    data-target="#menu-pagos">
+                <div class="flex items-center">
+                    <span class="material-icons-round text-lg mr-2 group-hover:text-primary transition-colors">payments</span>
+                    <span>Pagos</span>
+                </div>
+                <span class="material-icons-round text-lg transition-transform duration-200 text-slate-400 group-hover:text-primary chevron-icon">expand_more</span>
+            </button>
+
+            <div id="menu-pagos" class="accordion-content hidden space-y-1 mt-1">
+                <a href="{% url 'estadisticas_pagos' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'estadisticas_pagos' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">analytics</span>
+                    Estadísticas Pagos
+                </a>
+                <a href="{% url 'lista_pagos' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'lista_pagos' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">toc</span>
+                    Listado Pagos
+                </a>
+                <a href="{% url 'ingresar_pago_general' %}"
+                   class="flex items-center pl-8 pr-3 py-2 text-sm font-medium rounded-md hover:text-slate-900 dark:hover:text-white transition-colors group/item {% if request.resolver_match.url_name == 'ingresar_pago_general' %}text-primary font-bold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg mr-2 opacity-70 group-hover/item:opacity-100">add_circle_outline</span>
+                    Nuevo Pago
+                </a>
+            </div>
+        </div>
+
+        <div class="pt-2">
+            <button type="button"
+                    class="btn-accordion w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-card-dark/50 rounded-md transition-all group"
                     data-target="#menu-cotizaciones">
                 <div class="flex items-center">
                     <span class="material-icons-round text-lg mr-2 group-hover:text-primary transition-colors">request_quote</span>
