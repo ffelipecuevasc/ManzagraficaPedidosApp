@@ -448,90 +448,89 @@ def estadisticas_pedidos(request):
         eficiencia_pct = (completados_mes / total_mes_actual) * 100
     else:
         eficiencia_pct = 0
+    # ---------------------------------------------------------
+    # C. DATOS PARA EL GRÁFICO (Enero a Diciembre del Año Actual)
+    # ---------------------------------------------------------
+    year_actual = hoy.year
 
-        # ---------------------------------------------------------
-        # C. DATOS PARA EL GRÁFICO (Enero a Diciembre del Año Actual)
-        # ---------------------------------------------------------
-        year_actual = hoy.year
+    # 1. Crear una plantilla de 12 meses en cero
+    meses_nombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    datos_anuales = [{'mes_idx': i, 'label': meses_nombres[i - 1], 'total': 0} for i in range(1, 13)]
 
-        # 1. Crear una plantilla de 12 meses en cero
-        meses_nombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-        datos_anuales = [{'mes_idx': i, 'label': meses_nombres[i - 1], 'total': 0} for i in range(1, 13)]
+    # 2. Consultar la BD solo para los pedidos del año actual
+    datos_bd = (
+        Pedido.objects
+        .filter(fecha_solicitud__year=year_actual)
+        .annotate(mes=TruncMonth('fecha_solicitud'))
+        .values('mes')
+        .annotate(total=Count('id'))
+    )
 
-        # 2. Consultar la BD solo para los pedidos del año actual
-        datos_bd = (
-            Pedido.objects
-            .filter(fecha_solicitud__year=year_actual)
-            .annotate(mes=TruncMonth('fecha_solicitud'))
-            .values('mes')
-            .annotate(total=Count('id'))
-        )
+    # 3. Fusionar datos reales con nuestra plantilla de 12 meses
+    for d in datos_bd:
+        mes_db = d['mes'].month  # Retorna de 1 a 12
+        datos_anuales[mes_db - 1]['total'] = d['total']
 
-        # 3. Fusionar datos reales con nuestra plantilla de 12 meses
-        for d in datos_bd:
-            mes_db = d['mes'].month  # Retorna de 1 a 12
-            datos_anuales[mes_db - 1]['total'] = d['total']
+    # ---------------------------------------------------------
+    # D. LÓGICA SVG (GEOMETRÍA - Corregida)
+    # ---------------------------------------------------------
+    puntos_svg = ""
+    area_svg = ""
+    lista_puntos = []
 
-        # ---------------------------------------------------------
-        # D. LÓGICA SVG (GEOMETRÍA - Corregida)
-        # ---------------------------------------------------------
-        puntos_svg = ""
-        area_svg = ""
-        lista_puntos = []
+    # 1. Escala Vertical (Eje Y)
+    valores = [d['total'] for d in datos_anuales]
+    max_val = max(valores)
+    max_y = max_val * 1.2 if max_val > 0 else 10  # 20% de aire arriba
 
-        # 1. Escala Vertical (Eje Y)
-        valores = [d['total'] for d in datos_anuales]
-        max_val = max(valores)
-        max_y = max_val * 1.2 if max_val > 0 else 10  # 20% de aire arriba
+    # 2. Configuración Canvas SVG (1000x400)
+    canvas_height = 400
+    canvas_width = 1000
+    padding_top = 50
+    padding_bottom = 50
+    util_height = canvas_height - padding_top - padding_bottom
 
-        # 2. Configuración Canvas SVG (1000x400)
-        canvas_height = 400
-        canvas_width = 1000
-        padding_top = 50
-        padding_bottom = 50
-        util_height = canvas_height - padding_top - padding_bottom
+    # 3. Calcular Coordenadas exactas para los 12 meses
+    cantidad_puntos = 12
+    step_x = canvas_width / (cantidad_puntos - 1)
+    coords = []
 
-        # 3. Calcular Coordenadas exactas para los 12 meses
-        cantidad_puntos = 12
-        step_x = canvas_width / (cantidad_puntos - 1)
-        coords = []
+    for i, dato in enumerate(datos_anuales):
+        # Eje X e Y convertidos a INT para evitar error de comas flotantes en el HTML
+        cx = int(i * step_x)
+        valor = float(dato['total'])
+        cy = int((canvas_height - padding_bottom) - ((valor / max_y) * util_height))
 
-        for i, dato in enumerate(datos_anuales):
-            # Eje X e Y convertidos a INT para evitar error de comas flotantes en el HTML
-            cx = int(i * step_x)
-            valor = float(dato['total'])
-            cy = int((canvas_height - padding_bottom) - ((valor / max_y) * util_height))
+        coords.append(f"{cx},{cy}")
 
-            coords.append(f"{cx},{cy}")
+        # Pasamos el dato del "valor" para pintarlo como etiqueta flotante
+        lista_puntos.append({
+            'x': cx,
+            'y': cy,
+            'label': dato['label'],
+            'valor': int(valor),
+        })
 
-            # Pasamos el dato del "valor" para pintarlo como etiqueta flotante
-            lista_puntos.append({
-                'x': cx,
-                'y': cy,
-                'label': dato['label'],
-                'valor': int(valor),
-            })
+    # 4. Construir Path SVG
+    puntos_svg = "M " + " L ".join(coords)
+    area_svg = f"{puntos_svg} V {canvas_height} H 0 Z"
 
-        # 4. Construir Path SVG
-        puntos_svg = "M " + " L ".join(coords)
-        area_svg = f"{puntos_svg} V {canvas_height} H 0 Z"
+    context = {
+        # ... (Mantienes tus KPIs existentes aquí) ...
+        'total_mes_actual': total_mes_actual,
+        'crecimiento_pct': round(crecimiento_pct, 1),
+        'eficiencia_pct': round(eficiencia_pct, 1),
 
-        context = {
-            # ... (Mantienes tus KPIs existentes aquí) ...
-            'total_mes_actual': total_mes_actual,
-            'crecimiento_pct': round(crecimiento_pct, 1),
-            'eficiencia_pct': round(eficiencia_pct, 1),
+        # Nuevas variables del Gráfico Anual
+        'year_actual': year_actual,
+        'puntos_svg': puntos_svg,
+        'area_svg': area_svg,
+        'lista_puntos': lista_puntos,
+        'max_y_label': int(max_y),
+        'mitad_y_label': int(max_y / 2)
+    }
 
-            # Nuevas variables del Gráfico Anual
-            'year_actual': year_actual,
-            'puntos_svg': puntos_svg,
-            'area_svg': area_svg,
-            'lista_puntos': lista_puntos,
-            'max_y_label': int(max_y),
-            'mitad_y_label': int(max_y / 2)
-        }
-
-        return render(request, 'pedidos/estadisticas_pedidos.html', context)
+    return render(request, 'pedidos/estadisticas_pedidos.html', context)
 
 # ==========================================
 # GESTIÓN DE CLIENTES
