@@ -38,10 +38,10 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # ADVERTENCIA: No subir el proyecto al Servidor PythonAnywhere con esta configuración TRUE
 # Sólo para desarrollo (pruebas) el atributo puede estar en TRUE para reconocer los estáticos (CSS + JS)
 # Para la producción (despliegue) el archivo debe estar en FALSE para que el servidor pueda intervenir
-# DEBUG = os.getenv('DEBUG') == 'True'
-DEBUG = True
-# ALLOWED_HOSTS = ['manzagrafica.pythonanywhere.com']
-ALLOWED_HOSTS = ['*']
+DEBUG = os.getenv('DEBUG') == 'True'
+
+ALLOWED_HOSTS = ['manzagrafica.pythonanywhere.com']
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -109,10 +109,10 @@ DATABASES = {
 # ------------------------------------------------------
 # 2. Configuración Producción (PythonAnywhere)
 # Si existe la variable DATABASE_URL en el entorno (solo en la nube), sobrescribimos la config.
-database_url = os.environ.get('DATABASE_URL')
-if database_url:
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
     DATABASES['default'] = dj_database_url.config(
-        default=database_url,
+        default=DATABASE_URL,
         conn_max_age=60,
         ssl_require=False
     )

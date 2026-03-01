@@ -449,90 +449,89 @@ def estadisticas_pedidos(request):
     else:
         eficiencia_pct = 0
 
-    # ---------------------------------------------------------
-    # C. DATOS PARA EL GRÁFICO (Últimos 12 Meses)
-    # ---------------------------------------------------------
-    # Agrupamos por mes y contamos IDs
-    datos_grafico = (
-        Pedido.objects
-        .filter(fecha_solicitud__gte=fecha_corte_anual)
-        .annotate(mes=TruncMonth('fecha_solicitud'))  # Truncamos la fecha al día 1 del mes
-        .values('mes')  # Agrupamos por ese mes
-        .annotate(total=Count('id'))  # Contamos pedidos en ese grupo
-        .order_by('mes')  # Orden cronológico
-    )
+        # ---------------------------------------------------------
+        # C. DATOS PARA EL GRÁFICO (Enero a Diciembre del Año Actual)
+        # ---------------------------------------------------------
+        year_actual = hoy.year
 
-    # ---------------------------------------------------------
-    # D. LÓGICA SVG (GEOMETRÍA) - Reutilizada de estadisticas_bd
-    # ---------------------------------------------------------
-    puntos_svg = ""
-    area_svg = ""
-    lista_puntos = []
-    max_y = 10  # Valor por defecto mínimo
+        # 1. Crear una plantilla de 12 meses en cero
+        meses_nombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+        datos_anuales = [{'mes_idx': i, 'label': meses_nombres[i - 1], 'total': 0} for i in range(1, 13)]
 
-    if datos_grafico:
-        # 1. Escala Vertical
-        valores = [d['total'] for d in datos_grafico]
+        # 2. Consultar la BD solo para los pedidos del año actual
+        datos_bd = (
+            Pedido.objects
+            .filter(fecha_solicitud__year=year_actual)
+            .annotate(mes=TruncMonth('fecha_solicitud'))
+            .values('mes')
+            .annotate(total=Count('id'))
+        )
+
+        # 3. Fusionar datos reales con nuestra plantilla de 12 meses
+        for d in datos_bd:
+            mes_db = d['mes'].month  # Retorna de 1 a 12
+            datos_anuales[mes_db - 1]['total'] = d['total']
+
+        # ---------------------------------------------------------
+        # D. LÓGICA SVG (GEOMETRÍA - Corregida)
+        # ---------------------------------------------------------
+        puntos_svg = ""
+        area_svg = ""
+        lista_puntos = []
+
+        # 1. Escala Vertical (Eje Y)
+        valores = [d['total'] for d in datos_anuales]
         max_val = max(valores)
         max_y = max_val * 1.2 if max_val > 0 else 10  # 20% de aire arriba
 
-        # 2. Configuración Canvas (1000x400)
+        # 2. Configuración Canvas SVG (1000x400)
         canvas_height = 400
         canvas_width = 1000
         padding_top = 50
         padding_bottom = 50
         util_height = canvas_height - padding_top - padding_bottom
 
-        # 3. Calcular Coordenadas
-        cantidad_puntos = len(datos_grafico)
-        # Si hay solo 1 punto, lo centramos. Si hay más, distribuimos.
-        step_x = canvas_width / (cantidad_puntos - 1) if cantidad_puntos > 1 else canvas_width / 2
-
+        # 3. Calcular Coordenadas exactas para los 12 meses
+        cantidad_puntos = 12
+        step_x = canvas_width / (cantidad_puntos - 1)
         coords = []
 
-        for i, dato in enumerate(datos_grafico):
-            # Eje X
-            if cantidad_puntos == 1:
-                cx = 500
-            else:
-                cx = i * step_x
-
-            # Eje Y (Invertido)
+        for i, dato in enumerate(datos_anuales):
+            # Eje X e Y convertidos a INT para evitar error de comas flotantes en el HTML
+            cx = int(i * step_x)
             valor = float(dato['total'])
-            cy = (canvas_height - padding_bottom) - ((valor / max_y) * util_height)
+            cy = int((canvas_height - padding_bottom) - ((valor / max_y) * util_height))
 
             coords.append(f"{cx},{cy}")
 
-            # Datos para los puntos interactivos (círculos)
-            # dato['mes'] es un datetime, lo formateamos a "Ene", "Feb"
+            # Pasamos el dato del "valor" para pintarlo como etiqueta flotante
             lista_puntos.append({
                 'x': cx,
                 'y': cy,
-                'label': dato['mes'].strftime("%b"),  # Ej: "Feb"
-                'valor': int(valor),  # Cantidad de pedidos (entero)
-                'full_date': dato['mes'].strftime("%B %Y")  # Ej: "Febrero 2026"
+                'label': dato['label'],
+                'valor': int(valor),
             })
 
-        # 4. Construir Path
+        # 4. Construir Path SVG
         puntos_svg = "M " + " L ".join(coords)
         area_svg = f"{puntos_svg} V {canvas_height} H 0 Z"
 
-    context = {
-        # KPIs
-        'total_mes_actual': total_mes_actual,
-        'crecimiento_pct': round(crecimiento_pct, 1),
-        'eficiencia_pct': round(eficiencia_pct, 1),
+        context = {
+            # ... (Mantienes tus KPIs existentes aquí) ...
+            'total_mes_actual': total_mes_actual,
+            'crecimiento_pct': round(crecimiento_pct, 1),
+            'eficiencia_pct': round(eficiencia_pct, 1),
 
-        # Gráfico
-        'puntos_svg': puntos_svg,
-        'area_svg': area_svg,
-        'lista_puntos': lista_puntos,
-        'max_y_label': int(max_y),  # Eje Y tope (entero)
-        'mitad_y_label': int(max_y / 2)  # Eje Y medio
-    }
+            # Nuevas variables del Gráfico Anual
+            'year_actual': year_actual,
+            'puntos_svg': puntos_svg,
+            'area_svg': area_svg,
+            'lista_puntos': lista_puntos,
+            'max_y_label': int(max_y),
+            'mitad_y_label': int(max_y / 2)
+        }
 
-    # render provisional (aún no creamos el HTML, fallará si lo cargas)
-    return render(request, 'pedidos/estadisticas_pedidos.html', context)
+        return render(request, 'pedidos/estadisticas_pedidos.html', context)
 
 # ==========================================
 # GESTIÓN DE CLIENTES
