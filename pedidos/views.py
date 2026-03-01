@@ -451,7 +451,7 @@ def estadisticas_pedidos(request):
     # ---------------------------------------------------------
     # C. DATOS PARA EL GRÁFICO (Enero a Diciembre del Año Actual)
     # ---------------------------------------------------------
-    year_actual = hoy.year
+    year_actual = str(hoy.year)
 
     # 1. Crear una plantilla de 12 meses en cero
     meses_nombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
@@ -460,7 +460,7 @@ def estadisticas_pedidos(request):
     # 2. Consultar la BD solo para los pedidos del año actual
     datos_bd = (
         Pedido.objects
-        .filter(fecha_solicitud__year=year_actual)
+        .filter(fecha_solicitud__year=hoy.year)  # Usamos hoy.year en vez del string
         .annotate(mes=TruncMonth('fecha_solicitud'))
         .values('mes')
         .annotate(total=Count('id'))
@@ -496,17 +496,15 @@ def estadisticas_pedidos(request):
     coords = []
 
     for i, dato in enumerate(datos_anuales):
-        # Eje X e Y convertidos a INT para evitar error de comas flotantes en el HTML
         cx = int(i * step_x)
         valor = float(dato['total'])
         cy = int((canvas_height - padding_bottom) - ((valor / max_y) * util_height))
 
         coords.append(f"{cx},{cy}")
 
-        # Pasamos el dato del "valor" para pintarlo como etiqueta flotante
         lista_puntos.append({
-            'x': cx,
-            'y': cy,
+            'x': str(cx),
+            'y': str(cy),
             'label': dato['label'],
             'valor': int(valor),
         })
