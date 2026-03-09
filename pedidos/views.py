@@ -29,24 +29,18 @@ def dashboard(request):
     # ==========================================
     # 0. GATILLO DE ESTADÍSTICAS
     # ==========================================
-    # Registra el peso de la BD y métricas diarias si no se ha hecho hoy.
     registrar_metricas_diarias()
 
-    # Definimos fechas de referencia
     ahora = timezone.now()
     hoy = ahora.date()
 
     # ==========================================
-    # 1. TARJETAS SUPERIORES (KPIs OPERATIVOS)
+    # 1. TARJETA 1 (VERDE): ÚLTIMO RESPALDO BD (Lectura de archivos, no BD)
     # ==========================================
-
-    # --- TARJETA 1 (VERDE): ÚLTIMO RESPALDO BD ---
-    # Lógica extraída de: estadisticas_bd / utils.py
     backup_dir = os.path.join(settings.BASE_DIR, 'backups')
     ultimo_respaldo_fecha = None
 
     if os.path.exists(backup_dir):
-        # Listamos archivos .sql y buscamos el más reciente por fecha de modificación
         archivos = [
             os.path.join(backup_dir, f)
             for f in os.listdir(backup_dir)
@@ -54,44 +48,44 @@ def dashboard(request):
         ]
         if archivos:
             mas_reciente = max(archivos, key=os.path.getmtime)
-            # Convertimos timestamp a datetime consciente de la zona horaria si es necesario
             ultimo_respaldo_fecha = datetime.fromtimestamp(os.path.getmtime(mas_reciente))
 
-    # --- TARJETA 2 (ROJA): PEDIDOS ATRASADOS ---
-    # Lógica extraída de: trabajo_semanal (Zona Crítica)
-    # Pedidos NO terminados cuya fecha de entrega ya pasó (< hoy)
-    criticos_count = Pedido.objects.exclude(estado='TERMINADO').filter(
-        fecha_entrega__lt=hoy
-    ).count()
-
-    # --- TARJETA 3 (AMARILLA): PEDIDOS URGENTES (Próximos 7 días) ---
-    # Lógica extraída de: trabajo_semanal (Zona Urgente)
-    # Pedidos NO terminados con entrega entre hoy y hoy+7 días
+    # =========================================================================
+    # OPTIMIZACIÓN: 1 SOLA CONSULTA PARA TODAS LAS TARJETAS Y EL GRÁFICO
+    # =========================================================================
     limite_semana = hoy + timedelta(days=7)
-    urgentes_count = Pedido.objects.exclude(estado='TERMINADO').filter(
-        fecha_entrega__range=[hoy, limite_semana]
-    ).count()
-
-    # --- TARJETA 4 (AZUL): VOLUMEN MES ACTUAL ---
-    # Lógica extraída de: estadisticas_pedidos
-    # Total de pedidos recibidos desde el día 1 del mes actual hasta ahora
     inicio_mes_actual = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    pedidos_mes_count = Pedido.objects.filter(
-        fecha_solicitud__gte=inicio_mes_actual
-    ).count()
 
-    # ==========================================
-    # 2. DATOS PARA GRÁFICOS
-    # ==========================================
+    # Convertimos 7 viajes a la base de datos en 1 solo usando aggregate y Q objects
+    conteos = Pedido.objects.aggregate(
+        # Tarjeta 2: Críticos (Atrasados y no terminados)
+        criticos=Count('id', filter=~Q(estado='TERMINADO') & Q(fecha_entrega__lt=hoy)),
 
-    # A. Datos para Gráfico de Dona (AHORA FILTRADO POR MES ACTUAL)
-    # Reutilizamos 'inicio_mes_actual' definido arriba para filtrar la torta
-    queryset_mes = Pedido.objects.filter(fecha_solicitud__gte=inicio_mes_actual)
+        # Tarjeta 3: Urgentes (Próximos 7 días y no terminados)
+        urgentes=Count('id', filter=~Q(estado='TERMINADO') & Q(fecha_entrega__range=[hoy, limite_semana])),
 
-    total_pedidos = queryset_mes.count()  # Total solo del mes
-    pendientes = queryset_mes.filter(estado='PENDIENTE').count()
-    en_proceso = queryset_mes.filter(estado='EN_PROCESO').count()
-    completados = queryset_mes.filter(estado='TERMINADO').count()
+        # Tarjeta 4 y Total Dona: Mes Actual
+        mes_actual=Count('id', filter=Q(fecha_solicitud__gte=inicio_mes_actual)),
+
+        # Dona: Pendientes del mes
+        mes_pendientes=Count('id', filter=Q(fecha_solicitud__gte=inicio_mes_actual) & Q(estado='PENDIENTE')),
+
+        # Dona: En proceso del mes
+        mes_en_proceso=Count('id', filter=Q(fecha_solicitud__gte=inicio_mes_actual) & Q(estado='EN_PROCESO')),
+
+        # Dona: Completados del mes
+        mes_completados=Count('id', filter=Q(fecha_solicitud__gte=inicio_mes_actual) & Q(estado='TERMINADO'))
+    )
+
+    # Asignación de variables con fallback a 0
+    criticos_count = conteos['criticos'] or 0
+    urgentes_count = conteos['urgentes'] or 0
+    pedidos_mes_count = conteos['mes_actual'] or 0
+
+    total_pedidos = conteos['mes_actual'] or 0
+    pendientes = conteos['mes_pendientes'] or 0
+    en_proceso = conteos['mes_en_proceso'] or 0
+    completados = conteos['mes_completados'] or 0
 
     # Cálculo de Porcentajes (Conic Gradient CSS)
     if total_pedidos > 0:
@@ -103,13 +97,13 @@ def dashboard(request):
         stop_1 = 0
         stop_2 = 0
 
-    # Porcentajes texto (Redondeados para visualización)
     pct_text_pendientes = round((pendientes / total_pedidos * 100)) if total_pedidos > 0 else 0
     pct_text_proceso = round((en_proceso / total_pedidos * 100)) if total_pedidos > 0 else 0
     pct_text_completados = round((completados / total_pedidos * 100)) if total_pedidos > 0 else 0
 
-    # B. Datos para Gráfico de Barras (Top Clientes - ESTE SE MANTIENE HISTÓRICO)
-    # No aplicamos filtro de fecha aquí para mantener la fidelidad histórica
+    # ==========================================
+    # B. Datos para Gráfico de Barras (Top Clientes Histórico)
+    # ==========================================
     top_clientes = Cliente.objects.annotate(
         num_pedidos=Count('pedido')
     ).order_by('-num_pedidos')[:5]
@@ -120,13 +114,10 @@ def dashboard(request):
     # 3. CONTEXTO
     # ==========================================
     context = {
-        # Nuevas KPIs Operativas (Tarjetas Superiores)
-        'ultimo_respaldo_fecha': ultimo_respaldo_fecha,  # Tarjeta 1
-        'criticos_count': criticos_count,  # Tarjeta 2
-        'urgentes_count': urgentes_count,  # Tarjeta 3
-        'pedidos_mes_count': pedidos_mes_count,  # Tarjeta 4
-
-        # Datos para Gráficos (Dona y Barras - Sección Inferior)
+        'ultimo_respaldo_fecha': ultimo_respaldo_fecha,
+        'criticos_count': criticos_count,
+        'urgentes_count': urgentes_count,
+        'pedidos_mes_count': pedidos_mes_count,
         'fecha_actual': ahora,
         'total_pedidos': total_pedidos,
         'pendientes': pendientes,
@@ -142,7 +133,6 @@ def dashboard(request):
     }
 
     return render(request, 'pedidos/dashboard.html', context)
-
 
 # ==========================================
 # FUNCIÓN AUXILIAR - Para determinar estado de pago
@@ -324,14 +314,26 @@ def cambiar_estado_pedido(request, pk, nuevo_estado):
 
 @login_required
 def lista_pedidos(request):
-    # Contadores globales
-    total_pedidos = Pedido.objects.count()
-    pendientes = Pedido.objects.filter(estado='PENDIENTE').count()
-    en_proceso = Pedido.objects.filter(estado='EN_PROCESO').count()
-    completados = Pedido.objects.filter(estado='TERMINADO').count()
+    # =========================================================================
+    # OPTIMIZACIÓN 1: Unificar las 4 consultas de conteo en 1 sola (aggregate)
+    # =========================================================================
+    conteos = Pedido.objects.aggregate(
+        total=Count('id'),
+        pendientes=Count('id', filter=Q(estado='PENDIENTE')),
+        en_proceso=Count('id', filter=Q(estado='EN_PROCESO')),
+        completados=Count('id', filter=Q(estado='TERMINADO'))
+    )
 
-    # 1. Base QuerySet
-    pedidos = Pedido.objects.all()
+    total_pedidos = conteos['total'] or 0
+    pendientes = conteos['pendientes'] or 0
+    en_proceso = conteos['en_proceso'] or 0
+    completados = conteos['completados'] or 0
+
+    # =========================================================================
+    # OPTIMIZACIÓN 2: Prevenir N+1 usando select_related('cliente')
+    # =========================================================================
+    # Base QuerySet: Trae los pedidos Y los clientes asociados en un solo viaje.
+    pedidos = Pedido.objects.select_related('cliente').all()
 
     # 2. Lógica de Ordenamiento (Sorting)
     orden = request.GET.get('orden', '-fecha_solicitud')  # Default: Lo más nuevo primero
@@ -624,8 +626,12 @@ def trabajo_semanal(request):
     hoy = timezone.now().date()
     limite_semana = hoy + timedelta(days=7)
 
-    # 2. Obtener Pedidos Activos
-    activos = Pedido.objects.exclude(estado='TERMINADO')
+    # =========================================================================
+    # OPTIMIZACIÓN 1: Prevenir N+1 (select_related)
+    # =========================================================================
+    # Al pedir activos, forzamos un INNER JOIN con 'cliente' desde el principio.
+    # Así, cuando el HTML pida {{ pedido.cliente.nombre }}, el dato ya estará en memoria.
+    activos = Pedido.objects.select_related('cliente').exclude(estado='TERMINADO')
 
     # 3. Clasificación
     criticos = activos.filter(fecha_entrega__lt=hoy).order_by('fecha_entrega')
@@ -633,31 +639,42 @@ def trabajo_semanal(request):
     normales = activos.filter(fecha_entrega__gt=limite_semana).order_by('fecha_entrega')
 
     # 4. Métricas
-    total_activos = activos.count()
-    total_presion = criticos.count() + urgentes.count()
+    # Usamos len() en lugar de .count() porque vamos a iterar sobre estos querysets
+    # en el HTML sí o sí. Al usar len(), Django evalúa la consulta 1 sola vez,
+    # ahorrando 3 viajes adicionales "SELECT COUNT" a la BD.
+    total_criticos = len(criticos)
+    total_urgentes = len(urgentes)
+    total_activos = len(activos)
+
+    total_presion = total_criticos + total_urgentes
 
     if total_activos > 0:
         nivel_presion = int((total_presion / total_activos) * 100)
     else:
         nivel_presion = 0
 
-    # 5. Métrica Peak Load (CORREGIDA)
-    dia_peak_date = None  # Pasamos el objeto fecha, no el texto
-    dia_peak_cantidad = 0
+    # =========================================================================
+    # OPTIMIZACIÓN 2: Procesamiento SQL (Día Peak)
+    # =========================================================================
+    # Le decimos a MySQL: "Toma los urgentes, agrúpalos por fecha, cuenta cuántos
+    # hay en cada grupo, ordénalos de mayor a menor, y dame solo el ganador".
+    peak_data = urgentes.values('fecha_entrega').annotate(
+        cantidad=Count('id')
+    ).order_by('-cantidad', 'fecha_entrega').first()
 
-    if urgentes.exists():
-        fechas = [p.fecha_entrega for p in urgentes]
-        # Encontramos la fecha más común
-        fecha_mas_comun = max(set(fechas), key=fechas.count)
-        dia_peak_cantidad = fechas.count(fecha_mas_comun)
-        dia_peak_date = fecha_mas_comun  # Guardamos la fecha real
+    if peak_data:
+        dia_peak_date = peak_data['fecha_entrega']
+        dia_peak_cantidad = peak_data['cantidad']
+    else:
+        dia_peak_date = None
+        dia_peak_cantidad = 0
 
     context = {
         'criticos': criticos,
         'urgentes': urgentes,
         'normales': normales,
         'nivel_presion': nivel_presion,
-        'dia_peak_date': dia_peak_date,  # Nueva variable para el template
+        'dia_peak_date': dia_peak_date,
         'dia_peak_cantidad': dia_peak_cantidad,
         'hoy': hoy,
     }
@@ -1438,13 +1455,12 @@ def detalle_pago(request, pk):
 def estadisticas_pagos(request):
     """
     Vista de Dashboard Financiero.
-    Calcula KPIs, Barras de Progreso y Tabla de Deudores.
+    Calcula KPIs, Barras de Progreso y Tabla de Deudores (ULTRA OPTIMIZADO).
     """
 
     # =========================================================================
     # PASO 0: PREPARAR EL TERRENO (La "Query Maestra")
     # =========================================================================
-    # Calculamos lo pagado y el saldo a nivel de base de datos para filtrar rápido.
     pedidos_financieros = Pedido.objects.annotate(
         pagado_db=Coalesce(Sum('pagos__monto'), Value(0), output_field=IntegerField())
     ).annotate(
@@ -1452,96 +1468,83 @@ def estadisticas_pagos(request):
     )
 
     # =========================================================================
-    # SECCIÓN 1: KPIs (TARJETAS SUPERIORES) - YA IMPLEMENTADO
+    # SECCIÓN 1: KPIs (TARJETAS SUPERIORES) - Optimizado de 5 queries a 1
     # =========================================================================
+    kpis = pedidos_financieros.aggregate(
+        deuda_critica_total=Sum('saldo_db', filter=Q(estado='TERMINADO', saldo_db__gt=0)),
+        deuda_critica_cantidad=Count('id', filter=Q(estado='TERMINADO', saldo_db__gt=0)),
+        riesgo_total_monto=Sum('valor_venta', filter=Q(estado='EN_PROCESO', pagado_db=0)),
+        riesgo_cantidad=Count('id', filter=Q(estado='EN_PROCESO', pagado_db=0)),
+        proyeccion_total=Sum('saldo_db', filter=Q(saldo_db__gt=0)),
+    )
 
-    # KPI 1: DEUDA CRÍTICA (Terminados sin pagar)
-    kpi_critico_qs = pedidos_financieros.filter(estado='TERMINADO', saldo_db__gt=0)
-    deuda_critica_total = kpi_critico_qs.aggregate(Sum('saldo_db'))['saldo_db__sum'] or 0
-    deuda_critica_cantidad = kpi_critico_qs.count()
-
-    # KPI 2: RIESGO OPERATIVO (En Proceso sin abono)
-    kpi_riesgo_qs = pedidos_financieros.filter(estado='EN_PROCESO', pagado_db=0)
-    riesgo_total_monto = kpi_riesgo_qs.aggregate(Sum('valor_venta'))['valor_venta__sum'] or 0
-    riesgo_cantidad = kpi_riesgo_qs.count()
-
-    # KPI 3: PROYECCIÓN (Dinero en la calle)
-    proyeccion_qs = pedidos_financieros.filter(saldo_db__gt=0)
-    proyeccion_total = proyeccion_qs.aggregate(Sum('saldo_db'))['saldo_db__sum'] or 0
+    deuda_critica_total = kpis['deuda_critica_total'] or 0
+    deuda_critica_cantidad = kpis['deuda_critica_cantidad'] or 0
+    riesgo_total_monto = kpis['riesgo_total_monto'] or 0
+    riesgo_cantidad = kpis['riesgo_cantidad'] or 0
+    proyeccion_total = kpis['proyeccion_total'] or 0
 
     # =========================================================================
-    # SECCIÓN 2: BARRAS DE PROGRESO (Estado de los Pedidos Activos)
+    # SECCIÓN 2: BARRAS DE PROGRESO - Optimizado de 3 queries a 1
     # =========================================================================
-    # Consideramos "Activos" aquellos que NO estén entregados/archivados.
     activos_qs = pedidos_financieros.exclude(estado='ENTREGADO')
-    total_activos = activos_qs.count()
+
+    agregados_activos = activos_qs.aggregate(
+        total=Count('id'),
+        pagados=Count('id', filter=Q(saldo_db__lte=0)),
+        sin_abono=Count('id', filter=Q(pagado_db=0))
+    )
+
+    total_activos = agregados_activos['total'] or 0
+    pagados_count = agregados_activos['pagados'] or 0
+    sin_abono_count = agregados_activos['sin_abono'] or 0
 
     if total_activos > 0:
-        # A. Pagados (Saldo <= 0)
-        pagados_count = activos_qs.filter(saldo_db__lte=0).count()
         pct_pagados = int((pagados_count / total_activos) * 100)
-
-        # B. Sin Abono (Pagado == 0)
-        sin_abono_count = activos_qs.filter(pagado_db=0).count()
         pct_sin_abono = int((sin_abono_count / total_activos) * 100)
 
-        # C. Parciales (El resto: tiene abono pero tiene deuda)
-        # Lógica: Total - (Pagados + Sin Abono) para que sume 100% exacto visualmente
+        # Parciales es el remanente
         parcial_count = total_activos - (pagados_count + sin_abono_count)
         pct_parcial = 100 - (pct_pagados + pct_sin_abono)
-
-        # Ajuste de seguridad por si da negativo en casos raros
         if pct_parcial < 0: pct_parcial = 0
-
     else:
-        pct_pagados = 0
-        pct_sin_abono = 0
-        pct_parcial = 0
-        pagados_count = 0
-        sin_abono_count = 0
-        parcial_count = 0
+        pct_pagados = pct_sin_abono = pct_parcial = 0
+        pagados_count = sin_abono_count = parcial_count = 0
 
     # =========================================================================
-    # SECCIÓN 3: TABLA DE GESTIÓN (TOP DEUDORES)
+    # SECCIÓN 3: TABLA DE GESTIÓN (TOP DEUDORES) - Optimizado (Cero N+1)
     # =========================================================================
-    # Reutilizamos el QuerySet de 'Deuda Crítica' (Terminados con deuda).
-    # Ordenamos por fecha de entrega ascendente (los más viejos primero = más urgencia).
-    deudores_list = kpi_critico_qs.order_by('fecha_entrega')
+    # CRÍTICO: Agregamos select_related('cliente') para que el HTML no bombardee la BD
+    deudores_list = pedidos_financieros.filter(
+        estado='TERMINADO',
+        saldo_db__gt=0
+    ).select_related('cliente').order_by('fecha_entrega')
 
-    # Para calcular los "Días de Atraso" usaremos la fecha de hoy en el template
     hoy = timezone.now().date()
 
     # =========================================================================
-    # NUEVO KPI: INGRESOS REALES DEL MES EN CURSO (Caja Verde Horizontal)
+    # NUEVO KPI: INGRESOS REALES DEL MES EN CURSO
     # =========================================================================
     ahora = timezone.now()
     inicio_mes = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-
-    # Sumamos la tabla PAGO filtrando por fecha de pago >= inicio de este mes.
-    # Esto muestra el dinero real que entró a la caja, sin importar si el pedido es viejo o nuevo.
     ingresos_mes_actual = Pago.objects.filter(fecha__gte=inicio_mes).aggregate(total=Sum('monto'))['total'] or 0
 
     # =========================================================================
     # CONTEXTO FINAL
     # =========================================================================
     context = {
-        # KPIs
         'deuda_critica_total': deuda_critica_total,
         'deuda_critica_cantidad': deuda_critica_cantidad,
         'riesgo_total_monto': riesgo_total_monto,
         'riesgo_cantidad': riesgo_cantidad,
         'proyeccion_total': proyeccion_total,
         'ingresos_mes_actual': ingresos_mes_actual,
-
-        # Barras de Progreso
         'pct_pagados': pct_pagados,
         'count_pagados': pagados_count,
         'pct_parcial': pct_parcial,
         'count_parcial': parcial_count,
         'pct_sin_abono': pct_sin_abono,
         'count_sin_abono': sin_abono_count,
-
-        # Tabla y Utilidades
         'deudores_list': deudores_list,
         'hoy': hoy,
     }
