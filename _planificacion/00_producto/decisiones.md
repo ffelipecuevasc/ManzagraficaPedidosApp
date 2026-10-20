@@ -17,7 +17,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-009 | Una sola orden de gestión de mantención diaria (D8) | Aceptada |
 | RDA-010 | Tailwind CSS v3 compilado localmente con pnpm (D9) | Aceptada |
 | RDA-011 | Épicas numeradas igual que las fases del plan | Aceptada |
-| RDA-012 | Procedimientos operativos en `docs/operacion/` | Propuesta |
+| RDA-012 | Procedimientos operativos en `docs/operacion/` | Aceptada |
 
 ---
 
@@ -134,9 +134,11 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 ## RDA-012 · Procedimientos operativos en `docs/operacion/`
 
 - **Fecha:** 2026-10-19
-- **Estado:** Propuesta
+- **Estado:** Aceptada
 
 **Contexto:** la Fase 0 produce procedimientos que se usan en cada despliegue (respaldo verificado, réplica local, despliegue, retroceso) y que la Fase 7 consolida como documentos vivos del repositorio. No son planificación ni bitácoras: son instrucciones de operación.
 **Decisión:** viven en `docs/operacion/`, un archivo por procedimiento: `respaldo.md`, `replica-local.md`, `despliegue.md` y `retroceso.md`. Los agentes pueden editarlos; cada cambio queda descrito en la bitácora de la iteración que lo hizo.
 **Alternativas consideradas:** dentro de `_planificacion/` (descartado: mezcla instrucciones permanentes con el registro del trabajo); en el README raíz (descartado: el README no lleva comandos).
 **Consecuencias:** `AGENTS.md` y el README raíz remiten a esa carpeta.
+
+**Actualización 2026-10-20:** aceptada por el desarrollador.

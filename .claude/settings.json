@@ -96,8 +96,8 @@
       "Read(/.env)",
       "Read(/backups/**)",
       "Read(**/respaldo_*.sql)",
-      "Read(~/respaldos-manzagrafica/**)",
-      "Edit(~/respaldos-manzagrafica/**)",
+      "Read(//d/Trabajo/Proyectos PYTHON/Proyectos Personales/Pedidos Manzagrafica/respaldos/**)",
+      "Edit(//d/Trabajo/Proyectos PYTHON/Proyectos Personales/Pedidos Manzagrafica/respaldos/**)",
       "WebFetch(domain:www.pythonanywhere.com)",
       "WebFetch(domain:pythonanywhere.com)",
       "WebFetch(domain:manzagrafica.pythonanywhere.com)"

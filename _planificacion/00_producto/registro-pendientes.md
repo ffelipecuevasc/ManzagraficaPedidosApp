@@ -83,11 +83,8 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | Tema | RDA o hallazgo | Responsable |
 | :--- | :------------- | :---------- |
 | Comando o archivo compose del contenedor MySQL local (`AGENTS.md`, sección 5) | RDA-006 | Desarrollador |
-| Retención de volcados en el servidor: dos o tres | AUD-01-014 | Desarrollador |
+| Confirmar con el peso medido en 00-01 que la retención provisoria de 5 volcados en el servidor cabe en el disco | AUD-01-014, AUD-02-019 | Desarrollador |
 | Carpeta local cifrada donde se guardan los respaldos descargados | RDA-002 | Desarrollador |
-| Formato de las etiquetas de despliegue | RDA-007 | Desarrollador |
-| Aceptar RDA-012 (procedimientos en `docs/operacion/`) | RDA-012 | Desarrollador |
-| Licencia del repositorio (`README.md`, sección 8) | — | Desarrollador |
 | Fechas de los hitos (`producto.md`, sección 7) | — | Desarrollador |
 | Retención de las tablas de errores y de eventos | RDA-005 | Desarrollador |
 | Método para provocar el error controlado en producción (01-06) | AUD-01-005 | Desarrollador |
@@ -118,3 +115,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | :---- | :----- |
 | 2026-10-19 | Creación de la documentación del proyecto a partir de `plan-de-trabajo.md` y de la Auditoría 02: 8 épicas y 46 iteraciones previstas. |
 | 2026-10-20 | Iteración 00-01 en revisión: guiones de solo lectura, plantilla de línea base y pedido de evidencia listos; faltan la ejecución en producción y la del SQL en local. Detalle en [bitacora-00-01](../99_bitacora/epica-00-blindaje/bitacora-00-01.md). |
+| 2026-10-20 | Resueltas por el desarrollador: RDA-012 aceptada, formato de etiquetas `fase<N>-<propósito>-AAAA-MM-DD` (RDA-007), retención de 5 volcados (provisoria, a confirmar con el peso medido en 00-01) y licencia MIT; se agrega AUD-02-019 (rotación de respaldos), asignado a 06-03. |
