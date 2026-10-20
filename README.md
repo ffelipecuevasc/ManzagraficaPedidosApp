@@ -2,8 +2,8 @@
 
 Aplicación web interna para gestionar los clientes, cotizaciones, pedidos, pagos y producción de Manza Gráfica, una empresa de diseño, publicidad e impresión.
 
-🔹 **Sitio:** https://manzagrafica.pythonanywhere.com (acceso privado con usuario y contraseña)
-🔹 **Repositorio:** https://github.com/ffelipecuevasc/ManzagraficaPedidosApp
+🔹 **Sitio:** https://manzagrafica.pythonanywhere.com (acceso privado con usuario y contraseña)\
+🔹 **Repositorio:** https://github.com/ffelipecuevasc/ManzagraficaPedidosApp\
 🔹 **Desarrollo:** Francisco Felipe Cuevas Cerón · https://felipecuevas.dev
 
 ---
@@ -25,15 +25,15 @@ Funciones principales:
 
 ## 2. Tecnologías y para qué sirve cada una
 
-🔸 **Python y Django:** el lenguaje y el marco web que resuelven todo el servidor: rutas, vistas, formularios, plantillas, sesiones y el panel de administración.
-🔸 **Django ORM:** traduce los modelos de Python (cliente, pedido, pago) a tablas y consultas SQL, de modo que el código casi no escribe SQL a mano.
-🔸 **Sistema de autenticación de Django:** inicio de sesión, permisos y la distinción entre usuarios y superusuarios.
-🔸 **MySQL:** la base de datos relacional donde vive todo el historial comercial.
-🔸 **Docker:** levanta en local un MySQL idéntico al de producción, para probar los cambios contra una copia real de los datos.
-🔸 **WeasyPrint:** convierte una plantilla HTML en el PDF de una cotización.
-🔸 **Tailwind CSS:** el sistema de clases utilitarias con que se escriben los estilos, con modo claro y oscuro.
-🔸 **JavaScript, jQuery, Select2, Summernote y SweetAlert2:** la parte interactiva de los formularios: agregar ítems sin recargar la página, buscadores en los selectores, edición de texto enriquecido y avisos modales.
-🔸 **PythonAnywhere:** el servicio donde la aplicación está publicada.
+🔸 **Python y Django:** el lenguaje y el marco web que resuelven todo el servidor: rutas, vistas, formularios, plantillas, sesiones y el panel de administración.\
+🔸 **Django ORM:** traduce los modelos de Python (cliente, pedido, pago) a tablas y consultas SQL, de modo que el código casi no escribe SQL a mano.\
+🔸 **Sistema de autenticación de Django:** inicio de sesión, permisos y la distinción entre usuarios y superusuarios.\
+🔸 **MySQL:** la base de datos relacional donde vive todo el historial comercial.\
+🔸 **Docker:** levanta en local un MySQL idéntico al de producción, para probar los cambios contra una copia real de los datos.\
+🔸 **WeasyPrint:** convierte una plantilla HTML en el PDF de una cotización.\
+🔸 **Tailwind CSS:** el sistema de clases utilitarias con que se escriben los estilos, con modo claro y oscuro.\
+🔸 **JavaScript, jQuery, Select2, Summernote y SweetAlert2:** la parte interactiva de los formularios: agregar ítems sin recargar la página, buscadores en los selectores, edición de texto enriquecido y avisos modales.\
+🔸 **PythonAnywhere:** el servicio donde la aplicación está publicada.\
 🔸 **GitHub y PyCharm:** control de versiones y entorno de desarrollo.
 
 ## 3. Cómo está construido
