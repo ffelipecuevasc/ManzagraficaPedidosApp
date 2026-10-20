@@ -1,7 +1,7 @@
 # Iteración 00-01 · Línea base de producción
 
 - **Épica:** 00 · Blindaje y punto de retorno
-- **Estado:** Pendiente
+- **Estado:** En revisión
 - **Subfase del plan:** 0.1
 - **Depende de:** —
 - **RDA relacionadas:** RDA-004
