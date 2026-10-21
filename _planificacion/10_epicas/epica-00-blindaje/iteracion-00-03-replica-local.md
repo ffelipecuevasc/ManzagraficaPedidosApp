@@ -1,7 +1,7 @@
 # Iteración 00-03 · Réplica local fiel
 
 - **Épica:** 00 · Blindaje y punto de retorno
-- **Estado:** Pendiente
+- **Estado:** En revisión (falta la evidencia del desarrollador, `evidencia-00-03.md`)
 - **Subfase del plan:** 0.3
 - **Depende de:** 00-02
 - **RDA relacionadas:** RDA-002, RDA-006

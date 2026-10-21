@@ -34,3 +34,7 @@ Las reglas de negocio sin confirmar (`registro-pendientes.md`, sección 2) se fi
 
 - Las pruebas de regresión de 02-04 fallan de forma reproducible en tres ejecuciones seguidas, demostrando que capturan los defectos reales; el resto del conjunto está en verde.
 - El comando de pruebas forma parte de la lista de comprobación de `docs/operacion/despliegue.md`.
+
+## Notas
+
+- **2026-10-21 (00-03, AUD-02-020):** la réplica local usa `sql_mode = NO_ENGINE_SUBSTITUTION`, igual que producción. En 02-01 se decide si la base de pruebas activa el modo estricto por conexión (`OPTIONS["init_command"]` en la configuración de pruebas). Eso cambia la configuración y requiere consulta. Las pruebas que dependen del truncado silencioso de producción deben declararlo.

@@ -98,3 +98,9 @@ Notas agregadas sin reescribir los hallazgos. Cifras en `linea-base-produccion.m
 - **Otros errores del decorador en el registro.** `eliminar_producto` (4, `ProtectedError` por claves foráneas protegidas) y `eliminar_cotizacion` (2, plantilla `cotizacion_confirm_delete.html`): ambos defectos se corrigieron en el repositorio el 2026-02-03 (commits `73cc8e6` y `59801a4`) y producción corre `2442f3b`, posterior. Probablemente son errores anteriores a esa fecha; se confirman cuando se conozcan sus fechas. No se abre hallazgo nuevo.
 - **AUD-02-007 · decisión del desarrollador (2026-10-20).** Severidad Baja. Sigue abierto por el desfase de un pedido entre julio y agosto según se agrupe el mes en UTC o en hora de Chile (julio 65 o 64, agosto 77 o 78); se corrige en 06-01.
 - **AUD-02-021 · sigue abierto (2026-10-20).** La causa queda pendiente: falta el comando que entregue la fecha y el mensaje completo de cada error.
+
+### Notas de la iteración 00-03 · 2026-10-21
+
+Notas agregadas sin reescribir los hallazgos.
+
+- **AUD-02-020 · decisión de paridad.** El desarrollador eligió que la réplica local copie el modo de producción: `compose.yaml` fija `--sql-mode=NO_ENGINE_SUBSTITUTION`. Usar el modo estricto solo en la base de pruebas, por conexión, se evalúa en 02-01. La prueba del modo estricto antes de proponerlo para producción sigue en 04-05. El hallazgo sigue abierto.

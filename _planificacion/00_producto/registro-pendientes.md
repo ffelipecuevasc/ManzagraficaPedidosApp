@@ -18,7 +18,7 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | :-------- | :----- | :---- | :----- | :--------- | :-------- |
 | 00-01 | Línea base de producción | 00 | Terminada | — | [bitacora-00-01](../99_bitacora/epica-00-blindaje/bitacora-00-01.md), [bitacora-00-01-sql-local](../99_bitacora/epica-00-blindaje/bitacora-00-01-sql-local.md), [bitacora-00-01-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md), [bitacora-00-01-cierre](../99_bitacora/epica-00-blindaje/bitacora-00-01-cierre.md) |
 | 00-02 | Protocolo de respaldo verificado | 00 | Terminada | 00-01 | [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md) |
-| 00-03 | Réplica local fiel | 00 | Pendiente | 00-02 | — |
+| 00-03 | Réplica local fiel | 00 | En revisión | 00-02 | [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md) |
 | 00-04 | Higiene del repositorio | 00 | Pendiente | — | — |
 | 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | Pendiente | 00-03, 00-04 | — |
 | 00-06 | Correcciones tempranas de riesgo nulo | 00 | Pendiente | 00-05 | — |
@@ -82,7 +82,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 
 | Tema | RDA o hallazgo | Responsable |
 | :--- | :------------- | :---------- |
-| Comando o archivo compose del contenedor MySQL local (`AGENTS.md`, sección 5) | RDA-006 | Desarrollador |
+| Comando o archivo compose del contenedor MySQL local (`AGENTS.md`, sección 5): `compose.yaml` creado el 2026-10-21; falta que el desarrollador edite la sección 5 de `AGENTS.md` con la propuesta de [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md) | RDA-006 | Desarrollador |
 | ~~Confirmar con el peso medido en 00-01 que la retención provisoria de 5 volcados en el servidor cabe en el disco~~ Resuelto el 2026-10-20: 5 volcados (6,19 MB) | AUD-01-014, AUD-02-019 | Desarrollador |
 | ~~Carpeta local cifrada donde se guardan los respaldos descargados~~ Resuelto el 2026-10-20: carpeta cifrada fuera del repositorio, sin escribir su ruta; confirmada el 2026-10-21 (BitLocker, sin sincronización en la nube) | RDA-002 | Desarrollador |
 | ~~Retención local de volcados~~ Resuelto el 2026-10-21: los 4 semanales más recientes y el previo a cada despliegue hasta cerrar la fase siguiente | AUD-01-014 | Desarrollador, en [evidencia-00-02](../10_epicas/epica-00-blindaje/evidencia-00-02.md) |
@@ -104,7 +104,8 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | Obtener el mensaje completo y la fecha de los 13 errores de plantilla de `crear_pedido`, `crear_cotizacion` y `crear_cliente`, y las fechas de los errores de `eliminar_producto` y `eliminar_cotizacion` | AUD-02-021 | Desarrollador |
 | ~~Datos de la línea base que no vinieron en la evidencia~~ Resuelto el 2026-10-20 | — | Desarrollador |
 | Informe de desconexiones a 28 días de 00-06 (en paralelo, sin bloquear la Épica 01) | 00-06 | Desarrollador |
-| Paridad del modo SQL en la réplica local (copiar `NO_ENGINE_SUBSTITUTION` o usar modo estricto) | AUD-02-020 | Desarrollador, en 00-03 |
+| ~~Paridad del modo SQL en la réplica local~~ Resuelto el 2026-10-21: opción A, `NO_ENGINE_SUBSTITUTION` igual que producción; el modo estricto solo para la base de pruebas (opción C) se evalúa en 02-01 | AUD-02-020 | Desarrollador |
+| Responder [evidencia-00-03](../10_epicas/epica-00-blindaje/evidencia-00-03.md): cifrado, paso al compose, restauración medida, paridad, permiso para el guion SQL y pantallas | 00-03 | Desarrollador |
 
 ## 4. Propuestas fuera de alcance
 
@@ -128,3 +129,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-20 | Iteración 00-01 terminada: línea base completa (`backups/`, desglose por tabla, CPU y método de conteo por fecha); AUD-02-007 baja a Baja; criterio de 00-06 y término de la épica 00 ajustados; nota de retención en la épica 06; iteración activa 00-02. Detalle en [bitacora-00-01-cierre](../99_bitacora/epica-00-blindaje/bitacora-00-01-cierre.md). |
 | 2026-10-20 | Iteración 00-02 en revisión: `verificar_respaldo.py` (pruebas sintéticas 0, 1 y 1), `docs/operacion/respaldo.md` y pedido de evidencia; retención de 5 en el servidor; expiración del 2026-11-20 confirmada. Detalle en [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md). |
 | 2026-10-21 | Iteración 00-02 terminada: respaldo real verificado (código 0, 18 de 18 tablas), carpeta cifrada con BitLocker, 5 volcados en el servidor, retención local confirmada y nota en la épica 00; iteración activa 00-03. Detalle en [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md). |
+| 2026-10-21 | Iteración 00-03 en revisión: `compose.yaml` (MySQL 8.0.46, volumen `mysql_data` externo, `sql_mode` de producción), `paridad_replica.py`, `docs/operacion/replica-local.md` y pedido de evidencia. Detalle en [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md). |

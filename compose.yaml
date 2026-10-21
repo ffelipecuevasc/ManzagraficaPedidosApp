@@ -1,0 +1,32 @@
+# MySQL local de Manza Gráfica App (iteración 00-03).
+# Réplica de la configuración de producción medida en 00-01 (linea-base-produccion.md, sección 5).
+# Procedimiento completo: docs/operacion/replica-local.md
+#
+# NUNCA ejecutes `docker compose down -v` ni `docker volume rm mysql_data`:
+# borran el volumen con todas las bases locales, incluida la réplica.
+#
+# Las variables se leen del archivo .env de la raíz (no se versiona).
+# DB_PASSWORD debe ser la contraseña de root que ya tiene el volumen:
+# MYSQL_ROOT_PASSWORD solo se usa cuando el volumen está vacío.
+
+services:
+  db:
+    image: mysql:8.0.46
+    container_name: manzagrafica-mysql
+    restart: "no"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=UTC
+      - --sql-mode=NO_ENGINE_SUBSTITUTION
+    ports:
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+    external: true
+    name: mysql_data
