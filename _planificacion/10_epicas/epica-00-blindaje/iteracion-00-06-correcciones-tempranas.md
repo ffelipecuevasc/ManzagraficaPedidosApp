@@ -20,7 +20,7 @@ Un despliegue temprano y aislado con cuatro correcciones que no tocan datos, ló
 3. **Doble envío en el acceso.** En `registration/login.html`, deshabilitar el botón de ingresar al primer envío y mostrar que se está procesando, con JavaScript propio de la plantilla (la página de acceso no carga `index.js`).
 4. **Barra final en pagos.** Cambiar la ruta `pagos/lista` por `pagos/lista/`. Las plantillas usan `{% url 'lista_pagos' %}`, así que no cambian; las direcciones guardadas sin barra siguen funcionando porque Django redirige a la versión con barra.
 5. **Medición de arranque** antes y después: tiempo de importar `pedidos.urls` después de `django.setup()`, en tres corridas, y comprobación de que `weasyprint` no está en `sys.modules` tras importar las vistas.
-6. **Archivo de evidencia** `evidencia-00-06.md`: después del despliegue, contar en el registro del servidor las desconexiones y las peticiones a `/robots.txt` de los siete días siguientes, con el mismo método de 00-01.
+6. **Archivo de evidencia** `evidencia-00-06.md`: después del despliegue, contar por fecha, con el método reutilizable de `evidencia-00-01.md`, las 404 de `/robots.txt` por día (señal principal, cierra la iteración cuando bajan a 0) y las desconexiones `Broken pipe` por día (señal secundaria). Las desconexiones se informan en un segundo pedido a los 28 días del despliegue, sin umbral y sin bloquear el inicio de la Épica 01.
 
 ## Criterios de aceptación
 
@@ -31,7 +31,7 @@ Un despliegue temprano y aislado con cuatro correcciones que no tocan datos, ló
 - [ ] En local, `GET /pagos/lista/` responde 200 con sesión y `GET /pagos/lista` redirige a `/pagos/lista/`.
 - [ ] El botón de acceso queda deshabilitado tras el primer clic y vuelve a estar disponible si el acceso falla y la página se recarga (revisado en escritorio y a 360 px).
 - [ ] El despliegue tiene su propia etiqueta, distinta de la de 00-04.
-- [ ] La evidencia muestra el conteo de desconexiones y de 404 de `/robots.txt` de la semana posterior, comparado con la línea base de 00-01.
+- [ ] La evidencia muestra, con el conteo por fecha de 00-01, la tasa diaria de 404 de `/robots.txt` (señal principal; línea base: 7 en los 7 días del 2026-10-15 al 2026-10-21; las líneas de muestra revisadas son de Googlebot) y de desconexiones `Broken pipe` (señal secundaria; línea base: 4 en esos 7 días y 0,44 por día en 89 días). La iteración se da por cumplida cuando las 404 de `/robots.txt` bajan a 0. Las desconexiones se informan a los 28 días del despliegue, sin umbral, en paralelo y sin bloquear el inicio de la Épica 01.
 
 ## Fuera de alcance
 

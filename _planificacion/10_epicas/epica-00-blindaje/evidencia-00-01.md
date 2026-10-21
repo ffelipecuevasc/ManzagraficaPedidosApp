@@ -172,10 +172,10 @@ El desarrollador ejecutó los pasos 1 a 5 el 2026-10-20 (UTC) y pegó en la conv
 | 1. Guion SQL | Sí | 14 secciones. |
 | 2. Guion Bash | Sí | La salida contó `.gitkeep` como volcado (6 en vez de 5, antigüedad del más antiguo mal calculada). El desarrollador corrigió los valores a mano y el guion ya excluye `.gitkeep`. |
 | 3. Clave | Sí | `False` / `False`. |
-| 4. Panel | Sí | Sin tarea programada creada; expiración 2026-11-20 (`PENDIENTE_DESARROLLADOR`: confirmar si viene de una renovación del mismo día). El uso de CPU antes y después no se informó. |
+| 4. Panel | Sí | Sin tarea programada creada; expiración 2026-11-20 (`PENDIENTE_DESARROLLADOR`: confirmar si viene de una renovación del mismo día). CPU de consolas: 0,00 s antes; 3,13 s (3 %) después de `linea_base.sh`; 5,11 s (5 %) después del guion SQL, sobre una cuota de 100 s. |
 | 5. Registros | Sí, con un ajuste | El conteo por archivo no sirve para «7 días» porque los archivos rotan de forma irregular. Se contó por fecha de cada línea (método siguiente). |
 
-Pendiente de la evidencia: el tamaño de `backups/` completo con subcarpetas y el desglose de datos e índices por tabla no vinieron en la respuesta; quedan como `PENDIENTE_DESARROLLADOR` en la línea base.
+Completado al cierre de la iteración: el tamaño de `backups/` completo (7 MB), el desglose por tabla (18 tablas), el uso de CPU y los formatos de fecha de los registros los entregó el desarrollador después. Ya están en la línea base. Sigue pendiente solo la confirmación de la fecha de expiración.
 
 ## Método reutilizable para 00-06: conteo por fecha
 
@@ -199,7 +199,31 @@ contar_robots_por_dia() {
 contar_robots_por_dia
 ```
 
-**Registro del servidor:** la misma idea con los patrones verificados en 00-01, `Broken pipe` y `SIGPIPE|closed (pipe|socket|fd)`, agrupando por la fecha de cada línea. El formato de fecha de las líneas del registro del servidor **no quedó registrado** en la evidencia: `PENDIENTE_DESARROLLADOR`, guardar en `evidencia-00-06.md` el bloque exacto que se usó el 2026-10-20 para que la comparación use el mismo método.
+**Registro del servidor** (formato verificado: cada línea empieza con `AAAA-MM-DD HH:MM:SS` en UTC).
+
+**Método que usó el desarrollador el 2026-10-20** (cuenta los siete días que terminan hoy, en UTC):
+
+```bash
+cd /var/log; D=manzagrafica.pythonanywhere.com
+for i in 6 5 4 3 2 1 0; do d=$(date -u -d "-$i day" +%F); printf "%s broken_pipe=%s sigpipe=%s\n" "$d" "$(grep -h "^$d" $D.server.log | grep -c 'Broken pipe')" "$(grep -h "^$d" $D.server.log | grep -c 'SIGPIPE')"; done
+for i in 6 5 4 3 2 1 0; do d=$(date -u -d "-$i day" +%d/%b/%Y); printf "%s robots=%s\n" "$d" "$(cat $D.access.log $D.access.log.1 2>/dev/null | grep 'GET /robots.txt' | grep -c "$d")"; done
+```
+
+Resultado del 2026-10-15 al 2026-10-21 (UTC; el 21 cubre solo unos minutos): `broken_pipe` 2, 0, 1, 0, 0, 1, 0 (total 4); `sigpipe` 4, 1, 2, 1, 2, 2, 0 (total 12); `robots` 2, 0, 0, 1, 2, 2, 0 (total 7).
+
+**Verificación del agente** (2026-10-20, registros simulados en el scratchpad con los dos formatos anteriores): los comandos agrupan bien por día. Hay tres salvedades para usarlos en 00-06:
+
+1. `robots=` cuenta **todas** las respuestas a `/robots.txt`, no solo las 404. Después de 00-06 la ruta responde 200 y el conteo no bajaría. Para la señal principal hay que filtrar el código: `grep 'GET /robots.txt' | grep "$d" | grep -c '" 404 '`. Con el registro simulado, una 404 y una 200 del mismo día dan `robots=2` y `robots_404=1`.
+2. El nombre del mes (`%b`) depende del idioma de la consola. Antepón `LC_ALL=C` a `date` para que siempre sea `Oct` y no `oct.`.
+3. La ventana se calcula desde el día en que se ejecuta. Para 00-06, ejecútalo el día 7 y el día 28 después del despliegue (para 28 días, cambia la lista `6 5 4 3 2 1 0` por `seq 27 -1 0`). Solo lee `server.log`, `access.log` y `access.log.1`: si la ventana cae en archivos `.gz`, se pierden días. La versión siguiente lee todos con `zcat -f`.
+
+**Método reutilizable para 00-06** (el anterior con las tres salvedades resueltas; probado con los mismos registros simulados):
+
+```bash
+cd /var/log; D=manzagrafica.pythonanywhere.com
+for i in 6 5 4 3 2 1 0; do d=$(date -u -d "-$i day" +%F); printf "%s broken_pipe=%s sigpipe=%s\n" "$d" "$(zcat -f $D.server.log* | grep "^$d" | grep -c 'Broken pipe')" "$(zcat -f $D.server.log* | grep "^$d" | grep -c 'SIGPIPE')"; done
+for i in 6 5 4 3 2 1 0; do d=$(LC_ALL=C date -u -d "-$i day" +%d/%b/%Y); printf "%s robots=%s robots_404=%s\n" "$d" "$(zcat -f $D.access.log* | grep 'GET /robots.txt' | grep -c "$d")" "$(zcat -f $D.access.log* | grep 'GET /robots.txt' | grep "$d" | grep -c '" 404 ')"; done
+```
 
 **Línea base contra la que compara 00-06** (detalle en `linea-base-produccion.md`, sección 8):
 

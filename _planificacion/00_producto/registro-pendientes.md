@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-20
-- **Iteración activa:** 00-01 · Línea base de producción (En revisión: evidencia de producción consolidada, a la espera de la revisión del desarrollador)
+- **Iteración activa:** 00-02 · Protocolo de respaldo verificado
 - **Próximo hito:** Fase 0 completa: respaldo verificado fuera del servidor, réplica local fiel y retroceso ensayado
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -16,7 +16,7 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 
 | Iteración | Nombre | Épica | Estado | Depende de | Bitácoras |
 | :-------- | :----- | :---- | :----- | :--------- | :-------- |
-| 00-01 | Línea base de producción | 00 | En revisión | — | [bitacora-00-01](../99_bitacora/epica-00-blindaje/bitacora-00-01.md), [bitacora-00-01-sql-local](../99_bitacora/epica-00-blindaje/bitacora-00-01-sql-local.md), [bitacora-00-01-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md) |
+| 00-01 | Línea base de producción | 00 | Terminada | — | [bitacora-00-01](../99_bitacora/epica-00-blindaje/bitacora-00-01.md), [bitacora-00-01-sql-local](../99_bitacora/epica-00-blindaje/bitacora-00-01-sql-local.md), [bitacora-00-01-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md), [bitacora-00-01-cierre](../99_bitacora/epica-00-blindaje/bitacora-00-01-cierre.md) |
 | 00-02 | Protocolo de respaldo verificado | 00 | Pendiente | 00-01 | — |
 | 00-03 | Réplica local fiel | 00 | Pendiente | 00-02 | — |
 | 00-04 | Higiene del repositorio | 00 | Pendiente | — | — |
@@ -97,9 +97,10 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | `DESIGN.md`: origen de tipografías e íconos (autoalojados o servicio externo) | AUD-01-010 | Desarrollador |
 | ~~Ejecutar en producción los pasos de [evidencia-00-01](../10_epicas/epica-00-blindaje/evidencia-00-01.md)~~ Resuelto el 2026-10-20 | AUD-01-006, AUD-02-004, AUD-02-007, AUD-02-010 | Desarrollador |
 | Confirmar si la expiración de la web app del 2026-11-20 viene de una renovación hecha el día de la medición | 07-01 | Desarrollador |
-| Bajar la severidad de AUD-02-007 de Media a Baja (no se confirmó en producción) | AUD-02-007 | Desarrollador |
+| ~~Bajar la severidad de AUD-02-007 de Media a Baja~~ Resuelto el 2026-10-20: Baja, sigue abierto para 06-01 | AUD-02-007 | Desarrollador |
 | Obtener el mensaje completo y la fecha de los 13 errores de plantilla de `crear_pedido`, `crear_cotizacion` y `crear_cliente`, y las fechas de los errores de `eliminar_producto` y `eliminar_cotizacion` | AUD-02-021 | Desarrollador |
-| Datos de la línea base que no vinieron en la evidencia: tamaño de `backups/` completo y desglose de datos e índices por tabla (`PENDIENTE_DESARROLLADOR`, prioridad baja) | — | Desarrollador |
+| ~~Datos de la línea base que no vinieron en la evidencia~~ Resuelto el 2026-10-20 | — | Desarrollador |
+| Informe de desconexiones a 28 días de 00-06 (en paralelo, sin bloquear la Épica 01) | 00-06 | Desarrollador |
 | Paridad del modo SQL en la réplica local (copiar `NO_ENGINE_SUBSTITUTION` o usar modo estricto) | AUD-02-020 | Desarrollador, en 00-03 |
 
 ## 4. Propuestas fuera de alcance
@@ -121,3 +122,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-20 | Resueltas por el desarrollador: RDA-012 aceptada, formato de etiquetas `fase<N>-<propósito>-AAAA-MM-DD` (RDA-007), retención de 5 volcados (provisoria, a confirmar con el peso medido en 00-01) y licencia MIT; se agrega AUD-02-019 (rotación de respaldos), asignado a 06-03. |
 | 2026-10-20 | Guion SQL de 00-01 ejecutado en local sin errores (14 sentencias, solo lectura); el desarrollador aplicó la corrección de la regla 6 de `AGENTS.md`. Detalle en [bitacora-00-01-sql-local](../99_bitacora/epica-00-blindaje/bitacora-00-01-sql-local.md). |
 | 2026-10-20 | Evidencia de producción de 00-01 consolidada en la línea base; confirmados AUD-01-006, AUD-02-002 y AUD-02-004, no confirmado AUD-02-007, mitigado AUD-02-010; nuevos AUD-02-020 y AUD-02-021; nota en RDA-004; `linea_base.sh` excluye `.gitkeep`. Detalle en [bitacora-00-01-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md). |
+| 2026-10-20 | Iteración 00-01 terminada: línea base completa (`backups/`, desglose por tabla, CPU y método de conteo por fecha); AUD-02-007 baja a Baja; criterio de 00-06 y término de la épica 00 ajustados; nota de retención en la épica 06; iteración activa 00-02. Detalle en [bitacora-00-01-cierre](../99_bitacora/epica-00-blindaje/bitacora-00-01-cierre.md). |

@@ -29,6 +29,7 @@
 
 - La limpieza de filas duplicadas de `HistorialBD` es una operación destructiva sobre datos, no un cambio de esquema: se ejecuta con una orden de gestión revisada, respaldo descargado y ensayo previo en la réplica.
 - Unificar `estado_pago` exige Clase 3: queda como deuda diferida (07-05).
+- **Retención de volcados (para 06-03, medido en 00-01 el 2026-10-20):** cinco volcados suman 6,19 MB, menos del 1,5 % de la cuota de 512 MiB, y el más reciente pesa 1.438.471 bytes. La política conviene que retenga más copias y rote por antigüedad (por ejemplo, diarias recientes más semanales y mensuales), no por cantidad (AUD-02-019).
 
 ## Criterio de término
 

@@ -1,6 +1,6 @@
 # Épica 00 · Blindaje y punto de retorno
 
-- **Estado:** Pendiente
+- **Estado:** En curso (00-01 terminada el 2026-10-20; sigue 00-02)
 - **Fase del plan:** 0 (`plan-de-trabajo.md`, «FASE 0»)
 - **Objetivo:** construir la infraestructura que hace reversible todo lo demás. Al terminar, el desarrollador puede afirmar sin dudar: «si el próximo despliegue sale mal, vuelvo al estado anterior en menos de quince minutos, sin perder datos».
 - **Precondición:** ninguna.
@@ -24,7 +24,7 @@ El agente no accede a producción (`AGENTS.md`, sección 6). En esta épica eso 
 
 | Iteración | Nombre | Subfase |
 | :-------- | :----- | :------ |
-| 00-01 | Línea base de producción | 0.1 |
+| 00-01 | Línea base de producción (Terminada) | 0.1 |
 | 00-02 | Protocolo de respaldo verificado | 0.2 |
 | 00-03 | Réplica local fiel | 0.3 |
 | 00-04 | Higiene del repositorio | 0.4 |
@@ -44,4 +44,4 @@ El agente no accede a producción (`AGENTS.md`, sección 6). En esta épica eso 
 - La aplicación arranca en local contra la réplica restaurada y la tabla de paridad no tiene divergencias sin resolver.
 - Un clon limpio del repositorio no contiene `.idea/`, credenciales ni volcados.
 - El retroceso se ensayó contra la réplica local en menos de 15 minutos, medido.
-- Los despliegues de 00-04 y 00-06 están etiquetados y la evidencia de 00-06 muestra el efecto en el registro del servidor durante la semana siguiente.
+- Los despliegues de 00-04 y 00-06 están etiquetados y la evidencia de 00-06 muestra que las 404 de `/robots.txt` bajaron a 0. El informe de desconexiones a 28 días del despliegue de 00-06 se entrega en paralelo y no bloquea el término de la épica ni el inicio de la Épica 01.

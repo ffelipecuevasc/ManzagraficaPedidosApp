@@ -3,7 +3,7 @@
 Cifras reales de producción contra las que se compara toda corrección u optimización posterior. Cada cifra lleva su fecha de medición y nunca datos personales (solo conteos, tamaños, fechas y estados).
 
 - **Estado:** medida el 2026-10-20 (iteración 00-01, tarea 6). Detalle y salvedades en `99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md`.
-- **Marcador:** `PENDIENTE_DESARROLLADOR` significa que el dato no vino en la evidencia y no se inventó.
+- **Marcador:** `PENDIENTE_DESARROLLADOR` significa que el dato no vino en la evidencia y no se inventó. Los datos que faltaban se completaron con la respuesta del desarrollador al cierre de la iteración (medición del 2026-10-20).
 - **Fechas:** formato `AAAA-MM-DD`. La medición se hizo el 2026-10-20 en UTC, que también es 2026-10-20 en hora de Chile continental. Las horas y los días que dicen «UTC» se dejan en UTC.
 - **Fuentes:** «Guion SQL» = `scripts/diagnostico/linea_base.sql` (sección entre paréntesis); «Guion Bash» = `scripts/diagnostico/linea_base.sh` (sección entre paréntesis); «Clave» y «Registros» = fragmentos del archivo de evidencia; «Panel» = lectura manual en PythonAnywhere. Todas las salidas las pegó el desarrollador desde las consolas y el panel de PythonAnywhere.
 
@@ -45,10 +45,26 @@ Límite del plan: 512 MiB compartidos entre archivos y MySQL.
 
 | Tabla | Filas estimadas | Datos (MB) | Índices (MB) | Total (MB) | Fecha de medición | Fuente |
 | :---- | :-------------- | :--------- | :----------- | :--------- | :---------------- | :----- |
-| `pedidos_pedido` | 191 (exactas: 870) | PENDIENTE_DESARROLLADOR | PENDIENTE_DESARROLLADOR | 1,547 | 2026-10-20 | Guion SQL (2b) |
-| `pedidos_pago` | PENDIENTE_DESARROLLADOR | PENDIENTE_DESARROLLADOR | PENDIENTE_DESARROLLADOR | 0,094 | 2026-10-20 | Guion SQL (2b) |
-| `django_session` | PENDIENTE_DESARROLLADOR | PENDIENTE_DESARROLLADOR | PENDIENTE_DESARROLLADOR | 0,063 | 2026-10-20 | Guion SQL (2b) |
-| Las 15 tablas restantes | — | — | — | — | — | No se informaron por separado |
+| `pedidos_pedido` | 191 | 1,516 | 0,031 | 1,547 | 2026-10-20 | Guion SQL (2b) |
+| `pedidos_pago` | 178 | 0,063 | 0,031 | 0,094 | 2026-10-20 | Guion SQL (2b) |
+| `django_session` | 96 | 0,047 | 0,016 | 0,063 | 2026-10-20 | Guion SQL (2b) |
+| `auth_group_permissions` | 0 | 0,016 | 0,031 | 0,047 | 2026-10-20 | Guion SQL (2b) |
+| `pedidos_itempedido` | 141 | 0,016 | 0,031 | 0,047 | 2026-10-20 | Guion SQL (2b) |
+| `pedidos_itemcotizacion` | 48 | 0,016 | 0,031 | 0,047 | 2026-10-20 | Guion SQL (2b) |
+| `django_admin_log` | 0 | 0,016 | 0,031 | 0,047 | 2026-10-20 | Guion SQL (2b) |
+| `auth_user_user_permissions` | 0 | 0,016 | 0,031 | 0,047 | 2026-10-20 | Guion SQL (2b) |
+| `auth_user_groups` | 0 | 0,016 | 0,031 | 0,047 | 2026-10-20 | Guion SQL (2b) |
+| `django_content_type` | 9 | 0,016 | 0,016 | 0,031 | 2026-10-20 | Guion SQL (2b) |
+| `pedidos_cotizacion` | 25 | 0,016 | 0,016 | 0,031 | 2026-10-20 | Guion SQL (2b) |
+| `auth_user` | 0 | 0,016 | 0,016 | 0,031 | 2026-10-20 | Guion SQL (2b) |
+| `auth_permission` | 40 | 0,016 | 0,016 | 0,031 | 2026-10-20 | Guion SQL (2b) |
+| `auth_group` | 0 | 0,016 | 0,016 | 0,031 | 2026-10-20 | Guion SQL (2b) |
+| `django_migrations` | 18 | 0,016 | 0 | 0,016 | 2026-10-20 | Guion SQL (2b) |
+| `pedidos_cliente` | 105 | 0,016 | 0 | 0,016 | 2026-10-20 | Guion SQL (2b) |
+| `pedidos_historialbd` | 61 | 0,016 | 0 | 0,016 | 2026-10-20 | Guion SQL (2b) |
+| `pedidos_producto` | 12 | 0,016 | 0 | 0,016 | 2026-10-20 | Guion SQL (2b) |
+
+Las filas estimadas están desactualizadas (estadísticas de hasta 24 horas); las cifras exactas están en la sección 4.
 
 ## 3. Respaldos y archivos
 
@@ -58,7 +74,7 @@ Límite del plan: 512 MiB compartidos entre archivos y MySQL.
 | Tamaño total de los volcados (MB) | 6,19 (1,22; 1,24; 1,27; 1,32; 1,44) | 2026-10-20 | Guion Bash (C) |
 | Fechas de los volcados | 2026-03-26, 2026-04-13, 2026-05-05, 2026-06-23, 2026-10-20 (este último, generado a mano por el desarrollador ese día) | 2026-10-20 | Guion Bash (C) |
 | Antigüedad del volcado más antiguo y del más reciente (días) | 208 · 0 | 2026-10-20 | Guion Bash (C), corregido |
-| Tamaño de `backups/` completo, con subcarpetas (MB) | PENDIENTE_DESARROLLADOR | — | Guion Bash (C) |
+| Tamaño de `backups/` completo, con subcarpetas (MB) | 7 | 2026-10-20 | Guion Bash (C) |
 | Tamaño de `media/` (MB) y número de archivos | 3 MB · 11 archivos | 2026-10-20 | Guion Bash (D) |
 
 ## 4. Volumen por tabla de negocio
@@ -121,12 +137,13 @@ Con el mes calculado en UTC solo cambian julio (64) y agosto (78). Fuente: Guion
 | Fecha de expiración de la web app | 2026-11-20 (`PENDIENTE_DESARROLLADOR`: confirmar si viene de una renovación hecha el mismo día) | 2026-10-20 | Panel (Web) |
 | Procedimiento de renovación de la web app | Iniciar sesión y pulsar «Run until 1 month from today», al menos una vez al mes. PythonAnywhere avisa por correo una semana antes | 2026-10-20 | Panel (Web) |
 | Tráfico según el panel | Este mes 1.197 (anterior 1.835); hoy 96 (ayer 65) | 2026-10-20 | Panel (Web) |
+| CPU de consolas del Dashboard durante la medición (cuota 100 s) | 0,00 s antes; 3,13 s (3 %) después de `linea_base.sh`; 5,11 s (5 %) después del guion SQL | 2026-10-20 | Panel (Dashboard) |
 | Configuración visible de la web app | Force HTTPS activado; sin protección con contraseña; campo «Source code» vacío; estáticos `/static/` → `staticfiles`, `/media/` → `media` | 2026-10-20 | Panel (Web) |
 | Código desplegado | `HEAD` `2442f3b` (2026-03-12), rama `main`, sin archivos versionados modificados; sin versionar: `media/pedidos/` (8 imágenes), `media/referencias/` y `staticfiles/` | 2026-10-20 | Consola Bash (`git`) |
 
 ## 8. Registro del servidor · insumo para medir 00-06
 
-Método: conteo **por fecha de cada línea**, no por archivo, porque los archivos rotan de forma irregular (ver `evidencia-00-01.md`, «Método reutilizable para 00-06»). Periodo: 2026-10-15 a 2026-10-21 en UTC; el 21 cubre solo unos minutos.
+Método: conteo **por fecha de cada línea**, no por archivo, porque los archivos rotan de forma irregular (ver `evidencia-00-01.md`, «Método reutilizable para 00-06»). Formatos: el registro del servidor empieza cada línea con `AAAA-MM-DD HH:MM:SS` en UTC; el de accesos lleva `[dd/Mon/aaaa:hh:mm:ss +0000]`. Periodo: 2026-10-15 a 2026-10-21 en UTC; el 21 cubre solo unos minutos.
 
 | Métrica | Valor | Fecha de medición | Fuente |
 | :------ | :---- | :---------------- | :----- |

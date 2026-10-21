@@ -1,7 +1,7 @@
 # Iteración 00-01 · Línea base de producción
 
 - **Épica:** 00 · Blindaje y punto de retorno
-- **Estado:** En revisión
+- **Estado:** Terminada
 - **Subfase del plan:** 0.1
 - **Depende de:** —
 - **RDA relacionadas:** RDA-004
@@ -31,11 +31,11 @@ Medir producción sin modificar nada y dejar las cifras en `_planificacion/00_pr
 
 ## Criterios de aceptación
 
-- [ ] `scripts/diagnostico/linea_base.sql` no contiene `INSERT`, `UPDATE`, `DELETE`, `ALTER`, `DROP`, `CREATE`, `TRUNCATE`, `REPLACE` ni `GRANT` (búsqueda sin distinguir mayúsculas, sin coincidencias).
-- [ ] El guion SQL se ejecuta sin errores contra el MySQL local antes de entregarlo al desarrollador.
-- [ ] `linea-base-produccion.md` registra, con fecha de medición: filas de `HistorialBD` (total, días distintos, máximo por día); peso de la base en MB; uso de disco de la cuenta frente a los 512 MiB; número, tamaño total y antigüedad de los volcados en `backups/`; tamaño de `media/`; conteo de filas por tabla de negocio; versión, conjunto de caracteres, colación y zona horaria de MySQL; tablas de zona horaria cargadas (sí o no); gráfico anual con datos (sí o no); pedidos con `estado_pago` inconsistente; versión de Python de producción; tarea programada disponible (sí o no); fecha de expiración de la web app y procedimiento de renovación; desconexiones en el registro durante los últimos siete días; peticiones a `/robots.txt` en el mismo periodo; clave secreta con prefijo inseguro (sí o no) y coincidente con la del historial (sí o no).
-- [ ] Ningún archivo de la iteración contiene nombres, teléfonos, correos, montos de clientes ni la clave secreta.
-- [ ] Los cuatro hallazgos relacionados tienen su resultado medido anotado en `auditoria-tecnica.md`.
+- [x] `scripts/diagnostico/linea_base.sql` no contiene `INSERT`, `UPDATE`, `DELETE`, `ALTER`, `DROP`, `CREATE`, `TRUNCATE`, `REPLACE` ni `GRANT` (búsqueda sin distinguir mayúsculas, sin coincidencias).
+- [x] El guion SQL se ejecuta sin errores contra el MySQL local antes de entregarlo al desarrollador.
+- [x] `linea-base-produccion.md` registra, con fecha de medición: filas de `HistorialBD` (total, días distintos, máximo por día); peso de la base en MB; uso de disco de la cuenta frente a los 512 MiB; número, tamaño total y antigüedad de los volcados en `backups/`; tamaño de `media/`; conteo de filas por tabla de negocio; versión, conjunto de caracteres, colación y zona horaria de MySQL; tablas de zona horaria cargadas (sí o no); gráfico anual con datos (sí o no); pedidos con `estado_pago` inconsistente; versión de Python de producción; tarea programada disponible (sí o no); fecha de expiración de la web app y procedimiento de renovación; desconexiones en el registro durante los últimos siete días; peticiones a `/robots.txt` en el mismo periodo; clave secreta con prefijo inseguro (sí o no) y coincidente con la del historial (sí o no).
+- [x] Ningún archivo de la iteración contiene nombres, teléfonos, correos, montos de clientes ni la clave secreta.
+- [x] Los cuatro hallazgos relacionados tienen su resultado medido anotado en `auditoria-tecnica.md`.
 
 ## Fuera de alcance
 
