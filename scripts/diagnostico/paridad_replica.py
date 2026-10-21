@@ -10,8 +10,9 @@ Uso, desde la raíz del repositorio y con el .venv activo:
 
     python scripts/diagnostico/paridad_replica.py
 
-Código de salida: 0 si todo coincide con producción, 1 si hay diferencias
-o no se pudo medir.
+Código de salida: 0 si todo coincide con producción o si las únicas
+diferencias son las aceptadas (ver DIFERENCIAS_ACEPTADAS); 1 si hay una
+diferencia no aceptada o no se pudo medir.
 """
 
 import os
@@ -33,6 +34,13 @@ PRODUCCION = {
     "sql_mode": "NO_ENGINE_SUBSTITUTION",
     "tablas_zona_horaria": "sí",
     "python": "3.13.1",
+}
+
+# Diferencias aceptadas por el desarrollador: elemento -> (valor local aceptado, decisión).
+# Se acepta solo ese valor exacto; cualquier otro valor local vuelve a contar como diferencia.
+# Registro de la decisión: docs/operacion/replica-local.md, tabla de paridad.
+DIFERENCIAS_ACEPTADAS = {
+    "python": ("3.13.0", "parche menor de la misma versión, aceptado el 2026-10-21 (00-03)"),
 }
 
 # Instante en horario de verano de Chile: 12:00 UTC son las 09:00 en Santiago.
@@ -104,11 +112,18 @@ def main():
     print(f"Base medida: {base} ({tablas} tablas)")
     print(f"{'Elemento':<22} {'Producción':<26} {'Local':<26} Coincide")
     diferencias = 0
+    aceptadas = []
     for clave, esperado in PRODUCCION.items():
         valor = str(local.get(clave))
-        coincide = valor == esperado
-        diferencias += not coincide
-        print(f"{clave:<22} {esperado:<26} {valor:<26} {'Sí' if coincide else 'No'}")
+        if valor == esperado:
+            estado = "Sí"
+        elif DIFERENCIAS_ACEPTADAS.get(clave, (None,))[0] == valor:
+            estado = "No (aceptada)"
+            aceptadas.append(f"{clave}: {DIFERENCIAS_ACEPTADAS[clave][1]}")
+        else:
+            estado = "No"
+            diferencias += 1
+        print(f"{clave:<22} {esperado:<26} {valor:<26} {estado}")
 
     requeridos = leer_requirements()
     instalados = leer_pip_freeze()
@@ -119,7 +134,15 @@ def main():
     print(f"Solo en el entorno local: {', '.join(solo_local) or 'ninguno'}")
     diferencias += bool(solo_req or solo_local)
 
-    print(f"Diferencias: {diferencias}")
+    for nota in aceptadas:
+        print(f"Diferencia aceptada · {nota}")
+    print(f"Diferencias no aceptadas: {diferencias} · aceptadas: {len(aceptadas)}")
+    if diferencias:
+        print("Resultado: HAY DIFERENCIAS NO ACEPTADAS")
+    elif aceptadas:
+        print("Resultado: PARIDAD con diferencias aceptadas")
+    else:
+        print("Resultado: PARIDAD")
     return 1 if diferencias else 0
 
 

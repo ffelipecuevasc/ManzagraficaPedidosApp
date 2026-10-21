@@ -41,6 +41,8 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Alternativas consideradas:** datos sintéticos (descartado por baja fidelidad); entorno de preproducción en el servidor (descartado: el plan gratuito no lo permite y comparte el mismo disco).
 **Consecuencias:** la máquina del desarrollador guarda datos personales de clientes reales: exige disco cifrado, ningún volcado en el repositorio ni en carpetas sincronizadas sin cifrar, y que los agentes no lean los volcados.
 
+**Actualización 2026-10-21:** el cifrado obligatorio se cumple en D: (BitLocker al 100 %), donde están el repositorio, la carpeta de respaldos y el disco de Docker Desktop con la réplica (iteración 00-03). C: queda sin cifrar por decisión informada del desarrollador. El riesgo residual son restos de respaldos antiguos en C:; el desarrollador revisó y no encontró ninguno.
+
 ## RDA-003 · Cambios de esquema autorizados: solo Clase 1 y Clase 2 (D2)
 
 - **Fecha:** 2026-10-19

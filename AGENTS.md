@@ -71,8 +71,11 @@ python manage.py sqlmigrate pedidos <numero_de_migracion>
 # Estado de las migraciones en la base local
 python manage.py showmigrations pedidos
 
-# Contenedor MySQL local: PENDIENTE_DESARROLLADOR (comando de `docker run` o archivo compose;
-# se documenta en la iteración 00-03 y en docs/operacion/replica-local.md)
+# Contenedor MySQL local (compose.yaml en la raíz; lo ejecuta el desarrollador)
+docker compose up -d
+docker compose stop
+# Nunca `docker compose down -v` ni `docker volume rm mysql_data`.
+# Réplica de producción y su refresco: docs/operacion/replica-local.md
 ```
 
 Usa siempre `pip` para Python y `pnpm` para Node. Nunca `npm`, `yarn` ni `npx`. No dejes servidores de desarrollo corriendo al terminar.

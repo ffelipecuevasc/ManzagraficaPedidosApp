@@ -8,7 +8,7 @@ Cómo levantar el MySQL local, restaurar en él un respaldo verificado de produc
 
 > **Advertencia: la réplica contiene datos personales reales.** Trae nombres, teléfonos y montos de clientes, las sesiones de `django_session` y **los hashes de contraseña de los usuarios de producción** (`auth_user`). Por eso:
 >
-> - **La unidad cifrada es obligatoria.** Tanto la unidad del repositorio (D:) como la del volumen de Docker (C:) deben tener BitLocker con «Protección activada» (sección 2). Sin esa confirmación no se restauran datos reales.
+> - **La unidad cifrada es obligatoria.** La réplica vive en el volumen de Docker, cuyo disco virtual (`ext4.vhdx`) está en D:, igual que el repositorio y la carpeta de respaldos. D: debe tener BitLocker con «Protección activada» y el 100 % cifrado, y el disco de Docker tiene que estar en D: (sección 2). Sin esas dos confirmaciones no se restauran datos reales.
 > - No exportes, copies ni compartas la réplica, y no le saques capturas con datos de clientes.
 > - No dejes el puerto de MySQL abierto a la red: el compose lo publica solo en `127.0.0.1`.
 
@@ -40,14 +40,23 @@ Cómo levantar el MySQL local, restaurar en él un respaldo verificado de produc
 
 ## 2. Comprobación previa: cifrado
 
-En PowerShell como administrador:
+Las dos comprobaciones deben pasar. Si alguna falla, detente y no restaures.
+
+**a) D: cifrada.** En PowerShell como administrador:
 
 ```powershell
 manage-bde -status D:
-manage-bde -status C:
 ```
 
-Las dos unidades deben decir **«Estado de protección: Protección activada»** («Protection Status: Protection On»). Si alguna no lo dice, detente y no restaures.
+Debe decir **«Estado de protección: Protección activada»** («Protection Status: Protection On») y **«Porcentaje cifrado: 100,0 %»** («Percentage Encrypted: 100.0%»).
+
+**b) El disco de Docker está en D:.** En Docker Desktop, abre *Settings → Resources → Advanced → Disk image location*: la ruta tiene que empezar con `D:\`. Para confirmar que el archivo existe ahí:
+
+```powershell
+Get-ChildItem "<ruta de Disk image location>" -Recurse -Filter *.vhdx | Select-Object FullName, Length
+```
+
+Debe aparecer `ext4.vhdx` (en versiones recientes de Docker Desktop puede llamarse `docker_data.vhdx`) con una ruta en D:.
 
 ## 3. Pasar del contenedor «mysql» al compose (una sola vez)
 
@@ -157,7 +166,7 @@ python scripts\diagnostico\paridad_replica.py
 $LASTEXITCODE
 ```
 
-El guion es de solo lectura y no muestra filas. Compara con producción la versión de MySQL, el conjunto de caracteres, la colación, `@@time_zone`, `@@system_time_zone`, `@@sql_mode`, las tablas de zona horaria, la versión de Python y la diferencia entre `pip freeze` y `requirements.txt`. Una diferencia aceptada (como Python 3.13.0 frente a 3.13.1) hace que termine con código 1. Contrasta cada «No» con la tabla siguiente.
+El guion es de solo lectura y no muestra filas. Compara con producción la versión de MySQL, el conjunto de caracteres, la colación, `@@time_zone`, `@@system_time_zone`, `@@sql_mode`, las tablas de zona horaria, la versión de Python y la diferencia entre `pip freeze` y `requirements.txt`. Las diferencias aceptadas están en `DIFERENCIAS_ACEPTADAS`, al inicio del guion (hoy solo Python 3.13.0 frente a 3.13.1). Salen como «No (aceptada)» y no cambian el resultado. **Código 0:** paridad, con o sin diferencias aceptadas. **Código 1:** hay al menos una diferencia no aceptada o no se pudo medir. Para aceptar una diferencia nueva, primero se registra la decisión en la tabla siguiente y después en el guion.
 
 ### Tabla de paridad
 
@@ -206,4 +215,4 @@ Cuando los datos queden viejos (por ejemplo, antes de ensayar una migración o u
 
 | Fecha del refresco | Volcado (fecha en hora de Chile) | Tiempo de restauración (s) | Paridad |
 | :----------------- | :------------------------------- | :------------------------- | :------ |
-| `PENDIENTE_DESARROLLADOR` (primera restauración, 00-03) | 2026-10-20 13:09:17 | `PENDIENTE_DESARROLLADOR` | `PENDIENTE_DESARROLLADOR` |
+| 2026-10-21 (primera restauración, 00-03) | 2026-10-20 13:09:17 | 4,17 | 7 de 8 coinciden; Python aceptado; `pip freeze` 21/21 |
