@@ -81,9 +81,9 @@ Motivo: hasta el 2026-10-20, los volcados del servidor se hicieron sin calendari
 | Dónde | Cuántos | Estado |
 | :---- | :------ | :----- |
 | Servidor (`backups/`) | 5, los que conserva hoy la aplicación | Decidido por el desarrollador el 2026-10-20 |
-| Carpeta de respaldos definida por el desarrollador | Los 4 volcados semanales más recientes y el previo a cada despliegue, hasta que se cierre la fase siguiente | **Propuesta, por confirmar** (`PENDIENTE_DESARROLLADOR`) |
+| Carpeta de respaldos definida por el desarrollador | Los 4 volcados semanales más recientes y el previo a cada despliegue, hasta que se cierre la fase siguiente | Confirmado por el desarrollador el 2026-10-21 |
 
-Con la retención local propuesta, un volcado previo a un despliegue de la fase N se puede borrar cuando la fase N+1 queda terminada.
+Con la retención local vigente, un volcado previo a un despliegue de la fase N se puede borrar cuando la fase N+1 queda terminada.
 
 ## 6. Registro de respaldos
 
@@ -91,4 +91,4 @@ Una línea por respaldo verificado (o fallido). Solo fecha, tamaño, hash y resu
 
 | Fecha (hora de Chile) | Motivo | Tamaño (bytes) | SHA-256 | Resultado |
 | :-------------------- | :----- | :------------- | :------ | :-------- |
-| 2026-10-20 | Primer respaldo verificado (iteración 00-02) | 1.438.471 | `PENDIENTE_DESARROLLADOR` (sale del informe de `evidencia-00-02.md`) | `PENDIENTE_DESARROLLADOR` |
+| 2026-10-20 13:09:17 | Primer respaldo verificado (iteración 00-02) | 1.438.471 | `0fea064cb65fa1fc620663f2d66f6406d943489cd426a6e0cb37f31249d8d008` | VÁLIDO (código 0) |

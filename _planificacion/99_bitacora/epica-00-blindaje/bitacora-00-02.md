@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-20
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión (falta responder `evidencia-00-02.md`)
+- **Estado final:** Terminada (evidencia respondida el 2026-10-21)
 
 ## Resumen
 
@@ -81,6 +81,31 @@ Se creó `scripts/verificar_respaldo.py`, que usa solo la biblioteca estándar. 
 - **Pruebas de la aplicación:** `python manage.py test pedidos` no se ejecutó. No se modificó código de la aplicación.
 - **Revisión de pantallas:** no aplica, no se tocaron plantillas.
 
+## Evidencia de producción (2026-10-21)
+
+Respondida por el desarrollador en `evidencia-00-02.md`. Por su indicación se consolida aquí y no en un `bitacora-00-02-produccion.md` aparte.
+
+- **Informe del script sobre el respaldo real del 2026-10-20** (solo el informe; el agente no abrió el volcado):
+
+  ```text
+  Archivo: respaldo_20-10-2026_13-09-17.sql
+  Tamaño: 1.438.471 bytes (mínimo 500.000): OK
+  Línea de cierre «-- Dump completed»: presente
+  Sentencias CREATE TABLE: 18
+  Tablas esperadas encontradas: 18 de 18
+  Tablas faltantes: ninguna
+  Tablas adicionales (aviso, no invalida): ninguna
+  SHA-256: 0fea064cb65fa1fc620663f2d66f6406d943489cd426a6e0cb37f31249d8d008
+  Resultado: VÁLIDO
+  Código de salida: 0
+  ```
+
+  El tamaño coincide con el que muestra el servidor para ese archivo. La línea de cierre viene presente, como se esperaba.
+- **Carpeta de respaldos:** fuera del repositorio, cifrada con BitLocker al 100 % y sin sincronización con servicios en la nube.
+- **Volcados en el servidor:** 5, sin borrar nada.
+- **Retención local:** confirmada (ver «Decisiones tomadas»).
+- **Definición de la épica 00:** se agregó una nota con la decisión vigente (5 volcados, sin reducción a mano), sin borrar el texto original. AUD-01-014 no se tocó.
+
 ## Migraciones
 
 - Ninguna. Cambio de esquema: Ninguno.
@@ -90,15 +115,15 @@ Se creó `scripts/verificar_respaldo.py`, que usa solo la biblioteca estándar. 
 - [x] Códigos 0, 1 y 1 para el íntegro, el truncado y el que tiene una tabla faltante (salidas arriba).
 - [x] El informe no contiene ninguna línea del volcado: la marca sintética y las palabras clave de SQL dan 0 coincidencias en las tres salidas. El script solo imprime el nombre del archivo, sin la ruta, nombres de tabla que sean identificadores simples (`[A-Za-z0-9_$]`), conteos y el hash.
 - [x] `docs/operacion/respaldo.md` cubre la generación (sección 2), la descarga (2), la verificación (3), qué hacer si falla (3), el almacenamiento (4), la cadencia y la retención (5) y el registro (6).
-- [ ] Informe de un respaldo real con código 0 y su hash: pendiente de `evidencia-00-02.md`, punto 1.
-- [ ] Carpeta cifrada fuera del repositorio: pendiente de `evidencia-00-02.md`, punto 2.
-- [ ] `backups/` con a lo más 5 volcados: pendiente de `evidencia-00-02.md`, punto 3. La línea base del 2026-10-20 ya informaba 5.
+- [x] Informe de un respaldo real con código 0 y su hash: ver «Evidencia de producción».
+- [x] Carpeta cifrada fuera del repositorio: BitLocker al 100 %, sin sincronización en la nube.
+- [x] `backups/` con a lo más 5 volcados: el desarrollador informa 5, sin borrar nada.
 
 ## Decisiones tomadas
 
 - **Retención en el servidor: 5 volcados**, por decisión del desarrollador del 2026-10-20. Reemplaza el «dos o tres» de la iteración, que se conserva en el texto. El último criterio se ajustó a 5 y no hay que borrar nada a mano.
   - La definición de la épica 00 («se reduce a mano en el servidor») y la acción recomendada de AUD-01-014 («retención de dos o tres en servidor») quedan desactualizadas. No se editaron: la auditoría no se reescribe, y el desarrollador decide si cambia la épica. AUD-01-014 sigue abierto para 06-03.
-- **Retención local:** queda como propuesta (`PENDIENTE_DESARROLLADOR`): los 4 volcados semanales más recientes y el previo a cada despliegue, hasta que se cierre la fase siguiente.
+- **Retención local:** confirmada por el desarrollador el 2026-10-21: los 4 volcados semanales más recientes y el previo a cada despliegue, hasta que se cierre la fase siguiente.
 - **Carpeta de respaldos:** en los documentos se llama «la carpeta de respaldos definida por el desarrollador»; su ruta no se escribe en el repositorio.
 - **Hora del nombre del volcado.** Al planificar, el agente afirmó que `datetime.now()` entregaba la hora UTC. Era incorrecto: `TIME_ZONE = 'America/Santiago'` (`settings.py:148`) fija la zona horaria del proceso. El desarrollador lo corrigió con dos volcados de producción, que tienen 3 y 4 horas de diferencia con la hora UTC del servidor. Así quedó documentado en el procedimiento.
 - **El enlace GET de «Generar Nuevo Respaldo BD»** ya está cubierto por **AUD-02-006** (04-01), así que no se creó un hallazgo nuevo. Se advirtió en el procedimiento y se agregó al registro como pendiente asociado a 04-01.
@@ -107,8 +132,6 @@ Se creó `scripts/verificar_respaldo.py`, que usa solo la biblioteca estándar. 
 
 ## Pendientes y riesgos
 
-- Responder `evidencia-00-02.md` y consolidar en `bitacora-00-02-produccion.md`.
-- Si el volcado real no trae `-- Dump completed`, el script lo da por no válido. El criterio no se relaja sin una decisión del desarrollador.
 - Si una migración futura agrega una tabla, hay que actualizar `TABLAS_ESPERADAS` en el script en esa misma iteración. Si no, el volcado se informa con una tabla adicional, pero sigue siendo válido.
 
 ## Commit sugerido

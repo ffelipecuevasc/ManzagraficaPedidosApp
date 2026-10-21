@@ -28,13 +28,28 @@ python scripts\verificar_respaldo.py "<ruta del volcado en la carpeta de respald
 ```
 
   El renglón `Archivo:` muestra solo el nombre del archivo, no la ruta. Si la línea de cierre sale `AUSENTE`, pega igual el informe y no cambies nada: se decide aparte.
-- **Respuesta:** (pega las líneas del informe, el código de salida y el hash de `Get-FileHash`)
+- **Respuesta (2026-10-21):**
+
+  ```text
+  Archivo: respaldo_20-10-2026_13-09-17.sql
+  Tamaño: 1.438.471 bytes (mínimo 500.000): OK
+  Línea de cierre «-- Dump completed»: presente
+  Sentencias CREATE TABLE: 18
+  Tablas esperadas encontradas: 18 de 18
+  Tablas faltantes: ninguna
+  Tablas adicionales (aviso, no invalida): ninguna
+  SHA-256: 0fea064cb65fa1fc620663f2d66f6406d943489cd426a6e0cb37f31249d8d008
+  Resultado: VÁLIDO
+  Código de salida: 0
+  ```
+
+  El tamaño coincide con el que muestra el servidor para ese archivo.
 
 ### 2. Carpeta cifrada
 
 - **Para qué:** criterio «El desarrollador confirma que el respaldo está en una carpeta cifrada fuera del repositorio».
 - **Cómo obtenerlo:** confirma con sí o no las tres cosas, sin escribir la ruta: (a) el volcado está en la carpeta de respaldos definida por el desarrollador; (b) esa carpeta está cifrada (indica el método, por ejemplo BitLocker o VeraCrypt); (c) no está dentro del repositorio ni en una carpeta sincronizada sin cifrar.
-- **Respuesta:**
+- **Respuesta (2026-10-21):** (a) sí, fuera del repositorio; (b) sí, cifrada con BitLocker al 100 %; (c) sí, sin sincronización con servicios en la nube.
 
 ### 3. Volcados en el servidor
 
@@ -45,14 +60,15 @@ python scripts\verificar_respaldo.py "<ruta del volcado en la carpeta de respald
 ls -l backups/*.sql | wc -l
 ```
 
-- **Respuesta:** (el número)
+- **Respuesta (2026-10-21):** 5. No se borró nada.
 
 ### 4. Retención local
 
 - **Para qué:** cerrar la propuesta de `docs/operacion/respaldo.md`, sección 5.
 - **Pregunta:** ¿confirmas que en local guardas los 4 volcados semanales más recientes y el previo a cada despliegue, hasta que se cierre la fase siguiente? (sí, o la regla que prefieras)
-- **Respuesta:**
+- **Respuesta (2026-10-21):** sí, confirmada.
 
 ## Lo que no se pudo verificar
 
 - Que el volcado real traiga la línea `-- Dump completed`. El código no usa `--skip-comments`, así que debería traerla, pero solo el informe lo confirma.
+  - **Resuelto el 2026-10-21:** el informe del respaldo real la muestra presente.

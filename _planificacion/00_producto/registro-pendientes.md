@@ -2,8 +2,8 @@
 
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
-- **Última actualización:** 2026-10-20
-- **Iteración activa:** 00-02 · Protocolo de respaldo verificado (En revisión, falta la evidencia)
+- **Última actualización:** 2026-10-21
+- **Iteración activa:** 00-03 · Réplica local fiel
 - **Próximo hito:** Fase 0 completa: respaldo verificado fuera del servidor, réplica local fiel y retroceso ensayado
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -17,7 +17,7 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | Iteración | Nombre | Épica | Estado | Depende de | Bitácoras |
 | :-------- | :----- | :---- | :----- | :--------- | :-------- |
 | 00-01 | Línea base de producción | 00 | Terminada | — | [bitacora-00-01](../99_bitacora/epica-00-blindaje/bitacora-00-01.md), [bitacora-00-01-sql-local](../99_bitacora/epica-00-blindaje/bitacora-00-01-sql-local.md), [bitacora-00-01-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md), [bitacora-00-01-cierre](../99_bitacora/epica-00-blindaje/bitacora-00-01-cierre.md) |
-| 00-02 | Protocolo de respaldo verificado | 00 | En revisión | 00-01 | [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md) |
+| 00-02 | Protocolo de respaldo verificado | 00 | Terminada | 00-01 | [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md) |
 | 00-03 | Réplica local fiel | 00 | Pendiente | 00-02 | — |
 | 00-04 | Higiene del repositorio | 00 | Pendiente | — | — |
 | 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | Pendiente | 00-03, 00-04 | — |
@@ -84,9 +84,9 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | :--- | :------------- | :---------- |
 | Comando o archivo compose del contenedor MySQL local (`AGENTS.md`, sección 5) | RDA-006 | Desarrollador |
 | ~~Confirmar con el peso medido en 00-01 que la retención provisoria de 5 volcados en el servidor cabe en el disco~~ Resuelto el 2026-10-20: 5 volcados (6,19 MB) | AUD-01-014, AUD-02-019 | Desarrollador |
-| ~~Carpeta local cifrada donde se guardan los respaldos descargados~~ Resuelto el 2026-10-20: carpeta cifrada fuera del repositorio, sin escribir su ruta (falta confirmarla en [evidencia-00-02](../10_epicas/epica-00-blindaje/evidencia-00-02.md)) | RDA-002 | Desarrollador |
-| Retención local de volcados (propuesta: los 4 semanales más recientes y el previo a cada despliegue hasta cerrar la fase siguiente) | AUD-01-014 | Desarrollador, en [evidencia-00-02](../10_epicas/epica-00-blindaje/evidencia-00-02.md) |
-| Responder [evidencia-00-02](../10_epicas/epica-00-blindaje/evidencia-00-02.md): informe del respaldo real, carpeta cifrada y conteo de `backups/` | 00-02 | Desarrollador |
+| ~~Carpeta local cifrada donde se guardan los respaldos descargados~~ Resuelto el 2026-10-20: carpeta cifrada fuera del repositorio, sin escribir su ruta; confirmada el 2026-10-21 (BitLocker, sin sincronización en la nube) | RDA-002 | Desarrollador |
+| ~~Retención local de volcados~~ Resuelto el 2026-10-21: los 4 semanales más recientes y el previo a cada despliegue hasta cerrar la fase siguiente | AUD-01-014 | Desarrollador, en [evidencia-00-02](../10_epicas/epica-00-blindaje/evidencia-00-02.md) |
+| ~~Responder [evidencia-00-02](../10_epicas/epica-00-blindaje/evidencia-00-02.md)~~ Resuelto el 2026-10-21 | 00-02 | Desarrollador |
 | «Generar Nuevo Respaldo BD» es un enlace GET: cada visita crea un volcado y desplaza al más antiguo. Advertido en `docs/operacion/respaldo.md`; se corrige en 04-01 | AUD-02-006 | Agente, en 04-01 |
 | Fechas de los hitos (`producto.md`, sección 7) | — | Desarrollador |
 | Retención de las tablas de errores y de eventos | RDA-005 | Desarrollador |
@@ -127,3 +127,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-20 | Evidencia de producción de 00-01 consolidada en la línea base; confirmados AUD-01-006, AUD-02-002 y AUD-02-004, no confirmado AUD-02-007, mitigado AUD-02-010; nuevos AUD-02-020 y AUD-02-021; nota en RDA-004; `linea_base.sh` excluye `.gitkeep`. Detalle en [bitacora-00-01-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md). |
 | 2026-10-20 | Iteración 00-01 terminada: línea base completa (`backups/`, desglose por tabla, CPU y método de conteo por fecha); AUD-02-007 baja a Baja; criterio de 00-06 y término de la épica 00 ajustados; nota de retención en la épica 06; iteración activa 00-02. Detalle en [bitacora-00-01-cierre](../99_bitacora/epica-00-blindaje/bitacora-00-01-cierre.md). |
 | 2026-10-20 | Iteración 00-02 en revisión: `verificar_respaldo.py` (pruebas sintéticas 0, 1 y 1), `docs/operacion/respaldo.md` y pedido de evidencia; retención de 5 en el servidor; expiración del 2026-11-20 confirmada. Detalle en [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md). |
+| 2026-10-21 | Iteración 00-02 terminada: respaldo real verificado (código 0, 18 de 18 tablas), carpeta cifrada con BitLocker, 5 volcados en el servidor, retención local confirmada y nota en la épica 00; iteración activa 00-03. Detalle en [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md). |

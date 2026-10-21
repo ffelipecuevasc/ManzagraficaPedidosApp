@@ -35,6 +35,7 @@ El agente no accede a producción (`AGENTS.md`, sección 6). En esta épica eso 
 
 - Los procedimientos operativos viven en `docs/operacion/` (RDA-012, propuesta).
 - La reducción de la retención de volcados en el **código** de rotación queda para 06-03; en esta épica se reduce a mano en el servidor, después de tener una copia verificada fuera de él.
+  - **Nota 2026-10-21 (decisión vigente):** el desarrollador decidió conservar en el servidor los **5 volcados** que mantiene hoy la aplicación (6,19 MB), sin reducción a mano. Ver la iteración 00-02 y `docs/operacion/respaldo.md`.
 - El despliegue de 00-04 (cambia `settings.py`) se hace con la lista de comprobación de 00-05: es su primer uso real. El despliegue de 00-06 es el segundo, separado, con su propia etiqueta.
 
 ## Criterio de término
