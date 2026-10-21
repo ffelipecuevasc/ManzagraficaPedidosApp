@@ -134,7 +134,7 @@ Con el mes calculado en UTC solo cambian julio (64) y agosto (78). Fuente: Guion
 | Versión de Python de producción | 3.13.1 | 2026-10-20 | Guion Bash (E) |
 | Diferencias entre `pip freeze` y `requirements.txt` | Ninguna: 21 paquetes en cada uno (`requirements.txt` en UTF-16) | 2026-10-20 | Guion Bash (F) |
 | ¿Tarea programada disponible? (sí o no) | Sí, disponible; **no hay ninguna creada**. El formulario para crear una diaria está habilitado (hora por defecto 21:15 UTC) | 2026-10-20 | Panel (Tasks) |
-| Fecha de expiración de la web app | 2026-11-20 (`PENDIENTE_DESARROLLADOR`: confirmar si viene de una renovación hecha el mismo día) | 2026-10-20 | Panel (Web) |
+| Fecha de expiración de la web app | 2026-11-20, resultado de la renovación hecha el 2026-10-20 con «Run until 1 month from today» (confirmado por el desarrollador) | 2026-10-20 | Panel (Web) |
 | Procedimiento de renovación de la web app | Iniciar sesión y pulsar «Run until 1 month from today», al menos una vez al mes. PythonAnywhere avisa por correo una semana antes | 2026-10-20 | Panel (Web) |
 | Tráfico según el panel | Este mes 1.197 (anterior 1.835); hoy 96 (ayer 65) | 2026-10-20 | Panel (Web) |
 | CPU de consolas del Dashboard durante la medición (cuota 100 s) | 0,00 s antes; 3,13 s (3 %) después de `linea_base.sh`; 5,11 s (5 %) después del guion SQL | 2026-10-20 | Panel (Dashboard) |
