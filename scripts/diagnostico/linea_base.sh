@@ -37,11 +37,12 @@ linea_base_produccion() {
     du -m --max-depth=1 "$HOME" 2>/dev/null | sort -rn | head -12
 
     echo
+    # .gitkeep solo mantiene la carpeta en Git: no es un volcado (correccion 00-01).
     echo "=== [C] Carpeta backups/ (solo metadatos: fecha y tamano) ==="
     local dir_backups="$PROYECTO/backups"
     if [ -d "$dir_backups" ]; then
         local lista
-        lista=$(find "$dir_backups" -maxdepth 1 -type f -printf '%T@ %TY-%Tm-%Td %TH:%TM %s %f\n' 2>/dev/null | sort -n)
+        lista=$(find "$dir_backups" -maxdepth 1 -type f ! -name '.gitkeep' -printf '%T@ %TY-%Tm-%Td %TH:%TM %s %f\n' 2>/dev/null | sort -n)
         if [ -z "$lista" ]; then
             echo "Volcados: 0 archivos"
         else

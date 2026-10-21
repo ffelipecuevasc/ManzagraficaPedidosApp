@@ -61,6 +61,8 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Alternativas consideradas:** plan de pago (diferido; la sección 7.6 del plan define las señales que justificarían evaluarlo).
 **Consecuencias:** sin servicios externos de monitoreo, sin entorno de preproducción y con arranque en frío inevitable.
 
+**Actualización 2026-10-20:** medido en 00-01, la tarea programada diaria del plan está disponible, pero la cuenta no tiene ninguna creada (el formulario para crearla está habilitado). La orden de mantención de RDA-009 tendrá que crearla. Detalle en `99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md`.
+
 ## RDA-005 · Observabilidad local en tablas propias de MySQL con respaldo a salida estándar (D4)
 
 - **Fecha:** 2026-10-19

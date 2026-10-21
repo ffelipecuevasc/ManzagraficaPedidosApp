@@ -162,3 +162,49 @@ contar_logs
 - El método de conteo de desconexiones (nota del paso 5).
 - Qué clave usa realmente producción si resulta que la consola no la ve (paso 3).
 - Las rutas del proyecto y del entorno virtual en PythonAnywhere (`PENDIENTE_DESARROLLADOR`): el guion las toma de las dos variables del inicio.
+
+## Respuesta del desarrollador (registrada el 2026-10-20)
+
+El desarrollador ejecutó los pasos 1 a 5 el 2026-10-20 (UTC) y pegó en la conversación con el agente la salida ya procesada de las consolas y del panel de PythonAnywhere. Por la regla de datos personales **no se copian aquí registros crudos**: ni líneas del registro de accesos (tienen IP y agente), ni la clave, ni rutas con datos de clientes. Las cifras quedaron en `00_producto/linea-base-produccion.md` y el análisis en `99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md`.
+
+| Paso | Respondido | Observación |
+| :--- | :--------- | :---------- |
+| 1. Guion SQL | Sí | 14 secciones. |
+| 2. Guion Bash | Sí | La salida contó `.gitkeep` como volcado (6 en vez de 5, antigüedad del más antiguo mal calculada). El desarrollador corrigió los valores a mano y el guion ya excluye `.gitkeep`. |
+| 3. Clave | Sí | `False` / `False`. |
+| 4. Panel | Sí | Sin tarea programada creada; expiración 2026-11-20 (`PENDIENTE_DESARROLLADOR`: confirmar si viene de una renovación del mismo día). El uso de CPU antes y después no se informó. |
+| 5. Registros | Sí, con un ajuste | El conteo por archivo no sirve para «7 días» porque los archivos rotan de forma irregular. Se contó por fecha de cada línea (método siguiente). |
+
+Pendiente de la evidencia: el tamaño de `backups/` completo con subcarpetas y el desglose de datos e índices por tabla no vinieron en la respuesta; quedan como `PENDIENTE_DESARROLLADOR` en la línea base.
+
+## Método reutilizable para 00-06: conteo por fecha
+
+**Por qué:** los registros rotados de PythonAnywhere no cubren un día cada uno (`server.log` cubría 89 días; `access.log` empezaba el 2026-10-15 a las 09:03). Contar por archivo mezcla periodos. Se cuenta por la fecha escrita en cada línea, sobre todos los archivos (planos y `.gz`).
+
+**Ventana:** siete días completos en UTC, más una ventana larga (todos los días que cubra el registro) para calcular la tasa diaria. En 00-06 se usa la misma ventana después del despliegue y se compara la tasa diaria, no el total.
+
+**Registro de accesos** (formato verificado: `IP - - [dd/Mon/aaaa:hh:mm:ss +0000] "GET /robots.txt HTTP/1.1" 404 ...`). Pega en una consola Bash; imprime solo la fecha, el código de respuesta y el conteo:
+
+```bash
+contar_robots_por_dia() {
+    local dir="${DIR_LOGS:-/var/log}" dominio="manzagrafica.pythonanywhere.com"
+    zcat -f "$dir/$dominio".access.log* 2>/dev/null \
+        | awk '/"GET \/robots\.txt/ {
+                 split($0, a, "[][]"); split(a[2], f, ":");   # f[1] = dd/Mon/aaaa
+                 split($0, b, "\""); split(b[3], c, " ");      # c[1] = codigo de respuesta
+                 n[f[1] " " c[1]]++ }
+               END { for (k in n) print k, n[k] }' \
+        | sort -t/ -k3,3 -k2,2M -k1,1n
+}
+contar_robots_por_dia
+```
+
+**Registro del servidor:** la misma idea con los patrones verificados en 00-01, `Broken pipe` y `SIGPIPE|closed (pipe|socket|fd)`, agrupando por la fecha de cada línea. El formato de fecha de las líneas del registro del servidor **no quedó registrado** en la evidencia: `PENDIENTE_DESARROLLADOR`, guardar en `evidencia-00-06.md` el bloque exacto que se usó el 2026-10-20 para que la comparación use el mismo método.
+
+**Línea base contra la que compara 00-06** (detalle en `linea-base-produccion.md`, sección 8):
+
+| Señal | Últimos 7 días (2026-10-15 a 2026-10-21 UTC) | Tasa en la ventana larga |
+| :---- | :------------------------------------------- | :----------------------- |
+| 404 de `/robots.txt` | 7 | unas 1,1 por día |
+| `Broken pipe` | 4 | 0,44 por día (39 en 89 días) |
+| `SIGPIPE` o cerrado | 12 | 152 en 89 días |
