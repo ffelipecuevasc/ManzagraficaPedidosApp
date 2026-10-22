@@ -1,7 +1,7 @@
 # Iteración 00-05 · Protocolo de versionado, despliegue y retroceso
 
 - **Épica:** 00 · Blindaje y punto de retorno
-- **Estado:** Pendiente
+- **Estado:** En revisión (2026-10-21: tareas 1 a 4 escritas; ensayo y despliegue en `evidencia-00-05.md`)
 - **Subfase del plan:** 0.5
 - **Depende de:** 00-03, 00-04
 - **RDA relacionadas:** RDA-003, RDA-007, RDA-012
@@ -38,8 +38,8 @@ Convertir el despliegue en un procedimiento repetible y el retroceso en algo ens
 
 ## Criterios de aceptación
 
-- [ ] `docs/operacion/despliegue.md` contiene la convención de etiquetas, la lista de comprobación y los pasos en PythonAnywhere.
-- [ ] `docs/operacion/retroceso.md` cubre los tres casos con pasos numerados.
+- [x] `docs/operacion/despliegue.md` contiene la convención de etiquetas, la lista de comprobación y los pasos en PythonAnywhere.
+- [x] `docs/operacion/retroceso.md` cubre los tres casos con pasos numerados.
 - [ ] El ensayo de retroceso en la réplica quedó medido en la bitácora con un tiempo menor a 15 minutos, y la réplica terminó en el mismo estado de migraciones que al empezar (`showmigrations` antes y después).
 - [ ] La migración temporal del ensayo no aparece en `git status` ni en `pedidos/migrations/` al terminar.
 - [ ] La evidencia muestra la etiqueta del despliegue de 00-04 (`git tag -n`) y la lista de comprobación completada.
