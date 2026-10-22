@@ -1,0 +1,2 @@
+# requirements.txt se guarda siempre en UTF-8 con fin de linea LF (AGENTS.md, regla tecnica 16).
+requirements.txt text eol=lf

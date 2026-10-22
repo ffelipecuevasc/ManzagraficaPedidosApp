@@ -26,15 +26,16 @@ Cómo levantar el MySQL local, restaurar en él un respaldo verificado de produc
 | Configuración | `utf8mb4`, `utf8mb4_unicode_ci`, `--default-time-zone=UTC`, `sql_mode = NO_ENGINE_SUBSTITUTION` |
 | Bases | `manzagrafica_local` (desarrollo, **no se toca**) y `manzagrafica_replica` (copia de producción) |
 
-**Variables de `.env`** (las mismas que va a documentar `.env.example` en 00-04):
+**Variables de `.env`** (documentadas en `.env.example` desde la 00-04):
 
 | Variable | Uso |
 | :------- | :-- |
-| `DB_NAME` | Nombre de la base que usa la app. Hoy no se lee: `settings.py` fija `manzagrafica_local` hasta la 00-04. |
-| `DB_USER` | Usuario de MySQL (`root` en local). Hoy no se lee, por la misma razón. |
-| `DB_PASSWORD` | Contraseña de root. El compose la pasa como `MYSQL_ROOT_PASSWORD`. |
-| `DB_HOST` | `127.0.0.1`. Hoy no se lee. |
-| `DB_PORT` | Puerto publicado (por defecto `3306`). |
+| `DB_NAME` | Nombre de la base que usa la app. Si está vacía: `manzagrafica_local`. |
+| `DB_USER` | Usuario de MySQL. Si está vacía: `root`. |
+| `DB_PASSWORD` | Contraseña de root. Obligatoria: sin ella (y sin `DATABASE_URL`), la app no arranca y lo dice. El compose la pasa como `MYSQL_ROOT_PASSWORD`. |
+| `DB_HOST` | Si está vacía: `127.0.0.1`. |
+| `DB_PORT` | Puerto publicado. Si está vacía: `3306`. |
+| `ALLOWED_HOSTS` | En local no hace falta: si está vacía, se permiten `localhost` y `127.0.0.1`. |
 
 `MYSQL_ROOT_PASSWORD` solo se aplica cuando el volumen está vacío. Como se reutiliza `mysql_data`, `DB_PASSWORD` tiene que ser **la contraseña de root que ya tiene el volumen**. Si no coincide, el contenedor arranca igual, pero la conexión falla.
 
@@ -147,19 +148,19 @@ docker compose exec db sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CRE
 
 ## 6. Apuntar la aplicación a la réplica
 
-Hasta la 00-04, `settings.py` apunta a `manzagrafica_local`. Para usar la réplica sin tocarlo, define `DATABASE_URL` **solo en la sesión de PowerShell**:
+Desde la 00-04, la app toma la base de `DB_NAME`. Para usar la réplica sin cambiar tu `.env`, define `DB_NAME` **solo en la sesión de PowerShell**. Una variable de la sesión tiene prioridad sobre el `.env`, y la contraseña sigue saliendo de tu `.env`:
 
 ```powershell
-$env:DATABASE_URL = "mysql://root:<contraseña>@127.0.0.1:3306/manzagrafica_replica"
+$env:DB_NAME = "manzagrafica_replica"
 ```
 
-- Reemplaza `<contraseña>` en tu terminal. No la escribas en ningún archivo del repositorio. Si tiene caracteres especiales (`@`, `:`, `/`, `#`, `%`), escríbelos codificados para URL (por ejemplo, `@` se escribe `%40`).
-- **La variable se pierde al cerrar la sesión.** Al abrir otra terminal, la app vuelve a `manzagrafica_local`. Para volver antes, ejecuta `Remove-Item Env:DATABASE_URL`.
+- **La variable se pierde al cerrar la sesión.** Al abrir otra terminal, la app vuelve a la base de tu `.env` (o a `manzagrafica_local`). Para volver antes, ejecuta `Remove-Item Env:DB_NAME`.
+- No definas `DATABASE_URL` en local: si existe, reemplaza a todas las `DB_*`.
 - Comprueba a qué base apunta antes de hacer cualquier cosa: la línea «Base medida» de la sección 7.
 
 ## 7. Comprobar la paridad
 
-Con `DATABASE_URL` definida y el `.venv` activo:
+Con `DB_NAME` apuntando a la réplica (sección 6) y el `.venv` activo:
 
 ```powershell
 python scripts\diagnostico\paridad_replica.py
@@ -194,7 +195,7 @@ python manage.py check
 python manage.py runserver
 ```
 
-- **Hasta la 00-04, `runserver` responde 400 en `127.0.0.1`**, porque `ALLOWED_HOSTS` solo contiene el dominio de producción (AUD-02-022). Mientras tanto, agrega `'127.0.0.1'` en tu copia de `settings.py` solo para la revisión y deshazlo al terminar con `git restore PedidosApp/settings.py`. Nunca hagas commit de ese cambio.
+- Desde la 00-04, `runserver` responde en `127.0.0.1` y `localhost` sin tocar `settings.py` (AUD-02-022). Antes de la 00-04 respondía 400 y había que editar `settings.py` a mano; ya no hace falta.
 - Inicia sesión con **tu propia cuenta de producción**: la réplica trae los usuarios de producción. No crees usuarios nuevos en la réplica.
 - **No uses en la réplica «Respaldar BD» ni «Restaurar»**: escriben volcados con datos reales en `backups/` del repositorio y modifican la base.
 - Al terminar, detén `runserver` (Ctrl+C) y ejecuta `docker compose stop`.

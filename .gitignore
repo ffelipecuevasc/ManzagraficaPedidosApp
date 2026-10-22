@@ -11,9 +11,24 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Ignorar la configuración (SECRETOS) del .env
+# Ignorar la configuración (SECRETOS) del .env y sus variantes; solo se versiona la plantilla
 .env
+.env.*
+!.env.example
 
 # Ignorar contenido de backups, pero mantener la carpeta
 backups/*
 !backups/.gitkeep
+
+# Configuración del IDE (PyCharm)
+.idea/
+
+# Volcados SQL: contienen datos de clientes y nunca se versionan.
+# Excepción: los guiones de solo lectura bajo scripts/ (por ejemplo, scripts/diagnostico/linea_base.sql).
+*.sql
+!scripts/**/*.sql
+
+# Archivos generados o subidos por usuarios
+staticfiles/
+media/
+node_modules/

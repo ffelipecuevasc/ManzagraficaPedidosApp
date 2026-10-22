@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Cargar variables de entorno desde el archivo .env
 # 1. Primero definimos la Ruta Base (El mapa)
@@ -40,7 +41,16 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # Para la producción (despliegue) el archivo debe estar en FALSE para que el servidor pueda intervenir
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = ['manzagrafica.pythonanywhere.com']
+# Hosts permitidos, desde la variable ALLOWED_HOSTS (separados por comas).
+# Si no está definida o está vacía, solo se permite el acceso local.
+# Producción define ALLOWED_HOSTS=manzagrafica.pythonanywhere.com en su .env.
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in (os.getenv('ALLOWED_HOSTS') or 'localhost,127.0.0.1').split(',')
+    if host.strip()
+]
+if '*' in ALLOWED_HOSTS:
+    raise ImproperlyConfigured("ALLOWED_HOSTS no puede contener '*': indica cada dominio por su nombre.")
 
 # Application definition
 
@@ -93,24 +103,33 @@ WSGI_APPLICATION = "PedidosApp.wsgi.application"
 
 # CONFIGURACIÓN DE BASE DE DATOS
 # ------------------------------------------------------
-# 1. Configuración Base: MySQL 8.0 (Para tu desarrollo local por defecto [Corriendo en Docker])
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'manzagrafica_local',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+# 1. Configuración local: MySQL 8.0 en Docker (compose.yaml). Los datos de conexión
+#    vienen de las variables DB_* del .env; la contraseña no tiene valor por defecto.
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if not DATABASE_URL:
+    DB_PASSWORD = os.getenv('DB_PASSWORD')
+    if not DB_PASSWORD:
+        raise ImproperlyConfigured(
+            'Falta la contraseña de la base de datos: define DB_PASSWORD en el archivo .env '
+            '(ver .env.example) o define DATABASE_URL.'
+        )
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME') or 'manzagrafica_local',
+            'USER': os.getenv('DB_USER') or 'root',
+            'PASSWORD': DB_PASSWORD,
+            'HOST': os.getenv('DB_HOST') or '127.0.0.1',
+            'PORT': os.getenv('DB_PORT') or '3306',
+        }
     }
-}
 
 # CONFIGURACIÓN DE BASE DE DATOS
 # ------------------------------------------------------
 # 2. Configuración Producción (PythonAnywhere)
-# Si existe la variable DATABASE_URL en el entorno (solo en la nube), sobrescribimos la config.
-DATABASE_URL = os.environ.get('DATABASE_URL')
+# Si existe la variable DATABASE_URL en el entorno (solo en la nube), se usa esa configuración.
 if DATABASE_URL:
+    DATABASES = {}
     DATABASES['default'] = dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=60,
