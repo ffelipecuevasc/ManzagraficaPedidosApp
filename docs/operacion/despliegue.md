@@ -16,11 +16,19 @@ Cada bloque de comandos dice arriba en qué terminal va:
 | **[PA · Bash]** | Consola Bash de PythonAnywhere | Pestaña **Consoles** → **Bash** (o una consola Bash que ya tengas abierta) |
 | **[PA · Panel]** | Panel web de PythonAnywhere, sin terminal | Pestañas **Web**, **Files** o **Databases** |
 
-Datos que vas a necesitar del panel (pestaña **Web**, sección *Code*), anótalos una vez:
+**Variables `PROYECTO` y `VENV`.** Los comandos del servidor usan `"$PROYECTO"` (la carpeta del proyecto, la que tiene `manage.py`) y `"$VENV"` (la carpeta del entorno virtual). Son **los mismos valores que usaste como `PROYECTO` y `VENV` con `scripts/diagnostico/linea_base.sh`** en la 00-01; si no los tienes a mano, salen de la pestaña **Web**, sección *Code* (*Source code* y *Virtualenv*). Al abrir cada consola Bash, defínelos primero:
 
-- **Source code:** la carpeta del proyecto en el servidor. En este documento se llama `<carpeta del proyecto>`.
-- **Virtualenv:** la ruta del entorno virtual. En este documento se llama `<ruta del virtualenv>`.
-- **Error log:** en la sección *Log files*. Habitualmente `/var/log/manzagrafica.pythonanywhere.com.error.log`.
+**[PA · Bash]**
+
+```bash
+PROYECTO="<mismo valor que en linea_base.sh>"
+VENV="<mismo valor que en linea_base.sh>"
+test -f "$PROYECTO/manage.py" && test -x "$VENV/bin/python" && echo "PROYECTO y VENV correctos"
+```
+
+Esperado: `PROYECTO y VENV correctos`. Si no aparece, revisa los dos valores antes de seguir. Las variables se pierden al cerrar la consola.
+
+**Registro de errores:** pestaña **Web**, sección *Log files*. Habitualmente `/var/log/manzagrafica.pythonanywhere.com.error.log`.
 
 La consola Bash consume tus 100 segundos diarios de CPU. Los comandos de este documento son cortos; no dejes procesos corriendo.
 
@@ -31,11 +39,11 @@ Decidida por el desarrollador el 2026-10-21 (reemplaza el formato `fase<N>-<prop
 **Formato:** `v<fase>.<correlativo>-<propósito>`
 
 - `<fase>`: número de la fase del plan (igual al de la épica), sin ceros a la izquierda: `0`, `1`… `7`.
-- `<correlativo>`: número del despliegue dentro de esa fase, desde `1` y sin saltos: `v0.1`, `v0.2`…
+- `<correlativo>`: número del despliegue dentro de esa fase. **Cada fase parte en `1`** (aprobado por el desarrollador el 2026-10-22) y sigue sin saltos: `v0.1`, `v0.2`…, `v1.1`. El `.0` queda reservado para `v0.0-inicial`.
 - `<propósito>`: una o dos palabras en minúsculas, ASCII y con guiones: `higiene`, `correcciones`, `observabilidad`.
 - La etiqueta es **anotada** (`git tag -a`). Su mensaje dice la iteración y la fecha del despliegue (hora de Chile): `Iteración 00-04 · desplegada el 2026-10-22`. Es la única fecha que lleva.
 - Una etiqueta publicada no se mueve ni se borra. Si un despliegue se repite con cambios, lleva el correlativo siguiente.
-- `v0.0-inicial`: etiqueta especial que marca el código que estaba en producción antes del primer despliegue con este procedimiento (sección 4, paso 4.2). Sirve como destino de retroceso.
+- `v0.0-inicial`: etiqueta especial que marca el código que estaba en producción antes del primer despliegue con este procedimiento (se crea en el paso 3.1, antes de traer la versión nueva; sección 4, punto 1). Sirve como destino de retroceso.
 - **Etiquetas de ensayo** (por ejemplo `ensayo-retroceso`): solo locales, empiezan con `ensayo-`, nunca se publican con `push` y se borran al terminar el ensayo.
 
 Ejemplos: `v0.1-higiene` (00-04), `v0.2-correcciones` (00-06), `v1.1-observabilidad`.
@@ -97,8 +105,8 @@ Antes de empezar, ten a mano el nombre de la etiqueta que se despliega y la de d
 **[PA · Bash]**
 
 ```bash
-cd <carpeta del proyecto>
-source <ruta del virtualenv>/bin/activate
+cd "$PROYECTO"
+source "$VENV/bin/activate"
 git status --short
 git rev-parse --short HEAD
 git describe --tags --always
@@ -106,8 +114,17 @@ git describe --tags --always
 
 - `git status --short` **no debe mostrar nada**. Si muestra archivos modificados (` M`), alguien editó código directamente en el servidor: detente, no hagas `fetch` ni `checkout`, y anota la lista. Esos cambios se pierden o bloquean el despliegue.
   - Aparecer `?? media/...` o `?? staticfiles/` es normal hasta que el servidor tenga el `.gitignore` de la 00-04.
-- `git rev-parse --short HEAD`: el commit que está hoy en producción. **Anótalo**: es el destino de retroceso si no hay etiqueta anterior.
+- `git rev-parse --short HEAD`: el commit que está hoy en producción. **Anótalo**.
 - `git describe`: muestra la etiqueta actual si la hay.
+- **Si producción no tiene etiqueta** (solo en el primer despliegue con este procedimiento), crea ahora `v0.0-inicial` sobre ese commit, **antes de seguir con el paso 3.2**. Así el caso 1 de `retroceso.md` ya tiene a dónde volver si el despliegue falla. **[PC · PowerShell 7]**:
+
+  ```powershell
+  git tag -a v0.0-inicial <commit anotado> -m "Estado de producción antes del primer despliegue con el protocolo 00-05"
+  git push origin v0.0-inicial
+  git ls-remote --tags origin v0.0-inicial
+  ```
+
+  Esperado: `ls-remote` devuelve una línea. Si `git tag` responde `Not a valid object name`, ese commit no está en tu repositorio local (se hizo directo en el servidor o no se publicó): no sigas con el despliegue y revísalo.
 
 ### 3.2 Traer la versión etiquetada
 
@@ -206,10 +223,10 @@ tail -n 20 $L | cut -c1-160
 
 El paso a paso exacto, con las salidas que hay que anotar, está en `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-05.md`, parte B. Resume lo propio de este despliegue (punto 8 de la lista):
 
-1. **[PA · Bash]** Contar los archivos de `media/` y `media/pedidos/`, y comprobar que existe la captura.
-2. **[PA · Bash]** Con un conteo, comprobar que ningún pedido referencia `pedidos/Captura_de_pantalla_2026-01-20_152121.jpg`. El commit `965227d` saca esa imagen del índice y el `checkout` la borra del disco del servidor. Si el conteo es mayor que 0, copia la imagen fuera del repositorio antes del `checkout`.
-3. **[PA · Bash o Files]** Confirmar que el `.env` del servidor tiene `DATABASE_URL` y agregar `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` **antes** de recargar. Sin esa variable el sitio responde 400.
-4. **[PC · PowerShell 7]** Crear `v0.0-inicial` sobre el commit que estaba en producción (anotado en el paso 3.1), para tener un destino de retroceso con nombre.
+1. **[PC · PowerShell 7]** Crear y publicar `v0.0-inicial` sobre el commit que está en producción (anotado en el paso 3.1), **antes de tocar nada más en el servidor**, para que el retroceso ya tenga destino.
+2. **[PA · Bash]** Contar los archivos de `media/` y `media/pedidos/`, y comprobar que existe la captura.
+3. **[PA · Bash]** Con un conteo, comprobar que ningún pedido referencia `pedidos/Captura_de_pantalla_2026-01-20_152121.jpg`. El commit `965227d` saca esa imagen del índice y el `checkout` la borra del disco del servidor. Si el conteo es mayor que 0, copia la imagen fuera del repositorio antes del `checkout`.
+4. **[PA · Bash o Files]** Confirmar que el `.env` del servidor tiene `DATABASE_URL` y agregar `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` **antes** de recargar. Sin esa variable el sitio responde 400.
 
 ## 5. Registro de despliegues
 

@@ -20,7 +20,7 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 00-02 | Protocolo de respaldo verificado | 00 | Terminada | 00-01 | [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md) |
 | 00-03 | Réplica local fiel | 00 | Terminada | 00-02 | [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md) |
 | 00-04 | Higiene del repositorio | 00 | Terminada (sin desplegar; se despliega en 00-05) | — | [bitacora-00-04](../99_bitacora/epica-00-blindaje/bitacora-00-04.md) |
-| 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | En revisión | 00-03, 00-04 | [bitacora-00-05](../99_bitacora/epica-00-blindaje/bitacora-00-05.md) |
+| 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | En revisión | 00-03, 00-04 | [bitacora-00-05](../99_bitacora/epica-00-blindaje/bitacora-00-05.md), [bitacora-00-05-ensayo](../99_bitacora/epica-00-blindaje/bitacora-00-05-ensayo.md) |
 | 00-06 | Correcciones tempranas de riesgo nulo | 00 | Pendiente | 00-05 | — |
 | 01-01 | Modelo de registro de errores y eventos | 01 | Pendiente | Épica 00 | — |
 | 01-02 | Servicio de registro | 01 | Pendiente | 01-01, 02-01 | — |
@@ -108,6 +108,8 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~Responder [evidencia-00-03](../10_epicas/epica-00-blindaje/evidencia-00-03.md)~~ Resuelto el 2026-10-21 | 00-03 | Desarrollador |
 | Desplegar la 00-04 como primer uso de la lista de la 00-05 (punto 8): revisar `media/` y la referencia a la captura, confirmar `DATABASE_URL` y definir `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` en el `.env` del servidor antes de recargar. Paso a paso en [evidencia-00-05](../10_epicas/epica-00-blindaje/evidencia-00-05.md), parte B, después del ensayo (parte A) | 00-04, AUD-02-022 | Desarrollador, en 00-05 |
 | ~~Formato de etiquetas de despliegue (00-05, tarea 1)~~ Resuelto el 2026-10-21: `v<fase>.<correlativo>-<propósito>`, reemplaza al del 2026-10-20 | RDA-007 | Desarrollador |
+| ~~Numeración del correlativo de etiquetas~~ Resuelto el 2026-10-22: cada fase parte en `.1` (`v0.1`, `v1.1`); `v0.0-inicial` es la etiqueta del estado de partida | RDA-007 | Desarrollador |
+| Ventana del despliegue de 00-04 (`v0.1-higiene`), parte B de [evidencia-00-05](../10_epicas/epica-00-blindaje/evidencia-00-05.md) | 00-05 | Desarrollador |
 
 ## 4. Propuestas fuera de alcance
 
@@ -137,3 +139,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-21 | Iteración 00-04 terminada sin desplegar: índice sin `.idea/` ni la captura de `media/` (commit `965227d`), réplica con `check` limpio y `ALLOWED_HOSTS` con 200, 200 y 400; se cierran AUD-01-023 y AUD-02-009; **el despliegue de la 00-04 queda pendiente de la 00-05**, cuya lista suma el punto 8; iteración activa 00-05. Detalle en [bitacora-00-04](../99_bitacora/epica-00-blindaje/bitacora-00-04.md). |
 | 2026-10-21 | Formato de etiquetas cambia a `v<fase>.<correlativo>-<propósito>` (decisión del desarrollador); queda sin efecto el `fase<N>-<propósito>-AAAA-MM-DD` del 2026-10-20. Detalle en [bitacora-00-05](../99_bitacora/epica-00-blindaje/bitacora-00-05.md). |
 | 2026-10-21 | Iteración 00-05 en revisión: `docs/operacion/despliegue.md`, `docs/operacion/retroceso.md` y pedido de evidencia con el ensayo en la réplica (parte A) y el despliegue de 00-04 como `v0.1-higiene` (parte B). Detalle en [bitacora-00-05](../99_bitacora/epica-00-blindaje/bitacora-00-05.md). |
+| 2026-10-22 | Ensayo de retroceso aprobado en la réplica (caso 2, 1,31 min, migraciones iguales antes y después); numeración desde `.1` con `v0.0-inicial` como estado de partida; `v0.0-inicial` pasa a crearse antes de tocar el servidor; 00-05 sigue en revisión hasta el despliegue. Detalle en [bitacora-00-05-ensayo](../99_bitacora/epica-00-blindaje/bitacora-00-05-ensayo.md). |

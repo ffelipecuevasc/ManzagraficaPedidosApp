@@ -19,15 +19,15 @@ Anota la hora (hora de Chile) en que empiezas: el tiempo cuenta desde aquí.
 Necesitas:
 
 - **La etiqueta de destino:** la anterior a la desplegada (`git tag -n` en tu PC). Para el primer despliegue es `v0.0-inicial` o el commit anotado en el paso 3.1 de `despliegue.md`.
-- `<carpeta del proyecto>` y `<ruta del virtualenv>` (pestaña **Web**, sección *Code*).
+- Las variables `PROYECTO` y `VENV` definidas en la consola Bash: son los mismos valores que usaste con `scripts/diagnostico/linea_base.sh` (`despliegue.md`, sección 0, tiene el comando que los define y los comprueba).
 
 ## 2. Caso 1 · Sin migraciones: volver el código
 
 1. **[PA · Bash]** Ubicarse:
 
    ```bash
-   cd <carpeta del proyecto>
-   source <ruta del virtualenv>/bin/activate
+   cd "$PROYECTO"
+   source "$VENV/bin/activate"
    git describe --tags
    ```
 
@@ -55,8 +55,8 @@ Una migración de Clase 2 solo agrega: tablas nuevas, columnas que admiten nulo 
 1. **Primero revertir, con el código nuevo todavía en su lugar.** Django necesita el archivo de la migración para saber cómo deshacerla. **[PA · Bash]**:
 
    ```bash
-   cd <carpeta del proyecto>
-   source <ruta del virtualenv>/bin/activate
+   cd "$PROYECTO"
+   source "$VENV/bin/activate"
    python manage.py showmigrations pedidos
    python manage.py migrate pedidos <última migración de la etiqueta de destino> --plan
    ```
@@ -94,8 +94,8 @@ Una migración de Clase 3 no tiene retroceso seguro sin respaldo: por eso está 
 5. **[PA · Bash]** Ubica el volcado en el servidor y confirma que es el mismo que verificaste:
 
    ```bash
-   ls -l <carpeta del proyecto>/backups/
-   sha256sum <carpeta del proyecto>/backups/<archivo del volcado>
+   ls -l "$PROYECTO"/backups/
+   sha256sum "$PROYECTO"/backups/<archivo del volcado>
    ```
 
    El hash debe ser igual al del registro. Si el volcado ya rotó y no está, súbelo desde tu carpeta cifrada con la pestaña **Files** a una carpeta **fuera** del proyecto (por ejemplo `~/restauracion/`) y comprueba el hash igual.
@@ -124,3 +124,4 @@ Ensayos y retrocesos reales. Solo tiempos, etiquetas y resultado.
 
 | Fecha (hora de Chile) | Real o ensayo | Caso | De → a | Minutos | Resultado |
 | :-------------------- | :------------ | :--- | :----- | :------ | :-------- |
+| 2026-10-22 | Ensayo en `manzagrafica_replica` (00-05) | 2 | `0007` temporal → `ensayo-retroceso` | 1,31 | Correcto: migraciones y tabla iguales al estado inicial |

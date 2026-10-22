@@ -40,8 +40,8 @@ Convertir el despliegue en un procedimiento repetible y el retroceso en algo ens
 
 - [x] `docs/operacion/despliegue.md` contiene la convención de etiquetas, la lista de comprobación y los pasos en PythonAnywhere.
 - [x] `docs/operacion/retroceso.md` cubre los tres casos con pasos numerados.
-- [ ] El ensayo de retroceso en la réplica quedó medido en la bitácora con un tiempo menor a 15 minutos, y la réplica terminó en el mismo estado de migraciones que al empezar (`showmigrations` antes y después).
-- [ ] La migración temporal del ensayo no aparece en `git status` ni en `pedidos/migrations/` al terminar.
+- [x] El ensayo de retroceso en la réplica quedó medido en la bitácora con un tiempo menor a 15 minutos, y la réplica terminó en el mismo estado de migraciones que al empezar (`showmigrations` antes y después).
+- [x] La migración temporal del ensayo no aparece en `git status` ni en `pedidos/migrations/` al terminar.
 - [ ] La evidencia muestra la etiqueta del despliegue de 00-04 (`git tag -n`) y la lista de comprobación completada.
 
 ## Fuera de alcance

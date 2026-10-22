@@ -44,7 +44,14 @@ Esperado: `manzagrafica_replica`. **Si dice otra cosa, detente:** no sigas en `m
 git rev-parse --short HEAD
 ```
 
-**Respuesta A1 (commit):**
+**Respuesta A1 (commit):** `8b492f8` (punta de `main`). `git status --short` no mostró nada (árbol limpio). La sesión apuntó a `manzagrafica_replica`.
+
+```text
+manzagrafica_replica
+8b492f8
+```
+
+Nota: el primer `docker compose up -d` falló con `500 Internal Server Error` al consultar la imagen `mysql:8.0.46` (Docker Desktop todavía estaba arrancando). El segundo intento levantó el contenedor (`Container manzagrafica-mysql Started`).
 
 ### A2. Estado inicial
 
@@ -60,7 +67,19 @@ python manage.py shell -c "from django.db import connection; from django.db.migr
 
 Esperado: `tabla: False | filas 0007: 0`.
 
-**Respuesta A2 (pega ambas salidas):**
+**Respuesta A2:**
+
+```text
+pedidos
+ [X] 0001_initial
+ [X] 0002_itemcotizacion
+ [X] 0003_alter_itemcotizacion_cantidad_and_more
+ [X] 0004_historialbd
+ [X] 0005_pedido_creado_por_pedido_estado_pago_and_more
+ [X] 0006_remove_pedido_valor_abonado_and_more
+
+tabla: False | filas 0007: 0
+```
 
 ### A3. Etiqueta de la versión anterior (solo local)
 
@@ -70,6 +89,13 @@ git tag -n
 ```
 
 Esperado: `ensayo-retroceso` con su mensaje. **No la publiques con `push`.**
+
+**Respuesta A3:**
+
+```text
+ensayo-retroceso Ensayo de retroceso 00-05, solo local
+fase0-linea-base-2026-10-20 Estado de produccion medido el 2026-10-20
+```
 
 ### A4. «Desplegar» la versión nueva con la migración temporal
 
@@ -115,7 +141,38 @@ python manage.py shell -c "from django.db import connection; from django.db.migr
 
 Esperado: `[X] 0007_ensayo_retroceso` y `tabla: True | filas 0007: 1`.
 
-**Respuesta A4 (salida de `sqlmigrate`, `migrate` y las dos últimas):**
+**Respuesta A4:**
+
+```text
+> python manage.py sqlmigrate pedidos 0007
+--
+-- Raw SQL operation
+--
+CREATE TABLE ensayo_retroceso (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY) ENGINE=InnoDB;
+
+> python manage.py makemigrations --check --dry-run
+No changes detected
+
+> python manage.py migrate pedidos
+(advertencia mysql.W002, ver Observaciones)
+Operations to perform:
+  Apply all migrations: pedidos
+Running migrations:
+  Applying pedidos.0007_ensayo_retroceso... OK
+
+> python manage.py showmigrations pedidos
+ [X] 0001_initial
+ [X] 0002_itemcotizacion
+ [X] 0003_alter_itemcotizacion_cantidad_and_more
+ [X] 0004_historialbd
+ [X] 0005_pedido_creado_por_pedido_estado_pago_and_more
+ [X] 0006_remove_pedido_valor_abonado_and_more
+ [X] 0007_ensayo_retroceso
+
+tabla: True | filas 0007: 1
+```
+
+Clasificación: **Clase 2** (una sola sentencia `CREATE TABLE`, sin `ALTER` ni `DROP`).
 
 ### A5. Retroceso medido
 
@@ -161,7 +218,44 @@ $inicio = Get-Date
 
    Esperado: `System check identified no issues (0 silenced).`, `No planned migration operations.` y menos de 15 minutos.
 
-**Respuesta A5 (pega todas las salidas y los minutos):**
+**Respuesta A5:**
+
+```text
+> python manage.py migrate pedidos 0006 --plan
+(advertencia mysql.W002, ver Observaciones)
+Planned operations:
+pedidos.0007_ensayo_retroceso
+    Raw SQL operation -> DROP TABLE ensayo_retroceso;
+
+> python manage.py migrate pedidos 0006
+(advertencia mysql.W002, ver Observaciones)
+Operations to perform:
+  Target specific migration: 0006_remove_pedido_valor_abonado_and_more, from pedidos
+Running migrations:
+  Rendering model states... DONE
+  Unapplying pedidos.0007_ensayo_retroceso... OK
+
+> Remove-Item pedidos\migrations\0007_ensayo_retroceso.py          (sin errores)
+> Remove-Item pedidos\migrations\__pycache__\0007_ensayo_retroceso*.pyc   (sin errores)
+
+> git checkout ensayo-retroceso
+Note: switching to 'ensayo-retroceso'.
+You are in 'detached HEAD' state. ...
+HEAD is now at 8b492f8 Épica 0 - Iteración 00-05: agrega los procedimientos de despliegue y retroceso, ...
+
+> git describe --tags
+ensayo-retroceso
+
+> python manage.py check
+System check identified no issues (0 silenced).
+
+> python manage.py migrate --plan
+(advertencia mysql.W002, ver Observaciones)
+Planned operations:
+  No planned migration operations.
+
+Minutos: 1.31
+```
 
 ### A6. Estado final y limpieza
 
@@ -184,7 +278,56 @@ docker compose stop
 
 Esperado: `git status --short` sin `0007`; `Get-ChildItem` sin resultados; `Deleted tag 'ensayo-retroceso'`; la última lista vacía.
 
-**Respuesta A6 (pega las salidas):**
+**Respuesta A6:**
+
+```text
+> python manage.py showmigrations pedidos
+ [X] 0001_initial
+ [X] 0002_itemcotizacion
+ [X] 0003_alter_itemcotizacion_cantidad_and_more
+ [X] 0004_historialbd
+ [X] 0005_pedido_creado_por_pedido_estado_pago_and_more
+ [X] 0006_remove_pedido_valor_abonado_and_more
+
+tabla: False | filas 0007: 0
+
+> git switch main
+Switched to branch 'main'
+Your branch is up to date with 'origin/main'.
+
+> git status --short                                  (sin salida)
+> Get-ChildItem pedidos\migrations -Recurse -Filter "0007*"   (sin resultados)
+> git tag -d ensayo-retroceso
+Deleted tag 'ensayo-retroceso' (was ec1f98f)
+> git tag -l "ensayo-*"                               (sin salida)
+> Remove-Item Env:DB_NAME
+> docker compose stop
+ ✔ Container manzagrafica-mysql  Stopped
+```
+
+---
+
+## Resultado de la parte A
+
+- **Ejecutada:** 2026-10-22, por el desarrollador, en **[PC · PowerShell 7]** (terminal integrada de PyCharm), sobre `manzagrafica_replica`.
+- **Revisión del agente (2026-10-22):** **aprobado**. Retroceso en 1,31 minutos (menos de 15); `showmigrations` y el estado de la tabla y de `django_migrations` iguales en A2 y A6; sin `0007` en `git status` ni en `pedidos/migrations/`; etiqueta de ensayo borrada sin publicar.
+- **No se hizo ningún commit** durante el ensayo, y `git status --short` terminó vacío.
+
+| Criterio | Resultado | Dónde se ve |
+| :------- | :-------- | :---------- |
+| Retroceso medido en menos de 15 minutos | **1,31 minutos** | A5 |
+| `showmigrations` igual antes y después | Igual: `0001` a `0006` con `[X]`; `tabla: False \| filas 0007: 0` | A2 y A6 |
+| Migración temporal fuera de `git status` y de `pedidos/migrations/` | Cumple: sin salida en ambos | A6 |
+| Clasificación de la migración temporal | Clase 2 (un solo `CREATE TABLE`) | A4 |
+| Orden de retroceso del caso 2 (migración primero, código después) | Funcionó: `Unapplying ... OK` con el archivo todavía presente; después `migrate --plan` sin operaciones pendientes | A5 |
+| Etiqueta de ensayo solo local y eliminada | Cumple: `Deleted tag 'ensayo-retroceso'`; no se publicó | A3 y A6 |
+
+### Observaciones
+
+1. **Advertencia `mysql.W002`** (modo estricto de MySQL no activado) en cada `migrate`: es la configuración decidida en 00-03 (`sql_mode` igual al de producción, opción A). No es un hallazgo nuevo; el modo estricto se evalúa en 02-01.
+2. **Error transitorio de Docker** al primer `docker compose up -d` (`500 Internal Server Error` al consultar la imagen): Docker Desktop todavía estaba arrancando; el segundo intento funcionó. Conviene esperar a que Docker Desktop termine de iniciar antes de levantar el contenedor.
+3. **Alcance de la medición:** los 1,31 minutos cubren la base de datos y el código en local. En producción se suman los pasos de la consola de PythonAnywhere y la recarga de la web app; el margen contra los 15 minutos sigue siendo amplio, pero la cifra real de producción solo se conocerá en un retroceso real.
+4. **Lo que este ensayo no cubre:** solo ensayó el caso 2 de `retroceso.md`. El caso 1 (sin migraciones) es un subconjunto de él, y el caso 3 (restaurar un respaldo) se practicó por separado en la 00-03 (restauración de 4,17 s en la réplica), pero no con la función de restauración de la aplicación en producción.
 
 ---
 
@@ -232,7 +375,8 @@ Esperado: las 5 advertencias conocidas (`W004`, `W008`, `W009`, `W012`, `W016`) 
 | 5 | Respaldo verificado | (de B1) |
 | 6 | Estilos compilados | No aplica (05-04) |
 | 7 | Etiqueta publicada | (de B3) |
-| 8 | Punto 8 (media/, conteo, `.env`) | (de B5 y B6) |
+| 8 | Punto 8 (media/, conteo, `.env`) | (de B6 y B7) |
+| — | Etiqueta de partida `v0.0-inicial` | (de B5) |
 
 ### B3. Etiqueta · [PC · PowerShell 7]
 
@@ -251,20 +395,45 @@ Esperado: `ls-remote` devuelve una línea; `git tag -n` muestra `v0.1-higiene` c
 
 ### B4. Ubicarse en el servidor · [PA · Bash]
 
+Define primero `PROYECTO` y `VENV`: son **los mismos valores que usaste con `scripts/diagnostico/linea_base.sh`** en la 00-01. Valen para B4, B6, B7, B8 y B10 mientras no cierres la consola; si la cierras, vuelve a definirlos.
+
 ```bash
-cd <carpeta del proyecto>
-source <ruta del virtualenv>/bin/activate
+PROYECTO="<mismo valor que en linea_base.sh>"
+VENV="<mismo valor que en linea_base.sh>"
+test -f "$PROYECTO/manage.py" && test -x "$VENV/bin/python" && echo "PROYECTO y VENV correctos"
+cd "$PROYECTO"
+source "$VENV/bin/activate"
 git status --short
 git rev-parse --short HEAD
 git describe --tags --always
 python manage.py showmigrations pedidos
 ```
 
-Esperado: `git status` sin líneas ` M` (se aceptan `??`); un commit corto (el que está hoy en producción); `0001` a `0006` con `[X]`. **Si hay líneas ` M`, detente** y pégame solo los nombres de archivo.
+Esperado: `PROYECTO y VENV correctos`; `git status` sin líneas ` M` (se aceptan `??`); un commit corto (el que está hoy en producción: **anótalo**); `0001` a `0006` con `[X]`. **Si hay líneas ` M`, detente** y pégame solo los nombres de archivo.
 
 **Respuesta B4 (commit en producción y salida de `git status`):**
 
-### B5. Punto 8.1 y 8.2: `media/` y la captura · [PA · Bash]
+### B5. Etiqueta del estado de partida `v0.0-inicial` · [PC · PowerShell 7]
+
+**Antes de tocar nada más en el servidor.** Así, si el despliegue falla, el caso 1 de `retroceso.md` ya tiene a dónde volver. Con el commit anotado en B4:
+
+```powershell
+git tag -a v0.0-inicial <commit de B4> -m "Estado de producción antes del primer despliegue con el protocolo 00-05"
+git push origin v0.0-inicial
+git ls-remote --tags origin v0.0-inicial
+git tag -n
+```
+
+Esperado: `ls-remote` devuelve una línea; `git tag -n` muestra `v0.0-inicial` y `v0.1-higiene`.
+
+- Si `git tag` responde `Not a valid object name`, ese commit no está en tu repositorio local (se hizo directo en el servidor o no se publicó): **no sigas con el despliegue** y avísame.
+- Tienes una etiqueta local antigua, `fase0-linea-base-2026-10-20` («Estado de produccion medido el 2026-10-20»), con el formato anterior. Compara su commit con el de B4 (`git rev-list -n 1 fase0-linea-base-2026-10-20`) y anótalo. No la borres ni la muevas sin decidirlo antes.
+
+**Respuesta B5 (salida de `git tag -n` y commit de `fase0-linea-base-2026-10-20`):**
+
+### B6. Punto 8.1 y 8.2: `media/` y la captura · [PA · Bash]
+
+En la misma consola de B4 (con `PROYECTO` y `VENV` definidos y dentro de `"$PROYECTO"`):
 
 ```bash
 find media -type f | wc -l
@@ -275,13 +444,13 @@ python manage.py shell -c "from pedidos.models import Pedido as P; print('captur
 
 - Los dos `find` solo cuentan archivos; no pegues nombres.
 - `ls -l`: si dice `No such file`, la captura no está en el servidor y el `checkout` no borra nada.
-- **Si `captura:` es mayor que 0, detente:** copia la imagen fuera del repositorio (`cp media/pedidos/Captura_de_pantalla_2026-01-20_152121.jpg ~/`) antes de B7 y avísame.
+- **Si `captura:` es mayor que 0, detente:** copia la imagen fuera del repositorio (`cp media/pedidos/Captura_de_pantalla_2026-01-20_152121.jpg ~/`) antes de B8 y avísame.
 
-**Respuesta B5 (los dos conteos, si existe la captura y la línea `captura: … | en pedidos/: …`):**
+**Respuesta B6 (los dos conteos, si existe la captura y la línea `captura: … | en pedidos/: …`):**
 
-### B6. Punto 8.3: `.env` del servidor · [PA · Bash]
+### B7. Punto 8.3: `.env` del servidor · [PA · Bash]
 
-No muestres el contenido del `.env`: estos comandos solo cuentan líneas.
+En `"$PROYECTO"`. No muestres el contenido del `.env`: estos comandos solo cuentan líneas.
 
 ```bash
 grep -c '^DATABASE_URL=' .env
@@ -302,9 +471,11 @@ grep '^ALLOWED_HOSTS=' .env
 
 Esperado: `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com`. El código actual del servidor no lee esta variable, así que agregarla antes del `checkout` no cambia nada hasta la recarga.
 
-**Respuesta B6 (los dos conteos y la última línea):**
+**Respuesta B7 (los dos conteos y la última línea):**
 
-### B7. Traer la etiqueta · [PA · Bash]
+### B8. Traer la etiqueta · [PA · Bash]
+
+En `"$PROYECTO"`, con el virtualenv activo:
 
 ```bash
 git fetch origin --tags
@@ -321,20 +492,20 @@ Esperado:
 - `detached HEAD` y `v0.1-higiene`.
 - `git status` ya no lista `media/` ni `staticfiles/` (el `.gitignore` nuevo los ignora). Si aparece ` M`, detente.
 - `ls`: `No such file` (el `checkout` borró la captura, como se previó).
-- `check`: `System check identified no issues (0 silenced).` Si falla con `ImproperlyConfigured`, no recargues y avísame: la app vieja sigue funcionando mientras no recargues.
+- `check`: `System check identified no issues (0 silenced).` Si falla con `ImproperlyConfigured`, no recargues y avísame: la app vieja sigue funcionando mientras no recargues. Para dejar el código como estaba: `git checkout v0.0-inicial`.
 - `migrate --plan`: `No planned migration operations.`
 
-No hace falta `pip install` ni `collectstatic`: comprobado en el paso 3.3 y 3.5 de `despliegue.md` (`requirements.txt` cambia solo de codificación; sin cambios en `pedidos/static`). Si quieres confirmarlo: `git diff --stat <commit de B4> v0.1-higiene -- requirements.txt pedidos/static`.
+No hace falta `pip install` ni `collectstatic`: `requirements.txt` cambia solo de codificación y no hay cambios en `pedidos/static` (pasos 3.3 y 3.5 de `despliegue.md`). Si quieres confirmarlo: `git diff --stat v0.0-inicial v0.1-higiene -- requirements.txt pedidos/static`.
 
-**Respuesta B7 (salidas):**
+**Respuesta B8 (salidas):**
 
-### B8. Recargar · [PA · Panel]
+### B9. Recargar · [PA · Panel]
 
 Pestaña **Web** → **Reload manzagrafica.pythonanywhere.com**.
 
-**Respuesta B8 (hora de la recarga, hora de Chile):**
+**Respuesta B9 (hora de la recarga, hora de Chile):**
 
-### B9. Verificación posterior
+### B10. Verificación posterior
 
 **Navegador, ventana privada:**
 
@@ -344,7 +515,7 @@ Pestaña **Web** → **Reload manzagrafica.pythonanywhere.com**.
 | Listado de pedidos | `/pedidos/lista/` | Tabla de pedidos | |
 | Detalle de un pedido | Cualquiera desde el listado | Ítems y pagos | |
 
-Un **400** significa `ALLOWED_HOSTS` mal definido: vuelve a B6. Un **500** o un error en pantalla: sigue el caso 1 de `retroceso.md` hacia `v0.0-inicial` (B10) o el commit de B4.
+Un **400** significa `ALLOWED_HOSTS` mal definido: vuelve a B7. Un **500** o un error en pantalla: sigue el caso 1 de `retroceso.md` hacia `v0.0-inicial`, creada en B5.
 
 **[PA · Bash]** Registro de errores:
 
@@ -357,21 +528,7 @@ tail -n 20 $L | cut -c1-160
 
 Revisa solo las líneas posteriores a la recarga (el registro está en UTC: suma 3 horas a la hora de Chile). Esperado: ningún `Error`, `Traceback` ni `DisallowedHost` después de la recarga.
 
-**Respuesta B9 (tabla completa y, del registro, cuántas líneas hay después de la recarga y de qué tipo; no pegues el texto completo):**
-
-### B10. Etiqueta del estado anterior · [PC · PowerShell 7]
-
-Con el commit anotado en B4 (lo que estaba en producción antes de este despliegue):
-
-```powershell
-git tag -a v0.0-inicial <commit de B4> -m "Estado de producción antes del primer despliegue con el protocolo 00-05"
-git push origin v0.0-inicial
-git tag -n
-```
-
-Si `git tag` responde `Not a valid object name`, ese commit no está en tu repositorio local (se hizo directo en el servidor o no se publicó): no crees la etiqueta y avísame.
-
-**Respuesta B10 (salida de `git tag -n`):**
+**Respuesta B10 (tabla completa y, del registro, cuántas líneas hay después de la recarga y de qué tipo; no pegues el texto completo):**
 
 ### B11. Registros
 
