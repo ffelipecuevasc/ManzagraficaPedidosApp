@@ -80,3 +80,29 @@ Todo en PowerShell 7, desde la raíz del repositorio y con el `.venv` activo.
 
 - La conexión real a la réplica con la configuración nueva (paso 2).
 - El comportamiento en producción (pasos 3 y 4).
+
+## Respuesta del desarrollador (2026-10-21)
+
+Sin contraseñas ni valores del `.env`.
+
+### 1. Índice de Git
+
+- Commit `965227d`: saca `.idea/` y `media/pedidos/Captura_de_pantalla_2026-01-20_152121.jpg` del índice. Los archivos siguen en el disco.
+- `git ls-files .idea media`: sin salida (el agente también lo comprobó).
+- `.sql` y `.env` versionados: solo `scripts/diagnostico/linea_base.sql` y `.env.example`.
+- La captura no contiene datos sensibles: basta con sacarla del índice; no hace falta limpiar el historial por ella.
+
+### 2. `check` y `runserver` contra la réplica
+
+- `.env` local: tiene `DB_PASSWORD` y no tiene `ALLOWED_HOSTS` ni `DATABASE_URL`.
+- Sesión con `DB_NAME = manzagrafica_replica`:
+  - `Base: manzagrafica_replica`
+  - `ALLOWED_HOSTS: ['localhost', '127.0.0.1']`
+  - `python manage.py check`: «System check identified no issues (0 silenced).»
+- `runserver` arrancó sin cambios manuales en `settings.py` y sirvió `/static/pedidos/css/index.css` y `/static/pedidos/js/index.js` con 200.
+- `curl.exe` a `/accounts/login/`: `127.0.0.1` 200, `localhost` 200, `Host: otro-host.example.com` **400**. El servidor registró `DisallowedHost` para ese host.
+- Inicio de sesión en el navegador contra la réplica: correcto, después de dos intentos fallidos por error de escritura.
+
+### 3 y 4. Servidor y sitio publicado
+
+- No aplican todavía: la 00-04 se despliega en la 00-05. Los pasos quedaron en la lista de comprobación de `iteracion-00-05-protocolo-despliegue.md` (tarea 2, punto 8), junto con la revisión de `media/` en el servidor.

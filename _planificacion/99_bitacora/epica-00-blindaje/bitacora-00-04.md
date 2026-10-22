@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-21
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión (falta la evidencia del desarrollador; no se despliega todavía)
+- **Estado final:** Terminada (sin desplegar; el despliegue se hace en la 00-05)
 
 ## Resumen
 
@@ -75,16 +75,16 @@
 
 ## Criterios de aceptación
 
-- [ ] `git ls-files` sin `.idea/`, sin `.sql` fuera de `scripts/` y sin `.env`: pendiente del paso 1 de la evidencia.
+- [x] `git ls-files` sin `.idea/`, sin `.sql` fuera de `scripts/` y sin `.env`: commit `965227d`; solo quedan `scripts/diagnostico/linea_base.sql` y `.env.example`.
 - [x] `requirements.txt` en UTF-8 sin BOM con LF y con el mismo contenido (verificación arriba).
 - [x] Todas las líneas tienen `==` (21 de 21).
 - [x] Sin `'PASSWORD': '` literal en `settings.py`: 0 coincidencias.
 - [x] `.env.example` lista cada variable que lee el código. La búsqueda de `os.getenv` y `os.environ` en `PedidosApp/`, `pedidos/`, `scripts/` y `manage.py` encuentra `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `DATABASE_URL`, `DB_PASSWORD`, `DB_NAME`, `DB_USER`, `DB_HOST` y `DB_PORT`, más `DJANGO_SETTINGS_MODULE`, que es interno de Django. Las 9 están en la plantilla, todas sin valor.
-- [ ] `check` y `runserver` contra la réplica con el `.env` basado en la plantilla: `check` pasa en local; falta el paso 2.
+- [x] `check` y `runserver` contra la réplica con el `.env` basado en la plantilla: base `manzagrafica_replica`, `check` sin problemas, estáticos e inicio de sesión correctos.
 - [x] `settings.py` sin `'root'` ni otra contraseña literal.
-- [ ] `ALLOWED_HOSTS` en local, con 400 para un host ajeno: verificado en procesos aislados; falta la confirmación con `runserver` (paso 2).
+- [x] `ALLOWED_HOSTS` en local, con 400 para un host ajeno: `127.0.0.1` 200, `localhost` 200, otro host 400 con `DisallowedHost` en el registro.
 - [x] `.env.example` incluye `ALLOWED_HOSTS` y las cinco `DB_*`, sin valores.
-- [ ] Sitio publicado responde 200: después del despliegue (paso 4).
+- [ ] Sitio publicado responde 200: pasa a la 00-05, que despliega la 00-04.
 
 ## Decisiones tomadas
 
@@ -95,12 +95,19 @@
 - **El bloque de producción no cambió:** se movió la lectura de `DATABASE_URL` arriba, y cuando existe se usa la misma llamada a `dj_database_url.config` con los mismos argumentos. En producción, la presencia de `DATABASE_URL` hace que no se lean las `DB_*` ni se exija `DB_PASSWORD`.
 - **Réplica en local:** `$env:DB_NAME = "manzagrafica_replica"` en la sesión reemplaza a `DATABASE_URL`. Así la contraseña no se escribe en la terminal; sigue saliendo del `.env`.
 
+## Cierre (2026-10-21)
+
+- Evidencia del desarrollador en `evidencia-00-04.md`: índice limpio (commit `965227d`), réplica con `check` limpio, `ALLOWED_HOSTS` local con 200, 200 y 400, e inicio de sesión correcto.
+- Se cierran AUD-01-023 y AUD-02-009.
+- La lista de comprobación de la 00-05 suma el punto 8, propio del despliegue de 00-04: listar `media/` en el servidor y confirmar con un conteo que ningún pedido referencia la captura (el `git pull` de `965227d` la borra del servidor), confirmar `DATABASE_URL` y definir `ALLOWED_HOSTS` antes de recargar.
+- La captura no tiene datos sensibles: no requiere limpieza del historial.
+
 ## Pendientes y riesgos
 
 - **Antes de desplegar la 00-04:** definir `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` en el `.env` del servidor. Sin ella, producción responde 400. Va en la lista de comprobación de 00-05.
 - AUD-01-023 y AUD-02-009 se cierran cuando la iteración quede terminada: el primero, después del paso 1; el segundo, con el commit de `requirements.txt` y `.gitattributes`.
 - `requirements.txt` cambia de codificación sin cambiar versiones: en el servidor no hace falta `pip install`.
-- La imagen de `media/` y `.idea/` siguen en el historial de Git. Limpiar el historial va en 04-03.
+- `.idea/` sigue en el historial de Git; limpiarlo va en 04-03 junto con la clave expuesta. La captura de `media/` no lo necesita (sin datos sensibles, según el desarrollador).
 
 ## Commit sugerido
 

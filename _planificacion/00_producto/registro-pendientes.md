@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-21
-- **Iteración activa:** 00-04 · Higiene del repositorio
+- **Iteración activa:** 00-05 · Protocolo de versionado, despliegue y retroceso
 - **Próximo hito:** Fase 0 completa: respaldo verificado fuera del servidor, réplica local fiel y retroceso ensayado
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -19,7 +19,7 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 00-01 | Línea base de producción | 00 | Terminada | — | [bitacora-00-01](../99_bitacora/epica-00-blindaje/bitacora-00-01.md), [bitacora-00-01-sql-local](../99_bitacora/epica-00-blindaje/bitacora-00-01-sql-local.md), [bitacora-00-01-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md), [bitacora-00-01-cierre](../99_bitacora/epica-00-blindaje/bitacora-00-01-cierre.md) |
 | 00-02 | Protocolo de respaldo verificado | 00 | Terminada | 00-01 | [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md) |
 | 00-03 | Réplica local fiel | 00 | Terminada | 00-02 | [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md) |
-| 00-04 | Higiene del repositorio | 00 | En revisión | — | [bitacora-00-04](../99_bitacora/epica-00-blindaje/bitacora-00-04.md) |
+| 00-04 | Higiene del repositorio | 00 | Terminada (sin desplegar; se despliega en 00-05) | — | [bitacora-00-04](../99_bitacora/epica-00-blindaje/bitacora-00-04.md) |
 | 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | Pendiente | 00-03, 00-04 | — |
 | 00-06 | Correcciones tempranas de riesgo nulo | 00 | Pendiente | 00-05 | — |
 | 01-01 | Modelo de registro de errores y eventos | 01 | Pendiente | Épica 00 | — |
@@ -106,8 +106,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | Informe de desconexiones a 28 días de 00-06 (en paralelo, sin bloquear la Épica 01) | 00-06 | Desarrollador |
 | ~~Paridad del modo SQL en la réplica local~~ Resuelto el 2026-10-21: opción A, `NO_ENGINE_SUBSTITUTION` igual que producción; el modo estricto solo para la base de pruebas (opción C) se evalúa en 02-01 | AUD-02-020 | Desarrollador |
 | ~~Responder [evidencia-00-03](../10_epicas/epica-00-blindaje/evidencia-00-03.md)~~ Resuelto el 2026-10-21 | 00-03 | Desarrollador |
-| Definir `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` en el `.env` del servidor antes del despliegue de 00-04 | AUD-02-022 | Desarrollador, en 00-04 |
-| Responder [evidencia-00-04](../10_epicas/epica-00-blindaje/evidencia-00-04.md): sacar `.idea/` y la imagen de `media/` del índice, comprobar `runserver` contra la réplica y, al desplegar, el sitio publicado | 00-04 | Desarrollador |
+| Desplegar la 00-04 como primer uso de la lista de la 00-05 (punto 8): revisar `media/` y la referencia a la captura, confirmar `DATABASE_URL` y definir `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` en el `.env` del servidor antes de recargar | 00-04, AUD-02-022 | Desarrollador, en 00-05 |
 
 ## 4. Propuestas fuera de alcance
 
@@ -134,3 +133,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-21 | Iteración 00-03 en revisión: `compose.yaml` (MySQL 8.0.46, volumen `mysql_data` externo, `sql_mode` de producción), `paridad_replica.py`, `docs/operacion/replica-local.md` y pedido de evidencia. Detalle en [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md). |
 | 2026-10-21 | Iteración 00-03 terminada: restauración en 4,17 s, paridad sin diferencias no aceptadas, migraciones 0001 a 0006, `check` limpio, conteos explicados y pantallas coherentes; nuevo AUD-02-022 y 00-04 ampliada; iteración activa 00-04. Detalle en [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md). |
 | 2026-10-21 | Iteración 00-04 en revisión: `.gitignore`, `.gitattributes`, `.env.example`, `requirements.txt` en UTF-8 con LF y `settings.py` con `ALLOWED_HOSTS` y `DB_*` desde el entorno; sin desplegar. Detalle en [bitacora-00-04](../99_bitacora/epica-00-blindaje/bitacora-00-04.md). |
+| 2026-10-21 | Iteración 00-04 terminada sin desplegar: índice sin `.idea/` ni la captura de `media/` (commit `965227d`), réplica con `check` limpio y `ALLOWED_HOSTS` con 200, 200 y 400; se cierran AUD-01-023 y AUD-02-009; **el despliegue de la 00-04 queda pendiente de la 00-05**, cuya lista suma el punto 8; iteración activa 00-05. Detalle en [bitacora-00-04](../99_bitacora/epica-00-blindaje/bitacora-00-04.md). |

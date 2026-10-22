@@ -24,6 +24,10 @@ Convertir el despliegue en un procedimiento repetible y el retroceso en algo ens
    5. Respaldo de producción descargado y verificado con `scripts/verificar_respaldo.py` si el despliegue toca datos o esquema.
    6. Estilos compilados, cuando el proyecto compile Tailwind.
    7. Etiqueta anotada creada y publicada por el desarrollador.
+   8. **Solo para el despliegue de 00-04** (agregado el 2026-10-21 a pedido del desarrollador), antes del `git pull`:
+      1. En la consola del servidor, listar `media/` y `media/pedidos/`, y anotar el conteo de archivos.
+      2. Con una consulta agregada (un conteo, sin listar filas ni datos de clientes), comprobar que ningún pedido de producción referencia `pedidos/Captura_de_pantalla_2026-01-20_152121.jpg`. Motivo: el commit `965227d` saca esa imagen del índice, y el `git pull` la borra del disco del servidor. Si el conteo es mayor que 0, detenerse y copiar la imagen fuera del repositorio antes del `pull`.
+      3. Confirmar que el `.env` del servidor tiene `DATABASE_URL` y definir `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` **antes** de recargar la web app (AUD-02-022). Sin esa variable, el sitio responde 400.
 3. **Pasos del despliegue en PythonAnywhere**, escritos para el desarrollador: actualizar el código en la consola, instalar dependencias si cambió `requirements.txt`, aplicar migraciones, recolectar estáticos, recargar la web app y verificar después (tres pantallas, el registro de errores del servidor).
 4. **Procedimiento de retroceso** `docs/operacion/retroceso.md`, con tres casos:
    1. Sin migraciones: volver el código a la etiqueta anterior y recargar.

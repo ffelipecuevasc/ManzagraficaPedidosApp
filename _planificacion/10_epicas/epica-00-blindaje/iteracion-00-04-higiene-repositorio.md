@@ -1,7 +1,7 @@
 # Iteración 00-04 · Higiene del repositorio
 
 - **Épica:** 00 · Blindaje y punto de retorno
-- **Estado:** En revisión (falta la evidencia del desarrollador, `evidencia-00-04.md`; no se despliega todavía)
+- **Estado:** Terminada (2026-10-21, sin desplegar: el despliegue se hace en la 00-05 como primer uso de la lista de comprobación)
 - **Subfase del plan:** 0.4
 - **Depende de:** —
 - **RDA relacionadas:** RDA-002
@@ -28,16 +28,16 @@ Que un clon limpio del repositorio no contenga artefactos locales ni credenciale
 
 ## Criterios de aceptación
 
-- [ ] `git ls-files` no lista nada bajo `.idea/` (después de que el desarrollador ejecute el comando entregado), ningún `.sql` versionado fuera de `scripts/` ni ningún `.env`. *(Ajustado el 2026-10-21; el texto original decía «ni ningún archivo `.sql` o `.env`». Motivo en la tarea 1.)*
+- [x] `git ls-files` no lista nada bajo `.idea/` (después de que el desarrollador ejecute el comando entregado), ningún `.sql` versionado fuera de `scripts/` ni ningún `.env`. *(Ajustado el 2026-10-21; el texto original decía «ni ningún archivo `.sql` o `.env`». Motivo en la tarea 1.)*
 - [x] `requirements.txt` se detecta como UTF-8 sin BOM con fin de línea LF (comprobado leyendo sus primeros bytes con Python) y su contenido, línea por línea, es idéntico al anterior salvo la codificación.
 - [x] Todas las líneas de `requirements.txt` tienen `==`.
 - [x] Una búsqueda de `'PASSWORD': '` con un valor literal en `PedidosApp/settings.py` no encuentra coincidencias.
 - [x] `.env.example` lista cada variable que el código lee con `os.getenv` u `os.environ` (comparación hecha con una búsqueda en el código) y ninguna tiene valor.
-- [ ] Con un `.env` local basado en `.env.example`, `python manage.py check` termina sin errores y `python manage.py runserver` arranca contra la réplica.
+- [x] Con un `.env` local basado en `.env.example`, `python manage.py check` termina sin errores y `python manage.py runserver` arranca contra la réplica.
 - [x] `settings.py` no contiene la contraseña `'root'` ni ningún otro valor literal de contraseña (búsqueda en el archivo).
-- [ ] Sin `ALLOWED_HOSTS` en el entorno, `runserver` responde en `127.0.0.1` y en `localhost` sin cambios manuales, y una petición con otro `Host` recibe 400.
+- [x] Sin `ALLOWED_HOSTS` en el entorno, `runserver` responde en `127.0.0.1` y en `localhost` sin cambios manuales, y una petición con otro `Host` recibe 400.
 - [x] `.env.example` incluye `ALLOWED_HOSTS` y las cinco `DB_*`, sin valores.
-- [ ] Después del despliegue, la aplicación publicada responde 200 en `manzagrafica.pythonanywhere.com` (evidencia del desarrollador).
+- [ ] Después del despliegue, la aplicación publicada responde 200 en `manzagrafica.pythonanywhere.com` (evidencia del desarrollador). *(Pasa a la 00-05: se comprueba en `evidencia-00-05.md` al desplegar la 00-04.)*
 
 ## Fuera de alcance
 
