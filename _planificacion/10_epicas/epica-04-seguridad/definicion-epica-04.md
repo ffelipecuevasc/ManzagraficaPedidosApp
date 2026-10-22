@@ -35,3 +35,7 @@
 - `python manage.py check --deploy` sin advertencias en producción.
 - Las pruebas de regresión de escritura por GET, eliminación de pagos y borrado en cascada pasan de fallo esperado a verde.
 - Ningún proceso del servidor muestra la contraseña de la base en sus argumentos.
+
+## Notas
+
+- **2026-10-21 (00-03, AUD-02-022):** leer `ALLOWED_HOSTS` desde el entorno, con un valor por defecto local, se adelantó a 00-04 por decisión del desarrollador. 04-02 parte de ese estado y no lo repite.

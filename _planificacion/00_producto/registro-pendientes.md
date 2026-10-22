@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-21
-- **Iteración activa:** 00-03 · Réplica local fiel
+- **Iteración activa:** 00-04 · Higiene del repositorio
 - **Próximo hito:** Fase 0 completa: respaldo verificado fuera del servidor, réplica local fiel y retroceso ensayado
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -18,7 +18,7 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | :-------- | :----- | :---- | :----- | :--------- | :-------- |
 | 00-01 | Línea base de producción | 00 | Terminada | — | [bitacora-00-01](../99_bitacora/epica-00-blindaje/bitacora-00-01.md), [bitacora-00-01-sql-local](../99_bitacora/epica-00-blindaje/bitacora-00-01-sql-local.md), [bitacora-00-01-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-01-produccion.md), [bitacora-00-01-cierre](../99_bitacora/epica-00-blindaje/bitacora-00-01-cierre.md) |
 | 00-02 | Protocolo de respaldo verificado | 00 | Terminada | 00-01 | [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md) |
-| 00-03 | Réplica local fiel | 00 | En revisión | 00-02 | [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md) |
+| 00-03 | Réplica local fiel | 00 | Terminada | 00-02 | [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md) |
 | 00-04 | Higiene del repositorio | 00 | Pendiente | — | — |
 | 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | Pendiente | 00-03, 00-04 | — |
 | 00-06 | Correcciones tempranas de riesgo nulo | 00 | Pendiente | 00-05 | — |
@@ -74,7 +74,7 @@ Reglas de negocio que solo puede confirmar Manza Gráfica. Mientras falten, se u
 | ¿Se permite registrar pagos que superan el saldo (sobrepago)? | — | 02-02 | Pendiente |
 | Al reabrir (duplicar) un pedido, ¿se copian sus ítems? | — | 02-03 | Pendiente |
 | ¿Un pedido `ENTREGADO` atrasado debe contar como crítico? ¿Cómo se tratan los pedidos sin fecha de entrega en el trabajo semanal? | AUD-02-013 | 02-03, 06-06 | Pendiente |
-| Número de usuarios, sus roles y los dispositivos que usan | — | `producto.md` | Pendiente |
+| Número de usuarios, sus roles y los dispositivos que usan | — | `producto.md` | Pendiente (dato medido en la réplica: 1 usuario, superusuario, en el volcado del 2026-10-20; faltan roles y dispositivos) |
 
 ## 3. Decisiones por tomar
 
@@ -105,7 +105,8 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~Datos de la línea base que no vinieron en la evidencia~~ Resuelto el 2026-10-20 | — | Desarrollador |
 | Informe de desconexiones a 28 días de 00-06 (en paralelo, sin bloquear la Épica 01) | 00-06 | Desarrollador |
 | ~~Paridad del modo SQL en la réplica local~~ Resuelto el 2026-10-21: opción A, `NO_ENGINE_SUBSTITUTION` igual que producción; el modo estricto solo para la base de pruebas (opción C) se evalúa en 02-01 | AUD-02-020 | Desarrollador |
-| Responder [evidencia-00-03](../10_epicas/epica-00-blindaje/evidencia-00-03.md): cifrado, paso al compose, restauración medida, paridad, permiso para el guion SQL y pantallas | 00-03 | Desarrollador |
+| ~~Responder [evidencia-00-03](../10_epicas/epica-00-blindaje/evidencia-00-03.md)~~ Resuelto el 2026-10-21 | 00-03 | Desarrollador |
+| Definir `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` en el `.env` del servidor antes del despliegue de 00-04 | AUD-02-022 | Desarrollador, en 00-04 |
 
 ## 4. Propuestas fuera de alcance
 
@@ -130,3 +131,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-20 | Iteración 00-02 en revisión: `verificar_respaldo.py` (pruebas sintéticas 0, 1 y 1), `docs/operacion/respaldo.md` y pedido de evidencia; retención de 5 en el servidor; expiración del 2026-11-20 confirmada. Detalle en [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md). |
 | 2026-10-21 | Iteración 00-02 terminada: respaldo real verificado (código 0, 18 de 18 tablas), carpeta cifrada con BitLocker, 5 volcados en el servidor, retención local confirmada y nota en la épica 00; iteración activa 00-03. Detalle en [bitacora-00-02](../99_bitacora/epica-00-blindaje/bitacora-00-02.md). |
 | 2026-10-21 | Iteración 00-03 en revisión: `compose.yaml` (MySQL 8.0.46, volumen `mysql_data` externo, `sql_mode` de producción), `paridad_replica.py`, `docs/operacion/replica-local.md` y pedido de evidencia. Detalle en [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md). |
+| 2026-10-21 | Iteración 00-03 terminada: restauración en 4,17 s, paridad sin diferencias no aceptadas, migraciones 0001 a 0006, `check` limpio, conteos explicados y pantallas coherentes; nuevo AUD-02-022 y 00-04 ampliada; iteración activa 00-04. Detalle en [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md). |

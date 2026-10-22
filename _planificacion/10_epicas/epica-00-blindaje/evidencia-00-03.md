@@ -42,7 +42,7 @@ Sigue `docs/operacion/replica-local.md`. Hazlo en este orden y no abras la aplic
 - **Para qué:** tabla de paridad (tarea 4).
 - **Cómo obtenerlo:** secciones 6 y 7 del procedimiento.
 - **Respuesta (2026-10-21):** 7 de 8 filas coinciden. La única diferencia es Python 3.13.0 frente a 3.13.1 (aceptada). `pip freeze` 21/21, sin diferencias. Código 1, con la versión anterior del guion.
-- **Ajuste posterior:** el guion ahora tiene `DIFERENCIAS_ACEPTADAS` y termina con 0 cuando solo hay diferencias aceptadas («Resultado: PARIDAD con diferencias aceptadas»). Opcional: ejecútalo de nuevo y pega aquí la línea «Resultado» y el código.
+- **Ajuste posterior:** el guion ahora tiene `DIFERENCIAS_ACEPTADAS` y termina con 0 cuando solo hay diferencias aceptadas («Resultado: PARIDAD con diferencias aceptadas»). No se volvió a ejecutar contra la réplica. La lógica nueva se probó en local simulando la medición: código 0 con 3.13.0 y 3.13.1, y código 1 con 3.12.9 o con un `sql_mode` estricto.
 
 ### 5. Guion SQL de 00-01 contra la réplica (lo ejecuta el desarrollador)
 
@@ -57,7 +57,7 @@ Sigue `docs/operacion/replica-local.md`. Hazlo en este orden y no abras la aplic
 
   `base_en_uso` tiene que decir `manzagrafica_replica`; si no, detente. El aviso `Using a password on the command line interface can be insecure` es normal. Todos los resultados son agregados (conteos, tamaños, fechas mínimas y máximas), igual que en 00-01.
 - **Diferencias esperadas:** el volcado es del 2026-10-20 a las 16:09 UTC y la línea base se midió a las 23:43 UTC del mismo día. Las tablas de negocio pueden tener menos filas en la réplica por la actividad de esas 7,5 horas, y `pedidos_historialbd` puede tener una fila menos si alguien abrió «Estadísticas» en ese intervalo. Además, las secciones con «últimos 7 días» y la antigüedad dependen del momento de la medición.
-- **Respuesta:** la salida completa.
+- **Respuesta (2026-10-21):** salida completa recibida y medida a las 23:47:09 UTC. `base_en_uso` = `manzagrafica_replica`. Se compara con la línea base en `bitacora-00-03.md`, sección «Evidencia de la réplica».
 
 ### 5b. `showmigrations` y `check` contra la réplica (lo ejecuta el desarrollador)
 
@@ -74,15 +74,16 @@ Sigue `docs/operacion/replica-local.md`. Hazlo en este orden y no abras la aplic
   ```
 
   La primera línea de salida tiene que ser `Base: manzagrafica_replica`; si no, detente. `showmigrations` y `check` solo leen. La variable se pierde al cerrar la sesión, y `Remove-Item` la quita antes.
-- **Respuesta:** las tres salidas.
+- **Respuesta (2026-10-21):** `Base: manzagrafica_replica`. `showmigrations pedidos`: `[X]` de `0001_initial` a `0006_remove_pedido_valor_abonado_and_more`, ninguna pendiente. `check`: «System check identified no issues (0 silenced).» Al terminar se quitaron `DATABASE_URL` y `MYSQL_PWD` de la sesión.
 
 ### 6. Pantallas
 
 - **Para qué:** criterio de coherencia con producción.
 - **Cómo obtenerlo:** sección 8 del procedimiento. Abre el panel de control, el listado de pedidos, el trabajo semanal y el panel financiero. Compáralos con producción teniendo en cuenta que el volcado es del 2026-10-20.
-- **Respuesta:** «coherente» o la diferencia que viste, sin datos de clientes (solo conteos o totales).
+- **Respuesta (2026-10-21):** coherente. «Todo funciona como debería, sin problemas, no hay observaciones.» Pantallas abiertas: inicio, estadísticas de pedidos, listado de pedidos, nuevo pedido, trabajo semanal, estadísticas y listado de pagos, y estadísticas de la base (todas con 200).
+- **Observación:** el primer `runserver` respondió 400 en `127.0.0.1`, porque `ALLOWED_HOSTS` solo contiene el dominio de producción (AUD-02-022). El desarrollador lo cambió de forma temporal en su copia y lo deshizo con `git restore`, sin commitear.
 
 ## Lo que no se pudo verificar
 
-- Paridad de MySQL: confirmada el 2026-10-21 (paso 4).
-- Conteos frente a la línea base, `showmigrations`, `check` y pantallas: pendientes de los pasos 5, 5b y 6.
+- La hora exacta de la medición de la línea base (sección 0 del guion en producción) no quedó registrada en el repositorio. Que la línea base es posterior al volcado se deduce de los datos (ver bitácora), no de la hora.
+- `paridad_replica.py` con `DIFERENCIAS_ACEPTADAS` no se volvió a ejecutar contra la réplica.

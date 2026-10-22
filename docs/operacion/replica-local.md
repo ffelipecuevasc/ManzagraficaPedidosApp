@@ -194,6 +194,7 @@ python manage.py check
 python manage.py runserver
 ```
 
+- **Hasta la 00-04, `runserver` responde 400 en `127.0.0.1`**, porque `ALLOWED_HOSTS` solo contiene el dominio de producción (AUD-02-022). Mientras tanto, agrega `'127.0.0.1'` en tu copia de `settings.py` solo para la revisión y deshazlo al terminar con `git restore PedidosApp/settings.py`. Nunca hagas commit de ese cambio.
 - Inicia sesión con **tu propia cuenta de producción**: la réplica trae los usuarios de producción. No crees usuarios nuevos en la réplica.
 - **No uses en la réplica «Respaldar BD» ni «Restaurar»**: escriben volcados con datos reales en `backups/` del repositorio y modifican la base.
 - Al terminar, detén `runserver` (Ctrl+C) y ejecuta `docker compose stop`.

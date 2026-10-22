@@ -1,7 +1,7 @@
 # Iteración 00-03 · Réplica local fiel
 
 - **Épica:** 00 · Blindaje y punto de retorno
-- **Estado:** En revisión (falta la evidencia del desarrollador, `evidencia-00-03.md`)
+- **Estado:** Terminada (2026-10-21)
 - **Subfase del plan:** 0.3
 - **Depende de:** 00-02
 - **RDA relacionadas:** RDA-002, RDA-006
@@ -24,13 +24,13 @@ Que el entorno local deje de ser una maqueta y pase a ser un espejo de producci�
 
 ## Criterios de aceptación
 
-- [ ] La tabla de paridad no tiene filas con «No» sin una decisión escrita al lado.
-- [ ] `python manage.py showmigrations pedidos` muestra aplicadas de la `0001` a la `0006` y ninguna pendiente.
-- [ ] `python manage.py check` termina sin errores contra la réplica.
-- [ ] Los conteos por tabla de la réplica coinciden con los de `linea-base-produccion.md` para la fecha del volcado (diferencias explicadas por la actividad posterior al volcado).
-- [ ] El desarrollador confirma que el panel de control, el listado de pedidos, el trabajo semanal y el panel financiero muestran información coherente con producción.
-- [ ] El tiempo de restauración quedó medido en la bitácora.
-- [ ] El procedimiento de refresco está escrito y se puede seguir sin conocimiento previo.
+- [x] La tabla de paridad no tiene filas con «No» sin una decisión escrita al lado.
+- [x] `python manage.py showmigrations pedidos` muestra aplicadas de la `0001` a la `0006` y ninguna pendiente.
+- [x] `python manage.py check` termina sin errores contra la réplica.
+- [x] Los conteos por tabla de la réplica coinciden con los de `linea-base-produccion.md` para la fecha del volcado (diferencias explicadas por la actividad posterior al volcado).
+- [x] El desarrollador confirma que el panel de control, el listado de pedidos, el trabajo semanal y el panel financiero muestran información coherente con producción.
+- [x] El tiempo de restauración quedó medido en la bitácora.
+- [x] El procedimiento de refresco está escrito y se puede seguir sin conocimiento previo.
 
 ## Fuera de alcance
 
