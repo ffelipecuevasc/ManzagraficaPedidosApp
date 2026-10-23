@@ -11,6 +11,11 @@ class RobotsTxtTests(TestCase):
         self.assertTrue(respuesta['Content-Type'].startswith('text/plain'))
         self.assertIn('Disallow: /', respuesta.content.decode())
 
+    def test_acepta_head(self):
+        respuesta = self.client.head('/robots.txt')
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta['Content-Type'].startswith('text/plain'))
+
     def test_rechaza_post(self):
         self.assertEqual(self.client.post('/robots.txt').status_code, 405)
 

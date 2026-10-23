@@ -50,12 +50,12 @@ python -c "import sys, django; django.setup(); import pedidos.views; print('weas
 
 | Corrida | Importar `pedidos.urls` |
 | :------ | ----------------------: |
-| 1 | |
-| 2 | |
-| 3 | |
-| Media | |
+| 1 | 40,6 ms |
+| 2 | 22,4 ms |
+| 3 | 16,0 ms |
+| Media | 26,3 ms (frente a 1.029,0 ms antes: unas 39 veces más rápido; 681,5 ms sin la primera corrida, unas 26 veces) |
 
-`'weasyprint' in sys.modules`: ____
+`'weasyprint' in sys.modules`: `False`
 
 ### A3. Pruebas y revisiones
 
@@ -65,7 +65,9 @@ python manage.py check
 python manage.py makemigrations --check --dry-run
 ```
 
-**Esperado:** `Ran 5 tests` y `OK` (puede aparecer la advertencia `mysql.W002`, modo estricto; existía antes y no viene de esta iteración); `System check identified no issues (0 silenced).`; `No changes detected`.
+**Esperado:** `Ran 6 tests` y `OK` (5 en la primera revisión; la sexta, HEAD de `robots.txt`, se agregó con `require_safe`) (puede aparecer la advertencia `mysql.W002`, modo estricto; existía antes y no viene de esta iteración); `System check identified no issues (0 silenced).`; `No changes detected`.
+
+**Resultado (desarrollador):** `Ran 5 tests` y `OK` (con la advertencia `mysql.W002`, como se esperaba); `check` sin problemas; `makemigrations`: `No changes detected`.
 
 ### A4. Servidor local y sesión
 
@@ -84,43 +86,57 @@ $s = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $login = Invoke-WebRequest "$base/accounts/login/" -WebSession $s
 $csrf = ($s.Cookies.GetCookies($base) | Where-Object Name -eq 'csrftoken').Value
 $cred = Get-Credential -Message 'Usuario de la réplica'
-$r = Invoke-WebRequest "$base/accounts/login/" -Method Post -WebSession $s -MaximumRedirection 0 -SkipHttpErrorCheck `
+$r = Invoke-WebRequest "$base/accounts/login/" -Method Post -WebSession $s `
   -Headers @{ Referer = "$base/accounts/login/" } `
   -Body @{ csrfmiddlewaretoken = $csrf; username = $cred.UserName; password = $cred.GetNetworkCredential().Password; next = '/' }
-$r.StatusCode; $r.Headers.Location
+$r.BaseResponse.RequestMessage.RequestUri.AbsolutePath
+($s.Cookies.GetCookies($base) | Where-Object Name -eq 'sessionid').Count
 ```
 
-**Esperado:** `302` y `/`. Si sale `200`, el usuario o la contraseña no son válidos.
+**Esperado:** `/` (el `302` del acceso llevó al panel) y `1` (hay cookie de sesión). Si sale `/accounts/login/` y `0`, el usuario o la contraseña no son válidos. El `302` también se ve en la terminal de `runserver`: `"POST /accounts/login/ HTTP/1.1" 302`.
+
+> Corregido el 2026-10-23: en PowerShell 7.6, `-MaximumRedirection 0` lanza un error en lugar de devolver la respuesta. Ahora se sigue la redirección y se comprueba el destino final.
+
+**Resultado (desarrollador):** en PowerShell 7.6, `-MaximumRedirection 0` lanza el error «Se ha superado el número máximo de redireccionamientos» en lugar de devolver la respuesta (no es un fallo de la app). La prueba se dio por buena con el registro del servidor, que muestra `POST /accounts/login/ 302`, y con las cookies `csrftoken` y `sessionid` presentes tras el intento.
 
 ### A5. PDF de una cotización
 
 ```powershell
-$pk = python manage.py shell -c "from pedidos.models import Cotizacion; print(Cotizacion.objects.order_by('-pk').values_list('pk', flat=True).first())"
+$pk = (python manage.py shell -c "from pedidos.models import Cotizacion; print(Cotizacion.objects.order_by('-pk').values_list('pk', flat=True).first())" | Select-Object -Last 1).Trim()
 $r = Invoke-WebRequest "$base/cotizaciones/$pk/pdf/" -WebSession $s
 $r.StatusCode; $r.Headers['Content-Type']; [System.Text.Encoding]::ASCII.GetString($r.RawContentStream.ToArray()[0..3])
 ```
 
 **Esperado:** `200`, `application/pdf`, `%PDF`. Es la primera vez que se importa WeasyPrint en ese proceso: tarda algo más que el resto de las páginas.
 
+**Resultado (desarrollador):** cotización `5`: `200`, `application/pdf`, `%PDF`. La importación diferida de WeasyPrint no rompe la exportación. En el primer intento, `$pk` capturó también la línea «objects imported automatically» y dio 404; se corrigió con `| Select-Object -Last 1` y `.Trim()`.
+
 ### A6. `robots.txt` sin sesión
 
 ```powershell
 $r = Invoke-WebRequest "$base/robots.txt" -SkipHttpErrorCheck
 $r.StatusCode; $r.Headers['Content-Type']; $r.Content
+(Invoke-WebRequest "$base/robots.txt" -Method Head -SkipHttpErrorCheck).StatusCode
 (Invoke-WebRequest "$base/robots.txt" -Method Post -SkipHttpErrorCheck).StatusCode
 ```
 
-**Esperado:** `200`, `text/plain; charset=utf-8`, el texto `User-agent: *` y `Disallow: /`, y `405` para el POST. Sin `-WebSession`: es una petición sin sesión.
+**Esperado:** `200`, `text/plain; charset=utf-8`, el texto `User-agent: *` y `Disallow: /`; `200` para HEAD; `403` para el POST, porque el middleware CSRF responde antes que la vista. El `405` solo se ve en las pruebas, porque el cliente de pruebas no exige CSRF. Sin `-WebSession`: es una petición sin sesión.
+
+**Resultado (desarrollador):** `200`, `text/plain; charset=utf-8`, `User-agent: *` y `Disallow: /`. El POST dio `403`, no `405`: el middleware CSRF responde antes de que la vista compruebe el método. Es aceptable; el `405` aplica solo al cliente de pruebas.
 
 ### A7. Lista de pagos
 
 ```powershell
 (Invoke-WebRequest "$base/pagos/lista/" -WebSession $s).StatusCode
-$r = Invoke-WebRequest "$base/pagos/lista" -WebSession $s -MaximumRedirection 0 -SkipHttpErrorCheck
-$r.StatusCode; $r.Headers.Location
+$sid = ($s.Cookies.GetCookies($base) | Where-Object Name -eq 'sessionid').Value
+curl.exe -s -o NUL -w "%{http_code} %{redirect_url}`n" -b "sessionid=$sid" "$base/pagos/lista"
 ```
 
-**Esperado:** `200`; después `301` y `/pagos/lista/`.
+`curl.exe` viene con Windows 10 y no sigue redirecciones por defecto: muestra el código y el destino sin el error de `-MaximumRedirection 0`. Corregido el 2026-10-23.
+
+**Esperado:** `200`; después `301 http://127.0.0.1:8000/pagos/lista/`.
+
+**Resultado (desarrollador):** `/pagos/lista/` dio `200` (59.982 bytes). `/pagos/lista` redirigió con `301` a `/pagos/lista/`, según la salida y el registro del servidor (misma peculiaridad de `-MaximumRedirection 0` de A4).
 
 ### A8. Botón de acceso (navegador)
 
@@ -134,17 +150,21 @@ Cierra la sesión o usa una ventana privada en `http://127.0.0.1:8000/accounts/l
 
 | Revisión | Escritorio | 360 px |
 | :------- | :--------- | :----- |
-| Deshabilitado al primer envío | | |
-| Habilitado tras error | | |
-| Habilitado con «atrás» | | |
-| Sin desborde | | |
-| Foco visible | | |
+| Deshabilitado al primer envío | Sí | Sí |
+| Habilitado tras error | Sí | Sí |
+| Habilitado con «atrás» | Sí (Firefox) | Sí (Firefox) |
+| Sin desborde | Sí | Sí |
+| Foco visible | Sí | Sí |
+
+**Notas del desarrollador:** la prueba completa se repitió en Firefox. En Chrome, el botón «atrás» tras un intento fallido muestra «Confirmar reenvío del formulario» (`ERR_CACHE_MISS`): es una limitación del navegador, porque esa entrada del historial es la respuesta a un POST, y no un fallo de la app. Por separado se observó que, al volver con «atrás» después de iniciar sesión, aparece el formulario de acceso vacío: Django no redirige al panel a quien ya tiene sesión. Queda anotado como pendiente de baja prioridad (`redirect_authenticated_user=True`), propuesto para la Épica 04.
 
 Al terminar, detén `runserver` con Ctrl+C.
 
 ---
 
 ## Parte B · Despliegue como `v0.2-correcciones`
+
+> **Antes de empezar:** la parte A se revisó el 2026-10-23 y cumple. Después de esa revisión, `robots_txt` pasó de `require_GET` a `require_safe`. Repite A3 (esperado: `Ran 6 tests`, `OK`) y la línea HEAD de A6 (esperado: `200`). Despliega el commit que incluye ese cambio.
 
 Sigue `docs/operacion/despliegue.md`. Lo propio de este despliegue:
 
@@ -167,7 +187,7 @@ git ls-remote --tags origin v0.2-correcciones
 
 | # | Comprobación | Resultado |
 | :- | :----------- | :-------- |
-| 1 | Pruebas en verde | (A3) |
+| 1 | Pruebas en verde | `Ran 6 tests`, `OK` (repetir A3 tras `require_safe`) |
 | 2 | `check --deploy`: solo W004, W008, W009, W012, W016 | |
 | 3 | `No changes detected` | |
 | 4 | Migraciones nuevas | Ninguna |
@@ -205,7 +225,7 @@ python manage.py migrate --plan
 
 Ventana privada:
 
-1. `https://manzagrafica.pythonanywhere.com/robots.txt` → `User-agent: *` y `Disallow: /`, sin pedir sesión.
+1. `https://manzagrafica.pythonanywhere.com/robots.txt` → `User-agent: *` y `Disallow: /`, sin pedir sesión. Opcional **[PC · PowerShell 7]**: `curl.exe -sI https://manzagrafica.pythonanywhere.com/robots.txt` → `HTTP/1.1 200 OK` y `Content-Type: text/plain; charset=utf-8`.
 2. Inicio de sesión → el botón muestra **Ingresando…** y entra al panel.
 3. Panel, listado de pedidos y detalle de un pedido (`despliegue.md`, 3.7).
 4. Menú **Pagos** → abre `/pagos/lista/`.

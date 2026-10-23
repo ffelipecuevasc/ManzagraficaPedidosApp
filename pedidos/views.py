@@ -6,7 +6,7 @@ from django.core.files.storage import FileSystemStorage
 from django.db.models import Q, Count, Sum, F, ProtectedError, F, Value, IntegerField
 from django.db.models.functions import TruncMonth, Coalesce
 from django.http import JsonResponse, FileResponse, HttpResponseForbidden, HttpResponse
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_POST, require_safe
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.db import transaction
@@ -1567,7 +1567,7 @@ def error_500(request):
 
 
 @login_not_required
-@require_GET
+@require_safe
 def robots_txt(request):
     """Pide a los buscadores no indexar la app. Es pública y no renderiza plantillas."""
     return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain; charset=utf-8")

@@ -119,6 +119,7 @@ Ideas detectadas durante el trabajo que no forman parte del plan. Se evalúan ap
 | Propuesta | Origen | Fecha |
 | :-------- | :----- | :---- |
 | Implementar la métrica «clientes nuevos» del listado de clientes, que hoy siempre muestra 0 porque la vista envía un valor fijo | Auditoría 02 | 2026-10-19 |
+| Prioridad baja, para la Épica 04: la página de acceso debe redirigir al panel cuando ya hay sesión (`LoginView` con `redirect_authenticated_user=True`). Hoy, al volver con «atrás» después de entrar, aparece el formulario de acceso vacío | 00-06, parte A8 de la evidencia | 2026-10-23 |
 
 ## 5. Historial
 
