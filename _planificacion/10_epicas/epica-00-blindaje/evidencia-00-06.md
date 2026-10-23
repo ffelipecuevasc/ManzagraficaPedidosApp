@@ -187,14 +187,14 @@ git ls-remote --tags origin v0.2-correcciones
 
 | # | Comprobación | Resultado |
 | :- | :----------- | :-------- |
-| 1 | Pruebas en verde | `Ran 6 tests`, `OK` (repetir A3 tras `require_safe`) |
-| 2 | `check --deploy`: solo W004, W008, W009, W012, W016 | |
-| 3 | `No changes detected` | |
+| 1 | Pruebas en verde | `Ran 6 tests`, `OK` (repetir A3 tras `require_safe`) | Cumple: `Ran 6 tests`, `OK`; HEAD de `robots.txt` = 200 |
+| 2 | `check --deploy`: solo W004, W008, W009, W012, W016 | Cumple: esas cinco, 5 issues |
+| 3 | `No changes detected` | Cumple |
 | 4 | Migraciones nuevas | Ninguna |
 | 5 | Respaldo | No aplica |
 | 6 | Estilos compilados | No aplica |
-| 7 | `ls-remote` devuelve una línea | |
-| 8 | Solo despliegue de 00-06 | |
+| 7 | `ls-remote` devuelve una línea | Cumple (`refs/tags/v0.2-correcciones`, commit `7944943`) |
+| 8 | Solo despliegue de 00-06 | Cumple: de `v0.1-higiene` a `v0.2-correcciones`, sin otros cambios |
 
 ### B2. Servidor **[PA · Bash]**
 
@@ -219,7 +219,11 @@ python manage.py migrate --plan
 
 **Esperado:** `v0.2-correcciones`; el `diff` sin salida; `No planned migration operations.`
 
-**[PA · Panel]** Pestaña **Web** → **Reload**. Hora de la recarga (Chile): ____
+**[PA · Panel]** Pestaña **Web** → **Reload**. Hora de la recarga (Chile): **2026-10-23, 18:35** (21:35 UTC)
+
+**Resultado (desarrollador):** el servidor estaba en `v0.1-higiene` y limpio; `fetch --tags` trajo `v0.2-correcciones`; `checkout` dejó el servidor en el commit `7944943`; el `diff` de `requirements.txt`, `pedidos/static` y `pedidos/migrations` salió vacío; `migrate --plan`: `No planned migration operations` (con la advertencia conocida `mysql.W002`).
+
+**Incidente de etiqueta (resuelto antes del despliegue):** la etiqueta se creó primero con el texto de relleno `<AAAA-MM-DD>` en su mensaje. Como ningún servidor la había descargado, se eliminó (local y remota) y se recreó apuntando al mismo commit, con el mensaje «Iteración 00-06 · etiquetada el 2026-10-23». Lección: una etiqueta se crea solo con el mensaje final y después de la revisión.
 
 ### B3. Verificación después
 
@@ -235,12 +239,14 @@ Registro de errores (`despliegue.md`, 3.7). Anota solo tipo y hora de lo que apa
 
 | Revisión | Resultado |
 | :------- | :-------- |
-| `robots.txt` | |
-| Acceso | |
-| Panel, pedidos, detalle | |
-| Pagos | |
-| PDF | |
-| Errores después de la recarga | |
+| `robots.txt` | OK: texto directo sin pedir sesión. `curl.exe -sI`: `HTTP/1.1 200 OK` y `Content-Type: text/plain; charset=utf-8` |
+| Acceso | OK: se vio «Ingresando…» con el ícono girando y luego el panel |
+| Panel, pedidos, detalle | OK |
+| Pagos | OK: lista y detalle |
+| PDF | OK: se generó y se descargó sin problemas (WeasyPrint importado en producción) |
+| Errores después de la recarga | Una sola línea nueva, a las 21:47:11 UTC: `Not Found: /favicon.ico` (la solicita el navegador solo; nuevo hallazgo menor, la app no define favicon). Sin `Traceback`, sin `ImportError`, sin 500. El último `Not Found: /robots.txt` es del 2026-10-22 22:51 UTC, antes del despliegue |
+
+Producción quedó en `v0.2-correcciones`. Retroceso no necesario.
 
 Si algo falla: `docs/operacion/retroceso.md`, caso 1, con destino `v0.1-higiene`.
 
