@@ -82,7 +82,7 @@
                 </div>
             {% endif %}
 
-            <form method="post" action="{% url 'login' %}" class="space-y-5">
+            <form method="post" action="{% url 'login' %}" class="space-y-5" id="form-acceso">
                 {% csrf_token %}
 
                 <input type="hidden" name="next" value="{{ next }}">
@@ -116,10 +116,12 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit"
-                            class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-black bg-primary hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-all uppercase tracking-wide transform active:scale-95">
-                        Ingresar al Sistema
-                        <span class="material-icons-round text-lg ml-2">login</span>
+                    <button type="submit" id="btn-acceso"
+                            class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-black bg-primary hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-all uppercase tracking-wide transform active:scale-95 disabled:cursor-wait disabled:opacity-75 disabled:hover:bg-primary disabled:active:scale-100">
+                        <span data-texto-normal>Ingresar al Sistema</span>
+                        <span data-texto-procesando class="hidden">Ingresando…</span>
+                        <span class="material-icons-round text-lg ml-2" aria-hidden="true" data-icono-normal>login</span>
+                        <span class="material-icons-round text-lg ml-2 animate-spin hidden" aria-hidden="true" data-icono-procesando>autorenew</span>
                     </button>
                 </div>
             </form>
@@ -144,5 +146,38 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="{% static 'pedidos/js/index.js' %}"></script>
+<script>
+    // Evita el doble envío del acceso: deshabilita el botón al primer envío
+    // y lo restaura si la página se muestra de nuevo (recarga o botón «atrás»).
+    (function () {
+        var form = document.getElementById('form-acceso');
+        var boton = document.getElementById('btn-acceso');
+        if (!form || !boton) return;
+
+        function mostrar(procesando) {
+            boton.disabled = procesando;
+            boton.setAttribute('aria-busy', procesando ? 'true' : 'false');
+            boton.querySelectorAll('[data-texto-normal],[data-icono-normal]').forEach(function (el) {
+                el.classList.toggle('hidden', procesando);
+            });
+            boton.querySelectorAll('[data-texto-procesando],[data-icono-procesando]').forEach(function (el) {
+                el.classList.toggle('hidden', !procesando);
+            });
+        }
+
+        form.addEventListener('submit', function (evento) {
+            if (boton.disabled) {
+                evento.preventDefault();
+                return;
+            }
+            mostrar(true);
+        });
+
+        // pageshow se dispara también cuando el navegador recupera la página desde su caché («atrás»).
+        window.addEventListener('pageshow', function () {
+            mostrar(false);
+        });
+    })();
+</script>
 </body>
 </html>

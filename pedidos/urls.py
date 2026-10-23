@@ -3,6 +3,9 @@ from .views import respaldar_bd, generar_respaldo_bd
 from . import views
 
 urlpatterns = [
+    # ROBOTS
+    path('robots.txt', views.robots_txt, name='robots_txt'),
+
     # PANEL DE CONTROL
     path('', views.dashboard, name='dashboard'),
 
@@ -48,7 +51,7 @@ urlpatterns = [
     path('base_datos/estadisticas_bd/', views.estadisticas_bd, name='estadisticas_bd'),
 
     # PAGOS
-    path('pagos/lista', views.lista_pagos, name='lista_pagos'),
+    path('pagos/lista/', views.lista_pagos, name='lista_pagos'),
     path('pagos/ingresar/', views.ingresar_pago, name='ingresar_pago_general'),
     path('pagos/ingresar/<int:pedido_id>/', views.ingresar_pago, name='ingresar_pago'),
     path('pagos/detalle/<int:pk>/', views.detalle_pago, name='detalle_pago'),

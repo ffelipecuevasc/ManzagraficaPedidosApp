@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required, login_not_required, user_passes_test
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.db.models import Q, Count, Sum, F, ProtectedError, F, Value, IntegerField
 from django.db.models.functions import TruncMonth, Coalesce
 from django.http import JsonResponse, FileResponse, HttpResponseForbidden, HttpResponse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.db import transaction
@@ -16,7 +16,6 @@ from .decorators import transaccion_segura
 from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
 from datetime import timedelta, datetime
 from PedidosApp import settings
-import weasyprint
 import json
 import os
 
@@ -914,7 +913,12 @@ def exportar_cotizacion_pdf(request, pk):
         'cotizacion': cotizacion
     })
 
-    # 3. Crear el objeto HTML de WeasyPrint
+    # 3. Crear el objeto HTML de WeasyPrint.
+    # Se importa aquí y no en la cabecera: WeasyPrint es pesado y solo lo usa esta vista.
+    # Con un único worker que hiberna, importarlo al arrancar alarga cada arranque en frío.
+    # Si su importación falla, el error aparece al exportar el PDF y no impide iniciar la app.
+    import weasyprint
+
     html = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri())
 
     # 4. Generar el PDF
@@ -1560,3 +1564,10 @@ def error_404(request, exception):
 
 def error_500(request):
     return render(request, 'pedidos/errors/500.html', status=500)
+
+
+@login_not_required
+@require_GET
+def robots_txt(request):
+    """Pide a los buscadores no indexar la app. Es pública y no renderiza plantillas."""
+    return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain; charset=utf-8")

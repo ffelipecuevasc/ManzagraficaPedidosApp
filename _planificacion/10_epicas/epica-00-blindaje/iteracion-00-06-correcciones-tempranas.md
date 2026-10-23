@@ -1,7 +1,7 @@
 # Iteración 00-06 · Correcciones tempranas de riesgo nulo
 
 - **Épica:** 00 · Blindaje y punto de retorno
-- **Estado:** Pendiente
+- **Estado:** En revisión
 - **Subfase del plan:** 0.6
 - **Depende de:** 00-05
 - **RDA relacionadas:** RDA-007
