@@ -92,3 +92,4 @@ Una línea por respaldo verificado (o fallido). Solo fecha, tamaño, hash y resu
 | Fecha (hora de Chile) | Motivo | Tamaño (bytes) | SHA-256 | Resultado |
 | :-------------------- | :----- | :------------- | :------ | :-------- |
 | 2026-10-20 13:09:17 | Primer respaldo verificado (iteración 00-02) | 1.438.471 | `0fea064cb65fa1fc620663f2d66f6406d943489cd426a6e0cb37f31249d8d008` | VÁLIDO (código 0) |
+| 2026-10-22 23:56:36 | Previo al despliegue `v0.1-higiene` (iteración 00-05) | 1.444.819 | `90765c548e5c8f9676431c3c774e4d5aea6deed2559c91cdec0f773130de5fbe` | VÁLIDO (código 0) |

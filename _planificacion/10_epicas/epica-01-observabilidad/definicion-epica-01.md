@@ -31,6 +31,13 @@
 - La forma de aislar la escritura del error de la transacción que falló (conexión independiente, otra técnica) se decide en 01-02 y queda como RDA nueva.
 - Mientras exista `@transaccion_segura` (hasta la Épica 03), el decorador captura las excepciones antes de que lleguen a Django. Por eso 01-03 cambia su `print` por una llamada al servicio de registro, sin tocar todavía su lógica.
 
+## Pistas registradas para la épica
+
+Observaciones de otras iteraciones que la épica debe revisar. Son hipótesis, no hallazgos confirmados.
+
+- **2026-10-23 (00-05):** el `OSError: write error` del 2026-10-23 a las 02:56:38 UTC ocurrió 2 segundos después de generar un respaldo (`respaldo_22-10-2026_23-56-36.sql`, hora de Chile) y coincide con su descarga. Es de la misma familia que los `Broken pipe` y `SIGPIPE` medidos en 00-01. Hay que comprobar si esos cortes se relacionan con la descarga de respaldos (evidencia-00-05, B10).
+- **2026-10-23 (00-05):** los mensajes informativos de `fontTools` al generar PDFs con WeasyPrint (`subsetted`, `pruned`, `Took …s`) llegan al registro de errores del servidor y lo ensucian. Al medir errores en la épica hay que filtrarlos o bajar el nivel de registro de `fontTools`.
+
 ## Criterio de término
 
 - Un error real en producción se diagnostica en menos de cinco minutos sin acceso al servidor: desde el identificador que ve el usuario hasta la traza en el admin, medido en 01-06.

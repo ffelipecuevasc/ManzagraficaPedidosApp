@@ -232,3 +232,4 @@ El paso a paso exacto, con las salidas que hay que anotar, está en `_planificac
 
 | Fecha (hora de Chile) | Etiqueta | Commit | Iteración | Respaldo previo (SHA-256, 12 primeros) | Resultado |
 | :-------------------- | :------- | :----- | :-------- | :------------------------------------- | :-------- |
+| 2026-10-23 00:26 | `v0.1-higiene` | `64655f8` | 00-04 (primer uso del protocolo; partida `v0.0-inicial`, `2442f3b`) | `90765c548e5c` | Correcto, sin retroceso: panel, listado y detalle de pedido; sin errores después de la recarga |

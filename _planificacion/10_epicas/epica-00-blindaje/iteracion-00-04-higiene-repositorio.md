@@ -1,7 +1,7 @@
 # Iteración 00-04 · Higiene del repositorio
 
 - **Épica:** 00 · Blindaje y punto de retorno
-- **Estado:** Terminada (2026-10-21, sin desplegar: el despliegue se hace en la 00-05 como primer uso de la lista de comprobación)
+- **Estado:** Terminada (2026-10-21, sin desplegar: el despliegue se hace en la 00-05 como primer uso de la lista de comprobación). Desplegada el 2026-10-23 como `v0.1-higiene`.
 - **Subfase del plan:** 0.4
 - **Depende de:** —
 - **RDA relacionadas:** RDA-002
@@ -37,7 +37,7 @@ Que un clon limpio del repositorio no contenga artefactos locales ni credenciale
 - [x] `settings.py` no contiene la contraseña `'root'` ni ningún otro valor literal de contraseña (búsqueda en el archivo).
 - [x] Sin `ALLOWED_HOSTS` en el entorno, `runserver` responde en `127.0.0.1` y en `localhost` sin cambios manuales, y una petición con otro `Host` recibe 400.
 - [x] `.env.example` incluye `ALLOWED_HOSTS` y las cinco `DB_*`, sin valores.
-- [ ] Después del despliegue, la aplicación publicada responde 200 en `manzagrafica.pythonanywhere.com` (evidencia del desarrollador). *(Pasa a la 00-05: se comprueba en `evidencia-00-05.md` al desplegar la 00-04.)*
+- [x] Después del despliegue, la aplicación publicada responde 200 en `manzagrafica.pythonanywhere.com` (evidencia del desarrollador). *(Pasa a la 00-05: se comprueba en `evidencia-00-05.md` al desplegar la 00-04.)* Cumplido el 2026-10-23: inicio de sesión, panel, listado y detalle de pedido cargan con `v0.1-higiene` (evidencia-00-05, B10).
 
 ## Fuera de alcance
 

@@ -333,6 +333,9 @@ Deleted tag 'ensayo-retroceso' (was ec1f98f)
 
 ## Parte B · Primer uso real: despliegue de la 00-04 como `v0.1-higiene`
 
+- **Ejecutada:** del 2026-10-22 23:56 al 2026-10-23 00:30 (hora de Chile), por el desarrollador. Recarga de la web app: **2026-10-23 00:26 (hora de Chile) = 03:26 UTC**.
+- **Revisión del agente (2026-10-23):** **aprobado**. Lista completa, etiquetas `v0.0-inicial` y `v0.1-higiene` publicadas antes de tocar el código del servidor, `captura: 0` antes del `checkout`, `check` limpio, sin migraciones, tres pantallas correctas y ninguna línea en el registro de errores después de la recarga. Detalle en `bitacora-00-05-produccion.md`.
+
 **No ejecutar hasta que el agente revise la parte A.** Sigue `docs/operacion/despliegue.md`; aquí van los valores concretos de este despliegue. La 00-04 no trae migraciones, no cambia versiones de `requirements.txt` (solo su codificación) ni estáticos.
 
 **Qué se despliega:** el commit `64655f8` (cierre de la 00-04). Se etiqueta ese commit y no la punta de `main`, para que los documentos de la 00-05 no viajen en este despliegue (un despliegue, un propósito).
@@ -350,7 +353,13 @@ Deleted tag 'ensayo-retroceso' (was ec1f98f)
    Esperado: `0` y 18 de 18 tablas. Si da `1`, sigue «Si la verificación falla» de `respaldo.md` y no despliegues.
 3. Agrega la fila al registro de `respaldo.md`, sección 6 (motivo: «Previo al despliegue v0.1-higiene»).
 
-**Respuesta B1 (fecha del volcado, tamaño, SHA-256 y código):**
+**Respuesta B1:**
+
+- Archivo: `respaldo_22-10-2026_23-56-36.sql` (generado el 2026-10-22 a las 23:56:36, hora de Chile).
+- Tamaño: **1.444.819 bytes** (mínimo exigido 500.000).
+- SHA-256: `90765c548e5c8f9676431c3c774e4d5aea6deed2559c91cdec0f773130de5fbe`
+- Línea de cierre `-- Dump completed`: presente. `CREATE TABLE`: 18; tablas esperadas encontradas: **18 de 18**; sin tablas faltantes ni adicionales.
+- Resultado: **VÁLIDO**. `$LASTEXITCODE`: **0**.
 
 ### B2. Lista de comprobación · [PC · PowerShell 7]
 
@@ -364,19 +373,19 @@ python manage.py showmigrations pedidos
 
 Esperado: las 5 advertencias conocidas (`W004`, `W008`, `W009`, `W012`, `W016`) y ninguna otra; `No changes detected`; `0001` a `0006`.
 
-**Respuesta B2 (completa la tabla):**
+**Respuesta B2** (tabla completada abajo). Salida de `showmigrations pedidos`: `0001` a `0006` con `[X]`. El `makemigrations --check --dry-run` se ejecutó después de la lista, con el mismo resultado: `No changes detected`.
 
 | # | Comprobación | Resultado |
 | :- | :----------- | :-------- |
 | 1 | Pruebas | Sin pruebas (02-01) |
-| 2 | `check --deploy` | |
-| 3 | `makemigrations --check` | |
-| 4 | Migraciones nuevas | Ninguna (se confirma en B4) |
-| 5 | Respaldo verificado | (de B1) |
+| 2 | `check --deploy` | Solo las 5 advertencias conocidas (`W004`, `W008`, `W009`, `W012`, `W016`); ninguna otra y ningún error |
+| 3 | `makemigrations --check` | `No changes detected` |
+| 4 | Migraciones nuevas | Ninguna: `0001` a `0006` en B4 y `No planned migration operations` en B8 |
+| 5 | Respaldo verificado | Sí: `respaldo_22-10-2026_23-56-36.sql`, `VÁLIDO`, código 0 (B1) |
 | 6 | Estilos compilados | No aplica (05-04) |
-| 7 | Etiqueta publicada | (de B3) |
-| 8 | Punto 8 (media/, conteo, `.env`) | (de B6 y B7) |
-| — | Etiqueta de partida `v0.0-inicial` | (de B5) |
+| 7 | Etiqueta publicada | Sí: `v0.1-higiene` en el remoto (B3) |
+| 8 | Punto 8 (media/, conteo, `.env`) | Cumplido: `captura: 0`; `DATABASE_URL` presente; `ALLOWED_HOSTS` agregada (B6 y B7) |
+| — | Etiqueta de partida `v0.0-inicial` | Sí: creada y publicada antes de tocar el servidor (B5) |
 
 ### B3. Etiqueta · [PC · PowerShell 7]
 
@@ -391,7 +400,19 @@ git tag -n
 
 Esperado: `ls-remote` devuelve una línea; `git tag -n` muestra `v0.1-higiene` con su mensaje.
 
-**Respuesta B3 (salida de `git tag -n`):**
+**Respuesta B3:**
+
+```text
+> git push origin v0.1-higiene
+ * [new tag]         v0.1-higiene -> v0.1-higiene
+> git ls-remote --tags origin v0.1-higiene
+140afbb55ec0b6f93e7b05b73ed7df1f209c1db6        refs/tags/v0.1-higiene
+> git tag -n
+fase0-linea-base-2026-10-20 Estado de produccion medido el 2026-10-20
+v0.1-higiene    Iteracion 00-04 desplegada el 2026-10-22
+```
+
+Nota: el mensaje de la etiqueta dice 2026-10-22; la recarga real fue el 2026-10-23 a las 00:26 (hora de Chile). No se reescribe la etiqueta publicada; la fecha correcta queda en este registro.
 
 ### B4. Ubicarse en el servidor · [PA · Bash]
 
@@ -411,7 +432,21 @@ python manage.py showmigrations pedidos
 
 Esperado: `PROYECTO y VENV correctos`; `git status` sin líneas ` M` (se aceptan `??`); un commit corto (el que está hoy en producción: **anótalo**); `0001` a `0006` con `[X]`. **Si hay líneas ` M`, detente** y pégame solo los nombres de archivo.
 
-**Respuesta B4 (commit en producción y salida de `git status`):**
+**Respuesta B4:**
+
+```text
+PROYECTO y VENV correctos
+> git status --short
+(solo líneas "??": 8 archivos en media/pedidos/, la carpeta media/referencias/ y staticfiles/; ninguna línea " M")
+> git rev-parse --short HEAD
+2442f3b
+> git describe --tags --always
+2442f3b
+> python manage.py showmigrations pedidos
+ [X] 0001 ... [X] 0006 (todas aplicadas)
+```
+
+Commit en producción antes del despliegue: **`2442f3b`**. No se listan los nombres de las imágenes porque son archivos de trabajos de clientes.
 
 ### B5. Etiqueta del estado de partida `v0.0-inicial` · [PC · PowerShell 7]
 
@@ -429,7 +464,23 @@ Esperado: `ls-remote` devuelve una línea; `git tag -n` muestra `v0.0-inicial` y
 - Si `git tag` responde `Not a valid object name`, ese commit no está en tu repositorio local (se hizo directo en el servidor o no se publicó): **no sigas con el despliegue** y avísame.
 - Tienes una etiqueta local antigua, `fase0-linea-base-2026-10-20` («Estado de produccion medido el 2026-10-20»), con el formato anterior. Compara su commit con el de B4 (`git rev-list -n 1 fase0-linea-base-2026-10-20`) y anótalo. No la borres ni la muevas sin decidirlo antes.
 
-**Respuesta B5 (salida de `git tag -n` y commit de `fase0-linea-base-2026-10-20`):**
+**Respuesta B5:**
+
+```text
+> git tag -a v0.0-inicial 2442f3b -m "Estado de produccion antes del primer despliegue con el protocolo 00-05"
+> git push origin v0.0-inicial
+ * [new tag]         v0.0-inicial -> v0.0-inicial
+> git ls-remote --tags origin v0.0-inicial
+80672bb516ddbb22e989362ccab28df9168010b2        refs/tags/v0.0-inicial
+> git tag -n
+fase0-linea-base-2026-10-20 Estado de produccion medido el 2026-10-20
+v0.0-inicial    Estado de produccion antes del primer despliegue con el protocolo 00-05
+v0.1-higiene    Iteracion 00-04 desplegada el 2026-10-22
+> git rev-list -n 1 fase0-linea-base-2026-10-20
+2442f3b1ea749934f63988ce294cd285d31a7b72
+```
+
+El commit de `fase0-linea-base-2026-10-20` (`2442f3b1ea74...`) **coincide** con el de `v0.0-inicial` (`2442f3b`). Decisión del desarrollador: la etiqueta antigua se deja como está; las dos conviven sobre el mismo commit.
 
 ### B6. Punto 8.1 y 8.2: `media/` y la captura · [PA · Bash]
 
@@ -446,7 +497,20 @@ python manage.py shell -c "from pedidos.models import Pedido as P; print('captur
 - `ls -l`: si dice `No such file`, la captura no está en el servidor y el `checkout` no borra nada.
 - **Si `captura:` es mayor que 0, detente:** copia la imagen fuera del repositorio (`cp media/pedidos/Captura_de_pantalla_2026-01-20_152121.jpg ~/`) antes de B8 y avísame.
 
-**Respuesta B6 (los dos conteos, si existe la captura y la línea `captura: … | en pedidos/: …`):**
+**Respuesta B6:**
+
+```text
+> find media -type f | wc -l
+11
+> find media/pedidos -type f | wc -l
+9
+> ls -l media/pedidos/Captura_de_pantalla_2026-01-20_152121.jpg
+-rw-rw-r-- 1 manzagrafica registered_users 119385 Jan 22  2026 media/pedidos/Captura_de_pantalla_2026-01-20_152121.jpg
+> python manage.py shell -c "...captura / en pedidos/..."
+captura: 0 | en pedidos/: 7
+```
+
+`captura: 0`: ningún pedido usa la imagen que el `checkout` elimina del servidor. Los 7 pedidos que apuntan a `pedidos/` usan imágenes que no están versionadas y no se tocan.
 
 ### B7. Punto 8.3: `.env` del servidor · [PA · Bash]
 
@@ -471,7 +535,17 @@ grep '^ALLOWED_HOSTS=' .env
 
 Esperado: `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com`. El código actual del servidor no lee esta variable, así que agregarla antes del `checkout` no cambia nada hasta la recarga.
 
-**Respuesta B7 (los dos conteos y la última línea):**
+**Respuesta B7:**
+
+```text
+> grep -c '^DATABASE_URL=' .env
+1
+> grep -c '^ALLOWED_HOSTS=' .env
+0
+> printf '\nALLOWED_HOSTS=manzagrafica.pythonanywhere.com\n' >> .env
+> grep '^ALLOWED_HOSTS=' .env
+ALLOWED_HOSTS=manzagrafica.pythonanywhere.com
+```
 
 ### B8. Traer la etiqueta · [PA · Bash]
 
@@ -497,13 +571,35 @@ Esperado:
 
 No hace falta `pip install` ni `collectstatic`: `requirements.txt` cambia solo de codificación y no hay cambios en `pedidos/static` (pasos 3.3 y 3.5 de `despliegue.md`). Si quieres confirmarlo: `git diff --stat v0.0-inicial v0.1-higiene -- requirements.txt pedidos/static`.
 
-**Respuesta B8 (salidas):**
+**Respuesta B8:**
+
+```text
+> git fetch origin --tags
+   2442f3b..7bbece8  main                        -> origin/main
+ * [new tag]         fase0-linea-base-2026-10-20 -> fase0-linea-base-2026-10-20
+ * [new tag]         v0.0-inicial                -> v0.0-inicial
+ * [new tag]         v0.1-higiene                -> v0.1-higiene
+> git checkout v0.1-higiene
+HEAD is now at 64655f8 Épica 0 - Iteración 00-04: cierra la iteración sin desplegar ...
+> git describe --tags
+v0.1-higiene
+> git status --short
+(sin salida)
+> ls media/pedidos/Captura_de_pantalla_2026-01-20_152121.jpg
+ls: cannot access '...': No such file or directory      (esperado: el checkout la eliminó)
+> python manage.py check
+System check identified no issues (0 silenced).
+> python manage.py migrate --plan
+(advertencia mysql.W002, ya conocida)
+Planned operations:
+  No planned migration operations.
+```
 
 ### B9. Recargar · [PA · Panel]
 
 Pestaña **Web** → **Reload manzagrafica.pythonanywhere.com**.
 
-**Respuesta B9 (hora de la recarga, hora de Chile):**
+**Respuesta B9:** recarga a las **00:26 del 2026-10-23, hora de Chile** (03:26 UTC). La pestaña **Web** no mostró ningún error tras pulsar **Reload**, y la fecha de caducidad del sitio sigue siendo el viernes 20 de noviembre de 2026.
 
 ### B10. Verificación posterior
 
@@ -511,9 +607,9 @@ Pestaña **Web** → **Reload manzagrafica.pythonanywhere.com**.
 
 | Pantalla | Dirección | Esperado | Resultado |
 | :------- | :-------- | :------- | :-------- |
-| Inicio de sesión y panel | `https://manzagrafica.pythonanywhere.com/` | Inicio de sesión; después, el panel con sus cifras | |
-| Listado de pedidos | `/pedidos/lista/` | Tabla de pedidos | |
-| Detalle de un pedido | Cualquiera desde el listado | Ítems y pagos | |
+| Inicio de sesión y panel | `https://manzagrafica.pythonanywhere.com/` | Inicio de sesión; después, el panel con sus cifras | **Correcto**: inició sesión y el panel mostró sus datos |
+| Listado de pedidos | `/pedidos/lista/` | Tabla de pedidos | **Correcto** |
+| Detalle de un pedido | Cualquiera desde el listado | Ítems y pagos | **Correcto**: ítems y pagos visibles; un pedido con imagen de referencia también se vio bien |
 
 Un **400** significa `ALLOWED_HOSTS` mal definido: vuelve a B7. Un **500** o un error en pantalla: sigue el caso 1 de `retroceso.md` hacia `v0.0-inicial`, creada en B5.
 
@@ -528,11 +624,56 @@ tail -n 20 $L | cut -c1-160
 
 Revisa solo las líneas posteriores a la recarga (el registro está en UTC: suma 3 horas a la hora de Chile). Esperado: ningún `Error`, `Traceback` ni `DisallowedHost` después de la recarga.
 
-**Respuesta B10 (tabla completa y, del registro, cuántas líneas hay después de la recarga y de qué tipo; no pegues el texto completo):**
+**Respuesta B10:** tabla completada arriba. Registro de errores:
+
+```text
+> date -u "+%F %T UTC"
+2026-10-23 03:27:46 UTC
+> grep -c "^2026-10-23" /var/log/manzagrafica.pythonanywhere.com.error.log
+1
+```
+
+Líneas posteriores a la recarga (03:26 UTC): **ninguna**. Las últimas líneas del registro son anteriores y de tipos conocidos:
+
+- `2026-10-22 21:04:16 UTC`: mensajes informativos de subconjuntos de fuentes (`subsetted`, `pruned`, `Took 0.00xs`) de la generación de un PDF (WeasyPrint / fontTools). No son errores.
+- `2026-10-22 22:51:12 UTC`: `Not Found: /robots.txt` (404 conocido).
+- `2026-10-23 02:56:38 UTC`: `OSError: write error`, **28 minutos antes de la recarga** y 2 segundos después de la generación del respaldo de B1 (`23-56-36`, hora de Chile). Coincide con la descarga del volcado y pertenece a la familia de los cortes de conexión ya conocidos (`Broken pipe`, `SIGPIPE`); no se debe al despliegue.
 
 ### B11. Registros
 
-Agrega una fila en `docs/operacion/despliegue.md`, sección 5 (o pásame los datos y la agrego yo).
+Datos para las filas de `docs/operacion/despliegue.md`, sección 5, y de `docs/operacion/respaldo.md`, sección 6 (el agente las agrega al cerrar la iteración):
+
+| Dato | Valor |
+| :--- | :---- |
+| Etiqueta desplegada | `v0.1-higiene` (commit `64655f8`) |
+| Etiqueta de partida | `v0.0-inicial` (commit `2442f3b`) |
+| Fecha y hora de la recarga | 2026-10-23 00:26 (hora de Chile) |
+| Respaldo previo | `respaldo_22-10-2026_23-56-36.sql`, 1.444.819 bytes, SHA-256 `90765c54...de5fbe`, VÁLIDO |
+| Migraciones | Ninguna |
+| Resultado | Correcto, sin retroceso; panel, listado y detalle de pedido verificados; sin líneas nuevas en el registro de errores |
+
+## Resultado de la parte B
+
+- **Despliegue de `v0.1-higiene`:** realizado y verificado el 2026-10-23 (recarga a las 00:26, hora de Chile). **No hubo retroceso.**
+- **Revisión del agente (2026-10-23):** **aprobado**. Lista completa, etiquetas `v0.0-inicial` y `v0.1-higiene` publicadas antes de tocar el código del servidor, `captura: 0` antes del `checkout`, `check` limpio, sin migraciones, tres pantallas correctas y ninguna línea en el registro de errores después de la recarga. Detalle en `bitacora-00-05-produccion.md`.
+
+| Criterio | Resultado | Dónde se ve |
+| :------- | :-------- | :---------- |
+| Etiqueta del despliegue de 00-04 en `git tag -n` | `v0.1-higiene` (y `v0.0-inicial`) publicadas | B3 y B5 |
+| Lista de comprobación completada | Sí, incluidos el punto 8 y la etiqueta de partida | B2 |
+| El sitio publicado responde con la versión nueva | Sí: inicio de sesión, panel, listado y detalle de pedidos correctos | B10 |
+| Registro de errores sin fallos posteriores a la recarga | Sí: ninguna línea posterior a las 03:26 UTC | B10 |
+
+### Observaciones
+
+1. **Fecha en el mensaje de la etiqueta:** `v0.1-higiene` dice 2026-10-22, pero la recarga fue el 2026-10-23 a las 00:26 (hora de Chile). Se deja así y se registra la fecha real aquí.
+2. **El servidor queda en `detached HEAD`** sobre `v0.1-higiene`. Es lo esperado con este protocolo: los despliegues siguientes se hacen con `git fetch origin --tags` y `git checkout <etiqueta>`, no con `git pull`.
+3. **`OSError: write error`** a las 02:56:38 UTC, dos segundos después de generar el respaldo de B1, y con el tipo de falla de los `Broken pipe` y `SIGPIPE` ya medidos (0,44 por día en 89 días). Es un dato más a favor de investigar si esos cortes se relacionan con la descarga de respaldos (posible pista para la épica de observabilidad; hipótesis, sin confirmar).
+4. **Ruido en el registro de errores:** los mensajes informativos de `fontTools` al generar un PDF de cotización aparecen en el mismo archivo que los errores. Conviene filtrarlos al medir errores en la épica 01.
+5. **Hallazgo nuevo, aprobado como pendiente:** las imágenes de los trabajos (`media/pedidos/` con 8 archivos más la captura eliminada, y `media/referencias/`) no están en Git ni en el respaldo de la base de datos, así que no tienen ninguna copia. Se registra como hallazgo con propuesta para la épica de operación.
+6. **Advertencia `mysql.W002`** en el `migrate --plan` del servidor: es el modo SQL no estricto de producción, ya conocido.
+
+---
 
 ## Lo que no se pudo verificar
 
