@@ -25,7 +25,8 @@ Llevar la observabilidad a producción con el protocolo de 00-05 y demostrar con
    - Ejecutar una acción del inventario (por ejemplo, cambiar el estado de un pedido de prueba si existe, o un acceso) y verla en el admin de eventos.
    - Una semana después: contar filas nuevas de eventos, su peso y las líneas de `error.log` por nivel.
 5. **Configuración de pruebas de 02-01** (agregado el 2026-10-25): el bloque 3 de `settings.py` (base de pruebas `test_manzagrafica` con bloqueo de nombres reales) viaja en este despliegue. En el servidor, `python manage.py check --deploy` debe seguir sin errores nuevos después del `checkout`; el resultado va en la evidencia.
-6. **Contraste con la estimación** de 01-01 en la bitácora de producción. Si el crecimiento real supera la estimación, proponer el ajuste del inventario antes de cerrar.
+6. **Sin líneas duplicadas en `error.log`** (agregado el 2026-10-25, 01-02): `LOGGING` reemplaza el manejador de la raíz, pero si PythonAnywhere instala uno propio, cada línea podría salir dos veces. Tras el error controlado, la evidencia muestra que cada línea aparece una sola vez.
+7. **Contraste con la estimación** de 01-01 en la bitácora de producción. Si el crecimiento real supera la estimación, proponer el ajuste del inventario antes de cerrar.
 
 ## Criterios de aceptación
 

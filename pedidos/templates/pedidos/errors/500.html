@@ -1,23 +1,22 @@
 {% extends 'pedidos/base.html' %}
 
-{% block title %}Error del Servidor - Manza Gráfica{% endblock %}
+{% block title %}Algo salió mal - Manza Gráfica{% endblock %}
 
 {% block content %}
 <div class="min-h-[60vh] flex flex-col items-center justify-center text-center p-4">
     <div class="bg-red-100 dark:bg-red-900/20 p-6 rounded-full mb-6">
-        <span class="material-icons-round text-6xl text-red-600 dark:text-red-400">dns</span>
+        <span class="material-icons-round text-6xl text-red-600 dark:text-red-400" aria-hidden="true">dns</span>
     </div>
-    
-    <h1 class="text-4xl font-bold text-slate-900 dark:text-white mb-2 font-display tracking-wide">
-        500 <span class="text-red-500">ERROR</span>
+
+    <h1 class="text-4xl font-bold text-slate-900 dark:text-white mb-4 font-display tracking-wide">
+        Algo salió mal
     </h1>
-    
-    <h2 class="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">
-        Algo salió mal en nuestros sistemas
-    </h2>
-    
-    <p class="text-slate-500 dark:text-slate-400 max-w-md mb-8">
-        No es tu culpa. Hemos detectado un error interno y nuestro equipo ya ha sido notificado (bueno, cuando configuremos los correos 😉). Por favor intenta de nuevo en unos minutos.
+
+    <p class="text-slate-600 dark:text-slate-300 max-w-md mb-2">
+        No pudimos completar lo que pediste. Vuelve a intentarlo en unos minutos.
+    </p>
+    <p class="text-slate-600 dark:text-slate-300 max-w-md mb-8">
+        Si el problema sigue, avísale al administrador y cuéntale qué estabas haciendo.
     </p>
 
     <div class="flex gap-4">

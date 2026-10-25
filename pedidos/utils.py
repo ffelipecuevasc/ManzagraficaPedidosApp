@@ -4,8 +4,11 @@ from .models import HistorialBD, Pedido, Cliente, Cotizacion, Producto
 from datetime import datetime
 from django.conf import settings
 import glob
+import logging
 import subprocess
 import os
+
+logger = logging.getLogger(__name__)
 
 def generar_respaldo_mysql():
     """
@@ -84,9 +87,9 @@ def limpiar_backups_antiguos(directorio, mantener=5):
         for archivo in a_borrar:
             try:
                 os.remove(archivo)
-                print(f"Respaldo antiguo eliminado: {archivo}")
+                logger.info("Respaldo antiguo eliminado: %s", archivo)
             except OSError as e:
-                print(f"Error al borrar respaldo antiguo {archivo}: {e}")
+                logger.warning("Error al borrar respaldo antiguo %s", archivo, exc_info=True)
 
 def restaurar_bd_mysql(ruta_archivo_sql):
     """

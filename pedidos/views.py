@@ -17,7 +17,10 @@ from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metrica
 from datetime import timedelta, datetime
 from PedidosApp import settings
 import json
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 
 # ==========================================
@@ -187,7 +190,9 @@ def crear_pedido(request):
                                 precio_unitario=int(item['precio_unitario'])
                             )
                     except Exception as e:
-                        print(f"Error procesando items: {e}")
+                        # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en error.log.
+                        logger.exception('Error procesando items del pedido %s', pedido.pk,
+                                         extra={'request': request})
                         # No detenemos el proceso, los items son recuperables o editables
 
                 # 3. Lógica de Pago (CORREGIDA: Variable segura y flujo directo)
@@ -215,11 +220,9 @@ def crear_pedido(request):
             return redirect('detalle_pedido', pk=pedido.pk)
 
         else:
-            # Debugging en consola si falla la validación
-            print("\n" + "=" * 30)
-            print("❌ ERROR DE VALIDACIÓN DETECTADO [CREACIÓN DE PEDIDO]:")
-            print(form.errors)
-            print("=" * 30 + "\n")
+            # Solo los nombres de los campos: los mensajes pueden repetir lo que escribió el usuario.
+            logger.info('Formulario de pedido inválido; campos con error: %s',
+                        ', '.join(sorted(form.errors)), extra={'request': request})
 
     else:
         form = PedidoForm()

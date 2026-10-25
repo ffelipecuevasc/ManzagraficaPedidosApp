@@ -1,7 +1,7 @@
 # Iteración 01-02 · Configuración del registro y servicio de eventos
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión (2026-10-25; se despliega en 01-06)
+- **Estado:** Terminada (2026-10-25; sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere)
 - **Subfase del plan:** 1.2
 - **Depende de:** 01-01, 02-01
 - **RDA relacionadas:** RDA-008, RDA-013

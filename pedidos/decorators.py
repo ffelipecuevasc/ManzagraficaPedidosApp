@@ -1,6 +1,10 @@
+import logging
 from functools import wraps
+
 from django.shortcuts import render
 import sys
+
+logger = logging.getLogger(__name__)
 
 def transaccion_segura(view_func):
     """
@@ -15,7 +19,10 @@ def transaccion_segura(view_func):
             return view_func(request, *args, **kwargs)
         except Exception as e:
             # Si algo falla, capturamos el error aquí mismo
-            print(f"⚠️ Error capturado por decorador en {view_func.__name__}: {e}")
+            # Traza completa a error.log con el contexto de la petición (01-03). El rediseño
+            # del decorador es de la Épica 03.
+            logger.exception('Error capturado por decorador en %s', view_func.__name__,
+                             extra={'request': request})
 
             # Opcional: Podríamos pasar un mensaje específico al template
             context = {

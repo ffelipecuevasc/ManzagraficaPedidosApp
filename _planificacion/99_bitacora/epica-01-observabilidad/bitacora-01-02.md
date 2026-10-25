@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión. Se despliega con 01-01 a 01-05 en 01-06 (`v1.1-observabilidad`). Sin migraciones; el respaldo previo del despliegue lo exige la 0007 de la 01-01.
+- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador); sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere. Sin migraciones.
 
 ## Resumen
 

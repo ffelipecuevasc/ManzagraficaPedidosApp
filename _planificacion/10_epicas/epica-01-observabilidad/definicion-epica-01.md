@@ -22,8 +22,8 @@
 | Iteración | Nombre | Subfase |
 | :-------- | :----- | :------ |
 | 01-01 | Modelo de registro de eventos (Terminada) | 1.1 |
-| 01-02 | Configuración del registro y servicio de eventos (en revisión) | 1.2 |
-| 01-03 | Retiro del middleware y trazas completas | 1.3 |
+| 01-02 | Configuración del registro y servicio de eventos (Terminada) | 1.2 |
+| 01-03 | Retiro del middleware y trazas completas (en revisión) | 1.3 |
 | 01-04 | Instrumentación de eventos de negocio | 1.4 |
 | 01-05 | Consulta de eventos en el admin | 1.5 |
 | 01-06 | Despliegue y validación de la observabilidad | 1.6 |
@@ -32,6 +32,7 @@
 
 - **2026-10-25 · Errores en el registro del servidor, no en MySQL (RDA-013, decisión del desarrollador).** La observabilidad técnica es responsabilidad del desarrollador, no del usuario final. Los errores se escriben con `logging` a la salida de error (The Twelve-Factor App, factor XI: la aplicación emite sus registros como flujo y el entorno los guarda) y se leen en `error.log` de PythonAnywhere. Se descarta la tabla de errores y el código visible en la página 500 (YAGNI). Con esto desaparecen dos de las cuatro trampas originales: el aislamiento transaccional y la dependencia circular de los errores.
 - **2026-10-25 · Eventos en MySQL, consultados en el admin de Django (decisión del desarrollador).** Los eventos son registro de auditoría del negocio («quién hizo qué y cuándo»): se guardan en la base, se respaldan con ella y se consultan en `/admin`. Una pantalla propia con el diseño de la app queda fuera de la épica.
+- **2026-10-25 · Los 404 no van a `error.log` (decisión del desarrollador).** `django.request` queda en nivel `ERROR`: los 404 siguen visibles en `access.log`, pero no en `error.log`, porque los rastreadores y bots que piden rutas inexistentes llenarían de ruido el registro de errores. `LOGGING` no cambia.
 - **2026-10-25 · Sin identificador de petición (decisión del desarrollador).** Cada línea de error lleva hora, método, ruta y usuario; con eso basta para cruzar `error.log` con `access.log` en una aplicación de este tamaño.
 - Las iteraciones 01-01 a 01-05 se trabajan en local, contra la réplica, y se despliegan **juntas** en 01-06 con la etiqueta `v1.1-observabilidad` (RDA-007: cada fase parte en `.1`). La migración de la tabla de eventos va en un único despliegue con respaldo previo.
 - Mientras exista `@transaccion_segura` (hasta la Épica 03), el decorador captura las excepciones antes de que lleguen a Django. Por eso 01-03 cambia su `print` por `logger.exception`, sin tocar todavía su lógica.
@@ -42,7 +43,7 @@
 - `auditoria-tecnica.md`: actualizar la solución de AUD-01-005 según RDA-013 (01-01, tarea 1).
 - `registro-pendientes.md`: la decisión «Retención de las tablas de errores y de eventos» pasa a ser solo de eventos; la del «método para provocar el error controlado» se mantiene para 01-06.
 - `plan-de-trabajo.md` menciona el identificador de correlación y las tablas de registro en fases posteriores (por ejemplo, el contrato de error hacia el usuario de la Fase 3 y los índices de la Fase 5). No se reescribe ahora: cuando esas épicas se detallen, se aplican según RDA-013.
-- **`PENDIENTE_DESARROLLADOR` · `AGENTS.md`, regla 4:** habla del «servicio de registro del proyecto». Sigue siendo compatible (ahora es `logging` para errores y el servicio de eventos para el negocio), pero si el desarrollador quiere precisar el texto, la edición es suya: `AGENTS.md` es inmutable para el agente. El agente propone el texto en la bitácora de 01-03.
+- **`PENDIENTE_DESARROLLADOR` · `AGENTS.md`, regla 4:** habla del «servicio de registro del proyecto». Sigue siendo compatible (ahora es `logging` para errores y el servicio de eventos para el negocio), pero si el desarrollador quiere precisar el texto, la edición es suya: `AGENTS.md` es inmutable para el agente. El agente propone el texto en la bitácora de 01-03 (propuesta escrita el 2026-10-25, [bitacora-01-03](../../99_bitacora/epica-01-observabilidad/bitacora-01-03.md)).
 
 ## Datos conocidos al iniciar (Épica 00)
 
