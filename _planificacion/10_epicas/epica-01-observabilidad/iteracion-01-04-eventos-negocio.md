@@ -4,7 +4,7 @@
 - **Estado:** Pendiente
 - **Subfase del plan:** 1.4
 - **Depende de:** 01-02
-- **RDA relacionadas:** RDA-008
+- **RDA relacionadas:** RDA-008, RDA-013
 - **Hallazgos que cierra:** ninguno por sí sola. Avanza AUD-01-005.
 - **Cambio de esquema:** Ninguno (si el inventario cambia las opciones del tipo de evento, es Clase 1 y se verifica con `sqlmigrate`)
 - **Respaldo previo al despliegue:** Sí (se despliega en 01-06)
@@ -23,8 +23,9 @@ Que cada acción de negocio crítica deje un evento con quién, qué, sobre qué
    - Acceso: exitoso y fallido (con las señales de autenticación de Django). Para el fallido se registra el nombre de usuario intentado, nunca la contraseña.
    - Base de datos: respaldo generado y restauración ejecutada, con el usuario que la ejecutó.
 2. **Eventos sin usuario**: los que genere el sistema (la futura orden de mantención) se registran con usuario nulo y un origen identificable.
-3. **Instrumentar** cada punto del inventario con el servicio de 01-02.
-4. **Pruebas**: una por evento del inventario.
+3. **Instrumentar** cada punto del inventario con el servicio de eventos de 01-02.
+4. **Contraste con la estimación** de 01-01: si el inventario final difiere del usado en la estimación, recalcularla en la bitácora.
+5. **Pruebas**: una por evento del inventario.
 
 ## Criterios de aceptación
 
@@ -38,7 +39,7 @@ Que cada acción de negocio crítica deje un evento con quién, qué, sobre qué
 ## Fuera de alcance
 
 - Hacer atómicas las operaciones instrumentadas (va en la Épica 03). Mientras tanto, el evento se escribe tras el guardado que hoy existe.
-- Convertir a POST las rutas que hoy escriben con GET (va en 04-01).
+- Convertir a POST las rutas que hoy escriben con GET, como el cambio de estado `/pedido/<id>/cambiar/<estado>/` o el respaldo (va en 04-01). El evento se registra igual, sea GET o POST.
 
 ## Datos requeridos del cliente
 
