@@ -1,7 +1,7 @@
 # Iteración 01-01 · Modelo de registro de eventos
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Pendiente
+- **Estado:** En revisión (2026-10-25; se despliega en 01-06)
 - **Subfase del plan:** 1.1
 - **Depende de:** Épica 00
 - **RDA relacionadas:** RDA-003, RDA-005 (reemplazada en parte), RDA-008, RDA-013 (nueva, se escribe aquí)
@@ -22,19 +22,19 @@ Crear el modelo que responde «¿quién hizo qué y cuándo?», con índices, re
 2. **Estimación previa de crecimiento**, antes de escribir la migración: con los volúmenes de `linea-base-produccion.md`, calcular cuántas filas de eventos genera un mes normal (pedidos, pagos, cambios de estado, accesos, respaldos) y cuánto pesan, con un tamaño medio de fila supuesto y explicado. Contrastarlo con el disco libre (180,8 MB usados de 512 MB al 2026-10-20). Si el resultado incomoda, proponer reducir el inventario de eventos antes de seguir.
 3. **Modelo de eventos**: momento, tipo de evento (opciones cerradas según el inventario de 01-04), usuario (relación que admite nulo para eventos del sistema y que no borra el evento si se elimina el usuario), entidad afectada, identificador de la entidad y un resumen legible. Sin copias de objetos completos ni datos personales en el resumen más allá de identificadores.
 4. **Índices** sobre los campos de consulta: fecha, tipo de evento y usuario.
-5. **Retención y purga**: una función que elimina eventos más antiguos que la retención (`PENDIENTE_DESARROLLADOR`: días de retención; propuesta de partida: 365 días, a confirmar con la estimación de la tarea 2) y una orden de gestión `purgar_registros` que la ejecuta, que el desarrollador puede correr a mano hasta que la orden de mantención diaria (06-02) la absorba.
+5. **Retención y purga**: una función que elimina eventos más antiguos que la retención (365 días, confirmados por el desarrollador el 2026-10-25 con la estimación de la tarea 2) y una orden de gestión `purgar_registros` que la ejecuta, que el desarrollador puede correr a mano hasta que la orden de mantención diaria (06-02) la absorba.
 6. **Migración** (con consulta): generarla, clasificarla con `sqlmigrate` y aplicarla en la réplica local (`$env:DB_NAME = 'manzagrafica_replica'`) midiendo la duración.
 
 ## Criterios de aceptación
 
-- [ ] RDA-013 está escrita, RDA-005 figura como reemplazada en parte y AUD-01-005 tiene su solución actualizada.
-- [ ] La estimación de crecimiento está en la bitácora con sus supuestos, el resultado en filas y en MB por mes y el porcentaje del disco libre que representa.
-- [ ] `sqlmigrate` de la migración nueva muestra solo `CREATE TABLE` y `CREATE INDEX` (Clase 2); el SQL completo está en la bitácora.
-- [ ] La migración se aplica en la réplica local sin errores y su duración quedó medida.
-- [ ] `python manage.py makemigrations --check --dry-run` no detecta cambios pendientes tras crear la migración.
-- [ ] Una prueba crea eventos con fechas antiguas y recientes, ejecuta la purga y comprueba que solo quedan los recientes.
-- [ ] `python manage.py purgar_registros` corre en la réplica e informa cuántas filas eliminó.
-- [ ] Eliminar un usuario no elimina sus eventos (prueba).
+- [x] RDA-013 está escrita, RDA-005 figura como reemplazada en parte y AUD-01-005 tiene su solución actualizada.
+- [x] La estimación de crecimiento está en la bitácora con sus supuestos, el resultado en filas y en MB por mes y el porcentaje del disco libre que representa. ~1.200 filas y ~0,6 MB por mes; ~18 MB al año con los respaldos (5,4 % del disco libre).
+- [x] `sqlmigrate` de la migración nueva muestra solo `CREATE TABLE` y `CREATE INDEX` (Clase 2); el SQL completo está en la bitácora. Cumplido con observación aprobada por el desarrollador: incluye también un `ALTER TABLE` que agrega la clave foránea a la tabla nueva (bitácora).
+- [x] La migración se aplica en la réplica local sin errores y su duración quedó medida. 1,25 s.
+- [x] `python manage.py makemigrations --check --dry-run` no detecta cambios pendientes tras crear la migración.
+- [x] Una prueba crea eventos con fechas antiguas y recientes, ejecuta la purga y comprueba que solo quedan los recientes.
+- [x] `python manage.py purgar_registros` corre en la réplica e informa cuántas filas eliminó. 0 filas (tabla recién creada).
+- [x] Eliminar un usuario no elimina sus eventos (prueba).
 
 ## Fuera de alcance
 

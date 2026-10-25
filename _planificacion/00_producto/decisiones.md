@@ -10,7 +10,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-002 | Réplica local con volcado real de producción como entorno de pruebas (D1) | Aceptada |
 | RDA-003 | Cambios de esquema autorizados: solo Clase 1 y Clase 2 (D2) | Aceptada |
 | RDA-004 | PythonAnywhere en plan gratuito, con tarea diaria heredada (D3) | Aceptada |
-| RDA-005 | Observabilidad local en tablas propias de MySQL con respaldo a salida estándar (D4) | Aceptada |
+| RDA-005 | Observabilidad local en tablas propias de MySQL con respaldo a salida estándar (D4) | Reemplazada en parte por RDA-013 |
 | RDA-006 | Pruebas automatizadas contra MySQL en Docker idéntico a producción (D5) | Aceptada |
 | RDA-007 | Rama única `main` con etiqueta anotada antes de cada despliegue (D6) | Aceptada |
 | RDA-008 | Registro de eventos limitado a errores y eventos de negocio críticos (D7) | Aceptada |
@@ -18,6 +18,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-010 | Tailwind CSS v3 compilado localmente con pnpm (D9) | Aceptada |
 | RDA-011 | Épicas numeradas igual que las fases del plan | Aceptada |
 | RDA-012 | Procedimientos operativos en `docs/operacion/` | Aceptada |
+| RDA-013 | Errores en el registro del servidor con `logging`; eventos de negocio en MySQL | Aceptada |
 
 ---
 
@@ -68,12 +69,14 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 ## RDA-005 · Observabilidad local en tablas propias de MySQL con respaldo a salida estándar (D4)
 
 - **Fecha:** 2026-10-19
-- **Estado:** Aceptada
+- **Estado:** Reemplazada en parte por RDA-013
 
 **Contexto:** hoy un error no deja rastro útil y la lista blanca de salida descarta Sentry y equivalentes.
 **Decisión:** dos tablas propias, una de errores y otra de eventos, consultables desde el admin. Si la escritura en la base falla, el error se emite a la salida estándar, que PythonAnywhere recoge en su registro del servidor.
 **Alternativas consideradas:** servicios externos (descartados por la lista blanca); solo archivos de registro (descartado: no se consultan sin acceso al servidor).
 **Consecuencias:** las tablas compiten por el disco y necesitan retención y purga desde su diseño; la escritura del error debe quedar fuera de la transacción que falló.
+
+**Actualización 2026-10-25:** reemplazada en parte por RDA-013. Se descarta la tabla de errores: los errores van a `error.log` con `logging`. Sigue vigente la tabla de eventos de negocio, con retención y purga desde su diseño, consultable en el admin.
 
 ## RDA-006 · Pruebas automatizadas contra MySQL en Docker idéntico a producción (D5)
 
@@ -146,3 +149,13 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Consecuencias:** `AGENTS.md` y el README raíz remiten a esa carpeta.
 
 **Actualización 2026-10-20:** aceptada por el desarrollador.
+
+## RDA-013 · Errores en el registro del servidor con `logging`; eventos de negocio en MySQL
+
+- **Fecha:** 2026-10-25
+- **Estado:** Aceptada
+
+**Contexto:** RDA-005 preveía dos tablas propias, una de errores y otra de eventos. Al detallar la Épica 01 se vio que la tabla de errores obliga a resolver dos trampas caras (escribir el error fuera de la transacción que falló y registrar en MySQL un fallo del propio MySQL) para un público que no la necesita: quien diagnostica errores es el desarrollador, no el usuario final. Los eventos de negocio («quién hizo qué y cuándo») sí son información del negocio y deben respaldarse con la base.
+**Decisión:** los errores se emiten con `logging` de Python a la salida de error, que PythonAnywhere guarda en `error.log`, con traza completa, método, ruta, usuario y hora (The Twelve-Factor App, factor XI: la aplicación emite sus registros como flujo y el entorno los guarda). Los eventos de negocio se guardan en una tabla propia de MySQL (Clase 2), con índices, retención y purga desde su creación, y se consultan en el admin de Django. No hay código de error visible para el usuario ni identificador de petición.
+**Alternativas consideradas:** tabla de errores en MySQL (descartada por YAGNI: el usuario final no diagnostica errores, y exige escritura fuera de la transacción y un camino de respaldo propio); servicios externos de monitoreo como Sentry (descartados: la lista blanca de salida de PythonAnywhere lo impide, RDA-004).
+**Consecuencias:** los errores dependen de la rotación de registros de PythonAnywhere y se pierden si nadie los mira a tiempo; su revisión periódica es la iteración 07-03. Diagnosticar un error exige entrar al panel de PythonAnywhere. La tabla de eventos sigue compitiendo por el disco (estimación en 01-01) y su inventario lo cierra RDA-008. Desaparecen el aislamiento transaccional y la dependencia circular del registro de errores.

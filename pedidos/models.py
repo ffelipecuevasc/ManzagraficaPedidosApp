@@ -241,3 +241,49 @@ class HistorialBD(models.Model):
 
     def __str__(self):
         return f"{self.fecha_registro.strftime('%d/%m/%Y')} - {self.tamano_mb} MB"
+
+
+# Registro de eventos de negocio (Épica 01, RDA-008 y RDA-013).
+# Responde «¿quién hizo qué y cuándo?». La retención y la purga están en pedidos/eventos.py.
+class RegistroEvento(models.Model):
+    # Inventario cerrado de 01-04. Cambiar las opciones es Clase 1 y obliga a estimar
+    # de nuevo el crecimiento (RDA-008).
+    TIPO_CHOICES = [
+        ('pedido_creado', 'Pedido creado'),
+        ('pedido_modificado', 'Pedido modificado'),
+        ('pedido_eliminado', 'Pedido eliminado'),
+        ('pedido_estado_cambiado', 'Estado de pedido cambiado'),
+        ('pedido_duplicado', 'Pedido duplicado'),
+        ('pago_registrado', 'Pago registrado'),
+        ('pago_modificado', 'Pago modificado'),
+        ('pago_eliminado', 'Pago eliminado'),
+        ('cotizacion_convertida', 'Cotización convertida a pedido'),
+        ('cliente_eliminado', 'Cliente eliminado'),
+        ('producto_eliminado', 'Producto eliminado'),
+        ('acceso_exitoso', 'Acceso exitoso'),
+        ('acceso_fallido', 'Acceso fallido'),
+        ('respaldo_generado', 'Respaldo generado'),
+        ('restauracion_ejecutada', 'Restauración ejecutada'),
+    ]
+
+    momento = models.DateTimeField(default=timezone.now, verbose_name="Momento")
+    tipo = models.CharField(max_length=40, choices=TIPO_CHOICES, verbose_name="Tipo de evento")
+    # Nulo para los eventos del sistema; si se elimina el usuario, el evento se conserva.
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='eventos_registrados', verbose_name="Usuario")
+    entidad = models.CharField(max_length=30, blank=True, verbose_name="Entidad afectada")
+    entidad_id = models.PositiveIntegerField(null=True, blank=True, verbose_name="Identificador de la entidad")
+    # Solo identificadores: nada de nombres, teléfonos, montos ni copias de objetos.
+    resumen = models.CharField(max_length=255, verbose_name="Resumen")
+
+    class Meta:
+        verbose_name = "Registro de evento"
+        verbose_name_plural = "Registro de eventos"
+        ordering = ['-momento']
+        indexes = [
+            models.Index(fields=['momento'], name='evento_momento_idx'),
+            models.Index(fields=['tipo', 'momento'], name='evento_tipo_momento_idx'),
+        ]
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} · {timezone.localtime(self.momento):%d/%m/%Y %H:%M}"

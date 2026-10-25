@@ -1,6 +1,6 @@
 # Épica 01 · Observabilidad
 
-- **Estado:** Pendiente
+- **Estado:** En curso
 - **Fase del plan:** 1 (`plan-de-trabajo.md`, «FASE 1»)
 - **Objetivo:** dejar de estar ciego, con dos herramientas para dos públicos distintos. **Para el desarrollador:** que todo error de producción quede en el registro de errores de PythonAnywhere (`error.log`) con su traza completa y el contexto de la petición, en un formato ordenado y sin ruido. **Para el negocio:** que las acciones críticas dejen constancia de quién hizo qué y cuándo, consultable en el admin de Django.
 - **Precondición:** Épica 00 cerrada (2026-10-25). Puede avanzar en paralelo con la Épica 02; la iteración 01-02 necesita la infraestructura de pruebas de 02-01.

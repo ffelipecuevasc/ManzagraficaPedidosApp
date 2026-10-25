@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-25
-- **Iteración activa:** ninguna. Épica 00 cerrada el 2026-10-25; la siguiente iteración la elige el desarrollador (01-01 y 02-01 quedan desbloqueadas)
+- **Iteración activa:** 01-01 (elegida por el desarrollador antes que la 02-01, el 2026-10-25)
 - **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -22,11 +22,11 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 00-04 | Higiene del repositorio | 00 | Terminada (desplegada el 2026-10-23 como `v0.1-higiene`) | — | [bitacora-00-04](../99_bitacora/epica-00-blindaje/bitacora-00-04.md) |
 | 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | Terminada | 00-03, 00-04 | [bitacora-00-05](../99_bitacora/epica-00-blindaje/bitacora-00-05.md), [bitacora-00-05-ensayo](../99_bitacora/epica-00-blindaje/bitacora-00-05-ensayo.md), [bitacora-00-05-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-05-produccion.md) |
 | 00-06 | Correcciones tempranas de riesgo nulo | 00 | Terminada (desplegada el 2026-10-23 como `v0.2-correcciones`) | 00-05 | [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md) |
-| 01-01 | Modelo de registro de errores y eventos | 01 | Pendiente | Épica 00 | — |
-| 01-02 | Servicio de registro | 01 | Pendiente | 01-01, 02-01 | — |
-| 01-03 | Retiro del middleware de captura global | 01 | Pendiente | 01-02 | — |
+| 01-01 | Modelo de registro de eventos | 01 | En revisión (se despliega en 01-06) | Épica 00 | [bitacora-01-01](../99_bitacora/epica-01-observabilidad/bitacora-01-01.md) |
+| 01-02 | Configuración del registro y servicio de eventos | 01 | Pendiente | 01-01, 02-01 | — |
+| 01-03 | Retiro del middleware y trazas completas | 01 | Pendiente | 01-02 | — |
 | 01-04 | Instrumentación de eventos de negocio | 01 | Pendiente | 01-02 | — |
-| 01-05 | Consulta de registros en el admin | 01 | Pendiente | 01-01 | — |
+| 01-05 | Consulta de eventos en el admin | 01 | Pendiente | 01-01 | — |
 | 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente | 01-03, 01-04, 01-05 | — |
 | 02-01 | Infraestructura de pruebas | 02 | Pendiente | Épica 00 | — |
 | 02-02 | Pruebas de la lógica de dinero | 02 | Pendiente | 02-01 | — |
@@ -89,7 +89,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~Responder [evidencia-00-02](../10_epicas/epica-00-blindaje/evidencia-00-02.md)~~ Resuelto el 2026-10-21 | 00-02 | Desarrollador |
 | «Generar Nuevo Respaldo BD» es un enlace GET: cada visita crea un volcado y desplaza al más antiguo. Advertido en `docs/operacion/respaldo.md`; se corrige en 04-01 | AUD-02-006 | Agente, en 04-01 |
 | Fechas de los hitos (`producto.md`, sección 7) | — | Desarrollador |
-| Retención de las tablas de errores y de eventos | RDA-005 | Desarrollador |
+| ~~Retención de la tabla de eventos~~ Resuelto el 2026-10-25: 365 días, con la estimación de 01-01 (RDA-013 descarta la tabla de errores) | RDA-005, RDA-013 | Desarrollador |
 | Método para provocar el error controlado en producción (01-06) | AUD-01-005 | Desarrollador |
 | Dividir el decorador en dos o mantenerlo unificado con el orden correcto | AUD-01-001 | Desarrollador |
 | Tratamiento de las imágenes de referencia huérfanas cuando una transacción se revierte | AUD-01-001 | Desarrollador |
@@ -146,3 +146,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-23 | Iteración 00-05 terminada: 00-04 desplegada como `v0.1-higiene` (recarga a las 00:26, sin retroceso; partida `v0.0-inicial`); el servidor queda en `detached HEAD` y los próximos despliegues usan `git fetch origin --tags` y `git checkout <etiqueta>`, no `git pull`; AUD-02-022 resuelto; nuevo AUD-02-023 (Media, `media/` sin copia, protección manual); pistas para la épica 01; iteración activa 00-06. Detalle en [bitacora-00-05-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-05-produccion.md). |
 | 2026-10-23 | Iteración 00-06 en revisión: WeasyPrint se importa dentro de la vista del PDF, `robots.txt` es público, el botón de acceso evita el doble envío y la ruta queda `pagos/lista/`; 5 pruebas; medición «antes» con media de 1.029 ms; falta la verificación local, el despliegue como `v0.2-correcciones` y el conteo de 404 de `/robots.txt` ([evidencia-00-06](../10_epicas/epica-00-blindaje/evidencia-00-06.md)). Detalle en [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md). |
 | 2026-10-25 | Iteración 00-06 terminada y **Épica 00 cerrada**: `v0.2-correcciones` desplegada el 2026-10-23 sin retroceso; 404 de `/robots.txt` de 2 a 3 por día a 0 desde el despliegue (la única petición posterior, la verificación manual, dio 200); importar `pedidos.urls` de 1.029,0 a 26,3 ms; se cierran AUD-01-020 y AUD-01-021 y avanzan AUD-01-011 y AUD-01-024; seguimiento: confirmar 200 a un rastreador real con C2 (2026-11-20); nuevo hallazgo menor `favicon.ico`. Detalle en [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md). |
+| 2026-10-25 | Iteración 01-01 en revisión: RDA-013 escrita y RDA-005 reemplazada en parte; modelo `RegistroEvento` (15 tipos), purga con retención de 365 días y orden `purgar_registros`; migración 0007 de Clase 2 aplicada en la réplica en 1,25 s; estimación de ~0,6 MB al mes; 10 pruebas en verde sin cambiar configuración. Detalle en [bitacora-01-01](../99_bitacora/epica-01-observabilidad/bitacora-01-01.md). |
