@@ -39,3 +39,4 @@
 ## Notas
 
 - **2026-10-21 (00-03, AUD-02-022):** leer `ALLOWED_HOSTS` desde el entorno, con un valor por defecto local, se adelantó a 00-04 por decisión del desarrollador. 04-02 parte de ese estado y no lo repite.
+- **2026-10-25 (01-04), para 04-04 · Restauración y tabla de eventos:** restaurar un volcado reemplaza todas las tablas, incluida `pedidos_registroevento`, así que se pierden los eventos posteriores a ese volcado (la auditoría de lo ocurrido entre el volcado y la restauración). El evento `restauracion_ejecutada` se escribe después de restaurar para que sobreviva. Si el volcado no contiene al usuario que restauró, la clave foránea rechaza la fila: el servicio lo deja en `error.log` y el evento se pierde. 04-04 debe evaluar cómo conservar esa constancia (por ejemplo, registrarla también en `error.log` con `logger.warning` o preservar los eventos recientes).

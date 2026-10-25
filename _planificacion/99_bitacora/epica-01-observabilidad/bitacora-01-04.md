@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión. Se despliega con 01-01 a 01-05 en 01-06 (`v1.1-observabilidad`). **Sin migraciones.**
+- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador, con el ajuste del acceso fallido); sin desplegar; se despliega en 01-06. **Sin migraciones.**
 
 ## Resumen
 
@@ -68,7 +68,7 @@ Líneas finales, después de instrumentar. Las líneas de `pedidos/views.py` cor
 ## Desviaciones y observaciones
 
 - **Restauración y la tabla de eventos:** la restauración reemplaza todas las tablas con las del volcado, incluida `pedidos_registroevento`. Los eventos posteriores a ese volcado se pierden, y por eso el de la restauración se escribe después. Si el volcado no trae el usuario que restauró, la clave foránea rechaza la fila. El servicio absorbe el error y lo deja en `error.log` con traza: el evento se pierde, pero la restauración no falla. Es una limitación conocida, que conviene recordar en 04-04 (endurecimiento de la restauración).
-- **Riesgo del acceso fallido:** si alguien escribe su contraseña en el campo de usuario, quedaría en el resumen. El criterio exige guardar el nombre intentado; se recorta a 150 caracteres.
+- **Riesgo del acceso fallido:** si alguien escribe su contraseña en el campo de usuario, quedaría en el resumen. **Resuelto con el ajuste del 2026-10-25** (sección siguiente).
 - **Prueba del respaldo:** cerrar a mano el `FileResponse` dispara `request_finished`, y Django cierra la conexión en medio de la transacción de la prueba (error 2006). La prueba no lo cierra y usa `ignore_cleanup_errors` para la carpeta temporal en Windows. No afecta a la aplicación.
 - **Pruebas de restauración** sin ejecutar `mysql`: se simulan `generar_respaldo_mysql` y `restaurar_bd_mysql`, y `BASE_DIR` apunta a una carpeta temporal, para no escribir en `backups/`.
 - **Atomicidad:** las operaciones siguen sin `atomic()` (Épica 03). Si una vista falla después de guardar y antes de llamar al servicio, la operación queda hecha sin su evento. Pasa a ser imposible cuando 03-03 envuelva cada vista.
@@ -128,3 +128,15 @@ PowerShell 7, `DB_NAME=manzagrafica_replica`.
 ## Pendientes
 
 - Revisión del desarrollador.
+
+## Ajuste del acceso fallido (decisión del desarrollador, 2026-10-25)
+
+- **Cambio:** `pedidos/senales.py` busca el nombre intentado entre los usuarios. Si existe, guarda **el nombre registrado en la base**, no lo escrito: la colación `utf8mb4_unicode_ci` no distingue mayúsculas, así que «Recepcion» coincide con «recepcion» y se guarda «recepcion». Si no existe, guarda `Usuario intentado: usuario desconocido`.
+- **Motivo:** que una contraseña escrita por error en el campo de usuario no quede en la tabla ni en los respaldos.
+- **Costo:** una consulta más (`SELECT` por `username`, columna con índice único), solo en accesos fallidos.
+- **Archivos tocados:** solo `pedidos/senales.py` y sus pruebas, así que no requirió diff previo.
+- **Pruebas** (`EventosAccesoTests`), que reemplazan a `test_acceso_fallido_registra_el_nombre_sin_la_contrasena`:
+  - (a) `test_acceso_fallido_usuario_existente_guarda_el_nombre_sin_la_contrasena`;
+  - (b) `test_acceso_fallido_usuario_inexistente_no_guarda_lo_escrito`;
+  - (c) `test_acceso_fallido_contrasena_escrita_en_el_campo_usuario_no_queda`. Con la contraseña vacía, el formulario de acceso rechaza el envío antes de autenticar y no se emite la señal; la prueba envía también un intento con contraseña.
+- `test pedidos.tests.test_eventos_negocio.EventosAccesoTests`: 4 pruebas en `OK`. Suite completa: ver bitacora-01-05.

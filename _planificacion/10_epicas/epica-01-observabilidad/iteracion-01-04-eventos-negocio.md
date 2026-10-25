@@ -1,7 +1,7 @@
 # Iteración 01-04 · Instrumentación de eventos de negocio
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión (2026-10-25; se despliega en 01-06)
+- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega en 01-06)
 - **Subfase del plan:** 1.4
 - **Depende de:** 01-02
 - **RDA relacionadas:** RDA-008, RDA-013
@@ -20,7 +20,7 @@ Que cada acción de negocio crítica deje un evento con quién, qué, sobre qué
    - Pago: registro, modificación, eliminación.
    - Cotización: conversión a pedido.
    - Cliente y producto: eliminación.
-   - Acceso: exitoso y fallido (con las señales de autenticación de Django). Para el fallido se registra el nombre de usuario intentado, nunca la contraseña.
+   - Acceso: exitoso y fallido (con las señales de autenticación de Django). Para el fallido se registra el nombre de usuario intentado **solo si existe como usuario** (el registrado en la base); si no existe, «usuario desconocido». Nunca la contraseña ni lo escrito (ajuste del 2026-10-25).
    - Base de datos: respaldo generado y restauración ejecutada, con el usuario que la ejecutó.
 2. **Eventos sin usuario**: los que genere el sistema (la futura orden de mantención) se registran con usuario nulo y un origen identificable.
 3. **Instrumentar** cada punto del inventario con el servicio de eventos de 01-02.
@@ -32,7 +32,7 @@ Que cada acción de negocio crítica deje un evento con quién, qué, sobre qué
 - [x] El inventario final está en la bitácora y coincide con las opciones del tipo de evento del modelo. 15 tipos, sin cambios en el modelo.
 - [x] Cada evento del inventario tiene una prueba que ejecuta la operación y comprueba exactamente una fila nueva con el tipo, el usuario y la entidad correctos. `test_eventos_negocio.py`.
 - [x] Prueba: las vistas de solo lectura (listados, detalles, estadísticas) no crean eventos. 15 rutas.
-- [x] Prueba: un acceso fallido registra el evento sin la contraseña.
+- [x] Prueba: un acceso fallido registra el evento sin la contraseña. Ajustado el 2026-10-25: con un usuario existente guarda su nombre; con uno inexistente, o con una cadena parecida a una contraseña, guarda «usuario desconocido» y no lo escrito (3 pruebas).
 - [x] Prueba: la restauración de base de datos registra el evento con el usuario que la ejecutó (con la restauración simulada, sin ejecutar `mysql`).
 - [x] `python manage.py test pedidos` en verde. 61 pruebas, tres veces.
 

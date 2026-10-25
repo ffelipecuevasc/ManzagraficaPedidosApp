@@ -179,15 +179,37 @@ class EventosAccesoTests(TestCase):
         self.assertEqual((evento.tipo, evento.usuario, evento.entidad, evento.entidad_id),
                          ('acceso_exitoso', usuario, 'usuario', usuario.pk))
 
-    def test_acceso_fallido_registra_el_nombre_sin_la_contrasena(self):
-        factorias.crear_usuario('recepcion', password='clave-correcta-123')
-        respuesta = self.ejecutar_post({'username': 'recepcion', 'password': 'clave-equivocada-999'})
-        self.assertEqual(respuesta.status_code, 200)
+    def assertAccesoFallido(self, resumen_esperado):
         evento = RegistroEvento.objects.get()
         self.assertEqual((evento.tipo, evento.usuario, evento.entidad, evento.entidad_id),
                          ('acceso_fallido', None, 'usuario', None))
-        self.assertEqual(evento.resumen, 'Usuario intentado: recepcion')
+        self.assertEqual(evento.resumen, resumen_esperado)
+        return evento
+
+    def test_acceso_fallido_usuario_existente_guarda_el_nombre_sin_la_contrasena(self):
+        factorias.crear_usuario('recepcion', password='clave-correcta-123')
+        respuesta = self.ejecutar_post({'username': 'recepcion', 'password': 'clave-equivocada-999'})
+        self.assertEqual(respuesta.status_code, 200)
+        evento = self.assertAccesoFallido('Usuario intentado: recepcion')
         self.assertNotIn('clave-equivocada-999', evento.resumen)
+
+    def test_acceso_fallido_usuario_inexistente_no_guarda_lo_escrito(self):
+        factorias.crear_usuario('recepcion', password='clave-correcta-123')
+        self.ejecutar_post({'username': 'nombre-que-no-existe', 'password': 'otra-clave-456'})
+        evento = self.assertAccesoFallido('Usuario intentado: usuario desconocido')
+        self.assertNotIn('nombre-que-no-existe', evento.resumen)
+        self.assertNotIn('otra-clave-456', evento.resumen)
+
+    def test_acceso_fallido_contrasena_escrita_en_el_campo_usuario_no_queda(self):
+        factorias.crear_usuario('recepcion', password='Clave#Secreta2026!')
+        # Error típico: la contraseña se escribe en el campo de usuario.
+        self.ejecutar_post({'username': 'Clave#Secreta2026!', 'password': ''})
+        self.ejecutar_post({'username': 'Clave#Secreta2026!', 'password': 'x'})
+        resumenes = list(RegistroEvento.objects.values_list('resumen', flat=True))
+        self.assertTrue(resumenes)
+        for resumen in resumenes:
+            self.assertEqual(resumen, 'Usuario intentado: usuario desconocido')
+            self.assertNotIn('Clave#Secreta2026!', resumen)
 
 
 class LecturasSinEventosTests(EventosNegocioBase):
