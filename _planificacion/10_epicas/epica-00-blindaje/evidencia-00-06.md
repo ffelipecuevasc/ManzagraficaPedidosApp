@@ -67,7 +67,7 @@ python manage.py makemigrations --check --dry-run
 
 **Esperado:** `Ran 6 tests` y `OK` (5 en la primera revisión; la sexta, HEAD de `robots.txt`, se agregó con `require_safe`) (puede aparecer la advertencia `mysql.W002`, modo estricto; existía antes y no viene de esta iteración); `System check identified no issues (0 silenced).`; `No changes detected`.
 
-**Resultado (desarrollador):** `Ran 5 tests` y `OK` (con la advertencia `mysql.W002`, como se esperaba); `check` sin problemas; `makemigrations`: `No changes detected`.
+**Resultado (desarrollador):** `Ran 5 tests` y `OK` en la primera revisión (con la advertencia `mysql.W002`, como se esperaba); `check` sin problemas; `makemigrations`: `No changes detected`.
 
 ### A4. Servidor local y sesión
 
@@ -187,7 +187,7 @@ git ls-remote --tags origin v0.2-correcciones
 
 | # | Comprobación | Resultado |
 | :- | :----------- | :-------- |
-| 1 | Pruebas en verde | `Ran 6 tests`, `OK` (repetir A3 tras `require_safe`) | Cumple: `Ran 6 tests`, `OK`; HEAD de `robots.txt` = 200 |
+| 1 | Pruebas en verde | Cumple: `Ran 6 tests`, `OK` tras `require_safe`; HEAD de `robots.txt` = 200 |
 | 2 | `check --deploy`: solo W004, W008, W009, W012, W016 | Cumple: esas cinco, 5 issues |
 | 3 | `No changes detected` | Cumple |
 | 4 | Migraciones nuevas | Ninguna |
@@ -270,7 +270,17 @@ Pega la salida tal cual. Los días posteriores a la recarga deben tener `robots_
 
 | Fecha UTC | `robots` | `robots_404` | `broken_pipe` | `sigpipe` |
 | :-------- | -------: | -----------: | ------------: | --------: |
-| | | | | |
+| 2026-10-19 | 2 | 2 | 0 | 2 |
+| 2026-10-20 | 2 | 2 | 1 | 2 |
+| 2026-10-21 | 2 | 2 | 0 | 2 |
+| 2026-10-22 | 3 | 3 | 1 | 4 |
+| 2026-10-23 (despliegue 21:35 UTC) | 1 | 0 | 0 | 2 |
+| 2026-10-24 | 0 | 0 | 1 | 3 |
+| 2026-10-25 (parcial, hasta las 13:52 Chile) | 0 | 0 | 0 | 0 |
+
+**Lectura (2026-10-25):** hasta el 22 de octubre, las 9 peticiones de `/robots.txt` dieron 404 (2 a 3 por día). Desde el despliegue no hay ningún 404. La única petición del 23 de octubre es muy probablemente la verificación manual del desarrollador (B3) y respondió 200, lo que prueba que la ruta funciona en producción. El 24 y el 25 de octubre ningún rastreador la pidió, así que el 0 en 404 es cierto pero todavía sin confirmación de un rastreador real. `Broken pipe`: 3 en 7 días (≈0,43 por día), igual que la línea base, como se esperaba (esta iteración lo mide, no lo corrige).
+
+**Decisión del desarrollador (2026-10-25):** cerrar 00-06 y la Épica 00 con esta evidencia. Queda un seguimiento: confirmar que un rastreador real recibe 200, al repetir el conteo junto con C2 (2026-11-20).
 
 **Línea base (2026-10-15 a 2026-10-21):** 7 404 de `/robots.txt` en 7 días; 4 `Broken pipe` en 7 días (0,44 por día en 89 días).
 

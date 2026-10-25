@@ -21,8 +21,8 @@ Cada bloque de comandos dice arriba en qué terminal va:
 **[PA · Bash]**
 
 ```bash
-PROYECTO="<mismo valor que en linea_base.sh>"
-VENV="<mismo valor que en linea_base.sh>"
+PROYECTO="/home/manzagrafica/ManzagraficaPedidosApp"
+VENV="/home/manzagrafica/ManzagraficaPedidosApp/venv"
 test -f "$PROYECTO/manage.py" && test -x "$VENV/bin/python" && echo "PROYECTO y VENV correctos"
 ```
 

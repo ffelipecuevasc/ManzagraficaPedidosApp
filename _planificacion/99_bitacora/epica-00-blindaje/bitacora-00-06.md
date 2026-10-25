@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-23
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión (hasta que las 404 de `/robots.txt` bajen a 0 después del despliegue)
+- **Estado final:** Terminada (2026-10-25). Desplegada el 2026-10-23 como `v0.2-correcciones`, sin retroceso. Cierra también la Épica 00.
 
 ## Resumen
 
@@ -24,13 +24,15 @@
 
 | Archivo | Cambio |
 | :------ | :----- |
-| `pedidos/views.py` | Tareas 1 y 2 (importaciones `login_not_required` y `require_GET`, vista `robots_txt`) |
+| `pedidos/views.py` | Tareas 1 y 2 (importaciones `login_not_required` y `require_safe`, vista `robots_txt`) |
 | `pedidos/urls.py` | Ruta `robots.txt` y `pagos/lista/` |
 | `pedidos/templates/registration/login.html` | Tarea 3 |
-| `pedidos/tests.py` | 5 pruebas |
+| `pedidos/tests.py` | 6 pruebas |
 | `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-06.md` | Nuevo: partes A, B y C |
 | `_planificacion/10_epicas/epica-00-blindaje/iteracion-00-06-correcciones-tempranas.md` | Estado |
-| `_planificacion/00_producto/registro-pendientes.md` | Estado e historial |
+| `_planificacion/00_producto/registro-pendientes.md` | Estado, seguimiento, hallazgo `favicon.ico` e historial |
+| `_planificacion/00_producto/auditoria-tecnica.md` | Cierre de AUD-01-020 y AUD-01-021; avance de AUD-01-011 y AUD-01-024; notas de 00-06 |
+| `_planificacion/10_epicas/epica-00-blindaje/definicion-epica-00.md` | Épica cerrada, criterios de término y resumen de cierre |
 
 ## Verificación
 
@@ -45,7 +47,25 @@
 - **Agente:** `python manage.py test pedidos` dio 6 pruebas en `OK` tras el cambio a `require_safe`; `check` no encontró problemas; `makemigrations --check --dry-run` dio `No changes detected`.
 - **Cambio de esquema:** ninguno; no hay migraciones.
 
+## Despliegue y cierre (2026-10-23 a 2026-10-25)
+
+- **Parte B:** lista de comprobación en verde (`Ran 6 tests`, `OK`; `check --deploy` con las cinco advertencias conocidas; sin migraciones). Etiqueta `v0.2-correcciones` en el commit `7944943`, recarga el 2026-10-23 a las 18:35 Chile (21:35 UTC). Los `diff` de `requirements.txt`, `pedidos/static` y `pedidos/migrations` salieron vacíos.
+- **Incidente de etiqueta:** se creó primero con el texto de relleno `<AAAA-MM-DD>` en el mensaje. Ningún servidor la había descargado: se eliminó y se recreó sobre el mismo commit. Lección: la etiqueta se crea solo con el mensaje final.
+- **Verificación en producción (B3):** `robots.txt` con `200` y `text/plain`, acceso con «Ingresando…», panel, pedidos, pagos y PDF correctos. Única línea nueva en el registro de errores: `Not Found: /favicon.ico` (hallazgo menor, registrado como propuesta).
+- **Conteo C1 (2026-10-25):**
+
+| Fecha UTC | `robots` | `robots_404` | `broken_pipe` |
+| :-------- | -------: | -----------: | ------------: |
+| 2026-10-19 a 2026-10-22 | 9 | 9 | 2 |
+| 2026-10-23 (despliegue) | 1 | 0 | 0 |
+| 2026-10-24 | 0 | 0 | 1 |
+| 2026-10-25 (parcial) | 0 | 0 | 0 |
+
+- **Lectura:** 0 404 desde el despliegue; la única petición posterior (verificación manual) dio 200. Ningún rastreador pidió la ruta el 24 ni el 25. `Broken pipe`: 3 en 7 días, igual que la línea base.
+- **Decisión del desarrollador (2026-10-25):** cerrar la 00-06 y la Épica 00 con esta evidencia. Se cierran AUD-01-020 y AUD-01-021; avanzan AUD-01-011 (05-01) y AUD-01-024 (06-06).
+
 ## Pendientes
 
-- Antes de la parte B, repetir A3 y la línea HEAD de A6 tras el cambio a `require_safe`. Después, las partes B y C1.
+- **Seguimiento (2026-11-20):** parte C2, con la tasa de `Broken pipe` a 28 días y la confirmación de que un rastreador real recibe 200 en `/robots.txt`.
+- `favicon.ico` con 404: propuesta de prioridad baja en `registro-pendientes.md`, sección 4.
 - Propuesta registrada: redirigir al panel desde el acceso cuando ya hay sesión (Épica 04, prioridad baja). La parte C2 (28 días) va en paralelo y no bloquea la Épica 01.

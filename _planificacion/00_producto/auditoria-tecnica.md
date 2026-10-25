@@ -30,7 +30,7 @@ La aplicación funciona, pero no protege sus propios datos: el decorador que pro
 | AUD-01-008 | Alta | Rendimiento | Propiedades del modelo que consultan la base por fila en plantillas (`total_pagado_real`, `saldo_pendiente`, `porcentaje_pagado`). | Anotaciones del conjunto de consulta. Iteración 05-02. | Abierto |
 | AUD-01-009 | Alta | Configuración | `from PedidosApp import settings` en lugar de `django.conf.settings`. | Usar el objeto de configuración perezoso. Iteración 04-05. | Abierto |
 | AUD-01-010 | Alta | Rendimiento | Compilador de Tailwind cargado desde CDN y ejecutado en el navegador en cada página. | Compilación local con pnpm. Iteración 05-04. | Abierto |
-| AUD-01-011 | Alta | Rendimiento | WeasyPrint se importa al arrancar el proceso, aunque solo lo usa una vista. | Importación diferida (00-06) y revisión del resto de importaciones (05-01). | Abierto |
+| AUD-01-011 | Alta | Rendimiento | WeasyPrint se importa al arrancar el proceso, aunque solo lo usa una vista. | Importación diferida (00-06) y revisión del resto de importaciones (05-01). | Avanzado en 00-06 (2026-10-25: WeasyPrint diferido; importar `pedidos.urls` de 1.029,0 a 26,3 ms en local); sigue abierto para 05-01 |
 | AUD-01-012 | Media | Seguridad | Configuración de producción sin endurecer (cookies seguras, HTTPS, HSTS, orígenes CSRF de confianza). | Resolver `check --deploy` con criterio. Iteración 04-02. | Abierto |
 | AUD-01-013 | Media | Seguridad | La contraseña de la base viaja como argumento de `mysqldump` y `mysql`, visible en la tabla de procesos del servidor compartido. | Pasarla por variable de entorno del subproceso o archivo de opciones con permisos restringidos. Iteración 04-03. | Abierto |
 | AUD-01-014 | Media | Operación | Los respaldos viven en el mismo disco que la base que protegen; se retienen cinco volcados completos. | Extracción y verificación local; retención de dos o tres en servidor. Iteraciones 00-02 y 06-03. | Abierto |
@@ -39,11 +39,11 @@ La aplicación funciona, pero no protege sus propios datos: el decorador que pro
 | AUD-01-017 | Media | Rendimiento | El listado de clientes no tiene paginación. | Paginación. Iteración 06-06. | Abierto |
 | AUD-01-018 | Media | Seguridad | El módulo de restauración ejecuta un SQL arbitrario sin validar el archivo. | Validación de extensión, tamaño y estructura; confirmación explícita; registro del evento. Iteración 04-04. | Abierto |
 | AUD-01-019 | Media | Operación | La web app del plan gratuito expira sin aviso si la cuenta no registra actividad. | Recordatorio externo y procedimiento de renovación. Iteración 07-01. | Abierto |
-| AUD-01-020 | Baja | Operación | Rastreadores sin ruta para `robots.txt` generan 404 con renderizado completo. | Publicar `robots.txt`. Iteración 00-06. | Abierto |
-| AUD-01-021 | Baja | Interfaz | Doble envío del formulario de acceso. | Deshabilitar el botón tras el primer envío. Iteración 00-06. | Abierto |
+| AUD-01-020 | Baja | Operación | Rastreadores sin ruta para `robots.txt` generan 404 con renderizado completo. | Publicar `robots.txt`. Iteración 00-06. | Resuelto en 00-06 (2026-10-25, `v0.2-correcciones`: 0 404 desde el despliegue). Seguimiento: confirmar 200 a un rastreador real con C2 (2026-11-20) |
+| AUD-01-021 | Baja | Interfaz | Doble envío del formulario de acceso. | Deshabilitar el botón tras el primer envío. Iteración 00-06. | Resuelto en 00-06 (2026-10-25, `v0.2-correcciones`) |
 | AUD-01-022 | Baja | Arquitectura | Todas las vistas en un único archivo de más de 1.500 líneas. | Dividir por dominio como refactorización pura. Iteración 06-04. | Abierto |
 | AUD-01-023 | Baja | Repositorio | Configuración del IDE (`.idea/`) versionada. | Excluirla del repositorio. Iteración 00-04. | Cerrado (00-04, 2026-10-21) |
-| AUD-01-024 | Baja | Arquitectura | Nomenclatura de rutas inconsistente entre secciones (incluida `pagos/lista` sin barra final). | Barra final en 00-06; normalización en 06-06. | Abierto |
+| AUD-01-024 | Baja | Arquitectura | Nomenclatura de rutas inconsistente entre secciones (incluida `pagos/lista` sin barra final). | Barra final en 00-06; normalización en 06-06. | Avanzado en 00-06 (2026-10-25: `pagos/lista/` con barra final); sigue abierto para 06-06 |
 | AUD-01-025 | Baja | Calidad | Importaciones duplicadas y código muerto. | Limpieza. Iteración 04-05. | Abierto |
 | AUD-01-026 | Baja | Datos | `estado_pago` duplica información derivable de los pagos (doble fuente de verdad). Corregirlo exige un cambio de Clase 3. | Deuda diferida: mantener ambos valores sincronizados (ver AUD-02-004). Iteraciones 06-06 y 07-05. | Diferido |
 
@@ -116,3 +116,12 @@ Notas agregadas sin reescribir los hallazgos.
 - **AUD-02-023 · nuevo.** Se agrega en la tabla de la Auditoría 02 con el correlativo siguiente. Lo detectó el desarrollador al revisar `media/` en el despliegue de 00-04. Severidad Media, asignada por el desarrollador.
   - **Propuesta (épica 07, sin implementar).** Respaldo de `media/` con la misma cadencia que el de la base (semanal y antes de cada despliegue), acotado al disco de 512 MB. En la consola Bash se empaqueta `media/` en un `.tar.gz` fuera del proyecto, se anota su SHA-256, se descarga con la pestaña **Files** a la carpeta cifrada y **se borra del servidor** en la misma sesión. Así el servidor no guarda copias y el uso de disco solo sube durante unos minutos (hoy son unos pocos MB; antes de adoptarlo hay que medir `du -sm media`). Se documenta en `docs/operacion/respaldo.md` y se ensaya la restauración en la réplica (07-04). Más adelante se puede evaluar moverlo a la orden de mantención diaria (06-02), cuidando los 100 segundos de CPU y el límite de disco (06-03). La iteración que lo implemente la define el desarrollador.
   - **Mientras tanto, la protección es manual:** el desarrollador descarga las imágenes nuevas desde la pestaña **Files** a la carpeta cifrada cuando las haya. No hay copia automática.
+
+### Notas de la iteración 00-06 · 2026-10-25
+
+Notas agregadas sin reescribir los hallazgos.
+
+- **AUD-01-020 · resuelto con seguimiento.** Del 19 al 22 de octubre, 9 de 9 peticiones de `/robots.txt` dieron 404; desde el despliegue del 2026-10-23, ninguna. La única petición posterior fue la verificación manual y dio 200. El 24 y el 25 ningún rastreador la pidió: al repetir el conteo con C2 (2026-11-20) se confirma que un rastreador real recibe 200 (evidencia-00-06, C1).
+- **AUD-01-021 · resuelto.** Botón de acceso revisado en local (escritorio y 360 px) y en producción (evidencia-00-06, A8 y B3).
+- **AUD-01-011 y AUD-01-024 · avanzados.** Siguen abiertos para 05-01 y 06-06.
+- **`favicon.ico` · observación menor, sin número de hallazgo.** 404 en producción porque la app no define favicon. Registrado como propuesta en `registro-pendientes.md`, sección 4.

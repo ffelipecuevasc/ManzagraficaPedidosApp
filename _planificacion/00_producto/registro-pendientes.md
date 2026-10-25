@@ -2,9 +2,9 @@
 
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
-- **Última actualización:** 2026-10-21
-- **Iteración activa:** 00-06 · Correcciones tempranas de riesgo nulo
-- **Próximo hito:** Fase 0 completa: respaldo verificado fuera del servidor, réplica local fiel y retroceso ensayado
+- **Última actualización:** 2026-10-25
+- **Iteración activa:** ninguna. Épica 00 cerrada el 2026-10-25; la siguiente iteración la elige el desarrollador (01-01 y 02-01 quedan desbloqueadas)
+- **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
 
@@ -21,7 +21,7 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 00-03 | Réplica local fiel | 00 | Terminada | 00-02 | [bitacora-00-03](../99_bitacora/epica-00-blindaje/bitacora-00-03.md) |
 | 00-04 | Higiene del repositorio | 00 | Terminada (desplegada el 2026-10-23 como `v0.1-higiene`) | — | [bitacora-00-04](../99_bitacora/epica-00-blindaje/bitacora-00-04.md) |
 | 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | Terminada | 00-03, 00-04 | [bitacora-00-05](../99_bitacora/epica-00-blindaje/bitacora-00-05.md), [bitacora-00-05-ensayo](../99_bitacora/epica-00-blindaje/bitacora-00-05-ensayo.md), [bitacora-00-05-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-05-produccion.md) |
-| 00-06 | Correcciones tempranas de riesgo nulo | 00 | En revisión | 00-05 | [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md) |
+| 00-06 | Correcciones tempranas de riesgo nulo | 00 | Terminada (desplegada el 2026-10-23 como `v0.2-correcciones`) | 00-05 | [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md) |
 | 01-01 | Modelo de registro de errores y eventos | 01 | Pendiente | Épica 00 | — |
 | 01-02 | Servicio de registro | 01 | Pendiente | 01-01, 02-01 | — |
 | 01-03 | Retiro del middleware de captura global | 01 | Pendiente | 01-02 | — |
@@ -103,7 +103,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~Bajar la severidad de AUD-02-007 de Media a Baja~~ Resuelto el 2026-10-20: Baja, sigue abierto para 06-01 | AUD-02-007 | Desarrollador |
 | Obtener el mensaje completo y la fecha de los 13 errores de plantilla de `crear_pedido`, `crear_cotizacion` y `crear_cliente`, y las fechas de los errores de `eliminar_producto` y `eliminar_cotizacion` | AUD-02-021 | Desarrollador |
 | ~~Datos de la línea base que no vinieron en la evidencia~~ Resuelto el 2026-10-20 | — | Desarrollador |
-| Informe de desconexiones a 28 días de 00-06 (en paralelo, sin bloquear la Épica 01) | 00-06 | Desarrollador |
+| Informe de desconexiones a 28 días de 00-06 (parte C2 de [evidencia-00-06](../10_epicas/epica-00-blindaje/evidencia-00-06.md), 2026-11-20, en paralelo, sin bloquear la Épica 01). En el mismo conteo, **seguimiento del cierre de `robots.txt`**: confirmar que un rastreador real recibe 200 | 00-06, AUD-01-020 | Desarrollador |
 | ~~Paridad del modo SQL en la réplica local~~ Resuelto el 2026-10-21: opción A, `NO_ENGINE_SUBSTITUTION` igual que producción; el modo estricto solo para la base de pruebas (opción C) se evalúa en 02-01 | AUD-02-020 | Desarrollador |
 | ~~Responder [evidencia-00-03](../10_epicas/epica-00-blindaje/evidencia-00-03.md)~~ Resuelto el 2026-10-21 | 00-03 | Desarrollador |
 | ~~Desplegar la 00-04 como primer uso de la lista de la 00-05 (punto 8): revisar `media/` y la referencia a la captura, confirmar `DATABASE_URL` y definir `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` en el `.env` del servidor antes de recargar. Paso a paso en [evidencia-00-05](../10_epicas/epica-00-blindaje/evidencia-00-05.md), parte B, después del ensayo (parte A)~~ Resuelto el 2026-10-23: desplegada como `v0.1-higiene` | 00-04, AUD-02-022 | Desarrollador, en 00-05 |
@@ -120,6 +120,7 @@ Ideas detectadas durante el trabajo que no forman parte del plan. Se evalúan ap
 | :-------- | :----- | :---- |
 | Implementar la métrica «clientes nuevos» del listado de clientes, que hoy siempre muestra 0 porque la vista envía un valor fijo | Auditoría 02 | 2026-10-19 |
 | Prioridad baja, para la Épica 04: la página de acceso debe redirigir al panel cuando ya hay sesión (`LoginView` con `redirect_authenticated_user=True`). Hoy, al volver con «atrás» después de entrar, aparece el formulario de acceso vacío | 00-06, parte A8 de la evidencia | 2026-10-23 |
+| Hallazgo menor, prioridad baja: `/favicon.ico` responde 404 en producción porque la app no define favicon (el navegador lo pide solo y deja una línea `Not Found` en el registro de errores). Se evalúa junto con 05-05 o 06-06 | 00-06, parte B3 de la evidencia | 2026-10-25 |
 
 ## 5. Historial
 
@@ -144,3 +145,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-22 | Ensayo de retroceso aprobado en la réplica (caso 2, 1,31 min, migraciones iguales antes y después); numeración desde `.1` con `v0.0-inicial` como estado de partida; `v0.0-inicial` pasa a crearse antes de tocar el servidor; 00-05 sigue en revisión hasta el despliegue. Detalle en [bitacora-00-05-ensayo](../99_bitacora/epica-00-blindaje/bitacora-00-05-ensayo.md). |
 | 2026-10-23 | Iteración 00-05 terminada: 00-04 desplegada como `v0.1-higiene` (recarga a las 00:26, sin retroceso; partida `v0.0-inicial`); el servidor queda en `detached HEAD` y los próximos despliegues usan `git fetch origin --tags` y `git checkout <etiqueta>`, no `git pull`; AUD-02-022 resuelto; nuevo AUD-02-023 (Media, `media/` sin copia, protección manual); pistas para la épica 01; iteración activa 00-06. Detalle en [bitacora-00-05-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-05-produccion.md). |
 | 2026-10-23 | Iteración 00-06 en revisión: WeasyPrint se importa dentro de la vista del PDF, `robots.txt` es público, el botón de acceso evita el doble envío y la ruta queda `pagos/lista/`; 5 pruebas; medición «antes» con media de 1.029 ms; falta la verificación local, el despliegue como `v0.2-correcciones` y el conteo de 404 de `/robots.txt` ([evidencia-00-06](../10_epicas/epica-00-blindaje/evidencia-00-06.md)). Detalle en [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md). |
+| 2026-10-25 | Iteración 00-06 terminada y **Épica 00 cerrada**: `v0.2-correcciones` desplegada el 2026-10-23 sin retroceso; 404 de `/robots.txt` de 2 a 3 por día a 0 desde el despliegue (la única petición posterior, la verificación manual, dio 200); importar `pedidos.urls` de 1.029,0 a 26,3 ms; se cierran AUD-01-020 y AUD-01-021 y avanzan AUD-01-011 y AUD-01-024; seguimiento: confirmar 200 a un rastreador real con C2 (2026-11-20); nuevo hallazgo menor `favicon.ico`. Detalle en [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md). |
