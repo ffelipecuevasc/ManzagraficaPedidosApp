@@ -106,6 +106,7 @@ Notas agregadas sin reescribir los hallazgos. Cifras en `linea-base-produccion.m
 Notas agregadas sin reescribir los hallazgos.
 
 - **AUD-02-020 · decisión de paridad.** El desarrollador eligió que la réplica local copie el modo de producción: `compose.yaml` fija `--sql-mode=NO_ENGINE_SUBSTITUTION`. Usar el modo estricto solo en la base de pruebas, por conexión, se evalúa en 02-01. La prueba del modo estricto antes de proponerlo para producción sigue en 04-05. El hallazgo sigue abierto.
+- **AUD-02-020 · decisión de 02-01 (2026-10-25).** El desarrollador eligió la opción A: la base de pruebas también corre sin modo estricto (`NO_ENGINE_SUBSTITUTION`), igual que producción; `test_entorno.py` lo comprueba. Las pruebas que dependan del truncado silencioso lo declaran con un comentario. La advertencia `mysql.W002` no se silencia. La evaluación del modo estricto sigue en 04-05. El hallazgo sigue abierto.
 - **AUD-02-022 · nuevo.** Se agrega en la tabla de la Auditoría 02 con el correlativo siguiente. Lo detectó el desarrollador en la revisión de pantallas de la réplica.
 
 ### Notas de la iteración 00-05 · 2026-10-23

@@ -136,6 +136,21 @@ if DATABASE_URL:
         ssl_require=False
     )
 
+# 3. Base de pruebas (iteración 02-01, RDA-006). Nombre fijo para que no dependa de DB_NAME;
+#    juego de caracteres y colación de la línea base de producción (00-01). Django destruye
+#    esta base al terminar las pruebas: nunca puede llamarse como una base real.
+TEST_DB_NAME = 'test_manzagrafica'
+BASES_REALES = {'manzagrafica_local', 'manzagrafica_replica', DATABASES['default'].get('NAME')}
+if TEST_DB_NAME in BASES_REALES:
+    raise ImproperlyConfigured(
+        f'La base de pruebas no puede llamarse {TEST_DB_NAME!r}: coincide con una base real.'
+    )
+DATABASES['default']['TEST'] = {
+    'NAME': TEST_DB_NAME,
+    'CHARSET': 'utf8mb4',
+    'COLLATION': 'utf8mb4_unicode_ci',
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

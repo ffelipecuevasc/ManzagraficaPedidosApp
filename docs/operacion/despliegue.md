@@ -67,7 +67,7 @@ Se completa **antes** de tocar el servidor. Cópiala en la evidencia del desplie
 
 | # | Comprobación | Terminal | Resultado esperado |
 | :- | :----------- | :------- | :----------------- |
-| 1 | Pruebas en verde | PC | `python manage.py test pedidos` termina en `OK`. Hasta la 02-01 no hay pruebas: anota «sin pruebas (02-01)». |
+| 1 | Pruebas en verde | PC | Con el contenedor encendido, `python manage.py test pedidos` termina en `OK`, o en `OK (expected failures=N)` solo si N coincide con las regresiones declaradas (etiqueta `regresion`). Cualquier `failures`, `errors` o `unexpected successes` detiene el despliegue. Procedimiento en `pruebas.md`. |
 | 2 | Revisión de producción | PC | `check --deploy` con `DEBUG=False` (abajo). Cada advertencia anotada con su iteración. |
 | 3 | Sin cambios de modelo sin migración | PC | `makemigrations --check --dry-run` → `No changes detected`. |
 | 4 | Migraciones nuevas clasificadas | PC | Cada migración nueva con su clase según `sqlmigrate`. Ninguna de Clase 3. |

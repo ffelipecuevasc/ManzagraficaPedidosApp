@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-25
-- **Iteración activa:** 02-01, en preparación: archivo de la iteración redactado y en revisión del desarrollador; no se ejecuta hasta su indicación
+- **Iteración activa:** 02-01
 - **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -28,7 +28,7 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 01-04 | Instrumentación de eventos de negocio | 01 | Pendiente | 01-02 | — |
 | 01-05 | Consulta de eventos en el admin | 01 | Pendiente | 01-01 | — |
 | 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente | 01-03, 01-04, 01-05 | — |
-| 02-01 | Infraestructura de pruebas | 02 | Pendiente (archivo redactado, en revisión del desarrollador) | Épica 00 | — |
+| 02-01 | Infraestructura de pruebas | 02 | En revisión | Épica 00 | [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md) |
 | 02-02 | Pruebas de la lógica de dinero | 02 | Pendiente | 02-01 | — |
 | 02-03 | Pruebas de flujos críticos | 02 | Pendiente | 02-01 | — |
 | 02-04 | Pruebas de regresión de defectos conocidos | 02 | Pendiente | 02-01 | — |
@@ -111,12 +111,12 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~Numeración del correlativo de etiquetas~~ Resuelto el 2026-10-22: cada fase parte en `.1` (`v0.1`, `v1.1`); `v0.0-inicial` es la etiqueta del estado de partida | RDA-007 | Desarrollador |
 | ~~Ventana del despliegue de 00-04 (`v0.1-higiene`), parte B de [evidencia-00-05](../10_epicas/epica-00-blindaje/evidencia-00-05.md)~~ Resuelto el 2026-10-23: recarga a las 00:26 | 00-05 | Desarrollador |
 | Imágenes de `media/` sin ninguna copia: definir la iteración de la épica 07 que implementa el respaldo propuesto en `auditoria-tecnica.md` (notas de 00-05). Mientras tanto, la protección es manual | AUD-02-023 | Desarrollador |
-| 02-01 · Nombre fijo de la base de pruebas en `TEST` (propuesta `test_manzagrafica`, con bloqueo de nombres reales) o mantener `test_<DB_NAME>`. Cambia `settings.py` | 02-01, tarea 1 | Desarrollador |
-| 02-01 · Fijar `CHARSET` y `COLLATION` en `TEST` o confiar en la herencia del servidor, verificada por prueba | 02-01, tarea 1 | Desarrollador |
-| 02-01 · Modo estricto en la base de pruebas: A, paridad con producción (propuesta), o B, estricto solo en pruebas | AUD-02-020, 02-01, tarea 2 | Desarrollador |
-| 02-01 · Datos de prueba con funciones propias (propuesta) o `factory_boy` (dependencia nueva, con RDA) | 02-01, tarea 3 | Desarrollador |
-| 02-01 · Mecanismo de fallos esperados: `expectedFailure` con `@tag('regresion')` (propuesta) y si se incluye una prueba de demostración | 02-01, tarea 5 | Desarrollador |
-| 02-01 · Dónde se documenta la infraestructura de pruebas: `docs/operacion/pruebas.md` o una sección de `replica-local.md` | 02-01, tarea 6 | Desarrollador |
+| ~~02-01 · Nombre fijo de la base de pruebas en `TEST` (propuesta `test_manzagrafica`, con bloqueo de nombres reales) o mantener `test_<DB_NAME>`. Cambia `settings.py`~~ Resuelto el 2026-10-25: `test_manzagrafica` en `TEST`, con bloqueo de `manzagrafica_local` y `manzagrafica_replica` | 02-01, tarea 1 | Desarrollador |
+| ~~02-01 · Fijar `CHARSET` y `COLLATION` en `TEST` o confiar en la herencia del servidor, verificada por prueba~~ Resuelto el 2026-10-25: se fijan en `TEST` con los valores de la línea base (`utf8mb4`, `utf8mb4_unicode_ci`) | 02-01, tarea 1 | Desarrollador |
+| ~~02-01 · Modo estricto en la base de pruebas: A, paridad con producción (propuesta), o B, estricto solo en pruebas~~ Resuelto el 2026-10-25: opción A, paridad con producción; las pruebas que dependan del truncado lo declaran | AUD-02-020, 02-01, tarea 2 | Desarrollador |
+| ~~02-01 · Datos de prueba con funciones propias (propuesta) o `factory_boy` (dependencia nueva, con RDA)~~ Resuelto el 2026-10-25: funciones propias, sin dependencias nuevas | 02-01, tarea 3 | Desarrollador |
+| ~~02-01 · Mecanismo de fallos esperados: `expectedFailure` con `@tag('regresion')` (propuesta) y si se incluye una prueba de demostración~~ Resuelto el 2026-10-25: `expectedFailure` con `@tag('regresion')`, sin prueba de demostración | 02-01, tarea 5 | Desarrollador |
+| ~~02-01 · Dónde se documenta la infraestructura de pruebas: `docs/operacion/pruebas.md` o una sección de `replica-local.md`~~ Resuelto el 2026-10-25: `docs/operacion/pruebas.md` y punto 1 de `despliegue.md` | 02-01, tarea 6 | Desarrollador |
 
 ## 4. Propuestas fuera de alcance
 
@@ -155,3 +155,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-25 | Iteración 01-01 en revisión: RDA-013 escrita y RDA-005 reemplazada en parte; modelo `RegistroEvento` (15 tipos), purga con retención de 365 días y orden `purgar_registros`; migración 0007 de Clase 2 aplicada en la réplica en 1,25 s; estimación de ~0,6 MB al mes; 10 pruebas en verde sin cambiar configuración. Detalle en [bitacora-01-01](../99_bitacora/epica-01-observabilidad/bitacora-01-01.md). |
 | 2026-10-25 | Iteración 01-01 terminada tras la revisión del desarrollador (commit publicado); queda sin desplegar hasta la 01-06 (`v1.1-observabilidad`), con respaldo previo por la migración 0007 de Clase 2. Detalle en [bitacora-01-01](../99_bitacora/epica-01-observabilidad/bitacora-01-01.md). |
 | 2026-10-25 | Redactado el archivo de la iteración 02-01 (infraestructura de pruebas), sin ejecutar; quedan 6 decisiones `PENDIENTE_DESARROLLADOR` en la sección 3. Archivo: [iteracion-02-01](../10_epicas/epica-02-red-seguridad/iteracion-02-01-infraestructura-pruebas.md). |
+| 2026-10-25 | Iteración 02-01 en revisión: base de pruebas fija `test_manzagrafica` con bloqueo de nombres reales y `utf8mb4_unicode_ci` en `TEST`; paquete `pedidos/tests/` por dominio con factorías; sin modo estricto (opción A); `expectedFailure` con `regresion`; `docs/operacion/pruebas.md` y punto 1 de `despliegue.md`; 17 pruebas en verde tres veces. Detalle en [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md). |

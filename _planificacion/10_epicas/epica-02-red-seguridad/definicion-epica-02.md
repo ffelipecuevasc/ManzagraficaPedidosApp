@@ -1,6 +1,6 @@
 # Épica 02 · Red de seguridad
 
-- **Estado:** Pendiente
+- **Estado:** En curso
 - **Fase del plan:** 2 (`plan-de-trabajo.md`, «FASE 2»)
 - **Objetivo:** construir las pruebas automatizadas que permiten refactorizar la lógica crítica sin miedo. La aplicación maneja dinero y hoy tiene cero pruebas.
 - **Precondición:** Épica 00 completa. Puede avanzar en paralelo con la Épica 01.
@@ -19,7 +19,7 @@ Las reglas de negocio sin confirmar (`registro-pendientes.md`, sección 2) se fi
 
 | Iteración | Nombre | Subfase |
 | :-------- | :----- | :------ |
-| 02-01 | [Infraestructura de pruebas](iteracion-02-01-infraestructura-pruebas.md) (redactada, en revisión) | 2.1 |
+| 02-01 | [Infraestructura de pruebas](iteracion-02-01-infraestructura-pruebas.md) (en revisión) | 2.1 |
 | 02-02 | Pruebas de la lógica de dinero | 2.2 |
 | 02-03 | Pruebas de flujos críticos | 2.3 |
 | 02-04 | Pruebas de regresión de defectos conocidos | 2.4 |
@@ -39,3 +39,4 @@ Las reglas de negocio sin confirmar (`registro-pendientes.md`, sección 2) se fi
 
 - **2026-10-21 (00-03, AUD-02-020):** la réplica local usa `sql_mode = NO_ENGINE_SUBSTITUTION`, igual que producción. En 02-01 se decide si la base de pruebas activa el modo estricto por conexión (`OPTIONS["init_command"]` en la configuración de pruebas). Eso cambia la configuración y requiere consulta. Las pruebas que dependen del truncado silencioso de producción deben declararlo.
 - **2026-10-25 (01-01, antes de la 02-01 por decisión del desarrollador):** las pruebas de 01-01 corrieron con la infraestructura existente, sin cambiar configuración ni privilegios: Django crea y destruye `test_<DB_NAME>` (con `DB_NAME=manzagrafica_replica`, la base es `test_manzagrafica_replica`) y el usuario local tiene permiso para hacerlo. Las pruebas siguen en `pedidos/tests.py` (10 en total). Queda para la 02-01: paquete de pruebas por dominio, factorías, modo estricto en la base de pruebas (la advertencia `mysql.W002` sigue apareciendo), un nombre de base de pruebas fijo en `TEST` que no dependa de `DB_NAME`, y el mecanismo de fallos esperados. Detalle en la sección «Para la 02-01» de [bitacora-01-01](../../99_bitacora/epica-01-observabilidad/bitacora-01-01.md).
+- **2026-10-25 (02-01):** decidido el mecanismo de fallos esperados: `unittest.expectedFailure` con `@tag('regresion')` y comentario con el hallazgo; procedimiento en `docs/operacion/pruebas.md`. Las regresiones de 02-04 lo usan.
