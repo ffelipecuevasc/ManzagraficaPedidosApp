@@ -1,9 +1,9 @@
 # Iteración 01-06 · Despliegue y validación de la observabilidad
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Pendiente (redactada el 2026-10-25, en revisión del desarrollador; no se ejecuta hasta su indicación)
+- **Estado:** Pendiente (redactada, sin ejecutar; su ejecución espera a la 01-07)
 - **Subfase del plan:** 1.6
-- **Depende de:** 01-01, 01-02, 01-03, 01-04 y 01-05 (todas terminadas el 2026-10-25), y 02-01 (su bloque de `settings.py` viaja aquí)
+- **Depende de:** 01-01, 01-02, 01-03, 01-04 y 01-05 (terminadas el 2026-10-25), 01-07 (marcas visuales; agregada el 2026-10-25) y 02-01 (su bloque de `settings.py` viaja aquí)
 - **RDA relacionadas:** RDA-003, RDA-007, RDA-008, RDA-013
 - **Hallazgos que cierra:** AUD-01-005 (con 01-01 a 01-05). Confirma en producción el cierre de AUD-01-004 (01-03).
 - **Cambio de esquema:** Clase 2 (migración `0007_registroevento` de 01-01)
@@ -25,13 +25,14 @@ Llevar la observabilidad a producción con el protocolo de 00-05 y demostrar con
 | 01-03 | Sin `ErrorHandlingMiddleware`; `@transaccion_segura` con `logger.exception`; `print` a `logging`; página 500 nueva | Trazas completas en `error.log`; `server.log` deja de recibir los mensajes de errores |
 | 01-04 | 15 eventos (13 vistas y señales de acceso); acceso fallido sin lo escrito | Filas nuevas en la tabla al operar |
 | 01-05 | Admin de eventos de solo lectura para superusuarios | Nueva sección en el admin |
+| 01-07 | Emoji del nivel al inicio de cada línea del registro (`❌ nivel=ERROR …`) | Las líneas de `error.log` empiezan con el emoji, después de la fecha de PythonAnywhere |
 
 Sin cambios en `requirements.txt` ni en `pedidos/static`.
 
 ## Tareas
 
 1. **Lista de comprobación previa** (`docs/operacion/despliegue.md`, sección 2), completa en local y copiada en la evidencia:
-   1. `python manage.py test pedidos` → `Ran 72 tests` y `OK` (cifra al 2026-10-25; si cambia, se anota la nueva). Sin regresiones declaradas todavía, así que no se acepta `expected failures`.
+   1. `python manage.py test pedidos` → `Ran 79 tests` y `OK` (cifra al 2026-10-25, tras la 01-07; si cambia, se anota la nueva). Sin regresiones declaradas todavía, así que no se acepta `expected failures`.
    2. `check --deploy` con `DEBUG=False` → solo las 5 advertencias conocidas (`W004`, `W008`, `W009`, `W012`, `W016`, para 04-02 y 04-03). Cualquier otra, o un error, detiene el despliegue.
    3. `makemigrations --check --dry-run` → `No changes detected`.
    4. `sqlmigrate pedidos 0007` → el SQL completo, copiado en la bitácora y clasificado: `CREATE TABLE` de la tabla nueva, `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY` **sobre la tabla nueva** (aprobado como Clase 2 en 01-01: no toca `auth_user` ni ninguna tabla existente) y dos `CREATE INDEX`. Si el SQL difiere del de [bitacora-01-06](../../99_bitacora/epica-01-observabilidad/bitacora-01-06.md), detente.
@@ -51,7 +52,8 @@ Sin cambios en `requirements.txt` ni en `pedidos/static`.
 8. **Error controlado** (decisión del desarrollador del 2026-10-25): **abrir la página de eliminar un pago** (`/pagos/eliminar/<id>/`, AUD-02-002). Solo se abre, **nunca se confirma**: con GET, `eliminar_pago` solo intenta mostrar la plantilla `pedidos/pago_confirm_delete.html`, que no existe, y no escribe nada (tampoco un evento: `pago_eliminado` se registra solo con POST).
    - **Qué `id` usar:** el `1056`, el pago del caso real del 2026-10-22, si todavía existe; si no, el pago de mayor `id`. La evidencia trae el comando que lo decide en el servidor.
    - **Cómo confirmar antes que el caso sigue existiendo:** en el servidor, después del `checkout`, que la plantilla no exista (`test -f` responde «falta») y que el pago elegido exista. En local, la prueba `test_regresion_eliminar_pago_deja_tipo_y_traza` pasa en la lista de comprobación. Si la plantilla existiera (AUD-02-002 corregido antes), detente: hay que elegir otro método.
-   - **Medición:** hora de la petición (Chile y UTC) y tiempo hasta encontrar en `error.log` la línea `registrador=pedidos.decorators … excepcion=TemplateDoesNotExist` con método, ruta, usuario y traza completa. `error.log` está en UTC y PythonAnywhere antepone su fecha a cada línea; `server.log` está en hora de Chile.
+   - **Medición:** hora de la petición (Chile y UTC) y tiempo hasta encontrar en `error.log` la línea `❌ nivel=ERROR registrador=pedidos.decorators … excepcion=TemplateDoesNotExist` con método, ruta, usuario y traza completa.
+   - **Emoji (01-07):** la línea empieza con `❌` justo después de la fecha de PythonAnywhere y se ve bien en el visor de registros del panel y en la consola Bash. Si la salida no admite UTF-8, el riesgo no es solo el emoji: `logging` no puede escribir **la línea completa** (`UnicodeEncodeError`), informa «--- Logging error ---» y la petición sigue, pero el error se pierde (bitacora-01-07). Por eso C2 debe encontrar la línea con el `❌`; si no aparece ninguna línea nueva o aparece «Logging error», detente: el agente propone el ajuste (por ejemplo, reemplazar los caracteres no codificables). `error.log` está en UTC y PythonAnywhere antepone su fecha a cada línea; `server.log` está en hora de Chile.
 9. **`fontTools`**: generar un PDF de una cotización y comprobar que `error.log` no recibe ninguna línea de `fontTools` después de la recarga (en local, un PDF generaba 540 líneas antes de 01-02).
 10. **Evento en el admin**: el propio inicio de sesión del desarrollador deja un `acceso_exitoso` con su usuario; se revisa en el admin de eventos (01-05). Sin cambiar datos de negocio. Además, `python manage.py purgar_registros` una vez en el servidor (esperado: `Eventos eliminados: 0`).
 11. **`django.server` solo existe en `runserver`** (hallazgo de 01-02 y 01-05): en producción no hay líneas de `django.server`; los accesos siguen en `access.log` (uWSGI) y los 404 no van a `error.log` (decisión del 2026-10-25). La evidencia lo comprueba con un conteo de `registrador=django.server` en `error.log` (esperado: 0).
@@ -68,7 +70,7 @@ Decisión cerrada en esta redacción: el método del error controlado (abrir la 
 
 ## Criterios de aceptación
 
-- [ ] La lista de comprobación previa está completa en la bitácora (72 pruebas, `check --deploy`, `makemigrations --check`, `sqlmigrate` de la 0007 con su SQL y su clase) y el respaldo está verificado.
+- [ ] La lista de comprobación previa está completa en la bitácora (79 pruebas, `check --deploy`, `makemigrations --check`, `sqlmigrate` de la 0007 con su SQL y su clase) y el respaldo está verificado.
 - [ ] El ensayo en la réplica está medido: restauración del respaldo previo, aplicación de la 0007, reversión a la 0006 y nueva aplicación, todo sin errores.
 - [ ] La evidencia prueba que la 0007 no estaba aplicada en producción antes del `checkout` y que `migrate --plan` listaba solo la 0007.
 - [ ] La evidencia muestra la etiqueta `v1.1-observabilidad`, la migración aplicada en producción y `check --deploy` del servidor sin errores nuevos.

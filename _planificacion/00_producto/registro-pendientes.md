@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-25
-- **Iteración activa:** 01-06, en preparación: archivo de la iteración y evidencia redactados, en revisión del desarrollador; no se ejecuta hasta su indicación
+- **Iteración activa:** 01-07 (antes de ejecutar la 01-06, que queda redactada)
 - **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -27,7 +27,8 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 01-03 | Retiro del middleware y trazas completas | 01 | Terminada (sin desplegar; se despliega en 01-06, donde también se revisa la página 500 a 360 px) | 01-02 | [bitacora-01-03](../99_bitacora/epica-01-observabilidad/bitacora-01-03.md) |
 | 01-04 | Instrumentación de eventos de negocio | 01 | Terminada (sin desplegar; se despliega en 01-06) | 01-02 | [bitacora-01-04](../99_bitacora/epica-01-observabilidad/bitacora-01-04.md) |
 | 01-05 | Consulta de eventos en el admin | 01 | Terminada (sin desplegar; se despliega en 01-06) | 01-01 | [bitacora-01-05](../99_bitacora/epica-01-observabilidad/bitacora-01-05.md) |
-| 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente (redactada, en revisión del desarrollador) | 01-03, 01-04, 01-05 | — |
+| 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente (redactada, sin ejecutar; espera a la 01-07) | 01-03, 01-04, 01-05, 01-07 | [bitacora-01-06](../99_bitacora/epica-01-observabilidad/bitacora-01-06.md) |
+| 01-07 | Marcas visuales en el registro de errores | 01 | En revisión (falta mirar la terminal de PyCharm; se despliega en 01-06) | 01-02 | [bitacora-01-07](../99_bitacora/epica-01-observabilidad/bitacora-01-07.md) |
 | 02-01 | Infraestructura de pruebas | 02 | Terminada (sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor) | Épica 00 | [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md) |
 | 02-02 | Pruebas de la lógica de dinero | 02 | Pendiente | 02-01 | — |
 | 02-03 | Pruebas de flujos críticos | 02 | Pendiente | 02-01 | — |
@@ -171,3 +172,5 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-25 | Iteración 01-05 en revisión: `RegistroEventoAdmin` de solo lectura y solo para superusuarios, con filtros por fecha (rangos), tipo y usuario, búsqueda exacta por identificador y hora de Chile con su zona; sin `date_hierarchy` (regla 6); 72 pruebas; sin migraciones; falta la revisión manual ([evidencia-01-05](../10_epicas/epica-01-observabilidad/evidencia-01-05.md)). Detalle en [bitacora-01-05](../99_bitacora/epica-01-observabilidad/bitacora-01-05.md). |
 | 2026-10-25 | Iteración 01-05 terminada tras la revisión del desarrollador y su revisión manual en la réplica (9 puntos, 8 eventos generados; a 360 px la tabla se desplaza en horizontal, comportamiento normal del admin); sin desplegar; se despliega en 01-06. Detalle en [bitacora-01-05](../99_bitacora/epica-01-observabilidad/bitacora-01-05.md). |
 | 2026-10-25 | Iteración 01-06 redactada sin ejecutar: tareas y criterios completos, [evidencia-01-06](../10_epicas/epica-01-observabilidad/evidencia-01-06.md) en cuatro partes; error controlado decidido (eliminar pago, sin confirmar); 2 decisiones abiertas. Detalle en [bitacora-01-06](../99_bitacora/epica-01-observabilidad/bitacora-01-06.md). |
+| 2026-10-25 | Creada la iteración 01-07 (emoji del nivel al inicio de cada línea del registro), en curso; la 01-06 pasa a depender de ella y queda redactada sin ejecutar. Archivo: [iteracion-01-07](../10_epicas/epica-01-observabilidad/iteracion-01-07-marcas-visuales.md). |
+| 2026-10-25 | Iteración 01-07 en revisión: `FormateadorConEmoji` en `pedidos/registro.py` (❌ ⚠️ ❕ ❗❌❗ 🛠️) con los campos sin cambios; un flujo sin UTF-8 no rompe la petición pero pierde la línea (comprobación en 01-06); 79 pruebas; sin migraciones. Detalle en [bitacora-01-07](../99_bitacora/epica-01-observabilidad/bitacora-01-07.md). |

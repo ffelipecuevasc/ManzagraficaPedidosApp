@@ -54,7 +54,7 @@ Paquete `pedidos/tests/`, un archivo por dominio:
 | `test_rutas_publicas.py` | Rutas sin sesión (`robots.txt`) |
 | `test_pagos.py` | Pagos |
 | `test_eventos.py` | Registro de eventos, su purga y el servicio `registrar_evento` |
-| `test_registro.py` | Formato y niveles del registro de la aplicación (`LOGGING`) |
+| `test_registro.py` | Formato, emoji por nivel y niveles del registro de la aplicación (`LOGGING`) |
 | `test_errores.py` | Páginas 404 y 500 y trazas completas |
 | `test_eventos_negocio.py` | Un evento por operación del inventario y lecturas sin eventos |
 | `test_admin_eventos.py` | Admin de eventos: solo lectura, solo superusuarios, filtros, búsqueda y consultas |

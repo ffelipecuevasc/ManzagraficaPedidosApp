@@ -215,6 +215,7 @@ LOGGING = {
     },
     'formatters': {
         'clave_valor': {
+            'class': 'pedidos.registro.FormateadorConEmoji',
             'format': ('nivel=%(levelname)s registrador=%(name)s metodo=%(metodo)s '
                        'ruta=%(ruta)s usuario=%(usuario)s excepcion=%(excepcion)s '
                        'mensaje=%(mensaje_cv)s'),

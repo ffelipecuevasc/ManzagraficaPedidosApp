@@ -42,7 +42,7 @@ python manage.py test pedidos.tests.test_errores.ErroresSinMiddlewareTests.test_
 **Esperado:**
 
 - `git status` vacío.
-- `Ran 72 tests` y `OK` (puede salir la advertencia `mysql.W002`, esperada).
+- `Ran 79 tests` y `OK` (puede salir la advertencia `mysql.W002`, esperada).
 - `check --deploy`: solo `W004`, `W008`, `W009`, `W012` y `W016`.
 - `No changes detected`.
 - El SQL de la 0007 idéntico al de `bitacora-01-06.md`: un `CREATE TABLE`, un `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY` sobre `pedidos_registroevento` y dos `CREATE INDEX`. Pega el SQL completo.
@@ -316,8 +316,9 @@ sed -n "${N},$((N+60))p" $L | grep -nE 'Traceback|^[^ ]+ [^ ]+: [A-Za-z_.]+(Erro
 **Esperado:**
 
 - Dos líneas para esa ruta:
-  - `nivel=ERROR registrador=pedidos.decorators metodo=GET ruta=/pagos/eliminar/<ID>/ usuario=<tu id> excepcion=TemplateDoesNotExist mensaje="Error capturado por decorador en eliminar_pago"`;
-  - `nivel=ERROR registrador=django.request … mensaje="Internal Server Error: /pagos/eliminar/<ID>/"`.
+  - `❌ nivel=ERROR registrador=pedidos.decorators metodo=GET ruta=/pagos/eliminar/<ID>/ usuario=<tu id> excepcion=TemplateDoesNotExist mensaje="Error capturado por decorador en eliminar_pago"`;
+  - `❌ nivel=ERROR registrador=django.request … mensaje="Internal Server Error: /pagos/eliminar/<ID>/"`.
+- **Emoji (01-07):** las dos líneas empiezan con `❌` justo después de la fecha de PythonAnywhere. Mira además una de ellas en el visor de registros del panel (**[PA · Panel]**, pestaña **Web** → *Log files* → error log) y anota si el emoji se ve. Si no aparece ninguna línea nueva, revisa `awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c 'Logging error'`: un valor mayor que 0 indica que la salida no admite UTF-8 y la línea se perdió. Detente y avisa.
 - Debajo de la primera, `Traceback (most recent call last):` y, al final de la traza, `django.template.exceptions.TemplateDoesNotExist: pedidos/pago_confirm_delete.html`.
 
 Pega **solo** esas líneas (cabeceras, `Traceback` y la última línea de la traza). Detén el cronómetro.
@@ -325,6 +326,7 @@ Pega **solo** esas líneas (cabeceras, `Traceback` y la última línea de la tra
 | Dato | Valor |
 | :--- | :---- |
 | Cabecera del decorador (nivel, método, ruta, usuario, excepción) | |
+| ¿Empieza con `❌`? ¿Se ve en la consola y en el visor del panel? | |
 | Hora UTC de la línea | |
 | ¿Traza completa con `TemplateDoesNotExist` al final? | |
 | Tiempo de diagnóstico (minutos y segundos) | |

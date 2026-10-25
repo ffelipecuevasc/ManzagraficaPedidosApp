@@ -27,6 +27,29 @@ def _usuario(request):
     return str(usuario.pk)
 
 
+EMOJI_POR_NIVEL = {
+    logging.CRITICAL: '❗❌❗',
+    logging.ERROR: '❌',
+    logging.WARNING: '⚠️',
+    logging.INFO: '❕',
+    logging.DEBUG: '🛠️',
+}
+
+
+class FormateadorConEmoji(logging.Formatter):
+    """Antepone el emoji del nivel a la primera línea (iteración 01-07).
+
+    Los campos `clave=valor` no cambian, así que `grep "nivel=ERROR"` sigue sirviendo. Un nivel
+    personalizado, sin emoji en la tabla, sale sin marca. Si el flujo de salida no admite
+    emojis, `logging` informa el problema en stderr y la petición sigue (bitacora-01-07).
+    """
+
+    def format(self, record):
+        linea = super().format(record)
+        emoji = EMOJI_POR_NIVEL.get(record.levelno)
+        return f'{emoji} {linea}' if emoji else linea
+
+
 class FiltroContextoPeticion(logging.Filter):
     """Agrega el contexto de la petición al registro. Nunca descarta ni hace fallar un registro."""
 

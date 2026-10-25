@@ -33,7 +33,7 @@ class FormatoRegistroTests(TestCase):
         cabecera = linea.splitlines()[0]
         self.assertEqual(
             cabecera,
-            f'nivel=ERROR registrador=pedidos.views metodo=GET ruta=/pagos/eliminar/1056/ '
+            f'❌ nivel=ERROR registrador=pedidos.views metodo=GET ruta=/pagos/eliminar/1056/ '
             f'usuario={request.user.pk} excepcion=LookupError mensaje="No se pudo eliminar el pago"',
         )
         self.assertIn('Traceback (most recent call last):', linea)
@@ -56,7 +56,7 @@ class FormatoRegistroTests(TestCase):
         linea = formatear_como_error_log(capturado.records[0])
         self.assertEqual(
             linea,
-            'nivel=INFO registrador=pedidos.eventos metodo=- ruta=- usuario=- excepcion=- '
+            '❕ nivel=INFO registrador=pedidos.eventos metodo=- ruta=- usuario=- excepcion=- '
             'mensaje="Mensaje \\"con comillas\\"\\nen dos líneas"',
         )
 
@@ -72,7 +72,7 @@ class FormatoRegistroTests(TestCase):
         record.request = request
         with mock.patch('sys.stderr', new_callable=io.StringIO) as salida_error:
             linea = formatear_como_error_log(record)
-        self.assertTrue(linea.startswith('nivel=ERROR registrador=pedidos.views'))
+        self.assertTrue(linea.startswith('❌ nivel=ERROR registrador=pedidos.views'))
         self.assertIn('Fallo del filtro de contexto: RuntimeError', salida_error.getvalue())
 
 
@@ -110,3 +110,87 @@ class NivelesRegistradoresTests(TestCase):
         nombres = [h.name for h in logging.getLogger().handlers]
         self.assertEqual(nombres, ['stderr'])
         self.assertEqual(logging.getLogger('django').handlers, [])
+
+
+class EmojiPorNivelTests(TestCase):
+    """01-07: emoji del nivel al inicio de la línea; el resto no cambia."""
+
+    CASOS = [
+        (logging.CRITICAL, 'CRITICAL', '❗❌❗'),
+        (logging.ERROR, 'ERROR', '❌'),
+        (logging.WARNING, 'WARNING', '⚠️'),
+        (logging.INFO, 'INFO', '❕'),
+        (logging.DEBUG, 'DEBUG', '🛠️'),
+    ]
+
+    def linea(self, nivel, nombre='pedidos.views'):
+        record = logging.LogRecord(nombre, nivel, __file__, 1, 'Mensaje de prueba', None, None)
+        return formatear_como_error_log(record)
+
+    def test_cada_nivel_lleva_su_emoji_y_el_resto_no_cambia(self):
+        for nivel, nombre, emoji in self.CASOS:
+            with self.subTest(nivel=nombre):
+                self.assertEqual(
+                    self.linea(nivel),
+                    f'{emoji} nivel={nombre} registrador=pedidos.views metodo=- ruta=- usuario=- '
+                    f'excepcion=- mensaje="Mensaje de prueba"',
+                )
+
+    def test_debug_lleva_su_emoji(self):
+        # Decisión del desarrollador (2026-10-25): DEBUG lleva 🛠️, como dice la tabla de la 01-07.
+        self.assertTrue(self.linea(logging.DEBUG).startswith('🛠️ nivel=DEBUG '))
+
+    def test_nivel_personalizado_sin_emoji(self):
+        # Sin addLevelName, para no dejar un nivel global registrado: se llama «Level 25».
+        self.assertTrue(self.linea(25).startswith('nivel=Level 25 '))
+
+    def test_grep_por_nivel_sigue_funcionando(self):
+        linea = self.linea(logging.ERROR)
+        self.assertIn('nivel=ERROR', linea)
+        self.assertEqual(linea.split(' ', 1)[1].split(' ')[0], 'nivel=ERROR')
+
+    def test_la_traza_no_lleva_emoji(self):
+        try:
+            raise ValueError('falla de prueba')
+        except ValueError:
+            import sys
+            record = logging.LogRecord('pedidos.views', logging.ERROR, __file__, 1, 'Error', None, sys.exc_info())
+        lineas = formatear_como_error_log(record).splitlines()
+        self.assertTrue(lineas[0].startswith('❌ nivel=ERROR'))
+        self.assertEqual(lineas[1], 'Traceback (most recent call last):')
+        self.assertEqual(sum('❌' in l for l in lineas), 1)
+
+
+class SalidaSinEmojisTests(TestCase):
+    """01-07: un flujo que no admite emojis no rompe la petición."""
+
+    def test_flujo_ascii_no_rompe_y_logging_informa_el_problema(self):
+        flujo = io.TextIOWrapper(io.BytesIO(), encoding='ascii')
+        raiz = logging.getLogger()
+        manejador = next(h for h in raiz.handlers if h.name == 'stderr')
+        anterior = manejador.setStream(flujo)
+        try:
+            with mock.patch('sys.stderr', new_callable=io.StringIO) as aviso:
+                # Sin excepción hacia quien registra, aunque el emoji no se pueda codificar.
+                logging.getLogger('pedidos.views').error('Error con emoji en un flujo ascii')
+        finally:
+            manejador.setStream(anterior)
+        self.assertIn('UnicodeEncodeError', aviso.getvalue())
+        self.assertIn('--- Logging error ---', aviso.getvalue())
+
+    def test_peticion_responde_aunque_la_salida_no_admita_emojis(self):
+        from django.test import override_settings
+        from unittest import mock as m
+        flujo = io.TextIOWrapper(io.BytesIO(), encoding='ascii')
+        manejador = next(h for h in logging.getLogger().handlers if h.name == 'stderr')
+        anterior = manejador.setStream(flujo)
+        self.client.raise_request_exception = False
+        self.client.force_login(crear_usuario())
+        try:
+            with override_settings(DEBUG=False),                     m.patch('pedidos.views.Paginator', side_effect=RuntimeError('falla forzada')),                     m.patch('sys.stderr', new_callable=io.StringIO):
+                respuesta = self.client.get('/pagos/lista/')
+        finally:
+            manejador.setStream(anterior)
+        self.assertEqual(respuesta.status_code, 500)
+        self.assertIn('Algo salió mal', respuesta.content.decode())
+
