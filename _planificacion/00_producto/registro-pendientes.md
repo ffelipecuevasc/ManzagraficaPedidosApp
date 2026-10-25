@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-25
-- **Iteración activa:** 01-05
+- **Iteración activa:** 01-06, en preparación: archivo de la iteración y evidencia redactados, en revisión del desarrollador; no se ejecuta hasta su indicación
 - **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -26,8 +26,8 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 01-02 | Configuración del registro y servicio de eventos | 01 | Terminada (sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere) | 01-01, 02-01 | [bitacora-01-02](../99_bitacora/epica-01-observabilidad/bitacora-01-02.md) |
 | 01-03 | Retiro del middleware y trazas completas | 01 | Terminada (sin desplegar; se despliega en 01-06, donde también se revisa la página 500 a 360 px) | 01-02 | [bitacora-01-03](../99_bitacora/epica-01-observabilidad/bitacora-01-03.md) |
 | 01-04 | Instrumentación de eventos de negocio | 01 | Terminada (sin desplegar; se despliega en 01-06) | 01-02 | [bitacora-01-04](../99_bitacora/epica-01-observabilidad/bitacora-01-04.md) |
-| 01-05 | Consulta de eventos en el admin | 01 | En revisión (falta la revisión manual de evidencia-01-05; se despliega en 01-06) | 01-01 | [bitacora-01-05](../99_bitacora/epica-01-observabilidad/bitacora-01-05.md) |
-| 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente | 01-03, 01-04, 01-05 | — |
+| 01-05 | Consulta de eventos en el admin | 01 | Terminada (sin desplegar; se despliega en 01-06) | 01-01 | [bitacora-01-05](../99_bitacora/epica-01-observabilidad/bitacora-01-05.md) |
+| 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente (redactada, en revisión del desarrollador) | 01-03, 01-04, 01-05 | — |
 | 02-01 | Infraestructura de pruebas | 02 | Terminada (sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor) | Épica 00 | [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md) |
 | 02-02 | Pruebas de la lógica de dinero | 02 | Pendiente | 02-01 | — |
 | 02-03 | Pruebas de flujos críticos | 02 | Pendiente | 02-01 | — |
@@ -90,7 +90,9 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | «Generar Nuevo Respaldo BD» es un enlace GET: cada visita crea un volcado y desplaza al más antiguo. Advertido en `docs/operacion/respaldo.md`; se corrige en 04-01 | AUD-02-006 | Agente, en 04-01 |
 | Fechas de los hitos (`producto.md`, sección 7) | — | Desarrollador |
 | ~~Retención de la tabla de eventos~~ Resuelto el 2026-10-25: 365 días, con la estimación de 01-01 (RDA-013 descarta la tabla de errores) | RDA-005, RDA-013 | Desarrollador |
-| Método para provocar el error controlado en producción (01-06) | AUD-01-005 | Desarrollador |
+| ~~Método para provocar el error controlado en producción (01-06)~~ Resuelto el 2026-10-25: abrir la página de eliminar un pago (AUD-02-002), sin confirmar; `id` 1056 o el último pago | AUD-01-005 | Desarrollador |
+| `PENDIENTE_DESARROLLADOR` · 01-06: ventana del despliegue de `v1.1-observabilidad` (día y hora en Chile); la etiqueta se crea ese día | 01-06 | Desarrollador |
+| `PENDIENTE_DESARROLLADOR` · 01-06: cuándo agregar `pedidos_registroevento` a `TABLAS_ESPERADAS` de `scripts/verificar_respaldo.py` (tras migrar en 01-06, propuesta, o en 06-03) | 01-06 | Desarrollador |
 | Dividir el decorador en dos o mantenerlo unificado con el orden correcto | AUD-01-001 | Desarrollador |
 | Tratamiento de las imágenes de referencia huérfanas cuando una transacción se revierte | AUD-01-001 | Desarrollador |
 | ¿La orden de mantención avisa si no se ejecutó varios días seguidos? | RDA-009 | Desarrollador |
@@ -119,7 +121,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~02-01 · Dónde se documenta la infraestructura de pruebas: `docs/operacion/pruebas.md` o una sección de `replica-local.md`~~ Resuelto el 2026-10-25: `docs/operacion/pruebas.md` y punto 1 de `despliegue.md` | 02-01, tarea 6 | Desarrollador |
 | `PENDIENTE_DESARROLLADOR` · Precisar la regla 4 de `AGENTS.md` (servicio de registro = `logging` + `registrar_evento`); propuesta de texto en bitacora-01-03; la revisa el desarrollador | 01-03, RDA-013 | Desarrollador |
 | Normalizar el fin de línea de `PedidosApp/settings.py` (hoy mezcla CRLF y LF; las líneas de `LOGGING` y `TEST` quedaron en LF). Decisión del 2026-10-25: queda como propuesta, sin cambios por ahora | 01-03 | Desarrollador |
-| Responder [evidencia-01-05](../10_epicas/epica-01-observabilidad/evidencia-01-05.md): revisión manual del admin de eventos en la réplica | 01-05 | Desarrollador |
+| ~~Responder [evidencia-01-05](../10_epicas/epica-01-observabilidad/evidencia-01-05.md): revisión manual del admin de eventos en la réplica~~ Resuelto el 2026-10-25: 9 puntos verificados | 01-05 | Desarrollador |
 
 ## 4. Propuestas fuera de alcance
 
@@ -167,3 +169,5 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-25 | Iteración 01-04 en revisión: 15 eventos instrumentados (13 vistas y 2 señales de acceso en `pedidos/senales.py`), un evento por acción del usuario, sin cambios de modelo ni migraciones; estimación de 01-01 sin cambios; 61 pruebas. Detalle en [bitacora-01-04](../99_bitacora/epica-01-observabilidad/bitacora-01-04.md). |
 | 2026-10-25 | Iteración 01-04 terminada tras la revisión del desarrollador, con un ajuste: el acceso fallido guarda el nombre solo si existe como usuario (si no, «usuario desconocido»); nota de la restauración y la tabla de eventos en la Épica 04 (04-04); sin desplegar; se despliega en 01-06. Detalle en [bitacora-01-04](../99_bitacora/epica-01-observabilidad/bitacora-01-04.md). |
 | 2026-10-25 | Iteración 01-05 en revisión: `RegistroEventoAdmin` de solo lectura y solo para superusuarios, con filtros por fecha (rangos), tipo y usuario, búsqueda exacta por identificador y hora de Chile con su zona; sin `date_hierarchy` (regla 6); 72 pruebas; sin migraciones; falta la revisión manual ([evidencia-01-05](../10_epicas/epica-01-observabilidad/evidencia-01-05.md)). Detalle en [bitacora-01-05](../99_bitacora/epica-01-observabilidad/bitacora-01-05.md). |
+| 2026-10-25 | Iteración 01-05 terminada tras la revisión del desarrollador y su revisión manual en la réplica (9 puntos, 8 eventos generados; a 360 px la tabla se desplaza en horizontal, comportamiento normal del admin); sin desplegar; se despliega en 01-06. Detalle en [bitacora-01-05](../99_bitacora/epica-01-observabilidad/bitacora-01-05.md). |
+| 2026-10-25 | Iteración 01-06 redactada sin ejecutar: tareas y criterios completos, [evidencia-01-06](../10_epicas/epica-01-observabilidad/evidencia-01-06.md) en cuatro partes; error controlado decidido (eliminar pago, sin confirmar); 2 decisiones abiertas. Detalle en [bitacora-01-06](../99_bitacora/epica-01-observabilidad/bitacora-01-06.md). |

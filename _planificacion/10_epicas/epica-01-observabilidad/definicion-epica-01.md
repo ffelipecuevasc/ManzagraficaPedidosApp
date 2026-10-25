@@ -25,8 +25,8 @@
 | 01-02 | Configuración del registro y servicio de eventos (Terminada) | 1.2 |
 | 01-03 | Retiro del middleware y trazas completas (Terminada) | 1.3 |
 | 01-04 | Instrumentación de eventos de negocio (Terminada) | 1.4 |
-| 01-05 | Consulta de eventos en el admin (en revisión) | 1.5 |
-| 01-06 | Despliegue y validación de la observabilidad | 1.6 |
+| 01-05 | Consulta de eventos en el admin (Terminada) | 1.5 |
+| 01-06 | Despliegue y validación de la observabilidad (redactada, en revisión) | 1.6 |
 
 ## Decisiones de la épica
 
@@ -36,6 +36,7 @@
 - **2026-10-25 · Un evento por acción del usuario (decisión del desarrollador, 01-04).** Una operación compuesta deja una sola fila: crear un pedido con abono inicial registra `pedido_creado` («… con abono inicial»), convertir una cotización registra `cotizacion_convertida` (aunque cree pedido, ítems y pago) y restaurar registra `restauracion_ejecutada` (aunque genere antes un respaldo). Mantiene la estimación de 01-01. Consecuencia: filtrar por `pago_registrado` no muestra los abonos iniciales.
 - **2026-10-25 · Acceso fallido sin lo escrito (decisión del desarrollador, ajuste de 01-04).** El evento `acceso_fallido` guarda el nombre de usuario solo si existe como usuario (el registrado en la base); si no existe, el resumen dice «usuario desconocido». **Motivo:** que una contraseña escrita por error en el campo de usuario nunca quede en la tabla ni en los respaldos.
 - **2026-10-25 · Admin de eventos sin jerarquía por fecha (decisión del desarrollador, 01-05).** `date_hierarchy` agrupa con truncado y conversión de zona horaria en MySQL, contra la regla técnica 6 de `AGENTS.md`. La fecha se filtra con `DateFieldListFilter` (rangos de instantes en hora de Chile).
+- **2026-10-25 · Error controlado de la 01-06 (decisión del desarrollador).** Se abre la página de eliminar un pago (`/pagos/eliminar/<id>/`, AUD-02-002) sin confirmar: falla por la plantilla faltante y no escribe nada. `id` 1056 (caso real del 2026-10-22) o el último pago; antes se confirma que la plantilla sigue sin existir.
 - **2026-10-25 · Sin identificador de petición (decisión del desarrollador).** Cada línea de error lleva hora, método, ruta y usuario; con eso basta para cruzar `error.log` con `access.log` en una aplicación de este tamaño.
 - Las iteraciones 01-01 a 01-05 se trabajan en local, contra la réplica, y se despliegan **juntas** en 01-06 con la etiqueta `v1.1-observabilidad` (RDA-007: cada fase parte en `.1`). La migración de la tabla de eventos va en un único despliegue con respaldo previo.
 - Mientras exista `@transaccion_segura` (hasta la Épica 03), el decorador captura las excepciones antes de que lleguen a Django. Por eso 01-03 cambia su `print` por `logger.exception`, sin tocar todavía su lógica.

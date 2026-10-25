@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión. Falta la revisión manual del desarrollador en la réplica ([evidencia-01-05](../../10_epicas/epica-01-observabilidad/evidencia-01-05.md)). Se despliega con 01-01 a 01-04 en 01-06 (`v1.1-observabilidad`). **Sin migraciones.**
+- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador, con la revisión manual de [evidencia-01-05](../../10_epicas/epica-01-observabilidad/evidencia-01-05.md)); sin desplegar; se despliega en 01-06. **Sin migraciones.**
 
 ## Resumen
 
@@ -53,7 +53,7 @@ PowerShell 7, `DB_NAME=manzagrafica_replica`.
 - `python manage.py test pedidos`: **72 pruebas en `OK`** en tres ejecuciones (58,3 s, 67,8 s y 59,2 s).
 - `python manage.py check`: sin problemas.
 - `makemigrations --check --dry-run`: `No changes detected`. **Sin migraciones**: `RegistroEventoAdmin` no cambia el modelo.
-- **Revisión manual en la réplica:** pendiente del desarrollador, con los pasos de [evidencia-01-05](../../10_epicas/epica-01-observabilidad/evidencia-01-05.md). El agente no inició sesión ni arrancó el servidor. El criterio queda sin marcar.
+- **Revisión manual en la réplica:** hecha por el desarrollador el 2026-10-25 con los pasos de [evidencia-01-05](../../10_epicas/epica-01-observabilidad/evidencia-01-05.md). El agente no inició sesión ni arrancó el servidor. Ver «Revisión manual del desarrollador».
 
 ## Desviaciones y observaciones
 
@@ -84,5 +84,13 @@ PowerShell 7, `DB_NAME=manzagrafica_replica`.
 
 ## Pendientes
 
-- Respuesta del desarrollador a [evidencia-01-05](../../10_epicas/epica-01-observabilidad/evidencia-01-05.md).
 - Revisión del desarrollador.
+
+## Revisión manual del desarrollador (2026-10-25)
+
+Resultados integrados en [evidencia-01-05](../../10_epicas/epica-01-observabilidad/evidencia-01-05.md), sección «Respuesta del desarrollador».
+
+- **9 puntos verificados en la réplica:** listado, hora de Chile con `(UTC-0300)`, acceso fallido con nombre inexistente («usuario desconocido») y con un usuario existente (solo su nombre), accesos exitosos, solo lectura en el listado y en el detalle, búsqueda exacta (`1` no trae el `10`), filtro por tipo (3 accesos fallidos de 8) y detalle.
+- **Eventos generados:** de 0 a 8 filas (5 accesos exitosos y 3 fallidos). Confirma en un entorno real las señales de la 01-04 y su ajuste.
+- **Observación de la vista a 360 px:** la tabla es más ancha que la pantalla y se desplaza en horizontal para ver usuario, entidad, identificador y resumen. Es el comportamiento normal de las tablas del admin de Django en pantallas angostas, **no un defecto**. No requiere cambios.
+- **Salida de consola:** la petición a `/favicon.ico` (404) salió en la terminal desde `django.server`, que existe solo en `runserver`. No contradice la decisión de que los 404 no vayan a `error.log`: en PythonAnywhere no hay `django.server` y `django.request` sigue en `ERROR`.

@@ -1,7 +1,7 @@
 # Iteración 01-05 · Consulta de eventos en el admin
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión (2026-10-25; falta la revisión manual de [evidencia-01-05](evidencia-01-05.md); se despliega en 01-06)
+- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega en 01-06)
 - **Subfase del plan:** 1.5
 - **Depende de:** 01-01
 - **RDA relacionadas:** RDA-008, RDA-013
@@ -28,7 +28,7 @@ Consultar quién hizo qué y cuándo desde el admin nativo de Django (decisión 
 - [x] Prueba: un usuario con `is_staff` pero sin `is_superuser` recibe 403 o no ve el modelo. No ve el modelo y recibe 403, incluso con los permisos del modelo asignados.
 - [x] Prueba: el admin no ofrece agregar, modificar ni eliminar eventos.
 - [x] El número de consultas del listado no crece con el número de filas mostradas (`assertNumQueries` con 1 y con 20 filas).
-- [ ] Revisión manual en la réplica con capturas o descripción en la bitácora (listado, filtros y detalle). Pendiente del desarrollador: [evidencia-01-05](evidencia-01-05.md).
+- [x] Revisión manual en la réplica con capturas o descripción en la bitácora (listado, filtros y detalle). Hecha por el desarrollador el 2026-10-25 ([evidencia-01-05](evidencia-01-05.md)): 9 puntos verificados (listado, hora, accesos fallidos, solo lectura, búsqueda, filtros, detalle y 360 px, con desplazamiento horizontal normal del admin).
 - [x] `python manage.py test pedidos` en verde. 72 pruebas, tres veces.
 
 ## Fuera de alcance
