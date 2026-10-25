@@ -1,7 +1,7 @@
 # Iteración 02-01 · Infraestructura de pruebas
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** En revisión (2026-10-25)
+- **Estado:** Terminada (2026-10-25; sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor)
 - **Subfase del plan:** 2.1
 - **Depende de:** Épica 00
 - **RDA relacionadas:** RDA-002, RDA-006

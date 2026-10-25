@@ -1,7 +1,7 @@
 # Iteración 01-02 · Configuración del registro y servicio de eventos
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Pendiente
+- **Estado:** En revisión (2026-10-25; se despliega en 01-06)
 - **Subfase del plan:** 1.2
 - **Depende de:** 01-01, 02-01
 - **RDA relacionadas:** RDA-008, RDA-013
@@ -39,15 +39,15 @@ Dos piezas independientes: **(a)** una configuración de `logging` que deja cada
 
 ## Criterios de aceptación
 
-- [ ] La bitácora explica el estado actual de `error.log` y `server.log` y la configuración elegida.
-- [ ] Prueba: un error registrado con el registrador de la aplicación dentro de una petición produce la línea con nivel, método, ruta, usuario, tipo de excepción y la traza completa.
-- [ ] Prueba: un usuario anónimo aparece como `anonimo`, y la línea no contiene la contraseña ni el cuerpo del formulario.
-- [ ] Prueba: un mensaje `INFO` de `fontTools` no se emite; uno `WARNING` sí.
-- [ ] Prueba de fallo en cascada: con una excepción inyectada en la escritura del evento, la función retorna sin lanzar y el problema queda en el registro.
-- [ ] Prueba de costo: el número de consultas de una vista de listado no cambia con el servicio instalado (`assertNumQueries` con el mismo valor antes y después).
-- [ ] Prueba de confirmación: un evento registrado dentro de una transacción que se revierte no queda en la tabla; uno dentro de una transacción confirmada, sí.
-- [ ] Verificación manual en local con `runserver`: un error forzado se ve en la terminal con el formato acordado (salida pegada en la bitácora).
-- [ ] `python manage.py check` sin errores y `python manage.py test pedidos` en verde.
+- [x] La bitácora explica el estado actual de `error.log` y `server.log` y la configuración elegida.
+- [x] Prueba: un error registrado con el registrador de la aplicación dentro de una petición produce la línea con nivel, método, ruta, usuario, tipo de excepción y la traza completa. `test_registro.py`.
+- [x] Prueba: un usuario anónimo aparece como `anonimo`, y la línea no contiene la contraseña ni el cuerpo del formulario.
+- [x] Prueba: un mensaje `INFO` de `fontTools` no se emite; uno `WARNING` sí. Incluye el caso de `capture_logs` de WeasyPrint; un PDF real pasó de 540 líneas de `fontTools` a 0.
+- [x] Prueba de fallo en cascada: con una excepción inyectada en la escritura del evento, la función retorna sin lanzar y el problema queda en el registro. También con un `IntegrityError` real de MySQL y la aplicación respondiendo después.
+- [x] Prueba de costo: el número de consultas de una vista de listado no cambia con el servicio instalado (`assertNumQueries` con el mismo valor antes y después). 4 consultas en `/pagos/lista/`, fijadas en la prueba; el servicio no se llama.
+- [x] Prueba de confirmación: un evento registrado dentro de una transacción que se revierte no queda en la tabla; uno dentro de una transacción confirmada, sí.
+- [x] Verificación manual en local con `runserver`: un error forzado se ve en la terminal con el formato acordado (salida pegada en la bitácora). Error forzado: POST sin CSRF (403).
+- [x] `python manage.py check` sin errores y `python manage.py test pedidos` en verde. 34 pruebas, tres veces.
 
 ## Fuera de alcance
 

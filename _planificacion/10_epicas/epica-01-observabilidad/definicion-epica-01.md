@@ -22,7 +22,7 @@
 | Iteración | Nombre | Subfase |
 | :-------- | :----- | :------ |
 | 01-01 | Modelo de registro de eventos (Terminada) | 1.1 |
-| 01-02 | Configuración del registro y servicio de eventos | 1.2 |
+| 01-02 | Configuración del registro y servicio de eventos (en revisión) | 1.2 |
 | 01-03 | Retiro del middleware y trazas completas | 1.3 |
 | 01-04 | Instrumentación de eventos de negocio | 1.4 |
 | 01-05 | Consulta de eventos en el admin | 1.5 |
@@ -57,9 +57,10 @@
 Observaciones de otras iteraciones que la épica debe revisar. Son hipótesis, no hallazgos confirmados.
 
 - **2026-10-23 (00-05):** el `OSError: write error` del 2026-10-23 a las 02:56:38 UTC ocurrió 2 segundos después de generar un respaldo (`respaldo_22-10-2026_23-56-36.sql`, hora de Chile) y coincide con su descarga. Es de la misma familia que los `Broken pipe` y `SIGPIPE` medidos en 00-01. Hay que comprobar si esos cortes se relacionan con la descarga de respaldos (evidencia-00-05, B10).
-- **2026-10-23 (00-05):** los mensajes informativos de `fontTools` al generar PDFs con WeasyPrint llegan a `error.log` y lo ensucian. Se resuelven en 01-02 subiendo ese registrador a `WARNING`.
+- **2026-10-23 (00-05):** los mensajes informativos de `fontTools` al generar PDFs con WeasyPrint llegan a `error.log` y lo ensucian. Se resuelven en 01-02 subiendo ese registrador a `WARNING`. **Actualización 2026-10-25 (01-02):** el nivel no bastaba; WeasyPrint baja `fontTools` a `DEBUG` durante el recorte de fuentes (`capture_logs`) sin cortar la propagación. Se resolvió con `propagate=False` (ver bitacora-01-02).
 - **2026-10-25:** con las trazas completas de 01-03 en producción, el próximo error «Template: …» de `crear_pedido`, `crear_cotizacion` o `crear_cliente` dejará su causa en `error.log`. Eso desbloquea AUD-02-021, que hoy espera el mensaje completo.
 - **2026-10-25:** el conteo de `Broken pipe` por fecha de la 00-06 usó `server.log`, que está en hora de Chile y no en UTC. No cambia la conclusión de C1, pero el conteo de C2 (2026-11-20) debe decirlo.
+- **2026-10-25 (01-02):** sin `LOGGING`, en local y con `DEBUG=False` no llega a stderr ni el `Internal Server Error` de `django.request` ni el INFO de `fontTools`, pero en producción sí. Hipótesis: el cargador WSGI de PythonAnywhere instala un manejador en la raíz con nivel INFO. La configuración de 01-02 reemplaza el manejador de la raíz, así que en 01-06 hay que comprobar que `error.log` no tenga líneas duplicadas.
 
 ## Criterio de término
 

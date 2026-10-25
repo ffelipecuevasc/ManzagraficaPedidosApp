@@ -203,3 +203,42 @@ USE_THOUSAND_SEPARATOR = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# REGISTRO (iteración 01-02, RDA-013)
+# Todo va a stderr, que PythonAnywhere guarda en error.log (con su fecha UTC al inicio de
+# cada línea: por eso el formato no repite la fecha). Sin archivos de registro propios.
+# Configurar la raíz reemplaza cualquier manejador previo del entorno y evita líneas dobles.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'contexto_peticion': {'()': 'pedidos.registro.FiltroContextoPeticion'},
+    },
+    'formatters': {
+        'clave_valor': {
+            'format': ('nivel=%(levelname)s registrador=%(name)s metodo=%(metodo)s '
+                       'ruta=%(ruta)s usuario=%(usuario)s excepcion=%(excepcion)s '
+                       'mensaje=%(mensaje_cv)s'),
+        },
+    },
+    'handlers': {
+        'stderr': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stderr',
+            'filters': ['contexto_peticion'],
+            'formatter': 'clave_valor',
+        },
+    },
+    'root': {'handlers': ['stderr'], 'level': 'WARNING'},
+    'loggers': {
+        # Se quitan los manejadores por defecto de Django (consola solo con DEBUG, correo).
+        'django': {'handlers': [], 'level': 'WARNING', 'propagate': True},
+        'django.request': {'level': 'ERROR'},
+        'django.security': {'level': 'WARNING'},
+        'pedidos': {'level': 'INFO'},
+        # WeasyPrint baja fontTools a DEBUG mientras recorta fuentes (capture_logs) sin
+        # cortar la propagación: con propagate=False, nada de eso llega a la raíz.
+        'fontTools': {'handlers': ['stderr'], 'level': 'WARNING', 'propagate': False},
+        'weasyprint': {'level': 'WARNING'},
+    },
+}

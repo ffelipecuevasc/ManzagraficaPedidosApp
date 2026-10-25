@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión. No despliega nada por sí sola: el cambio de `settings.py` solo afecta la ejecución de pruebas y viaja con el próximo despliegue.
+- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador); sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor.
 
 ## Resumen
 

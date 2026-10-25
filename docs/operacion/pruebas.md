@@ -53,7 +53,8 @@ Paquete `pedidos/tests/`, un archivo por dominio:
 | `test_arranque.py` | Carga diferida de bibliotecas pesadas |
 | `test_rutas_publicas.py` | Rutas sin sesión (`robots.txt`) |
 | `test_pagos.py` | Pagos |
-| `test_eventos.py` | Registro de eventos y su purga |
+| `test_eventos.py` | Registro de eventos, su purga y el servicio `registrar_evento` |
+| `test_registro.py` | Formato y niveles del registro de la aplicación (`LOGGING`) |
 
 Las iteraciones siguientes agregan los archivos que necesiten (por ejemplo `test_dinero.py`, `test_pedidos.py`, `test_cotizaciones.py`, `test_regresiones.py`, `test_acceso.py`). No se crean archivos vacíos.
 

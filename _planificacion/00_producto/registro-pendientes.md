@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-25
-- **Iteración activa:** 02-01
+- **Iteración activa:** 01-02
 - **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -23,12 +23,12 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 00-05 | Protocolo de versionado, despliegue y retroceso | 00 | Terminada | 00-03, 00-04 | [bitacora-00-05](../99_bitacora/epica-00-blindaje/bitacora-00-05.md), [bitacora-00-05-ensayo](../99_bitacora/epica-00-blindaje/bitacora-00-05-ensayo.md), [bitacora-00-05-produccion](../99_bitacora/epica-00-blindaje/bitacora-00-05-produccion.md) |
 | 00-06 | Correcciones tempranas de riesgo nulo | 00 | Terminada (desplegada el 2026-10-23 como `v0.2-correcciones`) | 00-05 | [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md) |
 | 01-01 | Modelo de registro de eventos | 01 | Terminada (sin desplegar; se despliega en 01-06) | Épica 00 | [bitacora-01-01](../99_bitacora/epica-01-observabilidad/bitacora-01-01.md) |
-| 01-02 | Configuración del registro y servicio de eventos | 01 | Pendiente | 01-01, 02-01 | — |
+| 01-02 | Configuración del registro y servicio de eventos | 01 | En revisión (se despliega en 01-06) | 01-01, 02-01 | [bitacora-01-02](../99_bitacora/epica-01-observabilidad/bitacora-01-02.md) |
 | 01-03 | Retiro del middleware y trazas completas | 01 | Pendiente | 01-02 | — |
 | 01-04 | Instrumentación de eventos de negocio | 01 | Pendiente | 01-02 | — |
 | 01-05 | Consulta de eventos en el admin | 01 | Pendiente | 01-01 | — |
 | 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente | 01-03, 01-04, 01-05 | — |
-| 02-01 | Infraestructura de pruebas | 02 | En revisión | Épica 00 | [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md) |
+| 02-01 | Infraestructura de pruebas | 02 | Terminada (sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor) | Épica 00 | [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md) |
 | 02-02 | Pruebas de la lógica de dinero | 02 | Pendiente | 02-01 | — |
 | 02-03 | Pruebas de flujos críticos | 02 | Pendiente | 02-01 | — |
 | 02-04 | Pruebas de regresión de defectos conocidos | 02 | Pendiente | 02-01 | — |
@@ -156,3 +156,5 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-25 | Iteración 01-01 terminada tras la revisión del desarrollador (commit publicado); queda sin desplegar hasta la 01-06 (`v1.1-observabilidad`), con respaldo previo por la migración 0007 de Clase 2. Detalle en [bitacora-01-01](../99_bitacora/epica-01-observabilidad/bitacora-01-01.md). |
 | 2026-10-25 | Redactado el archivo de la iteración 02-01 (infraestructura de pruebas), sin ejecutar; quedan 6 decisiones `PENDIENTE_DESARROLLADOR` en la sección 3. Archivo: [iteracion-02-01](../10_epicas/epica-02-red-seguridad/iteracion-02-01-infraestructura-pruebas.md). |
 | 2026-10-25 | Iteración 02-01 en revisión: base de pruebas fija `test_manzagrafica` con bloqueo de nombres reales y `utf8mb4_unicode_ci` en `TEST`; paquete `pedidos/tests/` por dominio con factorías; sin modo estricto (opción A); `expectedFailure` con `regresion`; `docs/operacion/pruebas.md` y punto 1 de `despliegue.md`; 17 pruebas en verde tres veces. Detalle en [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md). |
+| 2026-10-25 | Iteración 02-01 terminada tras la revisión del desarrollador (commit publicado); sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor. Detalle en [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md). |
+| 2026-10-25 | Iteración 01-02 en revisión: `LOGGING` a stderr con formato `clave=valor` y filtro de contexto (`pedidos/registro.py`); `fontTools` sin propagación (un PDF bajó de 540 líneas a 0, causa: `capture_logs` de WeasyPrint); `registrar_evento` con `on_commit` que nunca lanza; 34 pruebas; sin migraciones. Detalle en [bitacora-01-02](../99_bitacora/epica-01-observabilidad/bitacora-01-02.md). |
