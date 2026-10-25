@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-25
-- **Iteración activa:** 01-03
+- **Iteración activa:** 01-04
 - **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -24,8 +24,8 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 00-06 | Correcciones tempranas de riesgo nulo | 00 | Terminada (desplegada el 2026-10-23 como `v0.2-correcciones`) | 00-05 | [bitacora-00-06](../99_bitacora/epica-00-blindaje/bitacora-00-06.md) |
 | 01-01 | Modelo de registro de eventos | 01 | Terminada (sin desplegar; se despliega en 01-06) | Épica 00 | [bitacora-01-01](../99_bitacora/epica-01-observabilidad/bitacora-01-01.md) |
 | 01-02 | Configuración del registro y servicio de eventos | 01 | Terminada (sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere) | 01-01, 02-01 | [bitacora-01-02](../99_bitacora/epica-01-observabilidad/bitacora-01-02.md) |
-| 01-03 | Retiro del middleware y trazas completas | 01 | En revisión (se despliega en 01-06) | 01-02 | [bitacora-01-03](../99_bitacora/epica-01-observabilidad/bitacora-01-03.md) |
-| 01-04 | Instrumentación de eventos de negocio | 01 | Pendiente | 01-02 | — |
+| 01-03 | Retiro del middleware y trazas completas | 01 | Terminada (sin desplegar; se despliega en 01-06, donde también se revisa la página 500 a 360 px) | 01-02 | [bitacora-01-03](../99_bitacora/epica-01-observabilidad/bitacora-01-03.md) |
+| 01-04 | Instrumentación de eventos de negocio | 01 | En revisión (se despliega en 01-06) | 01-02 | [bitacora-01-04](../99_bitacora/epica-01-observabilidad/bitacora-01-04.md) |
 | 01-05 | Consulta de eventos en el admin | 01 | Pendiente | 01-01 | — |
 | 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente | 01-03, 01-04, 01-05 | — |
 | 02-01 | Infraestructura de pruebas | 02 | Terminada (sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor) | Épica 00 | [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md) |
@@ -117,8 +117,8 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~02-01 · Datos de prueba con funciones propias (propuesta) o `factory_boy` (dependencia nueva, con RDA)~~ Resuelto el 2026-10-25: funciones propias, sin dependencias nuevas | 02-01, tarea 3 | Desarrollador |
 | ~~02-01 · Mecanismo de fallos esperados: `expectedFailure` con `@tag('regresion')` (propuesta) y si se incluye una prueba de demostración~~ Resuelto el 2026-10-25: `expectedFailure` con `@tag('regresion')`, sin prueba de demostración | 02-01, tarea 5 | Desarrollador |
 | ~~02-01 · Dónde se documenta la infraestructura de pruebas: `docs/operacion/pruebas.md` o una sección de `replica-local.md`~~ Resuelto el 2026-10-25: `docs/operacion/pruebas.md` y punto 1 de `despliegue.md` | 02-01, tarea 6 | Desarrollador |
-| Precisar la regla 4 de `AGENTS.md` (servicio de registro = `logging` + `registrar_evento`); propuesta de texto en bitacora-01-03 | 01-03, RDA-013 | Desarrollador |
-| Normalizar el fin de línea de `PedidosApp/settings.py` (hoy mezcla CRLF y LF; las líneas de `LOGGING` y `TEST` quedaron en LF). Es configuración: requiere consulta | 01-03 | Desarrollador |
+| `PENDIENTE_DESARROLLADOR` · Precisar la regla 4 de `AGENTS.md` (servicio de registro = `logging` + `registrar_evento`); propuesta de texto en bitacora-01-03; la revisa el desarrollador | 01-03, RDA-013 | Desarrollador |
+| Normalizar el fin de línea de `PedidosApp/settings.py` (hoy mezcla CRLF y LF; las líneas de `LOGGING` y `TEST` quedaron en LF). Decisión del 2026-10-25: queda como propuesta, sin cambios por ahora | 01-03 | Desarrollador |
 
 ## 4. Propuestas fuera de alcance
 
@@ -162,3 +162,5 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-25 | Iteración 01-02 en revisión: `LOGGING` a stderr con formato `clave=valor` y filtro de contexto (`pedidos/registro.py`); `fontTools` sin propagación (un PDF bajó de 540 líneas a 0, causa: `capture_logs` de WeasyPrint); `registrar_evento` con `on_commit` que nunca lanza; 34 pruebas; sin migraciones. Detalle en [bitacora-01-02](../99_bitacora/epica-01-observabilidad/bitacora-01-02.md). |
 | 2026-10-25 | Iteración 01-02 terminada tras la revisión del desarrollador (commit publicado); sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere. Decisión: los 404 no van a `error.log` (`django.request` en `ERROR`). Detalle en [bitacora-01-02](../99_bitacora/epica-01-observabilidad/bitacora-01-02.md). |
 | 2026-10-25 | Iteración 01-03 en revisión: `ErrorHandlingMiddleware` retirado y eliminado; `@transaccion_segura` registra con `logger.exception` y contexto; los demás `print` pasan a `logging` (0 restantes); página 500 sin detalles técnicos; 42 pruebas; sin migraciones. Detalle en [bitacora-01-03](../99_bitacora/epica-01-observabilidad/bitacora-01-03.md). |
+| 2026-10-25 | Iteración 01-03 terminada tras la revisión del desarrollador (commit publicado); AUD-01-004 cerrado; la revisión visual de la página 500 pasa a la 01-06; el fin de línea de `settings.py` queda como propuesta y la regla 4 de `AGENTS.md`, `PENDIENTE_DESARROLLADOR`. Detalle en [bitacora-01-03](../99_bitacora/epica-01-observabilidad/bitacora-01-03.md). |
+| 2026-10-25 | Iteración 01-04 en revisión: 15 eventos instrumentados (13 vistas y 2 señales de acceso en `pedidos/senales.py`), un evento por acción del usuario, sin cambios de modelo ni migraciones; estimación de 01-01 sin cambios; 61 pruebas. Detalle en [bitacora-01-04](../99_bitacora/epica-01-observabilidad/bitacora-01-04.md). |

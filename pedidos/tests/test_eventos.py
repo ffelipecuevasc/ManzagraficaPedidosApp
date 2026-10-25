@@ -63,7 +63,7 @@ class ServicioEventosTests(TestCase):
         crear_pago(pedido)
         crear_pago(pedido)
         self.client.force_login(crear_usuario())
-        with mock.patch('pedidos.eventos.registrar_evento') as servicio:
+        with mock.patch('pedidos.views.registrar_evento') as servicio:
             with self.assertNumQueries(CONSULTAS_LISTA_PAGOS):
                 self.assertEqual(self.client.get('/pagos/lista/').status_code, 200)
         servicio.assert_not_called()

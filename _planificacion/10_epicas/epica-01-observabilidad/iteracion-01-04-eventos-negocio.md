@@ -1,7 +1,7 @@
 # Iteración 01-04 · Instrumentación de eventos de negocio
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Pendiente
+- **Estado:** En revisión (2026-10-25; se despliega en 01-06)
 - **Subfase del plan:** 1.4
 - **Depende de:** 01-02
 - **RDA relacionadas:** RDA-008, RDA-013
@@ -29,12 +29,12 @@ Que cada acción de negocio crítica deje un evento con quién, qué, sobre qué
 
 ## Criterios de aceptación
 
-- [ ] El inventario final está en la bitácora y coincide con las opciones del tipo de evento del modelo.
-- [ ] Cada evento del inventario tiene una prueba que ejecuta la operación y comprueba exactamente una fila nueva con el tipo, el usuario y la entidad correctos.
-- [ ] Prueba: las vistas de solo lectura (listados, detalles, estadísticas) no crean eventos.
-- [ ] Prueba: un acceso fallido registra el evento sin la contraseña.
-- [ ] Prueba: la restauración de base de datos registra el evento con el usuario que la ejecutó (con la restauración simulada, sin ejecutar `mysql`).
-- [ ] `python manage.py test pedidos` en verde.
+- [x] El inventario final está en la bitácora y coincide con las opciones del tipo de evento del modelo. 15 tipos, sin cambios en el modelo.
+- [x] Cada evento del inventario tiene una prueba que ejecuta la operación y comprueba exactamente una fila nueva con el tipo, el usuario y la entidad correctos. `test_eventos_negocio.py`.
+- [x] Prueba: las vistas de solo lectura (listados, detalles, estadísticas) no crean eventos. 15 rutas.
+- [x] Prueba: un acceso fallido registra el evento sin la contraseña.
+- [x] Prueba: la restauración de base de datos registra el evento con el usuario que la ejecutó (con la restauración simulada, sin ejecutar `mysql`).
+- [x] `python manage.py test pedidos` en verde. 61 pruebas, tres veces.
 
 ## Fuera de alcance
 

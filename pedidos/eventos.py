@@ -4,6 +4,11 @@ Diseño (RDA-013, bitacora-01-02):
 - Solo se llama desde los puntos del inventario de 01-04, nunca en lecturas ordinarias.
 - El evento se escribe con `transaction.on_commit`: si la operación se revierte, no queda.
 - `registrar_evento` nunca lanza una excepción hacia quien lo llama.
+- Un evento por acción del usuario (01-04): una operación compuesta (pedido con abono,
+  conversión, restauración con respaldo previo) deja una sola fila y lo dice en el resumen.
+- Eventos del sistema (por ejemplo, la orden de mantención de 06-02): usuario nulo y resumen
+  que empieza con «Origen: <orden o proceso> ·». Un acceso fallido también lleva usuario nulo,
+  pero su origen lo identifica el tipo `acceso_fallido`.
 
 La purga la ejecuta a mano la orden `purgar_registros` hasta que la orden de mantención
 diaria (06-02) la absorba.

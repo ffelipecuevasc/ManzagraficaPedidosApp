@@ -13,6 +13,7 @@ from django.db import transaction
 from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion, HistorialBD, Pago
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm
 from .decorators import transaccion_segura
+from .eventos import registrar_evento
 from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
 from datetime import timedelta, datetime
 from PedidosApp import settings
@@ -217,6 +218,11 @@ def crear_pedido(request):
                     # OJO: NO actualizamos pedido.valor_abonado.
                     # Se mantiene en 0 como solicitaste.
 
+                # Evento de auditoría (01-04): se escribe cuando la transacción se confirma.
+                con_abono = ' con abono inicial' if abono_inicial and abono_inicial > 0 else ''
+                registrar_evento('pedido_creado', request.user, 'pedido', pedido.pk,
+                                 f'Pedido #{pedido.pk} creado{con_abono}')
+
             return redirect('detalle_pedido', pk=pedido.pk)
 
         else:
@@ -263,6 +269,8 @@ def editar_pedido(request, pk):
                         )
                 except Exception:
                     pass
+            registrar_evento('pedido_modificado', request.user, 'pedido', pedido.pk,
+                             f'Pedido #{pedido.pk} modificado')
             # Redirigir al detalle del pedido editado
             return redirect('detalle_pedido', pk=pedido.pk)
     else:
@@ -293,6 +301,7 @@ def eliminar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     if request.method == 'POST':
         pedido.delete()
+        registrar_evento('pedido_eliminado', request.user, 'pedido', pk, f'Pedido #{pk} eliminado')
         return redirect('lista_pedidos')
     return render(request, 'pedidos/pedido_confirm_delete.html', {'pedido': pedido})
 
@@ -309,8 +318,12 @@ def cambiar_estado_pedido(request, pk, nuevo_estado):
     opciones_validas = [opcion[0] for opcion in Pedido.ESTADO_CHOICES]
 
     if nuevo_estado in opciones_validas:
+        estado_anterior = pedido.estado
         pedido.estado = nuevo_estado
         pedido.save()
+        if estado_anterior != nuevo_estado:
+            registrar_evento('pedido_estado_cambiado', request.user, 'pedido', pedido.pk,
+                             f'Pedido #{pedido.pk}: {estado_anterior} -> {nuevo_estado}')
 
     return redirect('detalle_pedido', pk=pk)
 
@@ -405,6 +418,8 @@ def duplicar_pedido(request, pk):
 
     # 3. Guardar el nuevo registro (esto genera fecha_solicitud actual automática)
     nuevo_pedido.save()
+    registrar_evento('pedido_duplicado', request.user, 'pedido', nuevo_pedido.pk,
+                     f'Pedido #{nuevo_pedido.pk} duplicado desde el pedido #{original.pk}')
 
     # 4. Redirigir al detalle del nuevo pedido clonado
     return redirect('detalle_pedido', pk=nuevo_pedido.pk)
@@ -601,6 +616,7 @@ def eliminar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     if request.method == 'POST':
         cliente.delete()
+        registrar_evento('cliente_eliminado', request.user, 'cliente', pk, f'Cliente #{pk} eliminado')
         return redirect('lista_clientes')
     return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente})
 
@@ -895,6 +911,8 @@ def convertir_a_pedido(request, pk):
         # 5. Cerrar la Cotización
         cotizacion.estado = 'ACEPTADA'
         cotizacion.save()
+        registrar_evento('cotizacion_convertida', request.user, 'cotizacion', cotizacion.pk,
+                         f'Cotización #{cotizacion.pk} convertida en el pedido #{pedido.pk}')
 
         # 6. Redirigir al nuevo pedido
         messages.success(request, f"Cotización convertida exitosamente en el Pedido #{pedido.id}")
@@ -1002,6 +1020,7 @@ def eliminar_producto(request, pk):
     if request.method == 'POST':
         try:
             producto.delete()
+            registrar_evento('producto_eliminado', request.user, 'producto', pk, f'Producto #{pk} eliminado')
             return redirect('lista_productos')
         except ProtectedError:
             # Aquí capturamos el bloqueo de seguridad
@@ -1099,6 +1118,8 @@ def generar_respaldo_bd(request):
     """
     try:
         ruta_archivo = generar_respaldo_mysql()
+        registrar_evento('respaldo_generado', request.user, 'respaldo', None,
+                         f'Respaldo {os.path.basename(ruta_archivo)} generado')
         archivo = open(ruta_archivo, 'rb')
         response = FileResponse(archivo)
         nombre_archivo = os.path.basename(ruta_archivo)
@@ -1156,6 +1177,9 @@ def restaurar_bd(request):
             # LA RESTAURACIÓN: El momento de la verdad
             # ====================================================
             restaurar_bd_mysql(ruta_absoluta)
+            # Después de restaurar: la restauración reemplaza la tabla de eventos.
+            registrar_evento('restauracion_ejecutada', request.user, 'base_de_datos', None,
+                             'Base de datos restaurada desde un archivo .sql, con respaldo previo')
 
             # Si llegamos aquí, es porque salió bien
             messages.success(request, f"¡Éxito! La base de datos fue restaurada con el archivo: {archivo.name}")
@@ -1388,6 +1412,8 @@ def ingresar_pago(request, pedido_id=None):
                     pedido_relacionado.estado_pago = 'PENDIENTE'
 
             pedido_relacionado.save()
+            registrar_evento('pago_registrado', request.user, 'pago', pago.pk,
+                             f'Pago #{pago.pk} registrado en el pedido #{pedido_relacionado.pk}')
 
             messages.success(request, f"Pago de ${pago.monto} registrado correctamente.")
             return redirect('lista_pagos')
@@ -1416,6 +1442,8 @@ def editar_pago(request, pk):
 
             # CRÍTICO: Recalcular estado del pedido porque el monto pudo cambiar
             actualizar_estado_pago_pedido(pago_guardado.pedido)
+            registrar_evento('pago_modificado', request.user, 'pago', pago_guardado.pk,
+                             f'Pago #{pago_guardado.pk} modificado en el pedido #{pago_guardado.pedido_id}')
 
             messages.success(request, 'Pago actualizado correctamente.')
             return redirect('detalle_pedido', pago_guardado.pedido.id)
@@ -1444,6 +1472,8 @@ def eliminar_pago(request, pk):
 
         # CRÍTICO: Recalcular estado del pedido tras la eliminación
         actualizar_estado_pago_pedido(pedido)
+        registrar_evento('pago_eliminado', request.user, 'pago', pk,
+                         f'Pago #{pk} eliminado del pedido #{pedido.pk}')
 
         messages.warning(request, f'Se eliminó el pago de ${monto_eliminado}. El saldo del pedido ha sido actualizado.')
         return redirect('detalle_pedido', pedido.id)

@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión. Se despliega con 01-01 a 01-05 en 01-06 (`v1.1-observabilidad`). Sin migraciones.
+- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador); sin desplegar; se despliega en 01-06, donde también se revisa la página 500 a 360 px. Sin migraciones.
 
 ## Resumen
 

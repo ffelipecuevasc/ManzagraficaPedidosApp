@@ -1,7 +1,7 @@
 # Iteración 01-03 · Retiro del middleware y trazas completas
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión (2026-10-25; se despliega en 01-06)
+- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega en 01-06, donde también se revisa la página 500 a 360 px)
 - **Subfase del plan:** 1.3
 - **Depende de:** 01-02
 - **RDA relacionadas:** RDA-013
@@ -30,7 +30,7 @@ Que ninguna excepción se pierda: retirar `ErrorHandlingMiddleware`, que descart
 - [x] Prueba: una excepción forzada en una vista sin decorador responde 500 y deja un registro de nivel `ERROR` con la traza completa (`assertLogs`).
 - [x] Prueba: lo mismo para una vista con `@transaccion_segura`, con el nombre de la vista en el registro.
 - [x] Prueba de regresión del caso real: abrir la eliminación de un pago (AUD-02-002) deja en el registro el tipo de excepción y la traza completa, no solo el nombre de la plantilla. `test_regresion_eliminar_pago_deja_tipo_y_traza`.
-- [x] La página 500 no contiene el mensaje de la excepción, la traza ni la broma de los correos.
+- [x] La página 500 no contiene el mensaje de la excepción, la traza ni la broma de los correos. La revisión visual en escritorio y a 360 px se trasladó a la 01-06 (tarea 7) por decisión del desarrollador.
 - [x] No quedan `print` de diagnóstico en `pedidos/` (búsqueda pegada en la bitácora).
 - [x] `python manage.py check` sin errores y `python manage.py test pedidos` en verde. 42 pruebas, tres veces.
 

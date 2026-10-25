@@ -26,7 +26,8 @@ Llevar la observabilidad a producción con el protocolo de 00-05 y demostrar con
    - Una semana después: contar filas nuevas de eventos, su peso y las líneas de `error.log` por nivel.
 5. **Configuración de pruebas de 02-01** (agregado el 2026-10-25): el bloque 3 de `settings.py` (base de pruebas `test_manzagrafica` con bloqueo de nombres reales) viaja en este despliegue. En el servidor, `python manage.py check --deploy` debe seguir sin errores nuevos después del `checkout`; el resultado va en la evidencia.
 6. **Sin líneas duplicadas en `error.log`** (agregado el 2026-10-25, 01-02): `LOGGING` reemplaza el manejador de la raíz, pero si PythonAnywhere instala uno propio, cada línea podría salir dos veces. Tras el error controlado, la evidencia muestra que cada línea aparece una sola vez.
-7. **Contraste con la estimación** de 01-01 en la bitácora de producción. Si el crecimiento real supera la estimación, proponer el ajuste del inventario antes de cerrar.
+7. **Revisión visual de la página 500** (trasladada desde 01-03 el 2026-10-25): tras el error controlado, revisar la página 500 nueva («Algo salió mal») en escritorio y a 360 px: texto legible, botones visibles y con foco, sin código de error ni detalles técnicos. Captura o descripción en la evidencia.
+8. **Contraste con la estimación** de 01-01 en la bitácora de producción. Si el crecimiento real supera la estimación, proponer el ajuste del inventario antes de cerrar.
 
 ## Criterios de aceptación
 
