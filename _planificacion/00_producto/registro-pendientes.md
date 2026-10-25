@@ -3,7 +3,7 @@
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
 - **Última actualización:** 2026-10-25
-- **Iteración activa:** 01-07 (antes de ejecutar la 01-06, que queda redactada)
+- **Iteración activa:** 01-06, redactada y lista; se ejecuta el 2026-10-25 cuando el desarrollador lo indique
 - **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
 - **Flujo de ramas vigente:** rama única `main` y etiqueta anotada antes de cada despliegue (RDA-007)
@@ -27,8 +27,8 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 01-03 | Retiro del middleware y trazas completas | 01 | Terminada (sin desplegar; se despliega en 01-06, donde también se revisa la página 500 a 360 px) | 01-02 | [bitacora-01-03](../99_bitacora/epica-01-observabilidad/bitacora-01-03.md) |
 | 01-04 | Instrumentación de eventos de negocio | 01 | Terminada (sin desplegar; se despliega en 01-06) | 01-02 | [bitacora-01-04](../99_bitacora/epica-01-observabilidad/bitacora-01-04.md) |
 | 01-05 | Consulta de eventos en el admin | 01 | Terminada (sin desplegar; se despliega en 01-06) | 01-01 | [bitacora-01-05](../99_bitacora/epica-01-observabilidad/bitacora-01-05.md) |
-| 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente (redactada, sin ejecutar; espera a la 01-07) | 01-03, 01-04, 01-05, 01-07 | [bitacora-01-06](../99_bitacora/epica-01-observabilidad/bitacora-01-06.md) |
-| 01-07 | Marcas visuales en el registro de errores | 01 | En revisión (falta mirar la terminal de PyCharm; se despliega en 01-06) | 01-02 | [bitacora-01-07](../99_bitacora/epica-01-observabilidad/bitacora-01-07.md) |
+| 01-06 | Despliegue y validación de la observabilidad | 01 | Pendiente (redactada, sin ejecutar; ventana: domingo 2026-10-25) | 01-03, 01-04, 01-05, 01-07 | [bitacora-01-06](../99_bitacora/epica-01-observabilidad/bitacora-01-06.md) |
+| 01-07 | Marcas visuales en el registro de errores | 01 | Terminada (sin desplegar; se despliega en 01-06) | 01-02 | [bitacora-01-07](../99_bitacora/epica-01-observabilidad/bitacora-01-07.md) |
 | 02-01 | Infraestructura de pruebas | 02 | Terminada (sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor) | Épica 00 | [bitacora-02-01](../99_bitacora/epica-02-red-seguridad/bitacora-02-01.md) |
 | 02-02 | Pruebas de la lógica de dinero | 02 | Pendiente | 02-01 | — |
 | 02-03 | Pruebas de flujos críticos | 02 | Pendiente | 02-01 | — |
@@ -92,8 +92,8 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | Fechas de los hitos (`producto.md`, sección 7) | — | Desarrollador |
 | ~~Retención de la tabla de eventos~~ Resuelto el 2026-10-25: 365 días, con la estimación de 01-01 (RDA-013 descarta la tabla de errores) | RDA-005, RDA-013 | Desarrollador |
 | ~~Método para provocar el error controlado en producción (01-06)~~ Resuelto el 2026-10-25: abrir la página de eliminar un pago (AUD-02-002), sin confirmar; `id` 1056 o el último pago | AUD-01-005 | Desarrollador |
-| `PENDIENTE_DESARROLLADOR` · 01-06: ventana del despliegue de `v1.1-observabilidad` (día y hora en Chile); la etiqueta se crea ese día | 01-06 | Desarrollador |
-| `PENDIENTE_DESARROLLADOR` · 01-06: cuándo agregar `pedidos_registroevento` a `TABLAS_ESPERADAS` de `scripts/verificar_respaldo.py` (tras migrar en 01-06, propuesta, o en 06-03) | 01-06 | Desarrollador |
+| ~~01-06: ventana del despliegue de `v1.1-observabilidad`~~ Resuelto el 2026-10-25: domingo 2026-10-25 (el negocio cierra el sábado en la tarde y no hay uso hasta el lunes) | 01-06 | Desarrollador |
+| ~~01-06: cuándo agregar `pedidos_registroevento` a `TABLAS_ESPERADAS` de `scripts/verificar_respaldo.py`~~ Resuelto el 2026-10-25: en la 01-06, justo después de migrar (tarea 13, parte B8), con prueba sintética con y sin la tabla | 01-06 | Desarrollador |
 | Dividir el decorador en dos o mantenerlo unificado con el orden correcto | AUD-01-001 | Desarrollador |
 | Tratamiento de las imágenes de referencia huérfanas cuando una transacción se revierte | AUD-01-001 | Desarrollador |
 | ¿La orden de mantención avisa si no se ejecutó varios días seguidos? | RDA-009 | Desarrollador |
@@ -174,3 +174,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-25 | Iteración 01-06 redactada sin ejecutar: tareas y criterios completos, [evidencia-01-06](../10_epicas/epica-01-observabilidad/evidencia-01-06.md) en cuatro partes; error controlado decidido (eliminar pago, sin confirmar); 2 decisiones abiertas. Detalle en [bitacora-01-06](../99_bitacora/epica-01-observabilidad/bitacora-01-06.md). |
 | 2026-10-25 | Creada la iteración 01-07 (emoji del nivel al inicio de cada línea del registro), en curso; la 01-06 pasa a depender de ella y queda redactada sin ejecutar. Archivo: [iteracion-01-07](../10_epicas/epica-01-observabilidad/iteracion-01-07-marcas-visuales.md). |
 | 2026-10-25 | Iteración 01-07 en revisión: `FormateadorConEmoji` en `pedidos/registro.py` (❌ ⚠️ ❕ ❗❌❗ 🛠️) con los campos sin cambios; un flujo sin UTF-8 no rompe la petición pero pierde la línea (comprobación en 01-06); 79 pruebas; sin migraciones. Detalle en [bitacora-01-07](../99_bitacora/epica-01-observabilidad/bitacora-01-07.md). |
+| 2026-10-25 | Iteración 01-07 cerrada por el desarrollador. 01-06 ajustada sin ejecutar: depende de 01-07; ventana el domingo 2026-10-25; `verificar_respaldo.py` con la tabla de eventos justo después de migrar (B8); la parte C comprueba los emojis y la ausencia de `Logging error`; 79 pruebas contadas; etiqueta solo con `main` subido. Sin decisiones abiertas. Detalle en [bitacora-01-06](../99_bitacora/epica-01-observabilidad/bitacora-01-06.md). |

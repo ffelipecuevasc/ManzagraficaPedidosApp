@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** iteración redactada, sin ejecutar. En revisión del desarrollador; quedan 2 decisiones abiertas. La ejecución, la evidencia de producción y el contraste de la semana van en `bitacora-01-06-produccion.md`.
+- **Estado final:** iteración redactada, sin ejecutar; sin decisiones abiertas (ajuste del 2026-10-25, al final). La ejecución, la evidencia de producción y el contraste de la semana van en `bitacora-01-06-produccion.md`.
 
 ## Resumen
 
@@ -101,3 +101,15 @@ Ambas quedaron registradas en `registro-pendientes.md`, sección 3.
 
 - Revisión del desarrollador y respuesta a las 2 decisiones abiertas.
 - Ejecutar la 01-06 cuando el desarrollador lo indique.
+
+## Ajuste tras la 01-07 y decisiones del despliegue (2026-10-25)
+
+- **Decisiones del desarrollador**, cerradas en la iteración y en la sección 3 del registro:
+  1. **Ventana:** hoy, domingo 2026-10-25. El negocio cierra el sábado en la tarde y no hay uso hasta el lunes.
+  2. **`verificar_respaldo.py`:** `pedidos_registroevento` se agrega en la 01-06, **justo después de migrar** (tarea 13, parte B8 de la evidencia), con prueba en volcados sintéticos con la tabla (código 0) y sin ella (código 1). El respaldo previo real dará código 1 con el script nuevo, lo que confirma que es anterior al despliegue.
+- **`respaldo.md` y `bitacora-00-02`:** no se tocaron ahora. `respaldo.md` (sección 3, «18 tablas») se actualiza en B8, cuando cambie el script, con una nota para verificar los volcados anteriores con la versión de `v0.2-correcciones`. `bitacora-00-02` es histórica: no se reescribe.
+- **Dependencia de la 01-07:** la 01-07 quedó cerrada por el desarrollador, y la 01-06 depende de ella y despliega su formato.
+- **Filtros de las partes C y D:** buscan `nivel=…` dentro de la línea (fecha de PythonAnywhere, emoji y después `nivel=`) y nunca asumen que la línea empieza con el texto del nivel. Se revisaron todos los `grep` y `awk` de la evidencia.
+- **Parte C3:** suma la comprobación de los emojis en el `error.log` real (las 2 líneas del error con `❌`, ninguna línea con `nivel=` sin emoji) y la ausencia de `Logging error` y `UnicodeEncodeError`. La iteración suma el criterio correspondiente.
+- **Parte A:** las pruebas se **contaron** (79 métodos `test_` en `pedidos/tests/`, con `Grep`, sin ejecutar), y coinciden con la última ejecución de la 01-07. La etiqueta se crea solo con `git status` vacío, `main` sin `ahead` ni `behind` respecto de `origin/main` y el mismo hash en `HEAD` y `origin/main`. Su mensaje menciona la 01-07.
+- **Parte D:** suma la verificación del respaldo semanal con el script nuevo (19 de 19).

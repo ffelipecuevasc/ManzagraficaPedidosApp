@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión. Falta que el desarrollador mire la terminal de PyCharm. Se despliega dentro de la 01-06 (`v1.1-observabilidad`). **Sin migraciones; no requiere respaldo propio** (la 01-06 lo exige por la 0007).
+- **Estado final:** Terminada (2026-10-25, cerrada por el desarrollador; la revisión de la terminal de PyCharm no se reportó por escrito). Se despliega dentro de la 01-06 (`v1.1-observabilidad`). **Sin migraciones; no requiere respaldo propio** (la 01-06 lo exige por la 0007).
 
 ## Resumen
 

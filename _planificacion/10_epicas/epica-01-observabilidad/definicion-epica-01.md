@@ -26,8 +26,8 @@
 | 01-03 | Retiro del middleware y trazas completas (Terminada) | 1.3 |
 | 01-04 | Instrumentación de eventos de negocio (Terminada) | 1.4 |
 | 01-05 | Consulta de eventos en el admin (Terminada) | 1.5 |
-| 01-07 | Marcas visuales en el registro de errores (en revisión; se despliega dentro de la 01-06) | 1.2 (ampliación) |
-| 01-06 | Despliegue y validación de la observabilidad (redactada, sin ejecutar; espera a la 01-07) | 1.6 |
+| 01-07 | Marcas visuales en el registro de errores (Terminada) | 1.2 (ampliación) |
+| 01-06 | Despliegue y validación de la observabilidad (redactada, sin ejecutar; ventana: 2026-10-25) | 1.6 |
 
 ## Decisiones de la épica
 

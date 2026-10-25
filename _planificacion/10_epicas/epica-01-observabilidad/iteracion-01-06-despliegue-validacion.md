@@ -1,13 +1,14 @@
 # Iteración 01-06 · Despliegue y validación de la observabilidad
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Pendiente (redactada, sin ejecutar; su ejecución espera a la 01-07)
+- **Estado:** Pendiente (redactada, sin ejecutar; lista para ejecutarse el 2026-10-25 cuando el desarrollador lo indique)
 - **Subfase del plan:** 1.6
-- **Depende de:** 01-01, 01-02, 01-03, 01-04 y 01-05 (terminadas el 2026-10-25), 01-07 (marcas visuales; agregada el 2026-10-25) y 02-01 (su bloque de `settings.py` viaja aquí)
+- **Depende de:** 01-01, 01-02, 01-03, 01-04 y 01-05 (terminadas el 2026-10-25), 01-07 (marcas visuales; terminada el 2026-10-25) y 02-01 (su bloque de `settings.py` viaja aquí)
 - **RDA relacionadas:** RDA-003, RDA-007, RDA-008, RDA-013
 - **Hallazgos que cierra:** AUD-01-005 (con 01-01 a 01-05). Confirma en producción el cierre de AUD-01-004 (01-03).
 - **Cambio de esquema:** Clase 2 (migración `0007_registroevento` de 01-01)
 - **Respaldo previo al despliegue:** Sí (obligatorio: hay migración y es el primer despliegue de la fase 1)
+- **Ventana:** domingo 2026-10-25 (decisión del desarrollador): el negocio cierra el sábado en la tarde y no hay uso hasta el lunes.
 - **Etiqueta:** `v1.1-observabilidad`. **Partida y destino de retroceso:** `v0.2-correcciones`.
 - **Evidencia:** [evidencia-01-06](evidencia-01-06.md)
 
@@ -32,13 +33,13 @@ Sin cambios en `requirements.txt` ni en `pedidos/static`.
 ## Tareas
 
 1. **Lista de comprobación previa** (`docs/operacion/despliegue.md`, sección 2), completa en local y copiada en la evidencia:
-   1. `python manage.py test pedidos` → `Ran 79 tests` y `OK` (cifra al 2026-10-25, tras la 01-07; si cambia, se anota la nueva). Sin regresiones declaradas todavía, así que no se acepta `expected failures`.
+   1. `python manage.py test pedidos` → `Ran 79 tests` y `OK` (contadas el 2026-10-25: 79 métodos `test_` en `pedidos/tests/`, igual que la última ejecución de la 01-07; si cambia, se anota la nueva). Sin regresiones declaradas todavía, así que no se acepta `expected failures`.
    2. `check --deploy` con `DEBUG=False` → solo las 5 advertencias conocidas (`W004`, `W008`, `W009`, `W012`, `W016`, para 04-02 y 04-03). Cualquier otra, o un error, detiene el despliegue.
    3. `makemigrations --check --dry-run` → `No changes detected`.
    4. `sqlmigrate pedidos 0007` → el SQL completo, copiado en la bitácora y clasificado: `CREATE TABLE` de la tabla nueva, `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY` **sobre la tabla nueva** (aprobado como Clase 2 en 01-01: no toca `auth_user` ni ninguna tabla existente) y dos `CREATE INDEX`. Si el SQL difiere del de [bitacora-01-06](../../99_bitacora/epica-01-observabilidad/bitacora-01-06.md), detente.
    5. Respaldo previo verificado (tarea 2).
    6. Estilos compilados: no aplica (05-04).
-   7. Etiqueta anotada `v1.1-observabilidad` creada y publicada **después** de revisar la lista, con su mensaje final y la fecha real calculada al crearla (nunca un texto de relleno como `<AAAA-MM-DD>`; lección de 00-06).
+   7. Etiqueta anotada `v1.1-observabilidad` creada y publicada **solo después** de que todo esté con commit y `push` en `main` (`git status` vacío y `main` igual a `origin/main`) y de revisar la lista, con su mensaje final y la fecha real calculada al crearla (nunca un texto de relleno como `<AAAA-MM-DD>`; lección de 00-06).
    8. El despliegue publica solo la Épica 01 (con el bloque de pruebas de 02-01, que no cambia el comportamiento).
 2. **Respaldo previo**: un solo clic en «Generar Nuevo Respaldo BD» (enlace GET: no recargar), descarga a la carpeta cifrada, `scripts/verificar_respaldo.py` con código `0` (18 de 18 tablas: todavía sin `pedidos_registroevento`) y fila en `docs/operacion/respaldo.md`, sección 6.
 3. **Ensayo en la réplica antes de tocar el servidor** (parte A de la evidencia):
@@ -53,20 +54,27 @@ Sin cambios en `requirements.txt` ni en `pedidos/static`.
    - **Qué `id` usar:** el `1056`, el pago del caso real del 2026-10-22, si todavía existe; si no, el pago de mayor `id`. La evidencia trae el comando que lo decide en el servidor.
    - **Cómo confirmar antes que el caso sigue existiendo:** en el servidor, después del `checkout`, que la plantilla no exista (`test -f` responde «falta») y que el pago elegido exista. En local, la prueba `test_regresion_eliminar_pago_deja_tipo_y_traza` pasa en la lista de comprobación. Si la plantilla existiera (AUD-02-002 corregido antes), detente: hay que elegir otro método.
    - **Medición:** hora de la petición (Chile y UTC) y tiempo hasta encontrar en `error.log` la línea `❌ nivel=ERROR registrador=pedidos.decorators … excepcion=TemplateDoesNotExist` con método, ruta, usuario y traza completa.
-   - **Emoji (01-07):** la línea empieza con `❌` justo después de la fecha de PythonAnywhere y se ve bien en el visor de registros del panel y en la consola Bash. Si la salida no admite UTF-8, el riesgo no es solo el emoji: `logging` no puede escribir **la línea completa** (`UnicodeEncodeError`), informa «--- Logging error ---» y la petición sigue, pero el error se pierde (bitacora-01-07). Por eso C2 debe encontrar la línea con el `❌`; si no aparece ninguna línea nueva o aparece «Logging error», detente: el agente propone el ajuste (por ejemplo, reemplazar los caracteres no codificables). `error.log` está en UTC y PythonAnywhere antepone su fecha a cada línea; `server.log` está en hora de Chile.
+   - **Emoji (01-07):** el `❌` va justo después de la fecha que antepone PythonAnywhere, así que los filtros buscan `nivel=…` dentro de la línea y nunca asumen que la línea empieza con el texto del nivel. La línea lleva `❌` y se ve bien en el visor de registros del panel y en la consola Bash. Si la salida no admite UTF-8, el riesgo no es solo el emoji: `logging` no puede escribir **la línea completa** (`UnicodeEncodeError`), informa «--- Logging error ---» y la petición sigue, pero el error se pierde (bitacora-01-07). Por eso C2 debe encontrar la línea con el `❌`; si no aparece ninguna línea nueva o aparece «Logging error», detente: el agente propone el ajuste (por ejemplo, reemplazar los caracteres no codificables). `error.log` está en UTC y PythonAnywhere antepone su fecha a cada línea; `server.log` está en hora de Chile.
 9. **`fontTools`**: generar un PDF de una cotización y comprobar que `error.log` no recibe ninguna línea de `fontTools` después de la recarga (en local, un PDF generaba 540 líneas antes de 01-02).
 10. **Evento en el admin**: el propio inicio de sesión del desarrollador deja un `acceso_exitoso` con su usuario; se revisa en el admin de eventos (01-05). Sin cambiar datos de negocio. Además, `python manage.py purgar_registros` una vez en el servidor (esperado: `Eventos eliminados: 0`).
 11. **`django.server` solo existe en `runserver`** (hallazgo de 01-02 y 01-05): en producción no hay líneas de `django.server`; los accesos siguen en `access.log` (uWSGI) y los 404 no van a `error.log` (decisión del 2026-10-25). La evidencia lo comprueba con un conteo de `registrador=django.server` en `error.log` (esperado: 0).
 12. **Una semana después** (parte D de la evidencia): filas nuevas de eventos por tipo y por día, peso de la tabla, líneas de `error.log` por nivel y por registrador, y contraste con la estimación de 01-01 (~1.200 filas y ~0,6 MB por mes; ~40 filas por día). Si el crecimiento real supera la estimación, proponer el ajuste del inventario antes de cerrar.
-13. **Después de migrar en producción** (`PENDIENTE_DESARROLLADOR`, ver «Decisiones abiertas»): agregar `pedidos_registroevento` a `TABLAS_ESPERADAS` de `scripts/verificar_respaldo.py`, para que un volcado sin la tabla de eventos no pase por válido. No puede hacerse antes: el respaldo previo al despliegue tiene 18 tablas. Hasta entonces el verificador da la tabla nueva como «adicional (aviso, no invalida)».
+13. **`verificar_respaldo.py` con la tabla de eventos, justo después de migrar** (decisión del desarrollador del 2026-10-25; parte B8 de la evidencia):
+   - Cuando B4 confirme `[X] 0007_registroevento` en producción, el agente agrega `pedidos_registroevento` a `TABLAS_ESPERADAS` de `scripts/verificar_respaldo.py` (de 18 a 19 tablas). **No antes:** el respaldo previo (tarea 2) tiene 18 tablas y fallaría.
+   - **Prueba con volcados sintéticos**, fabricados en el scratchpad y fuera del repositorio, como en 00-02: uno **con** la tabla de eventos (código `0`, 19 de 19) y otro **sin** ella (código `1`, «1 tabla(s) faltante(s)»). Además, el respaldo previo real de la tarea 2, verificado de nuevo, debe dar código `1` por la tabla faltante: confirma que ese volcado es anterior al despliegue.
+   - `docs/operacion/respaldo.md`, sección 3: «las 18 tablas esperadas» pasa a «las 19 tablas esperadas (18 hasta `v0.2-correcciones`; `pedidos_registroevento` desde `v1.1-observabilidad`)», con una nota de que los volcados previos a `v1.1-observabilidad` se verifican con la versión anterior del script (`git show v0.2-correcciones:scripts/verificar_respaldo.py`). Las filas ya registradas y `bitacora-00-02` no se reescriben.
+   - El script corre en el PC del desarrollador, no en el servidor: el cambio va en un commit posterior a la etiqueta y no requiere otro despliegue.
+   - El respaldo semanal de la parte D se verifica con el script nuevo (19 de 19).
+
 14. **Registro**: fila en `docs/operacion/despliegue.md`, sección 5 (y la de `v0.2-correcciones`, que no figura); bitácora de producción `bitacora-01-06-produccion.md` con el contraste de la semana.
 
-## Decisiones abiertas (`PENDIENTE_DESARROLLADOR`)
+## Decisiones del desarrollador (2026-10-25)
 
-1. **Ventana del despliegue:** día y hora (hora de Chile) con poco uso de la app. La etiqueta se crea ese mismo día, porque su mensaje dice «desplegada el <fecha real>».
-2. **Cuándo actualizar `verificar_respaldo.py`** (tarea 13): en esta iteración, justo después de confirmar la migración en producción y antes del primer respaldo semanal (propuesta del agente), o en 06-03 junto con la gestión del disco.
+1. **Error controlado:** abrir la página de eliminar un pago, sin confirmar (tarea 8).
+2. **Ventana del despliegue:** hoy, domingo 2026-10-25; el negocio cierra el sábado en la tarde y no hay uso hasta el lunes. La etiqueta se crea ese mismo día.
+3. **`verificar_respaldo.py`:** la tabla de eventos se agrega en esta iteración, justo después de migrar (tarea 13).
 
-Decisión cerrada en esta redacción: el método del error controlado (abrir la página de eliminar un pago, 2026-10-25).
+No quedan decisiones abiertas.
 
 ## Criterios de aceptación
 
@@ -80,8 +88,9 @@ Decisión cerrada en esta redacción: el método del error controlado (abrir la 
 - [ ] La página 500 se revisó en escritorio y a 360 px.
 - [ ] Después del despliegue, `error.log` no tiene líneas de `fontTools` ni de `django.server`.
 - [ ] Una acción real o de prueba aparece en el admin de eventos con su usuario, y `purgar_registros` corrió en el servidor.
+- [ ] Las líneas de `error.log` de producción llevan su emoji (01-07) y no hay líneas `Logging error` ni `UnicodeEncodeError`.
 - [ ] El crecimiento de una semana de la tabla de eventos está medido en filas y MB y comparado con la estimación.
-- [ ] Las decisiones abiertas de esta iteración están resueltas y registradas.
+- [ ] `verificar_respaldo.py` exige la tabla de eventos después de migrar: volcado sintético con la tabla, código 0; sin ella, código 1; `respaldo.md` actualizado.
 
 ## Fuera de alcance
 

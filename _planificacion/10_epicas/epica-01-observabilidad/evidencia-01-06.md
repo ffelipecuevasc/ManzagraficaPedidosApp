@@ -42,7 +42,7 @@ python manage.py test pedidos.tests.test_errores.ErroresSinMiddlewareTests.test_
 **Esperado:**
 
 - `git status` vacío.
-- `Ran 79 tests` y `OK` (puede salir la advertencia `mysql.W002`, esperada).
+- `Ran 79 tests` y `OK` (contadas el 2026-10-25: 79 métodos `test_` en `pedidos/tests/`; puede salir la advertencia `mysql.W002`, esperada).
 - `check --deploy`: solo `W004`, `W008`, `W009`, `W012` y `W016`.
 - `No changes detected`.
 - El SQL de la 0007 idéntico al de `bitacora-01-06.md`: un `CREATE TABLE`, un `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY` sobre `pedidos_registroevento` y dos `CREATE INDEX`. Pega el SQL completo.
@@ -141,18 +141,21 @@ python manage.py test pedidos
 python manage.py check
 ```
 
-Si todo cumple y el agente revisó la parte A, crea la etiqueta **el día del despliegue** (decisión abierta: ventana). El mensaje toma la fecha del día:
+Si todo cumple y el agente revisó la parte A, crea la etiqueta **el día del despliegue** (domingo 2026-10-25, decisión del desarrollador), **solo con todo subido a `main`**. El mensaje toma la fecha del día:
 
 ```powershell
+git fetch origin
 git status --short
+git status -sb | Select-Object -First 1
+git rev-parse HEAD origin/main
 $fecha = Get-Date -Format 'yyyy-MM-dd'
-git tag -a v1.1-observabilidad -m "Épica 01 · iteraciones 01-01 a 01-05 (y bloque de pruebas de 02-01) · desplegada el $fecha"
+git tag -a v1.1-observabilidad -m "Épica 01 · iteraciones 01-01 a 01-05 y 01-07 (y bloque de pruebas de 02-01) · desplegada el $fecha"
 git tag -n v1.1-observabilidad
 git push origin v1.1-observabilidad
 git ls-remote --tags origin v1.1-observabilidad
 ```
 
-**Esperado:** `git tag -n` muestra el mensaje con la fecha real (revísalo **antes** del `push`; si está mal, `git tag -d v1.1-observabilidad` y créala de nuevo, porque todavía no está publicada), y `ls-remote` devuelve una línea.
+**Esperado:** `git status --short` vacío; la primera línea de `git status -sb` es `## main...origin/main` **sin** `[ahead N]` ni `[behind N]`; los dos hashes de `rev-parse` son iguales (si no, haz `git push` o revisa antes de etiquetar); `git tag -n` muestra el mensaje con la fecha real (revísalo **antes** del `push`; si está mal, `git tag -d v1.1-observabilidad` y créala de nuevo, porque todavía no está publicada), y `ls-remote` devuelve una línea.
 
 | Dato | Valor |
 | :--- | :---- |
@@ -243,6 +246,8 @@ Si `migrate` falla, detente y sigue `retroceso.md`, caso 2.
 | Duración de `migrate` (`real`) | |
 | Últimas migraciones | |
 
+Avisa al agente apenas B4 termine con `[X] 0007_registroevento`: es la señal para el paso B8.
+
 ### B5. Antes de recargar: el caso del error controlado sigue existiendo **[PA · Bash]**
 
 ```bash
@@ -286,6 +291,27 @@ Ventana privada: inicio de sesión, panel, listado de pedidos y detalle de un pe
 | Listado y detalle de pedido | |
 
 Si algo responde 500 en estas pantallas, sigue `retroceso.md`, caso 1, con destino `v0.2-correcciones` (la tabla nueva puede quedarse: el código anterior la ignora).
+
+### B8. Verificador de respaldos con la tabla de eventos (después de migrar)
+
+Decisión del desarrollador (2026-10-25): `pedidos_registroevento` se agrega a las tablas esperadas **después** de B4, nunca antes (el respaldo de A2 tiene 18 tablas).
+
+1. **El agente**, al recibir el aviso de B4: agrega la tabla a `TABLAS_ESPERADAS` de `scripts/verificar_respaldo.py` (19 tablas), la prueba con dos volcados sintéticos fabricados en su scratchpad (con la tabla: código `0`, 19 de 19; sin ella: código `1`, «1 tabla(s) faltante(s)») y actualiza `docs/operacion/respaldo.md`, sección 3. Te entrega la salida de las dos pruebas.
+2. **Tú**, en **[PC · PowerShell 7]**, con el script nuevo y el respaldo de A2:
+
+```powershell
+python scriptserificar_respaldo.py "<ruta del volcado de A2>"
+$LASTEXITCODE
+```
+
+**Esperado:** `Tablas esperadas encontradas: 18 de 19`, `Tablas faltantes: pedidos_registroevento`, `Resultado: NO VÁLIDO (1 tabla(s) faltante(s))` y código `1`. Es correcto: confirma que ese volcado es anterior al despliegue. Los volcados previos a `v1.1-observabilidad` se verifican con la versión anterior: `git show v0.2-correcciones:scripts/verificar_respaldo.py > $env:TEMPerificar_respaldo_v02.py`.
+
+El cambio va en un commit después de la etiqueta: el script corre en tu PC, no en el servidor, así que no requiere otro despliegue.
+
+| Dato | Valor |
+| :--- | :---- |
+| Pruebas sintéticas del agente (con y sin la tabla) | |
+| Respaldo de A2 con el script nuevo (tablas y código) | |
 
 ---
 
@@ -337,13 +363,21 @@ Pega **solo** esas líneas (cabeceras, `Traceback` y la última línea de la tra
 awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c "ruta=/pagos/eliminar/$ID/"
 awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -v 'nivel=' | grep -c "Internal Server Error: /pagos/eliminar/$ID/"
 awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c 'Traceback (most recent call last)'
+awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c "❌ nivel=ERROR .*ruta=/pagos/eliminar/$ID/"
+awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep 'nivel=' | grep -vcE '(❗❌❗|❌|⚠️|❕|🛠️) nivel='
+awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -cE 'Logging error|UnicodeEncodeError'
 ```
+
+Los filtros buscan `nivel=…` dentro de la línea: cada línea empieza con la fecha de PythonAnywhere, después el emoji (01-07) y recién entonces `nivel=`.
 
 **Esperado:**
 
 - `2`: una línea del decorador y una de `django.request`, por **una** apertura. Con `4` hay duplicación.
 - `0`: no queda el formato antiguo, sin `nivel=`, que dejaba el manejador propio de PythonAnywhere.
 - `1`: una sola traza.
+- `2`: las dos líneas del error controlado llevan `❌` (emoji en el `error.log` real).
+- `0`: ninguna línea con `nivel=` queda sin su emoji.
+- `0`: ninguna línea `Logging error` ni `UnicodeEncodeError` (la salida admite UTF-8). Si es mayor que 0, detente y avisa: las líneas del registro se estarían perdiendo (bitacora-01-07).
 
 Si los números son el doble, la hipótesis del manejador de PythonAnywhere se confirma: no hagas retroceso por esto (la información está completa); anótalo y el agente propondrá el ajuste.
 
@@ -352,6 +386,9 @@ Si los números son el doble, la hipótesis del manejador de PythonAnywhere se c
 | Líneas de la ruta | |
 | Formato antiguo | |
 | Trazas | |
+| Líneas del error con `❌` | |
+| Líneas con `nivel=` sin emoji | |
+| `Logging error` o `UnicodeEncodeError` | |
 
 ### C4. PDF sin `fontTools` y sin `django.server` **[Navegador]** y **[PA · Bash]**
 
@@ -435,6 +472,7 @@ zcat -f $L* | awk -v d="$DESDE" 'substr($0,1,19) >= d' | grep -c 'fontTools'
 - `information_schema` puede tener hasta 24 horas de atraso (`linea-base-produccion.md`, sección 2): el peso es referencial. El agente lo contrasta con filas × tamaño estimado.
 - `zcat -f $L*` lee también los registros rotados (método de 00-01).
 - Pega también el uso de disco de **[PA · Panel]** (Dashboard: MB usados de 512).
+- **Respaldo semanal de rutina** (`respaldo.md`, sección 5): verifícalo con el script nuevo de B8. Esperado: `19 de 19`, `Tablas faltantes: ninguna`, código `0`.
 
 | Dato | Valor |
 | :--- | :---- |
@@ -448,6 +486,7 @@ zcat -f $L* | awk -v d="$DESDE" 'substr($0,1,19) >= d' | grep -c 'fontTools'
 | Líneas por registrador | |
 | Líneas de `fontTools` | |
 | Disco del panel | |
+| Respaldo semanal (tablas y código) | |
 
 **Contraste (lo hace el agente en `bitacora-01-06-produccion.md`):** estimación de 01-01 = ~1.200 filas al mes (~40 por día, ~280 en 7 días) y ~0,6 MB al mes. Si el real supera la estimación, el agente propone ajustar el inventario antes de cerrar.
 

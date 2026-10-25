@@ -1,7 +1,7 @@
 # Iteración 01-07 · Marcas visuales en el registro de errores
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión (2026-10-25; se despliega dentro de la 01-06)
+- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega dentro de la 01-06)
 - **Subfase del plan:** 1.2 (amplía el formato de 01-02; iteración nueva, sin subfase propia en el plan)
 - **Depende de:** 01-02
 - **RDA relacionadas:** RDA-013
@@ -38,7 +38,7 @@ Que el nivel de cada línea de `error.log` se reconozca a simple vista, con un e
 - [x] La regla de `DEBUG` está cubierta por una prueba. Decisión del desarrollador: DEBUG lleva 🛠️; un nivel personalizado va sin emoji.
 - [x] `grep "nivel=ERROR"` (o su equivalente en la prueba) sigue encontrando la línea.
 - [x] Con un flujo `ascii`, el registro no rompe la petición; el comportamiento está documentado en la bitácora. Ojo: se pierde la línea completa, no solo el emoji (bitácora).
-- [ ] La terminal de PyCharm y PowerShell 7 muestran bien los emojis (salida en la bitácora). PowerShell 7.6.8 verificado por el agente; falta la terminal de PyCharm (el desarrollador).
+- [ ] La terminal de PyCharm y PowerShell 7 muestran bien los emojis (salida en la bitácora). PowerShell 7.6.8 verificado por el agente. El desarrollador cerró la iteración el 2026-10-25; la revisión de la terminal de PyCharm no se reportó por escrito.
 - [x] `python manage.py check` sin errores, `makemigrations --check` sin cambios y `python manage.py test pedidos` en verde. 79 pruebas, tres veces.
 
 ## Fuera de alcance
