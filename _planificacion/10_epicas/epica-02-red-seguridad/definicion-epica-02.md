@@ -19,7 +19,7 @@ Las reglas de negocio sin confirmar (`registro-pendientes.md`, sección 2) se fi
 
 | Iteración | Nombre | Subfase |
 | :-------- | :----- | :------ |
-| 02-01 | Infraestructura de pruebas | 2.1 |
+| 02-01 | [Infraestructura de pruebas](iteracion-02-01-infraestructura-pruebas.md) (redactada, en revisión) | 2.1 |
 | 02-02 | Pruebas de la lógica de dinero | 2.2 |
 | 02-03 | Pruebas de flujos críticos | 2.3 |
 | 02-04 | Pruebas de regresión de defectos conocidos | 2.4 |

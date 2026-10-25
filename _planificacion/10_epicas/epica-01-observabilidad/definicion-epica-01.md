@@ -21,7 +21,7 @@
 
 | Iteración | Nombre | Subfase |
 | :-------- | :----- | :------ |
-| 01-01 | Modelo de registro de eventos | 1.1 |
+| 01-01 | Modelo de registro de eventos (Terminada) | 1.1 |
 | 01-02 | Configuración del registro y servicio de eventos | 1.2 |
 | 01-03 | Retiro del middleware y trazas completas | 1.3 |
 | 01-04 | Instrumentación de eventos de negocio | 1.4 |
