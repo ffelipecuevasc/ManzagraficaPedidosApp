@@ -74,16 +74,16 @@ Resultados entregados por el desarrollador el 2026-10-25 (archivo `evidencia-01-
 
 | Momento (hora de Chile) | Tipo | Usuario | Entidad | Id. entidad | Resumen |
 | :---------------------- | :--- | :------ | :------ | :---------- | :------ |
-| 25-10-2026 17:53:27 (UTC-0300) | Acceso exitoso | nacho | usuario | 1 | Acceso de usuario #1 |
+| 25-10-2026 17:53:27 (UTC-0300) | Acceso exitoso | usuario #1 | usuario | 1 | Acceso de usuario #1 |
 | 25-10-2026 17:53:58 (UTC-0300) | Acceso fallido | - | usuario | - | Usuario intentado: usuario desconocido |
-| 25-10-2026 17:54:18 (UTC-0300) | Acceso exitoso | nacho | usuario | 1 | Acceso de usuario #1 |
-| 25-10-2026 18:01:36 (UTC-0300) | Acceso fallido | - | usuario | - | Usuario intentado: nacho |
-| 25-10-2026 18:01:55 (UTC-0300) | Acceso exitoso | nacho | usuario | 1 | Acceso de usuario #1 |
-| 25-10-2026 18:02:38 (UTC-0300) | Acceso exitoso | nacho | usuario | 1 | Acceso de usuario #1 |
-| 25-10-2026 18:02:47 (UTC-0300) | Acceso fallido | - | usuario | - | Usuario intentado: nacho |
-| 25-10-2026 18:02:57 (UTC-0300) | Acceso exitoso | nacho | usuario | 1 | Acceso de usuario #1 |
+| 25-10-2026 17:54:18 (UTC-0300) | Acceso exitoso | usuario #1 | usuario | 1 | Acceso de usuario #1 |
+| 25-10-2026 18:01:36 (UTC-0300) | Acceso fallido | - | usuario | - | Usuario intentado: usuario #1 |
+| 25-10-2026 18:01:55 (UTC-0300) | Acceso exitoso | usuario #1 | usuario | 1 | Acceso de usuario #1 |
+| 25-10-2026 18:02:38 (UTC-0300) | Acceso exitoso | usuario #1 | usuario | 1 | Acceso de usuario #1 |
+| 25-10-2026 18:02:47 (UTC-0300) | Acceso fallido | - | usuario | - | Usuario intentado: usuario #1 |
+| 25-10-2026 18:02:57 (UTC-0300) | Acceso exitoso | usuario #1 | usuario | 1 | Acceso de usuario #1 |
 
-Resumen: 5 accesos exitosos y 3 fallidos (1 con nombre inexistente y 2 con el usuario `nacho` y una contraseña inventada).
+Resumen: 5 accesos exitosos y 3 fallidos (1 con nombre inexistente y 2 con el usuario `usuario #1` y una contraseña inventada).
 
 ### Resultados por punto
 
@@ -92,13 +92,13 @@ Resumen: 5 accesos exitosos y 3 fallidos (1 con nombre inexistente y 2 con el us
 | 1 | Listado | «Registro de eventos» aparece en el menú «Pedidos». El listado muestra momento, tipo de evento, usuario, entidad afectada, identificador de la entidad y resumen, ordenado del más reciente al más antiguo. | ✅ |
 | 2 | Hora de Chile | Todos los momentos salen con la zona al lado, `(UTC-0300)`, el desfase de Chile continental en octubre. El encabezado de la columna dice «Momento (hora de Chile)». | ✅ |
 | 3 | Acceso fallido con un nombre que no existe | Fila 17:53:58: usuario `-`, resumen «Usuario intentado: usuario desconocido». No aparece lo que se escribió. | ✅ |
-| 3b | Acceso fallido con un usuario que existe (`nacho`) | Filas 18:01:36 y 18:02:47: resumen «Usuario intentado: nacho». La contraseña inventada que se escribió no aparece en el listado ni en el detalle. | ✅ |
-| 4 | Accesos exitosos | Cinco filas con tipo «Acceso exitoso», usuario `nacho`, entidad `usuario`, identificador `1` y resumen «Acceso de usuario #1». | ✅ |
+| 3b | Acceso fallido con un usuario que existe (`usuario #1`) | Filas 18:01:36 y 18:02:47: resumen «Usuario intentado: usuario #1». La contraseña inventada que se escribió no aparece en el listado ni en el detalle. | ✅ |
+| 4 | Accesos exitosos | Cinco filas con tipo «Acceso exitoso», usuario `usuario #1`, entidad `usuario`, identificador `1` y resumen «Acceso de usuario #1». | ✅ |
 | 5 | Solo lectura (listado) | En el menú lateral, «Registro de eventos» no tiene el enlace «Añadir» que sí tienen Clientes, Pedidos y Productos. El listado no ofrece botón de agregar. | ✅ |
 | 5b | Solo lectura (detalle) | El detalle se titula «Vista Registro de evento». Solo ofrece el botón «Cerrar» (y «Histórico»); no hay «Guardar» ni «Eliminar» y los campos no son editables. | ✅ |
 | 6 | Búsqueda por identificador de la entidad | Buscar `1`: «5 resultados (8 total)», todos de la entidad `usuario` con identificador 1. Buscar `10`: «0 resultados (8 total)»: el 1 no se confunde con el 10. | ✅ |
 | 6b | Filtros de la barra lateral | La barra muestra «Por Momento» (Cualquier fecha, Hoy, Últimos 7 días, Este mes, Este año) y «Por Tipo de evento» (con todos los tipos). El desarrollador aplicó «Por Tipo de evento → Acceso fallido» y el listado mostró **3 resultados**, que coinciden con los 3 accesos fallidos de la tabla de arriba. Confirmado con captura: «3 resultados (8 total)», las tres filas son accesos fallidos (18:02:47, 18:01:36 y 17:53:58) y la barra lateral muestra «Borrar todos los filtros». | ✅ |
-| 7 | Detalle de un evento | Detalle del acceso fallido de las 18:02:47: momento `25-10-2026 18:02:47 (UTC-0300)`, tipo «Acceso fallido», usuario `-`, entidad `usuario`, identificador `-`, resumen «Usuario intentado: nacho». | ✅ |
+| 7 | Detalle de un evento | Detalle del acceso fallido de las 18:02:47: momento `25-10-2026 18:02:47 (UTC-0300)`, tipo «Acceso fallido», usuario `-`, entidad `usuario`, identificador `-`, resumen «Usuario intentado: usuario #1». | ✅ |
 | 8 | Vista a 360 px | A 360 × 800 el encabezado, la barra de búsqueda y el listado se ven bien y se leen. La tabla es más ancha que la pantalla, así que aparece una barra de desplazamiento horizontal para ver usuario, entidad, identificador y resumen. Es el comportamiento normal de las tablas del admin de Django en pantallas angostas. | ✅ (con desplazamiento horizontal) |
 
 ### Cobertura por pruebas automáticas (para contraste)
