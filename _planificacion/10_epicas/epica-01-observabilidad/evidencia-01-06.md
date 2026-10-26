@@ -543,11 +543,11 @@ grep -c 'Error capturado por decorador' "$S"
 
 **Primera medición (después de B7 y de C1):** la tabla estaba **vacía** (`0 Registro de eventos` en el admin y `[]` en el conteo por tipo), aunque se había revisado la aplicación. La explicación es que B7 se hizo con una **sesión ya iniciada** antes del despliegue: Django guarda las sesiones en la base de datos y sobreviven a la recarga, y una sesión que continúa no registra un «acceso exitoso» (las lecturas tampoco generan eventos, por diseño). El desarrollador confirmó después que B7 se hizo con la sesión que ya tenía abierta, de modo que la explicación quedó **confirmada**. Aun así, para descartar una falla del servicio se hizo una prueba directa.
 
-**Prueba directa en producción:** cerrar sesión; en el acceso, escribir el usuario `nacho` con una contraseña **inventada** (rechazada); entrar con la contraseña real; revisar el admin y el conteo por tipo.
+**Prueba directa en producción:** cerrar sesión; en el acceso, escribir el nombre del usuario #1 con una contraseña **inventada** (rechazada); entrar con la contraseña real; revisar el admin y el conteo por tipo.
 
 | Dato | Valor |
 | :--- | :---- |
-| Evento en el admin (tipo, usuario, hora) | «Acceso fallido» (usuario `-`, resumen «Usuario intentado: nacho») a las `25-10-2026 22:12:58 (UTC-0300)` y «Acceso exitoso» (usuario `nacho`, «Acceso de usuario #1») a las `25-10-2026 22:13:10 (UTC-0300)`. 2 registros |
+| Evento en el admin (tipo, usuario, hora) | «Acceso fallido» (usuario `-`, resumen «Usuario intentado: usuario #1») a las `25-10-2026 22:12:58 (UTC-0300)` y «Acceso exitoso» (usuario #1, «Acceso de usuario #1») a las `25-10-2026 22:13:10 (UTC-0300)`. 2 registros |
 | ¿Hay `pago_eliminado`? | No |
 | Salida de `purgar_registros` | `Eventos eliminados: 0 (anteriores al 25-10-2025 22:05, hora de Chile; retención de 365 días).` |
 | Eventos por tipo | Antes de la prueba: `[]`. Después: `[('acceso_exitoso', 1), ('acceso_fallido', 1)]` |
@@ -630,7 +630,7 @@ Observación: la variable `DESDE` de B6 se definió la primera vez con el texto 
 - El error controlado (pago 1056) quedó registrado **con su traza completa** en `error.log` y con el formato propio, emoji y contexto en `server.log`; el diagnóstico tomó unos 2 minutos.
 - La página 500 cumplió en escritorio, a 360 px y con foco.
 - El PDF de la cotización 27 se generó (`200` a las 21:54:55) sin dejar ni una línea de `fontTools` ni de `django.server`.
-- El servicio de eventos escribe en producción: tras cerrar sesión, un acceso fallido con `nacho` y una contraseña inventada, y un acceso correcto, el admin mostró 2 eventos con hora de Chile. La tabla había quedado vacía después de B7 porque se usó una sesión ya abierta (confirmado por el desarrollador).
+- El servicio de eventos escribe en producción: tras cerrar sesión, un acceso fallido con el nombre del usuario #1 y una contraseña inventada, y un acceso correcto, el admin mostró 2 eventos con hora de Chile. La tabla había quedado vacía después de B7 porque se usó una sesión ya abierta (confirmado por el desarrollador).
 - **Hallazgo:** cada error queda escrito en dos archivos con dos formatos (`error.log`: el de PythonAnywhere; `server.log`: el nuestro con emoji y contexto). La suposición «nuestras líneas caen en `error.log`» era incorrecta. Claude Code investigó la causa y el desarrollador decidió la **opción A** (2026-10-25): el diagnóstico se hace en `server.log`; `error.log` queda como lo escribe PythonAnywhere; sin cambios de código ni v1.2. El manejador de PythonAnywhere sigue siendo una deducción no confirmada. No es motivo de retroceso: no se perdió ninguna línea y la traza completa está en ambos archivos.
 
 _(Parte D: pendiente, hacia el domingo 2026-11-01. Decisión sobre los dos destinos de registro: resuelta, opción A.)_
