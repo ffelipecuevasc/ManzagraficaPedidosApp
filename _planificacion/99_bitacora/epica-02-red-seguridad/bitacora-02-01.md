@@ -3,6 +3,7 @@
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
 - **Estado final:** Terminada (2026-10-25, revisada por el desarrollador); sin desplegar; el bloque de `settings.py` viaja en 01-06, donde se revisa `check --deploy` del servidor.
+  - **Nota del 2026-10-26:** la 02-01 viajó completa en `v1.1-observabilidad` (commit `d6768d0`, desplegado el 2026-10-25): el bloque 3 de `PedidosApp/settings.py` (base de pruebas `TEST`), el paquete `pedidos/tests/` y `docs/operacion/pruebas.md`. En el servidor solo tiene efecto el bloque de `settings.py`, que se carga al arrancar; `check --deploy` quedó sin errores ([bitacora-01-06-produccion](../epica-01-observabilidad/bitacora-01-06-produccion.md), B2 y B4). Las pruebas y la documentación están en el servidor, pero allí no se ejecutan. No quedó nada sin desplegar.
 
 ## Resumen
 
