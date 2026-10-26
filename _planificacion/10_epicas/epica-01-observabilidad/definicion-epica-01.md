@@ -28,8 +28,8 @@
 | 01-05 | Consulta de eventos en el admin (Terminada) | 1.5 |
 | 01-07 | Marcas visuales en el registro de errores (Terminada) | 1.2 (ampliación) |
 | 01-06 | Despliegue y validación de la observabilidad (desplegada el 2026-10-25 como `v1.1-observabilidad`; falta la parte D, hacia el 2026-11-01) | 1.6 |
-| 01-08 | Comentarios de registro alineados con la opción A, solo texto (redactada, sin ejecutar) | 1.2 (ajuste) |
-| 01-09 | Capturas amplias que incumplen la regla 4 (por definir) | — (deuda detectada en 01-06) |
+| 01-08 | Comentarios de registro alineados con la opción A, solo texto (en revisión, ejecutada el 2026-10-26) | 1.2 (ajuste) |
+| 01-09 | Capturas amplias que incumplen la regla 4 (redactada, sin ejecutar) | — (deuda detectada en 01-06) |
 
 ## Decisiones de la épica
 

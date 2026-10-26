@@ -54,6 +54,11 @@
 | Lectura y edición de `backups/` y lectura de cualquier `respaldo_*.sql` | Los volcados contienen nombres, teléfonos y montos de clientes reales. El patrón usa el prefijo con que la aplicación nombra sus volcados, para no bloquear los guiones SQL de diagnóstico que el agente sí escribe y lee en `scripts/`. Si descargas un volcado con otro nombre, guárdalo fuera del repositorio. |
 | WebFetch a `pythonanywhere.com`, `www.pythonanywhere.com` y `manzagrafica.pythonanywhere.com` | El panel y la API de PythonAnywhere son producción. La aplicación publicada tiene rutas que modifican datos con una simple visita, así que ni siquiera se lee desde el agente. La documentación de ayuda está en otro dominio y sigue disponible. |
 
-## 5. Por qué `.env.example` no está bloqueado
-
-El proyecto carga un solo archivo de secretos: `.env`. Bloquear el patrón `.env*` habría bloqueado también `.env.example`, que es una plantilla sin valores y forma parte del trabajo de higiene del repositorio. Por eso solo `.env` está en `deny` y `.env.example` queda en `ask`. Si algún día se agregan archivos como `.env.local` o `.env.production`, hay que sumarlos a `deny`.
+## 5. `.env.example` y los límites de la protección                                                                                                                                                                                            
+                                                                                                                                                                                                                                                 
+- **`.env.example` también queda bloqueado para lectura.** La regla `Read(./.env.*)` (y `Read(**/.env.*)`) calza con `.env.example`, así que el agente no puede leerlo; `Edit(**/.env.*)` también impide editarlo. Si una iteración necesita   
+cambiarlo, el agente entrega el texto propuesto y el desarrollador lo aplica. Archivos nuevos como `.env.local` o `.env.production` quedan cubiertos por los mismos patrones.                                                                  
+- **La protección es parcial.** Las reglas `Read` y `Edit` solo gobiernan las herramientas de lectura y edición de Claude Code. No cubren un `grep -r` (ni `rg`, `findstr` o `Select-String`) que recorra el repositorio, ni un guion de Python
+o de shell que abra el archivo. Por eso el agente excluye siempre `.env`, `.env.*`, `backups/` y la carpeta de respaldos en sus búsquedas.                                                                                                     
+- **Sin sandbox en Windows nativo.** El sandbox de Claude Code, que limitaría a nivel de sistema los archivos que leen los comandos, no existe en Windows nativo. Aquí la única barrera para Bash y PowerShell es la disciplina del agente y la
+revisión del desarrollador.   
