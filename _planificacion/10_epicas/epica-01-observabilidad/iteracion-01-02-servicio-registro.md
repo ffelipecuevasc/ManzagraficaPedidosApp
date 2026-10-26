@@ -1,7 +1,7 @@
 # Iteración 01-02 · Configuración del registro y servicio de eventos
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Terminada (2026-10-25; sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere)
+- **Estado:** Terminada (2026-10-25; sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere). **Resultado en producción (2026-10-25, 01-06):** la hipótesis se confirmó solo en parte. Existe otro manejador que escribe en `error.log` con el formato de PythonAnywhere, pero `LOGGING` no lo reemplaza, y nuestra salida de error termina en `server.log`. El destino de la tarea 2 es, en la práctica, `server.log`. Opción A del desarrollador: diagnóstico en `server.log` ([bitacora-01-06-produccion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md))
 - **Subfase del plan:** 1.2
 - **Depende de:** 01-01, 02-01
 - **RDA relacionadas:** RDA-008, RDA-013

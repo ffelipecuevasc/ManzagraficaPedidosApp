@@ -26,7 +26,7 @@ Llevar la observabilidad a producción con el protocolo de 00-05 y demostrar con
 | 01-03 | Sin `ErrorHandlingMiddleware`; `@transaccion_segura` con `logger.exception`; `print` a `logging`; página 500 nueva | Trazas completas en `error.log`; `server.log` deja de recibir los mensajes de errores |
 | 01-04 | 15 eventos (13 vistas y señales de acceso); acceso fallido sin lo escrito | Filas nuevas en la tabla al operar |
 | 01-05 | Admin de eventos de solo lectura para superusuarios | Nueva sección en el admin |
-| 01-07 | Emoji del nivel al inicio de cada línea del registro (`❌ nivel=ERROR …`) | Las líneas de `error.log` empiezan con el emoji, después de la fecha de PythonAnywhere |
+| 01-07 | Emoji del nivel al inicio de cada línea del registro (`❌ nivel=ERROR …`) | Las líneas de `server.log` empiezan con el emoji, después de la fecha del recolector (corregido el 2026-10-25: `error.log` conserva el formato de PythonAnywhere) |
 
 Sin cambios en `requirements.txt` ni en `pedidos/static`.
 
@@ -49,6 +49,7 @@ Sin cambios en `requirements.txt` ni en `pedidos/static`.
 4. **Prueba de que la migración no se aplicó antes de tiempo** (parte B de la evidencia): en el servidor, antes del `checkout`, `showmigrations pedidos` termina en `[X] 0006` sin `0007`, `pedidos_registroevento` no existe y `migrate --plan` dice `No planned migration operations.`; después del `checkout`, `migrate --plan` lista **solo** `pedidos.0007_registroevento`.
 5. **Configuración de pruebas de 02-01** (agregado el 2026-10-25): el bloque 3 de `settings.py` viaja en este despliegue. En el servidor, `check --deploy` antes y después del `checkout` debe dar las mismas advertencias y ningún error nuevo (con `DATABASE_URL`, el nombre de producción no coincide con `test_manzagrafica`). Ambas salidas, resumidas por código, en la evidencia.
 6. **Sin líneas duplicadas en `error.log`** (agregado el 2026-10-25, 01-02): la hipótesis es que el cargador WSGI de PythonAnywhere instala un manejador propio en la raíz (explica que hoy lleguen `Internal Server Error` y los INFO de `fontTools` sin `LOGGING`). `LOGGING` reemplaza el manejador de la raíz. Tras el error controlado, cada línea aparece una sola vez y no queda ninguna línea en el formato antiguo (sin `nivel=`) para esa petición.
+   **Resultado y corrección (2026-10-25, opción A del desarrollador):** el error queda en dos archivos. En `server.log` (hora de Chile) va nuestra línea con emoji y `clave=valor`, con la traza en la misma línea (`#012`). En `error.log` (UTC) va la misma traza en el formato de PythonAnywhere, sin `nivel=`. La tarea se cumple así: **cada registro aparece una sola vez dentro de cada archivo**, y `error.log` conserva el formato de PythonAnywhere por decisión. El manejador de PythonAnywhere sigue siendo una deducción ([bitacora-01-06-produccion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md)).
 7. **Revisión visual de la página 500** (trasladada desde 01-03 el 2026-10-25): la página que muestra el error controlado («Algo salió mal») en escritorio y a 360 px: texto legible, botones «Recargar» e «Ir al inicio» visibles y con foco al recorrerlos con Tab, sin código de error, sin detalles técnicos ni la broma de los correos.
 8. **Error controlado** (decisión del desarrollador del 2026-10-25): **abrir la página de eliminar un pago** (`/pagos/eliminar/<id>/`, AUD-02-002). Solo se abre, **nunca se confirma**: con GET, `eliminar_pago` solo intenta mostrar la plantilla `pedidos/pago_confirm_delete.html`, que no existe, y no escribe nada (tampoco un evento: `pago_eliminado` se registra solo con POST).
    - **Qué `id` usar:** el `1056`, el pago del caso real del 2026-10-22, si todavía existe; si no, el pago de mayor `id`. La evidencia trae el comando que lo decide en el servidor.
@@ -88,7 +89,7 @@ No quedan decisiones abiertas.
 - [ ] La página 500 se revisó en escritorio y a 360 px.
 - [ ] Después del despliegue, `error.log` no tiene líneas de `fontTools` ni de `django.server`.
 - [ ] Una acción real o de prueba aparece en el admin de eventos con su usuario, y `purgar_registros` corrió en el servidor.
-- [ ] Las líneas de `error.log` de producción llevan su emoji (01-07) y no hay líneas `Logging error` ni `UnicodeEncodeError`.
+- [ ] Las líneas de `server.log` de producción llevan su emoji (01-07) y no hay líneas `Logging error` ni `UnicodeEncodeError` en `server.log` ni en `error.log` (corregido el 2026-10-25: el emoji no aparece en `error.log`, que conserva el formato de PythonAnywhere).
 - [ ] El crecimiento de una semana de la tabla de eventos está medido en filas y MB y comparado con la estimación.
 - [ ] `verificar_respaldo.py` exige la tabla de eventos después de migrar: volcado sintético con la tabla, código 0; sin ella, código 1; `respaldo.md` actualizado.
 

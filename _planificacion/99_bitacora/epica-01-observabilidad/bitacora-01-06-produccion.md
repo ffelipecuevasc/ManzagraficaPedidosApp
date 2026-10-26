@@ -121,6 +121,32 @@ Lo que pediste: el emoji y el formato `clave=valor` visibles en el archivo donde
 - No cambia: los eventos van a MySQL, no a los archivos.
 - Si C5 incluye contar líneas de `fontTools` o `django.server`, se cuentan en los dos archivos. `fontTools` iría a `server.log`.
 
-### Decisión pendiente
+### Decisión del desarrollador (2026-10-25): opción A
 
-`PENDIENTE_DESARROLLADOR`: elegir A, B, C o D (registrada en `registro-pendientes.md`, sección 3). Según la que elijas, se ajustan en la misma iteración los documentos de la tabla de efectos, y C o D abren una `v1.2-…`.
+- **El diagnóstico se hace en `server.log`** (hora de Chile; la traza se lee con `sed 's/#012/\n/g'`). `error.log` (UTC) queda como lo escribe PythonAnywhere.
+- No se cambia código ni configuración, y no hay `v1.2`.
+- Resuelto en la sección 3 de `registro-pendientes.md`.
+
+**Documentos corregidos:**
+- **RDA-013:** texto de la decisión y actualización fechada.
+- **RDA-005:** la actualización del 2026-10-25.
+- **`iteracion-01-02`:** resultado de la hipótesis, en el estado.
+- **`iteracion-01-06`:** fila de la 01-07 en la tabla de lo que se despliega, resultado de la tarea 6 y criterio del emoji.
+- **`iteracion-01-07`:** «Fuera de alcance».
+- **`docs/operacion/despliegue.md`:**
+  - tabla de los dos archivos al inicio;
+  - `L` apunta a `server.log`;
+  - comandos con `TZ=America/Santiago`;
+  - recuperación de saltos con `sed`;
+  - aviso sobre el filtro por fecha de `error.log`.
+- **Propuesta de regla 4 en `bitacora-01-03`:** reescrita. `AGENTS.md` no se tocó.
+
+Los criterios que mencionan `error.log` y aún no se marcan (diagnóstico, duplicados, `fontTools` y `django.server`) se evalúan al integrar la parte C, con la lectura de arriba. `evidencia-01-06.md` no se editó.
+
+### Lo que sigue sin confirmar
+
+**Que `error.log` lo alimenta un manejador de `logging` propio de PythonAnywhere, instalado en el registrador raíz después de cargar la aplicación, sigue siendo una deducción.**
+- Se apoya en el formato distinto de `error.log` y en que recibe registros de `pedidos.decorators` y de `django.request`.
+- No se comprobó dentro del proceso web, y la documentación encontrada no lo describe.
+- Con la opción A no hace falta confirmarlo: el diagnóstico no depende de ese manejador.
+- Si PythonAnywhere lo quitara o lo cambiara, `error.log` dejaría de recibir los errores, pero `server.log` seguiría teniéndolos.

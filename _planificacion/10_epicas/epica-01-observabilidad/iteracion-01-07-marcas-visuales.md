@@ -45,7 +45,7 @@ Que el nivel de cada línea de `error.log` se reconozca a simple vista, con un e
 
 - Cambiar los campos, su orden o los niveles de los registradores (01-02).
 - Colores ANSI u otros formatos (JSON).
-- Verificar el emoji en el `error.log` real de PythonAnywhere (va en la 01-06).
+- Verificar el emoji en el registro real de PythonAnywhere (va en la 01-06). Corrección del 2026-10-25: en producción, el emoji se ve en `server.log`; `error.log` conserva el formato de PythonAnywhere, sin emoji (opción A, [bitacora-01-06-produccion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md)).
 
 ## Datos requeridos del cliente
 

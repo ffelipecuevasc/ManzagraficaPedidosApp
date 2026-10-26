@@ -28,7 +28,14 @@ test -f "$PROYECTO/manage.py" && test -x "$VENV/bin/python" && echo "PROYECTO y 
 
 Esperado: `PROYECTO y VENV correctos`. Si no aparece, revisa los dos valores antes de seguir. Las variables se pierden al cerrar la consola.
 
-**Registro de errores:** pestaña **Web**, sección *Log files*. Habitualmente `/var/log/manzagrafica.pythonanywhere.com.error.log`.
+**Registros:** pestaña **Web**, sección *Log files*. Desde `v1.1-observabilidad` (2026-10-25) cada error queda en dos archivos:
+
+| Archivo | Hora | Qué tiene |
+| :------ | :--- | :-------- |
+| `/var/log/manzagrafica.pythonanywhere.com.server.log` | **Chile** | **El archivo de diagnóstico.** Nuestra línea con emoji y `clave=valor` (nivel, registrador, método, ruta, usuario, excepción y mensaje), con la traza en la misma línea y los saltos escritos como `#012`. |
+| `/var/log/manzagrafica.pythonanywhere.com.error.log` | **UTC** | Los mismos errores en el formato de PythonAnywhere (`fecha,ms: mensaje` y la traza debajo), sin método, ruta ni usuario. Se deja como está. |
+
+Para leer la traza de `server.log`, recupera los saltos de línea con `sed 's/#012/\n/g'`. En `error.log`, las líneas de la traza no llevan fecha: para cortar por hora, empieza en la primera línea con fecha ≥ la buscada y deja pasar las siguientes, porque comparar texto con `substr($0,1,19)` deja pasar como «nuevas» las líneas antiguas que empiezan con letra.
 
 La consola Bash consume tus 100 segundos diarios de CPU. Los comandos de este documento son cortos; no dejes procesos corriendo.
 
@@ -204,13 +211,14 @@ Si cualquiera responde **400 Bad Request**, revisa `ALLOWED_HOSTS` en el `.env` 
 **[PA · Bash]** Registro de errores después de la recarga:
 
 ```bash
-L=/var/log/manzagrafica.pythonanywhere.com.error.log
-date -u "+%F %T UTC"
-grep -c "^$(date -u +%F)" $L
-tail -n 20 $L | cut -c1-160
+L=/var/log/manzagrafica.pythonanywhere.com.server.log
+TZ=America/Santiago date "+%F %T (hora de Chile)"
+grep -c "^$(TZ=America/Santiago date +%F)" $L
+grep "nivel=" $L | tail -n 20 | cut -c1-200
+# Traza completa de una línea: grep "ruta=/la/ruta/" $L | sed 's/#012/\n/g'
 ```
 
-- El registro escribe la hora en **UTC** (Chile está 3 horas atrás en horario de verano).
+- `L` apunta a `server.log`, el archivo de diagnóstico (opción A del 2026-10-25), que escribe la hora de **Chile**. Si quieres mirar `error.log`, recuerda que está en **UTC** (Chile está 3 horas atrás en horario de verano).
 - Revisa solo las líneas con hora posterior a la recarga. Lo esperado es ninguna línea `Error`, `Traceback` ni `DisallowedHost` después de la recarga.
 - Si hay errores, copia en la evidencia **solo el tipo de error y la hora**, no el texto completo: puede traer datos de clientes.
 
