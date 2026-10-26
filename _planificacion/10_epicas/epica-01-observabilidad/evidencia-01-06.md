@@ -4,6 +4,7 @@
 - **Pedido por:** Claude Code (Opus 5.5)
 - **Iteración:** [01-06](iteracion-01-06-despliegue-validacion.md). Etiqueta `v1.1-observabilidad`; partida y destino de retroceso `v0.2-correcciones`.
 - **Criterios que dependen de esta evidencia:** todos los de la 01-06.
+- **Estado (2026-10-25, noche; 2026-10-26 en UTC):** partes A y B completadas y sin incidencias, salvo la corrección de `DESDE` en B6. B8: parte del agente lista (script y `respaldo.md`); falta verificar el respaldo de A2. C y D pendientes.
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide, sin datos de clientes: conteos, horas, tipos de error y códigos.
 >
@@ -48,16 +49,32 @@ python manage.py test pedidos.tests.test_errores.ErroresSinMiddlewareTests.test_
 - El SQL de la 0007 idéntico al de `bitacora-01-06.md`: un `CREATE TABLE`, un `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY` sobre `pedidos_registroevento` y dos `CREATE INDEX`. Pega el SQL completo.
 - La prueba de regresión de eliminar pago en `OK`: el caso del error controlado sigue existiendo en el código que se despliega.
 
+**SQL de `sqlmigrate pedidos 0007` (pegado por el desarrollador, 2026-10-25):**
+
+```sql
+--
+-- Create model RegistroEvento
+--
+CREATE TABLE `pedidos_registroevento` (`id` bigint AUTO_INCREMENT NOT NULL PRIMARY KEY, `momento` datetime(6) NOT NULL, `tipo` varchar(40) NOT NULL, `entidad` varchar(30) NOT NULL, `entidad_id` integer UNSIGNED NULL CHECK (`entidad_id` >= 0), `resumen` varchar(255) NOT NULL, `usuario_id` integer NULL);
+ALTER TABLE `pedidos_registroevento` ADD CONSTRAINT `pedidos_registroevento_usuario_id_b991a708_fk_auth_user_id` FOREIGN KEY (`usuario_id`) REFERENCES `auth_user` (`id`);
+CREATE INDEX `evento_momento_idx` ON `pedidos_registroevento` (`momento`);
+CREATE INDEX `evento_tipo_momento_idx` ON `pedidos_registroevento` (`tipo`, `momento`);
+```
+
+Estructura: un `CREATE TABLE`, un `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY` sobre la tabla nueva y dos `CREATE INDEX`. Sin `DROP`, `RENAME` ni cambios sobre tablas existentes: **Clase 2**. La comparación literal con `bitacora-01-06.md` queda para la revisión del agente.
+
 | # | Comprobación | Resultado |
 | :- | :----------- | :-------- |
-| 1 | Pruebas (`Ran N tests`, `OK`) | |
-| 2 | `check --deploy` (códigos) | |
-| 3 | `makemigrations --check` | |
-| 4 | `sqlmigrate 0007` igual a la bitácora; Clase 2 | |
-| 5 | Respaldo verificado (A2) | |
+| 1 | Pruebas (`Ran N tests`, `OK`) | `Ran 79 tests in 71.016s` · `OK` (advertencia `mysql.W002`, esperada) |
+| 2 | `check --deploy` (códigos) | `W004`, `W008`, `W009`, `W012`, `W016` (5 avisos, 0 silenciados) |
+| 3 | `makemigrations --check` | `No changes detected` |
+| 4 | `sqlmigrate 0007` igual a la bitácora; Clase 2 | Estructura esperada (ver SQL arriba); Clase 2. Comparación literal pendiente del agente |
+| 5 | Respaldo verificado (A2) | Sí: `VÁLIDO`, 18 de 18, código 0 |
 | 6 | Estilos compilados | No aplica |
-| 7 | Etiqueta publicada (A5) | |
-| 8 | Solo la Épica 01 (más el bloque de pruebas de 02-01) | |
+| 7 | Etiqueta publicada (A5) | Sí: `v1.1-observabilidad` en el remoto |
+| 8 | Solo la Épica 01 (más el bloque de pruebas de 02-01) | Según el mensaje de la etiqueta (01-01 a 01-05, 01-07 y el bloque de pruebas de 02-01). Contraste con `git diff` pendiente del agente |
+
+Prueba de regresión de eliminar pago: `Ran 1 test in 2.722s` · `OK`.
 
 ### A2. Respaldo previo **[Navegador]** y **[PC · PowerShell 7]**
 
@@ -73,13 +90,13 @@ $LASTEXITCODE
 
 | Dato | Valor |
 | :--- | :---- |
-| Nombre del archivo (hora de Chile del nombre) | |
-| Tamaño (bytes) | |
-| SHA-256 | |
-| Tablas | |
-| Código | |
+| Nombre del archivo (hora de Chile del nombre) | `respaldo_25-10-2026_21-02-34.sql` (21:02:34, hora de Chile) |
+| Tamaño (bytes) | 1.446.507 (mínimo exigido: 500.000) |
+| SHA-256 | `f3163addfce276441938c03419d646770ffecd10ef48d96739c8b2fc89490aa9` |
+| Tablas | 18 de 18 esperadas; faltantes: ninguna; adicionales: ninguna |
+| Código | `0` · `Resultado: VÁLIDO` · línea de cierre «-- Dump completed» presente |
 
-Agrega la fila en `docs/operacion/respaldo.md`, sección 6 (motivo: «Previo al despliegue `v1.1-observabilidad` (iteración 01-06)»).
+Agrega la fila en `docs/operacion/respaldo.md`, sección 6 (motivo: «Previo al despliegue `v1.1-observabilidad` (iteración 01-06)»). _(Pendiente de registrar en el documento.)_
 
 ### A3. Ensayo de retroceso por restauración en la réplica **[PC · PowerShell 7]**
 
@@ -99,12 +116,12 @@ python manage.py shell -c "from django.db import connection; print('pedidos_regi
 
 | Dato | Valor |
 | :--- | :---- |
-| Código y segundos de la restauración | |
-| Tablas | |
-| Últimas migraciones | |
-| ¿Existe `pedidos_registroevento`? | |
+| Código y segundos de la restauración | Código `0` · 3,6 segundos |
+| Tablas | 18 |
+| Últimas migraciones | `[X] 0006_remove_pedido_valor_abonado_and_more` y `[ ] 0007_registroevento` |
+| ¿Existe `pedidos_registroevento`? | `False` |
 
-Anota el refresco en la tabla de `replica-local.md`, sección 9.
+Anota el refresco en la tabla de `replica-local.md`, sección 9. _(Pendiente de registrar en el documento.)_
 
 ### A4. Ensayo de la migración y de su reversión **[PC · PowerShell 7]**
 
@@ -129,10 +146,10 @@ Es el caso 2 de `retroceso.md`. En producción no se revierte salvo que la tabla
 
 | Paso | Resultado | Segundos |
 | :--- | :-------- | :------- |
-| Aplicar 0007 | | |
-| Plan de reversión | | — |
-| Revertir a 0006 (tabla existe: `False`) | | |
-| Aplicar de nuevo | | |
+| Aplicar 0007 | `Applying pedidos.0007_registroevento... OK` | 1,46 |
+| Plan de reversión | Solo `Undo Create model RegistroEvento` | — |
+| Revertir a 0006 (tabla existe: `False`) | `Unapplying pedidos.0007_registroevento... OK` · tabla: `False` | 1,07 |
+| Aplicar de nuevo | `Applying pedidos.0007_registroevento... OK` · queda `[X] 0007_registroevento` | 1,78 |
 
 ### A5. Pruebas con la réplica restaurada y etiqueta **[PC · PowerShell 7]**
 
@@ -159,9 +176,12 @@ git ls-remote --tags origin v1.1-observabilidad
 
 | Dato | Valor |
 | :--- | :---- |
-| Pruebas y `check` | |
-| Mensaje de la etiqueta | |
-| Commit de la etiqueta | |
+| Pruebas y `check` | `Ran 79 tests in 76.296s` · `OK` · `check`: «no issues (0 silenced)» |
+| Mensaje de la etiqueta | `Épica 01 · iteraciones 01-01 a 01-05 y 01-07 (y bloque de pruebas de 02-01) · desplegada el 2026-10-25` |
+| Commit de la etiqueta | `d6768d00274a575e48b1a800f6d9145231784b9b` (`HEAD` = `origin/main`, sin `[ahead]` ni `[behind]`) |
+| Objeto de la etiqueta en el remoto | `45817771de0a8101be1b5ee7ba01f5d276c6da88` (`git ls-remote`) |
+
+**Nota:** la etiqueta se publicó al terminar A5, antes de la revisión del agente de la parte A. Todas las comprobaciones de A1 a A5 ya habían dado el resultado esperado, y el servidor todavía no la ha traído, así que no hay efecto. Si la revisión del agente encontrara un problema antes de B3, la etiqueta se puede borrar y recrear (`git tag -d` y `git push origin :refs/tags/v1.1-observabilidad`); después de B3 ya no se toca.
 
 ---
 
@@ -200,10 +220,12 @@ python manage.py check --deploy 2>&1 | grep -oE '[a-z_]+\.[EW][0-9]{3}' | sort -
 
 | Dato | Valor |
 | :--- | :---- |
-| Últimas migraciones | |
-| `tabla_eventos` | |
-| `migrate --plan` | |
-| `check --deploy` antes (códigos) | |
+| Últimas migraciones | `[X] 0005_pedido_creado_por_pedido_estado_pago_and_more` y `[X] 0006_remove_pedido_valor_abonado_and_more` (sin 0007) |
+| `tabla_eventos` | `False` |
+| `migrate --plan` | `No planned migration operations.` |
+| `check --deploy` antes (códigos) | `security.W004 security.W008 security.W012 security.W016` (4 códigos; sin `W009`, a diferencia del PC: la clave secreta de producción pasa esa revisión) |
+
+Estado verificado antes del cambio: el servidor estaba en `v0.2-correcciones` (`HEAD detached`), con `git status` vacío, a las 00:19–00:21 UTC (21:19–21:21, hora de Chile).
 
 ### B3. Traer la etiqueta **[PA · Bash]**
 
@@ -220,6 +242,16 @@ git diff --stat v0.2-correcciones v1.1-observabilidad -- pedidos/migrations
 - `v1.1-observabilidad` (en `detached HEAD`, como siempre).
 - El primer `diff` sin salida: no hay que instalar dependencias ni ejecutar `collectstatic`.
 - El segundo `diff` muestra solo `pedidos/migrations/0007_registroevento.py`.
+
+| Dato | Valor |
+| :--- | :---- |
+| `git fetch origin --tags` | `7944943..d6768d0  main -> origin/main` y `[new tag] v1.1-observabilidad` |
+| `git checkout v1.1-observabilidad` | `HEAD is now at d6768d0 Épica 1 - Iteración 01-06: fija la ventana del despliegue, agrega la tabla de eventos al verificador tras migrar y comprueba los emojis de la 01-07 en error.log.` |
+| `git describe --tags` | `v1.1-observabilidad` (`detached HEAD`) |
+| `diff` de `requirements.txt` y `pedidos/static` | Sin salida: no hay dependencias nuevas ni `collectstatic` |
+| `diff` de `pedidos/migrations` | Solo `pedidos/migrations/0007_registroevento.py` (98 inserciones) |
+
+El commit del servidor (`d6768d0`) coincide con el de la etiqueta registrado en A5.
 
 ### B4. Migración y configuración **[PA · Bash]**
 
@@ -241,10 +273,12 @@ Si `migrate` falla, detente y sigue `retroceso.md`, caso 2.
 
 | Dato | Valor |
 | :--- | :---- |
-| `migrate --plan` | |
-| `check --deploy` después (códigos) y `ERRORS` | |
-| Duración de `migrate` (`real`) | |
-| Últimas migraciones | |
+| `migrate --plan` | Solo `pedidos.0007_registroevento` (`Create model RegistroEvento`) |
+| `check --deploy` después (códigos) y `ERRORS` | `security.W004 security.W008 security.W012 security.W016` (igual que en B2) · `ERRORS`: `0` |
+| Duración de `migrate` (`real`) | `0m2,659s` (`user` 0,504 s; `sys` 0,100 s) |
+| Últimas migraciones | `[X] 0006_remove_pedido_valor_abonado_and_more` y `[X] 0007_registroevento` |
+
+`Applying pedidos.0007_registroevento... OK`, a las 00:23 UTC (21:23, hora de Chile). Se confirmó que el bloque de pruebas de 02-01 no rompe la configuración de producción (tarea 5).
 
 Avisa al agente apenas B4 termine con `[X] 0007_registroevento`: es la señal para el paso B8.
 
@@ -264,6 +298,13 @@ date -u "+%F %T"
 - `eventos: 0`.
 - La hora UTC antes de la recarga.
 
+| Dato | Valor |
+| :--- | :---- |
+| Plantilla `pago_confirm_delete.html` | `plantilla falta: el caso sigue` |
+| `pago_id` para C1 | `1056` (el pago del caso real del 2026-10-22 todavía existe) |
+| Eventos antes de recargar | `eventos: 0` |
+| Hora UTC antes de la recarga | `2026-10-26 00:24:29` (21:24:29, hora de Chile) |
+
 ### B6. Recargar **[PA · Panel]**
 
 Pestaña **Web** → **Reload manzagrafica.pythonanywhere.com**. Anota la hora de la recarga en Chile y en UTC.
@@ -278,6 +319,23 @@ echo "$DESDE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}
 
 **Esperado:** `DESDE válido`. Esta es la única línea que se completa a mano. Si la consola se cierra, define `DESDE` y `L` otra vez.
 
+| Dato | Valor |
+| :--- | :---- |
+| Hora de la recarga | `2026-10-26 00:27:15` UTC (21:27:15, hora de Chile), según lo anotado por el desarrollador |
+| `L` | `/var/log/manzagrafica.pythonanywhere.com.error.log` (definida) |
+| Validación de `DESDE` | **No pasó:** la consola no imprimió «DESDE válido». `DESDE` quedó con el texto de la plantilla entre `<` y `>`: `<2026-10-26 00:27:15 de la recarga, en UTC>` |
+
+**Corrección obligatoria antes de la parte C:** `DESDE` debe llevar **solo** la fecha y la hora, sin `<`, `>` ni texto. En la misma consola:
+
+```bash
+DESDE="2026-10-26 00:27:15"
+echo "$DESDE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$' && echo "DESDE válido"
+```
+
+Debe imprimir `DESDE válido`. Con el valor incorrecto, los filtros `awk 'substr($0,1,19) >= d'` de la parte C no devolverían ninguna línea.
+
+> **Nota (2026-10-25):** después de las 21:00 hora de Chile, la fecha en UTC ya es **2026-10-26** (Chile está en UTC-3). Si recargas, por ejemplo, a las 21:30 de Chile, `DESDE` es `2026-10-26 00:30:00`, no `2026-10-25`. Usa la hora UTC que muestre `date -u` o la del panel, no la de tu reloj.
+
 > Los filtros `awk 'substr($0,1,19) >= d'` de las partes C y D suponen que cada línea de `error.log` empieza con la fecha `AAAA-MM-DD HH:MM:SS` que antepone PythonAnywhere. No se pudieron probar contra el archivo real. Si en C2 no aparece nada, pega la salida de `tail -n 2 $L | cut -c1-40` y el agente ajusta el filtro.
 
 ### B7. Verificar después **[Navegador]**
@@ -286,9 +344,11 @@ Ventana privada: inicio de sesión, panel, listado de pedidos y detalle de un pe
 
 | Revisión | Resultado |
 | :------- | :-------- |
-| Hora de la recarga (Chile / UTC) | |
-| Acceso y panel | |
-| Listado y detalle de pedido | |
+| Hora de la recarga (Chile / UTC) | 21:27:15 Chile / 00:27:15 UTC (2026-10-26), según lo anotado |
+| Acceso y panel | Correcto, según el desarrollador |
+| Listado y detalle de pedido | Correcto: se revisó hasta el detalle de un pedido y están todos los datos (según el desarrollador) |
+
+Sin respuestas 500 en las pantallas revisadas: no corresponde retroceso. El inicio de sesión de B7 debe haber generado un evento `acceso_exitoso` en producción (se comprueba en C5).
 
 Si algo responde 500 en estas pantallas, sigue `retroceso.md`, caso 1, con destino `v0.2-correcciones` (la tabla nueva puede quedarse: el código anterior la ignora).
 
@@ -300,17 +360,19 @@ Decisión del desarrollador (2026-10-25): `pedidos_registroevento` se agrega a l
 2. **Tú**, en **[PC · PowerShell 7]**, con el script nuevo y el respaldo de A2:
 
 ```powershell
-python scriptserificar_respaldo.py "<ruta del volcado de A2>"
+python scripts\verificar_respaldo.py "<ruta del volcado de A2>"
 $LASTEXITCODE
 ```
 
-**Esperado:** `Tablas esperadas encontradas: 18 de 19`, `Tablas faltantes: pedidos_registroevento`, `Resultado: NO VÁLIDO (1 tabla(s) faltante(s))` y código `1`. Es correcto: confirma que ese volcado es anterior al despliegue. Los volcados previos a `v1.1-observabilidad` se verifican con la versión anterior: `git show v0.2-correcciones:scripts/verificar_respaldo.py > $env:TEMPerificar_respaldo_v02.py`.
+**Esperado:** `Tablas esperadas encontradas: 18 de 19`, `Tablas faltantes: pedidos_registroevento`, `Resultado: NO VÁLIDO (1 tabla(s) faltante(s))` y código `1`. Es correcto: confirma que ese volcado es anterior al despliegue. Los volcados previos a `v1.1-observabilidad` se verifican con la versión anterior: `git show v0.2-correcciones:scripts/verificar_respaldo.py > "$env:TEMP\verificar_respaldo_v02.py"`.
+
+> Corrección (2026-10-25): en la versión anterior de este archivo, las rutas de estos dos comandos habían perdido una barra invertida y una letra (`scriptserificar_respaldo.py` y `$env:TEMPerificar_respaldo_v02.py`). Quedaron como arriba.
 
 El cambio va en un commit después de la etiqueta: el script corre en tu PC, no en el servidor, así que no requiere otro despliegue.
 
 | Dato | Valor |
 | :--- | :---- |
-| Pruebas sintéticas del agente (con y sin la tabla) | |
+| Pruebas sintéticas del agente (con y sin la tabla) | Con la tabla: 19 de 19, `VÁLIDO`, código `0`. Sin ella: 18 de 19, falta `pedidos_registroevento`, `NO VÁLIDO (1 tabla(s) faltante(s))`, código `1` (2026-10-25) |
 | Respaldo de A2 con el script nuevo (tablas y código) | |
 
 ---
@@ -380,6 +442,8 @@ Los filtros buscan `nivel=…` dentro de la línea: cada línea empieza con la f
 - `0`: ninguna línea `Logging error` ni `UnicodeEncodeError` (la salida admite UTF-8). Si es mayor que 0, detente y avisa: las líneas del registro se estarían perdiendo (bitacora-01-07).
 
 Si los números son el doble, la hipótesis del manejador de PythonAnywhere se confirma: no hagas retroceso por esto (la información está completa); anótalo y el agente propondrá el ajuste.
+
+> **Decisión del desarrollador (2026-10-25), si el emoji no se escribe bien:** si en vez de `❌` el `error.log` muestra `\u274c` (la línea y su traza llegan completas), se **sigue** y se corrige después, sin retroceso. Solo se retrocede si se pierden líneas (`Logging error` y la línea del error no llega).
 
 | Conteo | Valor |
 | :----- | :---- |
@@ -496,4 +560,12 @@ zcat -f $L* | awk -v d="$DESDE" 'substr($0,1,19) >= d' | grep -c 'fontTools'
 
 ## Respuesta del desarrollador
 
-_(pendiente)_
+**Parte A (2026-10-25, noche; las pruebas corrieron a las 20:59 y a las 21:11, hora de Chile):** completada sin incidencias. Las 79 pruebas pasaron dos veces (la segunda, con la réplica restaurada y la 0007 aplicada), `check --deploy` mostró solo los cinco avisos esperados, el SQL de la 0007 es Clase 2, el respaldo previo verificó 18 de 18 con código 0, la restauración en la réplica tardó 3,6 s, la migración se aplicó y se revirtió sin problemas (1,46 s, 1,07 s y 1,78 s) y la etiqueta `v1.1-observabilidad` quedó publicada sobre el commit `d6768d00274a575e48b1a800f6d9145231784b9b`.
+
+Observación: durante las pruebas aparece un aviso de GLib sobre una aplicación de Outlook de Windows (`GLib-GIO-WARNING … supports 5 extensions but has no verbs`). Viene de las bibliotecas gráficas que usa WeasyPrint en Windows, no de la aplicación ni de Django, y no afecta los resultados.
+
+**Parte B (2026-10-25, entre las 21:19 y las 21:27, hora de Chile; 00:19 a 00:27 UTC del 2026-10-26):** el servidor pasó de `v0.2-correcciones` a `v1.1-observabilidad` (commit `d6768d0`). Antes del cambio, la 0007 no estaba aplicada y `check --deploy` mostraba cuatro avisos. `migrate --plan` listó solo la 0007, `migrate` la aplicó en 2,659 s, y `check --deploy` quedó igual que antes, con `ERRORS` en 0. La plantilla de eliminar pago sigue faltando y el pago 1056 existe, así que el error controlado de C1 es reproducible. El desarrollador recargó la aplicación a las 21:27:15 (Chile) y revisó acceso, panel, listado y detalle de un pedido, todo sin problemas.
+
+Observación: la variable `DESDE` de B6 se definió con el texto de la plantilla entre `<` y `>` y no pasó la validación. Se corrige antes de la parte C (ver B6).
+
+_(B8, C y D: pendientes.)_

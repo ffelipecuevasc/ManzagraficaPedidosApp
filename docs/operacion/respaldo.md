@@ -41,7 +41,8 @@ $LASTEXITCODE
 ```
 
 - `0`: el volcado es válido. `1`: no es válido o no se pudo leer.
-- El script revisa el tamaño (mínimo 500.000 bytes por defecto; se cambia con `--min-bytes N`), la línea de cierre `-- Dump completed`, las 18 tablas esperadas y el SHA-256. El informe no muestra ninguna línea del volcado, así que se puede copiar en la tabla de la sección 6 y en las evidencias.
+- El script revisa el tamaño (mínimo 500.000 bytes por defecto; se cambia con `--min-bytes N`), la línea de cierre `-- Dump completed`, las 19 tablas esperadas y el SHA-256. El informe no muestra ninguna línea del volcado, así que se puede copiar en la tabla de la sección 6 y en las evidencias.
+- **Desde el 2026-10-25** (01-06, migración 0007) la lista incluye `pedidos_registroevento`. Un volcado anterior a esa fecha tiene 18 tablas y da `NO VÁLIDO (1 tabla(s) faltante(s))` con el script actual: verifícalo con la versión anterior, `git show v0.2-correcciones:scripts/verificar_respaldo.py > "$env:TEMPerificar_respaldo_v02.py"`.
 - Para comprobar el hash por otro camino:
 
 ```powershell
