@@ -37,7 +37,7 @@
 | `git checkout`, `switch`, `branch`, `restore`, `stash` | El flujo es rama única `main`; además, `checkout` y `restore` pueden descartar cambios sin guardar. |
 | `rm`, `mv` | Mover o borrar archivos requiere aprobación. |
 | Edición de `pedidos/migrations/` | Una migración aplicada nunca se edita; una nueva se revisa con `sqlmigrate`. |
-| Edición de `PedidosApp/`, `manage.py`, `requirements.txt`, `.gitignore`, `.env.example`, `compose.yaml`, `package.json`, `pnpm-lock.yaml`, `tailwind.config.js` | Son archivos de configuración: un error en ellos rompe el arranque o el despliegue. |
+| Edición de `PedidosApp/`, `manage.py`, `requirements.txt`, `.gitignore`, `compose.yaml`, `package.json`, `pnpm-lock.yaml`, `tailwind.config.js` | Son archivos de configuración: un error en ellos rompe el arranque o el despliegue. `.env.example` ya no está aquí: su lectura y su edición están en `deny` (ver sección 4 y sección 5). |
 
 ## 4. `deny` · Prohibido
 
@@ -50,15 +50,12 @@
 | `npm`, `npx`, `yarn`, `pnpm dlx` | El único gestor de Node es pnpm con dependencias fijadas; los otros generan archivos de bloqueo distintos, y `npx` y `pnpm dlx` ejecutan paquetes descargados en el momento, sin versión fija. |
 | Edición de `AGENTS.md`, `DESIGN.md`, `README.md` y `_planificacion/README.md` | Son los documentos inmutables: el agente propone cambios y el desarrollador los aplica. |
 | Edición de `.claude/` y `.git/` | El agente no cambia sus propios permisos ni el repositorio interno de Git. |
-| Lectura y edición de `.env` | Contiene la clave secreta y las credenciales. |
-| Lectura y edición de `backups/` y lectura de cualquier `respaldo_*.sql` | Los volcados contienen nombres, teléfonos y montos de clientes reales. El patrón usa el prefijo con que la aplicación nombra sus volcados, para no bloquear los guiones SQL de diagnóstico que el agente sí escribe y lee en `scripts/`. Si descargas un volcado con otro nombre, guárdalo fuera del repositorio. |
+| Lectura y edición de `.env` y de cualquier `.env.*`, incluido `.env.example`, en cualquier carpeta (`Read(**/.env)`, `Read(**/.env.*)`, `Edit(**/.env.*)`) | `.env` contiene la clave secreta y las credenciales. `.env.example` queda bloqueado con el mismo patrón: el agente propone su texto y el desarrollador lo edita. |
+| Lectura de `backups/` en cualquier carpeta (`Read(**/backups/**)`) y edición de `backups/` en la raíz; lectura de `../respaldos/` (la carpeta de respaldos descargados, junto al proyecto) y de cualquier `respaldo_*.sql` | Los volcados contienen nombres, teléfonos y montos de clientes reales. La carpeta de respaldos se indica con una ruta relativa, no absoluta, para no depender del equipo. El patrón `respaldo_*.sql` usa el prefijo con que la aplicación nombra sus volcados, para no bloquear los guiones SQL de diagnóstico de `scripts/`. Si descargas un volcado con otro nombre, guárdalo fuera del repositorio. |
 | WebFetch a `pythonanywhere.com`, `www.pythonanywhere.com` y `manzagrafica.pythonanywhere.com` | El panel y la API de PythonAnywhere son producción. La aplicación publicada tiene rutas que modifican datos con una simple visita, así que ni siquiera se lee desde el agente. La documentación de ayuda está en otro dominio y sigue disponible. |
 
-## 5. `.env.example` y los límites de la protección                                                                                                                                                                                            
-                                                                                                                                                                                                                                                 
-- **`.env.example` también queda bloqueado para lectura.** La regla `Read(./.env.*)` (y `Read(**/.env.*)`) calza con `.env.example`, así que el agente no puede leerlo; `Edit(**/.env.*)` también impide editarlo. Si una iteración necesita   
-cambiarlo, el agente entrega el texto propuesto y el desarrollador lo aplica. Archivos nuevos como `.env.local` o `.env.production` quedan cubiertos por los mismos patrones.                                                                  
-- **La protección es parcial.** Las reglas `Read` y `Edit` solo gobiernan las herramientas de lectura y edición de Claude Code. No cubren un `grep -r` (ni `rg`, `findstr` o `Select-String`) que recorra el repositorio, ni un guion de Python
-o de shell que abra el archivo. Por eso el agente excluye siempre `.env`, `.env.*`, `backups/` y la carpeta de respaldos en sus búsquedas.                                                                                                     
-- **Sin sandbox en Windows nativo.** El sandbox de Claude Code, que limitaría a nivel de sistema los archivos que leen los comandos, no existe en Windows nativo. Aquí la única barrera para Bash y PowerShell es la disciplina del agente y la
-revisión del desarrollador.   
+## 5. `.env.example` y los límites de la protección
+
+- **`.env.example` también queda bloqueado para lectura.** La regla `Read(./.env.*)` (y `Read(**/.env.*)`) calza con `.env.example`, así que el agente no puede leerlo; `Edit(**/.env.*)` también impide editarlo. Si una iteración necesita cambiarlo, el agente entrega el texto propuesto y el desarrollador lo aplica. Archivos nuevos como `.env.local` o `.env.production` quedan cubiertos por los mismos patrones.
+- **La protección es parcial.** Las reglas `Read` y `Edit` solo gobiernan las herramientas de lectura y edición de Claude Code. No cubren un `grep -r` (ni `rg`, `findstr` o `Select-String`) que recorra el repositorio, ni un guion de Python o de shell que abra el archivo. Por eso el agente excluye siempre `.env`, `.env.*`, `backups/` y la carpeta de respaldos en sus búsquedas.
+- **Sin sandbox en Windows nativo.** El sandbox de Claude Code, que limitaría a nivel de sistema los archivos que leen los comandos, no existe en Windows nativo. Aquí la única barrera para Bash y PowerShell es la disciplina del agente y la revisión del desarrollador.

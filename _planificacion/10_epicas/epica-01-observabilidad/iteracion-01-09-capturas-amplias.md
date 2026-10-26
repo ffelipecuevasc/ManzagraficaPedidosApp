@@ -1,13 +1,13 @@
 # Iteración 01-09 · Capturas amplias que incumplen la regla 4
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Redactada, sin ejecutar. Ninguna corrección está decidida: cada captura tiene opciones para que elija el desarrollador (sección «Decisiones del desarrollador»).
+- **Estado:** Redactada, sin ejecutar. Opciones decididas por el desarrollador el 2026-10-26 (sección «Decisiones del desarrollador»): **A** para los ítems y **C** para respaldo y restauración. Se ejecuta y se despliega **después** de la parte D de la 01-06 (2026-11-01).
 - **Subfase del plan:** ninguna propia. Es deuda detectada en la revisión de la 01-06 (2026-10-25) y adelanta parte de 3.2 (supresión silenciosa) y de 3.4 (contrato de error) **solo en lo que pide la regla 4**: registrar y no mostrar `str(e)`.
 - **Depende de:** 01-06 (detección de las capturas y opción A: el diagnóstico se lee en `server.log`).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-008 (inventario de eventos), RDA-013 (errores con `logging`).
 - **Hallazgos relacionados:** AUD-01-002 (`:270`, `:766`, `:810`), AUD-02-006 (`:1128`) y las dos entradas nuevas de la sección 3 de `registro-pendientes.md` (`:1168`, `:1191`). Según la opción elegida, la iteración **avanza** esos hallazgos sin cerrarlos: AUD-01-002 se cierra en 03-02 y AUD-02-006 en 04-01 y 03-04.
 - **Cambio de esquema:** Ninguno.
-- **Respaldo previo al despliegue:** ver «Despliegue». La iteración no toca esquema ni datos.
+- **Respaldo previo al despliegue:** Sí, por decisión del desarrollador (las vistas tocadas son las de respaldo y restauración). La iteración no toca esquema ni datos.
 
 ## Objetivo
 
@@ -54,6 +54,8 @@ Que ninguna de las seis capturas amplias de `pedidos/views.py` deje un fallo sin
 | **C. No tocarlas en la 01-09** | Se dejan para 03-02, que ya las cubre. La 01-09 solo deja registradas las líneas. | **Sin riesgo de código**, pero los fallos siguen sin rastro hasta la Épica 03 y la deuda de la regla 4 sigue abierta. |
 | **D. Corrección completa** | `transaction.atomic()` alrededor del pedido o la cotización y sus ítems, y propagar el error. | **Alto para esta iteración.** Es el trabajo de 03-02 y 03-03, cambia el comportamiento ante fallos y mezcla fases (contra «un despliegue, un propósito», RDA-007). Se anota solo para descartarla de forma consciente. |
 
+**Elegida: opción A** (decisión 1). La corrección de fondo queda en 03-02.
+
 ### 4. `views.py:1128` · `generar_respaldo_bd` (AUD-02-006)
 
 - **Qué hace hoy:** genera el volcado con `mysqldump`, registra `respaldo_generado` y lo descarga. Si algo falla, `except Exception as e` devuelve `HttpResponse(f"Error crítico: {str(e)}")`: una página en blanco, fuera de `base.html`, con el texto de la excepción, que puede incluir la salida de error de `mysqldump` y rutas del servidor. No registra nada.
@@ -78,6 +80,26 @@ Que ninguna de las seis capturas amplias de `pedidos/views.py` deje un fallo sin
 | **C. A, más el estado de la base en `:1191`** | Además, el mensaje de `:1191` dice que la base puede haber quedado restaurada en parte y nombra el respaldo de emergencia que se generó en `:1168` (hoy se descarta el valor que devuelve `generar_respaldo_mysql()`). | **Medio.** Cambia el texto y guarda una variable, sin tocar la lógica de aborto. El nombre del archivo no es un dato técnico sensible, pero la decisión es del desarrollador. Se solapa con 04-04 («verificar que el respaldo previo se generó»). |
 | **D. No tocarlas en la 01-09** | Se dejan para 03-04 (mensajes), 04-01 (`:1128` por POST) y 04-04 (restauración). | **Sin riesgo de código**, pero `str(e)` sigue expuesto hasta la Épica 03 o 04, y un fallo de la restauración sigue sin traza. |
 
+**Elegida: opción C para las tres** (decisión 2), con `messages.error` y redirección a `respaldar_bd` en `:1128` (decisión 4).
+
+### Textos aprobados (decisión 3)
+
+| Captura | Texto que ve el usuario |
+| :------ | :---------------------- |
+| `:1128` | «No se pudo generar el respaldo. El detalle quedó en el registro del servidor.» |
+| `:1168` | «Operación cancelada: no se pudo crear el respaldo de seguridad previo, así que la base no se tocó.» |
+| `:1191` | «La restauración falló. La base puede haber quedado restaurada en parte: revisa el registro del servidor antes de seguir. El respaldo de seguridad previo es `<nombre>`.» La última frase **solo** aparece si el respaldo de emergencia se generó en `:1168`; si el fallo ocurrió antes (por ejemplo, al guardar el archivo subido), el mensaje termina en «antes de seguir.» |
+
+### Dónde queda el respaldo de emergencia y si conviene nombrarlo
+
+Revisado en `pedidos/utils.py:13-70` y `pedidos/views.py:1075-1111` y en la plantilla `respaldar_bd.html`:
+
+- **Dónde queda:** `generar_respaldo_mysql()` lo escribe en `backups/` dentro del proyecto (`settings.BASE_DIR`). En producción es la carpeta `backups/` del servidor de PythonAnywhere, **en el mismo disco de 512 MiB que la base que protege**. No sale del servidor.
+- **Cómo se llega a él:** la página «Respaldar base de datos» lo **lista** (nombre, fecha y tamaño), pero **no tiene enlace de descarga**: el único enlace de la plantilla es el de generar un respaldo nuevo. Para recuperarlo hay que entrar a la pestaña **Files** de PythonAnywhere, algo que solo hace el desarrollador.
+- **Cuánto dura:** la rotación (`limpiar_backups_antiguos`, `mantener=5`, por fecha de modificación) lo conserva mientras esté entre los cinco más recientes. Cada clic en «generar respaldo» y cada nuevo intento de restauración crea otro volcado y lo va desplazando (AUD-02-019): después de cinco intentos, desaparece.
+- **El nombre:** `respaldo_DD-MM-AAAA_HH-MM-SS.sql`, con `datetime.now()` sin zona horaria, o sea, la hora del sistema operativo. En PythonAnywhere es **UTC**, no la hora de Chile (supuesto que se comprueba al desplegar, comparando el nombre con la hora del intento).
+- **¿Es útil o engañoso?** Útil, con condiciones: es la única copia del estado justo antes de la restauración fallida y el nombre permite encontrarla entre las cinco de la lista. Puede engañar en tres casos: (1) si el usuario cree que el archivo está a salvo fuera del servidor o que lo puede descargar desde la aplicación; (2) si lo busca más tarde y la rotación ya lo borró; (3) si compara la hora del nombre con la hora de Chile y le parece un archivo equivocado. Ninguno de los tres es causa para no nombrarlo, pero el texto aprobado no los aclara. Se anota como observación para el desarrollador, sin cambiar el texto aprobado: si quiere, puede agregar «Está en la carpeta backups/ del servidor» o «Hora UTC» antes de ejecutar. La rotación y la descarga son de 04-04 y de la épica 07.
+
 ## Fuera de alcance
 
 - Transacciones en pedidos y cotizaciones (03-02, 03-03) y el rediseño de `@transaccion_segura` (Épica 03).
@@ -92,7 +114,7 @@ Que ninguna de las seis capturas amplias de `pedidos/views.py` deje un fallo sin
 1. **Pruebas primero (regla 8.15).** Por cada captura que se corrija, una prueba que falla hoy y pasa con la corrección, simulando el fallo con `mock` (sin ejecutar `mysql` ni `mysqldump`, como `test_restauracion_fallida_no_deja_evento`). Cada prueba comprueba lo que corresponda a la opción: hay un registro `ERROR` de `pedidos.views` con traza, el mensaje que ve el usuario no contiene el texto de la excepción y no aparece `Traceback` en la respuesta.
 2. Aplicar las opciones elegidas en `pedidos/views.py` (y en `pedidos/utils.py` solo con la opción B de respaldo).
 3. Verificar: `python manage.py test pedidos` (79 más las nuevas, en `OK`), `check` y `makemigrations --check --dry-run`.
-4. Revisión manual en la réplica local, en escritorio y a 360 px: generar un respaldo (camino normal) y ver los mensajes de error con un fallo simulado. La restauración real contra la réplica solo si el desarrollador la autoriza (decisión 5).
+4. Revisión manual en la réplica local, en escritorio y a 360 px: generar un respaldo (camino normal) y ver los mensajes de error con un fallo simulado. **Restauración real solo contra la réplica local de Docker, nunca contra producción, y solo cuando el desarrollador lo pida al ejecutar la iteración** (decisión 6). Después se refresca la réplica según `docs/operacion/replica-local.md` si quedó con otros datos.
 5. Bitácora `bitacora-01-09.md` con el diff, las pruebas y los resultados. Actualizar `registro-pendientes.md` (entradas de `:270` a `:1191`) y, si corresponde, `auditoria-tecnica.md` (avance de AUD-01-002 y AUD-02-006, sin cerrarlos).
 
 ## Criterios de aceptación
@@ -117,21 +139,23 @@ Que ninguna de las seis capturas amplias de `pedidos/views.py` deje un fallo sin
 
 ## Despliegue
 
-- **Cambia código, así que necesita despliegue con etiqueta** (RDA-007). Propuesta: `v1.2-capturas` (o el propósito que elija el desarrollador), con partida en `v1.1-observabilidad`.
+- **Cambia código, así que necesita despliegue con etiqueta** (RDA-007): **`v1.2-capturas`** (decisión 5), con partida en `v1.1-observabilidad`.
 - **La 01-08 viaja en el mismo despliegue:** sus comentarios están en `main` y no tienen despliegue propio. La etiqueta de la 01-09 los incluye. El registro de despliegue de `despliegue.md` debe nombrar las dos iteraciones.
-- **Cuándo:** después de cerrar la parte D de la 01-06 (medición hasta el 2026-11-01), para que la medición no mezcle versiones. Es una decisión del desarrollador (decisión 6).
-- **Respaldo previo:** no hay migraciones ni cambios de datos, así que la iteración no lo exige por sí misma. Las vistas que se tocan son las de respaldo y restauración: si el despliegue sale mal, el botón de respaldo de la aplicación puede ser justo lo que no funcione. Conviene un respaldo descargado antes, según el protocolo de `docs/operacion/despliegue.md` (decisión 5).
-- **Pruebas con la réplica:** pruebas automáticas con `mock` en todos los casos. Contra la réplica local, el camino normal de generar respaldo. La restauración real en local reemplaza los datos de la réplica: solo si el desarrollador la autoriza, y después se refresca la réplica según `docs/operacion/replica-local.md`.
+- **Cuándo:** se ejecuta y se despliega **después** de cerrar la parte D de la 01-06 (2026-11-01), para que la medición no mezcle versiones (decisión 5).
+- **Respaldo previo:** no hay migraciones ni cambios de datos, así que la iteración no lo exige por sí misma. Las vistas que se tocan son las de respaldo y restauración: si el despliegue sale mal, el botón de respaldo de la aplicación puede ser justo lo que no funcione. **Decidido: respaldo descargado antes del despliegue**, según el protocolo de `docs/operacion/despliegue.md` (decisión 6).
+- **Pruebas con la réplica:** pruebas automáticas con `mock` en todos los casos. Contra la réplica local, el camino normal de generar respaldo y una **restauración real**, autorizada por el desarrollador solo contra la réplica de Docker y solo cuando él lo pida al ejecutar la iteración (decisión 6). La restauración reemplaza los datos de la réplica: después se refresca según `docs/operacion/replica-local.md`.
 - **Validación en producción:** pasos para el desarrollador. Generar un respaldo desde la aplicación (camino normal) y comprobar que se descarga. **No** se provoca a propósito un fallo de respaldo ni de restauración en producción.
 
 ## Decisiones del desarrollador
 
-1. **Capturas de ítems (`:270`, `:766`, `:810`):** opción A, B o C (D queda descartada por alcance). `PENDIENTE_DESARROLLADOR`.
-2. **Capturas de respaldo y restauración (`:1128`, `:1168`, `:1191`):** opción A, B, C o D, juntas o por separado. `PENDIENTE_DESARROLLADOR`.
-3. **Textos que ve el usuario** con las opciones que los cambian (B de ítems; A, B o C de respaldo). Propuesta para revisar: `:1128` «No se pudo generar el respaldo. El detalle quedó en el registro del servidor.»; `:1168` «Operación cancelada: no se pudo crear el respaldo de seguridad previo, así que la base no se tocó.»; `:1191` «La restauración falló. La base puede haber quedado restaurada en parte: revisa el registro del servidor antes de seguir.» `PENDIENTE_DESARROLLADOR`.
-4. **`:1128`:** mensaje y redirección a `respaldar_bd`, o `HttpResponse` con texto fijo. `PENDIENTE_DESARROLLADOR`.
-5. **Respaldo previo al despliegue y restauración real en la réplica local:** sí o no. `PENDIENTE_DESARROLLADOR`.
-6. **Cuándo ejecutar y desplegar:** antes o después de cerrar la parte D de la 01-06, y nombre de la etiqueta. `PENDIENTE_DESARROLLADOR`.
+Todas resueltas el 2026-10-26.
+
+1. **Capturas de ítems (`:270`, `:766`, `:810`):** opción A, registrar igual que `:194` sin cambiar lo que ve el usuario. La corrección de fondo queda en 03-02.
+2. **Capturas de respaldo y restauración (`:1128`, `:1168`, `:1191`):** opción C.
+3. **Textos que ve el usuario:** los de la tabla «Textos aprobados». En `:1191`, el nombre del archivo solo aparece si el respaldo de emergencia se generó en `:1168`.
+4. **`:1128`:** `messages.error` con el texto fijo y redirección a `respaldar_bd`.
+5. **Cuándo y con qué etiqueta:** se ejecuta y se despliega después de la parte D de la 01-06 (2026-11-01), con `v1.2-capturas`. La 01-08 viaja en ese despliegue.
+6. **Respaldo y restauración real:** respaldo previo al despliegue, sí. Restauración real autorizada **solo contra la réplica local de Docker**, nunca contra producción, y solo cuando el desarrollador lo pida al ejecutar la iteración.
 
 ## Datos requeridos del cliente
 
