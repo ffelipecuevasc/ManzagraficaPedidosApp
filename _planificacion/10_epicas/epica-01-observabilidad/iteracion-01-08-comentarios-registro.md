@@ -1,7 +1,7 @@
 # Iteración 01-08 · Comentarios del registro alineados con la opción A
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Redactada, sin ejecutar
+- **Estado:** Redactada, sin ejecutar. Se ejecuta **ahora, antes de la medición de la parte D de la 01-06** (decisión del desarrollador del 2026-10-26), una vez que el desarrollador apruebe expresamente el diff.
 - **Subfase del plan:** 1.2 (ajuste de texto de 01-02 y 01-03; iteración nueva, sin subfase propia en el plan)
 - **Depende de:** 01-06 (hallazgo «dos destinos de registro» y decisión A del desarrollador, 2026-10-25)
 - **RDA relacionadas:** RDA-013 (con su actualización del 2026-10-25)
@@ -20,7 +20,7 @@ Solo cambia texto: ni una instrucción ni un valor de configuración.
 
 ## Alcance
 
-Los cuatro lugares decididos por el desarrollador, más uno que encontró la revisión.
+Los cuatro lugares decididos por el desarrollador, más uno que encontró la revisión (incluido por decisión del desarrollador del 2026-10-26).
 
 | # | Archivo y línea | Texto actual | Texto propuesto |
 | :- | :-------------- | :----------- | :-------------- |
@@ -30,7 +30,7 @@ Los cuatro lugares decididos por el desarrollador, más uno que encontró la rev
 | 4 | `pedidos/eventos.py:47` | `# hacer fallar una petición. El problema queda en error.log con su traza.` | `# hacer fallar una petición. El problema queda en server.log con su traza.` |
 | 5 | `pedidos/registro.py:69` (encontrado en la revisión) | `# Única captura amplia permitida (AGENTS.md, regla 4): el registrador nunca puede` | `# Captura amplia permitida (AGENTS.md, regla 4), como las de eventos.py: el registrador nunca puede` |
 
-- **Sobre el punto 5:** no menciona `error.log`, pero comparte el problema: el comentario es inexacto. Dice «única» y `eventos.py:45` y `:54` tienen otras dos capturas permitidas por la misma regla. Se incluye solo si el desarrollador lo aprueba (decisión 2).
+- **Sobre el punto 5:** no menciona `error.log`, pero comparte el problema: el comentario es inexacto. Dice «única» y `eventos.py:45` y `:54` tienen otras dos capturas permitidas por la misma regla. **Se incluye** (decisión 2).
 - **Si el punto 5 deja la línea muy larga:** el texto se reparte en dos líneas de comentario, sin tocar el código.
 
 ### Diff exacto de `settings.py` (solo comentarios; requiere aprobación antes de aplicarlo)
@@ -73,7 +73,7 @@ Busqué `error.log`, `server.log`, `stderr`, «salida estándar», «salida de e
 
 ## Tareas
 
-1. Aplicar los cambios 2, 3 y 4, y el 5 si se aprueba, exactamente como en la tabla.
+1. Aplicar los cambios 2, 3, 4 y 5 exactamente como en la tabla, **solo después de la aprobación expresa del desarrollador**, que antes revisa el diff completo.
 2. Aplicar el diff de `settings.py` **solo después de la aprobación del desarrollador**, que antes lo ve tal cual.
 3. Comprobar que el diff completo de la iteración contiene **solo líneas de comentario**. Revisarlo con `git diff --stat`, y con `git diff` filtrado: cada línea `+` o `-` empieza con `#` después de la sangría.
 4. Verificar: `python manage.py test pedidos`, `check` y `makemigrations --check --dry-run`.
@@ -81,7 +81,7 @@ Busqué `error.log`, `server.log`, `stderr`, «salida estándar», «salida de e
 
 ## Criterios de aceptación
 
-- [ ] Los cuatro lugares decididos (y el quinto, si se aprueba) tienen el texto propuesto u otro aprobado por el desarrollador.
+- [ ] Los cinco lugares tienen el texto propuesto u otro aprobado por el desarrollador.
 - [ ] El diff de `settings.py` lo aprobó el desarrollador antes de aplicarlo, y coincide con el de esta iteración.
 - [ ] El diff total cambia solo comentarios: ninguna línea de código, configuración, plantilla ni prueba. El resto del diff es nulo.
 - [ ] `python manage.py test pedidos`: **79 pruebas en `OK`**. `check` sin errores. `makemigrations --check`: `No changes detected`.
@@ -89,7 +89,7 @@ Busqué `error.log`, `server.log`, `stderr`, «salida estándar», «salida de e
 
 ## Despliegue
 
-- **No requiere un despliegue ni una etiqueta propios.** No cambia el comportamiento: producción, con `v1.1-observabilidad`, se comporta igual con o sin estos comentarios.
+- **No requiere un despliegue ni una etiqueta propios** (confirmado por el desarrollador el 2026-10-26). No cambia el comportamiento: producción, con `v1.1-observabilidad`, se comporta igual con o sin estos comentarios.
 - **Cuándo conviene desplegarla:** junto con el siguiente despliegue que cambie código, por ejemplo la 01-09 o la próxima iteración de la Épica 02 o 03. Así viaja dentro de esa etiqueta y el servidor vuelve a coincidir con `main`.
 - **Mientras tanto,** el servidor queda con los comentarios antiguos. No tiene efecto, porque los comentarios no se ejecutan.
 
@@ -104,9 +104,10 @@ Busqué `error.log`, `server.log`, `stderr`, «salida estándar», «salida de e
 
 ## Decisiones del desarrollador
 
-1. **Diff de `settings.py`:** aprobarlo tal cual o ajustar el texto (`PENDIENTE_DESARROLLADOR`).
-2. **Punto 5 (`registro.py:69`, «Única captura amplia»):** incluirlo en esta iteración o dejarlo fuera (`PENDIENTE_DESARROLLADOR`).
-3. **Cuándo ejecutarla**, considerando que viaja en el siguiente despliegue con cambios de código.
+1. **Diff de `settings.py` y de los demás archivos:** `PENDIENTE_DESARROLLADOR`. El desarrollador lo revisa y da su aprobación expresa antes de que se aplique cualquier cambio.
+2. **Punto 5 (`registro.py:69`, «Única captura amplia»):** se incluye (2026-10-26).
+3. **Cuándo ejecutarla:** ahora, antes de la medición de la parte D de la 01-06 (2026-10-26).
+4. **Despliegue:** no necesita uno propio; viaja en el siguiente despliegue con cambios de código (2026-10-26).
 
 ## Datos requeridos del cliente
 
