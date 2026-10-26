@@ -4,7 +4,7 @@
 - **Pedido por:** Claude Code (Opus 5.5)
 - **Iteración:** [01-06](iteracion-01-06-despliegue-validacion.md). Etiqueta `v1.1-observabilidad`; partida y destino de retroceso `v0.2-correcciones`.
 - **Criterios que dependen de esta evidencia:** todos los de la 01-06.
-- **Estado (2026-10-25, noche; 2026-10-26 en UTC):** partes A y B completadas y sin incidencias, salvo la corrección de `DESDE` en B6. B8: parte del agente lista (script y `respaldo.md`); falta verificar el respaldo de A2. C y D pendientes.
+- **Estado (2026-10-25, noche; 2026-10-26 en UTC):** partes A, B y C completadas; el error controlado, la página 500, el PDF y los eventos se validaron en producción. Hallazgo: cada error queda en dos archivos con dos formatos (decisión pendiente). B8: pruebas del agente hechas, verificación en el PC pendiente. D pendiente (hacia el domingo 2026-11-01).
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide, sin datos de clientes: conteos, horas, tipos de error y códigos.
 >
@@ -321,9 +321,9 @@ echo "$DESDE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}
 
 | Dato | Valor |
 | :--- | :---- |
-| Hora de la recarga | `2026-10-26 00:27:15` UTC (21:27:15, hora de Chile), según lo anotado por el desarrollador |
+| Hora de la recarga | Anotada por el desarrollador: `00:27:15` UTC (21:27:15 Chile). Según `server.log`, el reinicio ocurrió a las **21:26:25** Chile (`00:26:25` UTC) |
 | `L` | `/var/log/manzagrafica.pythonanywhere.com.error.log` (definida) |
-| Validación de `DESDE` | **No pasó:** la consola no imprimió «DESDE válido». `DESDE` quedó con el texto de la plantilla entre `<` y `>`: `<2026-10-26 00:27:15 de la recarga, en UTC>` |
+| Validación de `DESDE` (primer intento) | **No pasó:** la consola no imprimió «DESDE válido». `DESDE` quedó con el texto de la plantilla entre `<` y `>`: `<2026-10-26 00:27:15 de la recarga, en UTC>` |
 
 **Corrección obligatoria antes de la parte C:** `DESDE` debe llevar **solo** la fecha y la hora, sin `<`, `>` ni texto. En la misma consola:
 
@@ -332,7 +332,7 @@ DESDE="2026-10-26 00:27:15"
 echo "$DESDE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$' && echo "DESDE válido"
 ```
 
-Debe imprimir `DESDE válido`. Con el valor incorrecto, los filtros `awk 'substr($0,1,19) >= d'` de la parte C no devolverían ninguna línea.
+Debe imprimir `DESDE válido`. **Resultado:** se corrigió a las 00:31 UTC e imprimió `DESDE válido`. Con el valor incorrecto, los filtros `awk 'substr($0,1,19) >= d'` de la parte C no devolverían ninguna línea.
 
 > **Nota (2026-10-25):** después de las 21:00 hora de Chile, la fecha en UTC ya es **2026-10-26** (Chile está en UTC-3). Si recargas, por ejemplo, a las 21:30 de Chile, `DESDE` es `2026-10-26 00:30:00`, no `2026-10-25`. Usa la hora UTC que muestre `date -u` o la del panel, no la de tu reloj.
 
@@ -348,7 +348,7 @@ Ventana privada: inicio de sesión, panel, listado de pedidos y detalle de un pe
 | Acceso y panel | Correcto, según el desarrollador |
 | Listado y detalle de pedido | Correcto: se revisó hasta el detalle de un pedido y están todos los datos (según el desarrollador) |
 
-Sin respuestas 500 en las pantallas revisadas: no corresponde retroceso. El inicio de sesión de B7 debe haber generado un evento `acceso_exitoso` en producción (se comprueba en C5).
+Sin respuestas 500 en las pantallas revisadas: no corresponde retroceso. Se esperaba un evento `acceso_exitoso` por el inicio de sesión de B7, pero la tabla estaba vacía al revisarla en C5. La explicación probable es una sesión reutilizada (no verificada); la prueba directa de C5 confirmó que el servicio escribe.
 
 Si algo responde 500 en estas pantallas, sigue `retroceso.md`, caso 1, con destino `v0.2-correcciones` (la tabla nueva puede quedarse: el código anterior la ignora).
 
@@ -372,12 +372,53 @@ El cambio va en un commit después de la etiqueta: el script corre en tu PC, no 
 
 | Dato | Valor |
 | :--- | :---- |
-| Pruebas sintéticas del agente (con y sin la tabla) | Con la tabla: 19 de 19, `VÁLIDO`, código `0`. Sin ella: 18 de 19, falta `pedidos_registroevento`, `NO VÁLIDO (1 tabla(s) faltante(s))`, código `1` (2026-10-25) |
-| Respaldo de A2 con el script nuevo (tablas y código) | |
+| Pruebas sintéticas del agente (con y sin la tabla) | Con la tabla: `19 de 19`, VÁLIDO, código `0`. Sin ella: `18 de 19`, NO VÁLIDO (1 tabla faltante), código `1` |
+| Respaldo de A2 con el script nuevo (tablas y código) | _Pendiente: se ejecuta en el PC (esperado `18 de 19`, falta `pedidos_registroevento`, código `1`)_ |
 
 ---
 
 ## Parte C · Validación (el mismo día)
+
+> **Hallazgo de la validación (2026-10-25):** en PythonAnywhere cada error queda escrito en **dos archivos con dos formatos**:
+>
+> - **`error.log`** (UTC): lo escribe PythonAnywhere. Lleva el mensaje, la **traza completa** y `Internal Server Error: <ruta>`. Sin emoji, sin `nivel=` y sin método, ruta ni usuario en la primera línea.
+> - **`server.log`** (hora de Chile): lleva **nuestro formato** (`❌ nivel=ERROR registrador=… metodo=… ruta=… usuario=… excepcion=… mensaje="…"`), con los saltos de línea de la traza escritos como `#012`.
+>
+> La suposición de las iteraciones 01-02 a 01-06 («nuestras líneas caen en `error.log`») era incorrecta. Claude Code investiga la causa y las opciones; la decisión sobre qué hacer está pendiente (`registro-pendientes.md`, sección 3). Los comandos de esta parte quedaron **adaptados** a lo que realmente ocurre.
+
+### Preparación de la consola **[PA · Bash]**
+
+Define estas variables y la función `desde` en la consola Bash (si la cierras, vuelve a definirlas):
+
+```bash
+cd "$PROYECTO"; source "$VENV/bin/activate"
+desde() { awk -v d="$2" '/^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] / && substr($0,1,19) >= d {f=1} f' "$1"; }
+ID=<ID de B5>
+L=/var/log/manzagrafica.pythonanywhere.com.error.log
+S=/var/log/manzagrafica.pythonanywhere.com.server.log
+DESDE="<AAAA-MM-DD HH:MM:SS de la recarga, en UTC>"
+DESDE_CL="<AAAA-MM-DD HH:MM:SS de la recarga, en hora de Chile>"
+```
+
+- **`DESDE` va en UTC** (para `error.log` y `access.log`) y **`DESDE_CL` en hora de Chile** (para `server.log`). Escribe solo la fecha y la hora, **sin** `<`, `>` ni texto.
+- La función `desde` corta el archivo en la **primera línea con fecha ≥ la indicada** y muestra desde ahí hasta el final. Reemplaza al filtro `awk 'substr($0,1,19) >= d'` de la versión anterior, que dejaba pasar las líneas que empiezan con una letra (`Traceback`, `django.…`) aunque fueran antiguas, porque las letras ordenan después de los números.
+- Referencia del despliegue real: reinicio del servidor a las **21:26:25** (hora de Chile) = **00:26:25** UTC del 2026-10-26, según `server.log`.
+
+### C0. Fotografía previa **[PA · Bash]**
+
+Antes de provocar el error, para conocer la forma real de los registros y tener una base de comparación:
+
+```bash
+tail -n 6 $L | cut -c1-120
+grep -c 'Error capturado por decorador' "$S"
+desde $S "$DESDE_CL" | grep -o 'nivel=[A-Z]*' | sort | uniq -c
+```
+
+| Dato | Valor |
+| :--- | :---- |
+| Últimas líneas de `error.log` | Líneas de PythonAnywhere con fecha (`AAAA-MM-DD HH:MM:SS,mmm: mensaje`), por ejemplo `OSError: write error` (2026-10-24 y 2026-10-26 00:02:40, anteriores al despliegue) y restos de `fontTools` del 2026-10-23 |
+| «Error capturado por decorador» en `server.log` (base) | `0` |
+| Líneas con `nivel=` desde la recarga (antes del error controlado) | Ninguna |
 
 ### C1. Error controlado y página 500 **[Navegador]**
 
@@ -387,128 +428,141 @@ El cambio va en un commit después de la etiqueta: el script corre en tu PC, no 
 
 | Dato | Valor |
 | :--- | :---- |
-| Hora de la petición (Chile) | |
-| Página 500 en escritorio | |
-| Página 500 a 360 px | |
-| Foco visible en los botones | |
+| Hora de la petición (Chile) | Anotada por el desarrollador: 21:41. Los registros dan **21:40:36** (`server.log`) = 00:40:36 UTC (`error.log`): es la hora que se usa |
+| Página 500 en escritorio | Dice «Algo salió mal», sin «500», sin la broma de los correos y sin detalles técnicos; se ve bien |
+| Página 500 a 360 px | Se ve bien |
+| Foco visible en los botones | Sí: «Recargar» e «Ir al inicio» muestran su foco con Tab |
 
-### C2. Diagnóstico desde `error.log` **[PA · Bash]**
+### C2. Diagnóstico desde los registros **[PA · Bash]**
 
 ```bash
-ID=<ID de B5>
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep "ruta=/pagos/eliminar/$ID/" | cut -c1-260
-N=$(grep -n "registrador=pedidos.decorators.*ruta=/pagos/eliminar/$ID/" $L | tail -n 1 | cut -d: -f1)
-sed -n "${N},$((N+60))p" $L | grep -nE 'Traceback|^[^ ]+ [^ ]+: [A-Za-z_.]+(Error|DoesNotExist|Exception)' | cut -c1-200
+desde $S "$DESDE_CL" | grep "ruta=/pagos/eliminar/$ID/" | cut -c1-260
+desde $L "$DESDE" | cut -c1-200
 ```
 
 **Esperado:**
 
-- Dos líneas para esa ruta:
-  - `❌ nivel=ERROR registrador=pedidos.decorators metodo=GET ruta=/pagos/eliminar/<ID>/ usuario=<tu id> excepcion=TemplateDoesNotExist mensaje="Error capturado por decorador en eliminar_pago"`;
-  - `❌ nivel=ERROR registrador=django.request … mensaje="Internal Server Error: /pagos/eliminar/<ID>/"`.
-- **Emoji (01-07):** las dos líneas empiezan con `❌` justo después de la fecha de PythonAnywhere. Mira además una de ellas en el visor de registros del panel (**[PA · Panel]**, pestaña **Web** → *Log files* → error log) y anota si el emoji se ve. Si no aparece ninguna línea nueva, revisa `awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c 'Logging error'`: un valor mayor que 0 indica que la salida no admite UTF-8 y la línea se perdió. Detente y avisa.
-- Debajo de la primera, `Traceback (most recent call last):` y, al final de la traza, `django.template.exceptions.TemplateDoesNotExist: pedidos/pago_confirm_delete.html`.
+- **`server.log`:** dos líneas con `❌ nivel=ERROR`: la del decorador (`registrador=pedidos.decorators metodo=GET ruta=/pagos/eliminar/<ID>/ usuario=<tu id> excepcion=TemplateDoesNotExist mensaje="Error capturado por decorador en eliminar_pago"` y la traza con `#012`) y la de `django.request` (`mensaje="Internal Server Error: /pagos/eliminar/<ID>/"`).
+- **`error.log`:** `Error capturado por decorador en eliminar_pago`, `Traceback (most recent call last):`, la traza, `django.template.exceptions.TemplateDoesNotExist: pedidos/pago_confirm_delete.html` e `Internal Server Error: /pagos/eliminar/<ID>/`. Sin emoji.
+- Además, mira el `server log` en el visor del panel (**[PA · Panel]**, pestaña **Web** → *Log files*) y anota si el emoji se ve.
 
-Pega **solo** esas líneas (cabeceras, `Traceback` y la última línea de la traza). Detén el cronómetro.
+Pega solo esas líneas (cabeceras, `Traceback` y la última línea de la traza). Detén el cronómetro.
 
 | Dato | Valor |
 | :--- | :---- |
-| Cabecera del decorador (nivel, método, ruta, usuario, excepción) | |
-| ¿Empieza con `❌`? ¿Se ve en la consola y en el visor del panel? | |
-| Hora UTC de la línea | |
-| ¿Traza completa con `TemplateDoesNotExist` al final? | |
-| Tiempo de diagnóstico (minutos y segundos) | |
+| Cabecera del decorador en `server.log` (nivel, método, ruta, usuario, excepción) | `❌ nivel=ERROR registrador=pedidos.decorators metodo=GET ruta=/pagos/eliminar/1056/ usuario=1 excepcion=TemplateDoesNotExist mensaje="Error capturado por decorador en eliminar_pago"` (hora de Chile 21:40:36) |
+| Línea de `django.request` en `server.log` | `❌ nivel=ERROR registrador=django.request metodo=GET ruta=/pagos/eliminar/1056/ usuario=1 excepcion=- mensaje="Internal Server Error: /pagos/eliminar/1056/"` |
+| ¿Empieza con `❌`? ¿Se ve? | `server.log`: sí, y se ve bien en el visor del panel. `error.log`: sin emoji (formato de PythonAnywhere) |
+| Hora UTC en `error.log` | `2026-10-26 00:40:36,355` (decorador) y `00:40:36,362` (`Internal Server Error`) |
+| ¿Traza completa con `TemplateDoesNotExist` al final? | Sí, en ambos archivos. En `error.log`: de `decorators.py` línea 19 a `django.template.exceptions.TemplateDoesNotExist: pedidos/pago_confirm_delete.html` |
+| Tiempo de diagnóstico | Unos **2 minutos**: error a las 21:40:36; causa y traza a la vista a las 21:42; C2 terminó a las 21:43 (según el desarrollador). El 2026-10-22 el mismo error (las dos líneas de las 19:19:05 y 19:19:08 UTC) quedó sin traza ni causa |
 
-### C3. Sin líneas duplicadas ni formato antiguo **[PA · Bash]**
+### C3. Sin duplicados dentro de un archivo, sin formato perdido **[PA · Bash]**
 
 ```bash
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c "ruta=/pagos/eliminar/$ID/"
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -v 'nivel=' | grep -c "Internal Server Error: /pagos/eliminar/$ID/"
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c 'Traceback (most recent call last)'
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c "❌ nivel=ERROR .*ruta=/pagos/eliminar/$ID/"
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep 'nivel=' | grep -vcE '(❗❌❗|❌|⚠️|❕|🛠️) nivel='
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -cE 'Logging error|UnicodeEncodeError'
+echo "--- server.log (nuestro formato; hora de Chile) ---"
+desde $S "$DESDE_CL" | grep -c "ruta=/pagos/eliminar/$ID/"
+desde $S "$DESDE_CL" | grep -c "❌ nivel=ERROR .*ruta=/pagos/eliminar/$ID/"
+desde $S "$DESDE_CL" | grep 'nivel=' | grep -vcE '(❗❌❗|❌|⚠️|❕|🛠️) nivel='
+desde $S "$DESDE_CL" | grep -cE 'Logging error|UnicodeEncodeError'
+echo "--- error.log (lo que escribe PythonAnywhere; UTC) ---"
+desde $L "$DESDE" | grep -c 'Error capturado por decorador'
+desde $L "$DESDE" | grep -c "Internal Server Error: /pagos/eliminar/$ID/"
+desde $L "$DESDE" | grep -c 'Traceback (most recent call last)'
+desde $L "$DESDE" | grep -c 'TemplateDoesNotExist: pedidos/pago_confirm_delete.html'
+desde $L "$DESDE" | grep -cE 'Logging error|UnicodeEncodeError'
+desde $L "$DESDE" | wc -l
 ```
 
-Los filtros buscan `nivel=…` dentro de la línea: cada línea empieza con la fecha de PythonAnywhere, después el emoji (01-07) y recién entonces `nivel=`.
+| Archivo | Conteo | Esperado | Resultado |
+| :------ | :----- | :------- | :-------- |
+| `server.log` | Líneas de la ruta | `2` | `2` |
+| `server.log` | Líneas con `❌ nivel=ERROR` de la ruta | `2` | `2` |
+| `server.log` | Líneas con `nivel=` sin emoji | `0` | `0` |
+| `server.log` | `Logging error` o `UnicodeEncodeError` | `0` | `0` |
+| `error.log` | «Error capturado por decorador» | `1` | `1` |
+| `error.log` | «Internal Server Error» de la ruta | `1` | `1` |
+| `error.log` | Trazas | `1` | `1` |
+| `error.log` | `TemplateDoesNotExist` | `1` | `1` |
+| `error.log` | `Logging error` o `UnicodeEncodeError` | `0` | `0` |
+| `error.log` | Líneas desde `DESDE` | 14 (el mensaje, `Traceback`, 10 líneas de la traza, la excepción e `Internal Server Error`) | `14` (medido después del PDF y de la prueba de C5) |
 
-**Esperado:**
+Interpretación:
 
-- `2`: una línea del decorador y una de `django.request`, por **una** apertura. Con `4` hay duplicación.
-- `0`: no queda el formato antiguo, sin `nivel=`, que dejaba el manejador propio de PythonAnywhere.
-- `1`: una sola traza.
-- `2`: las dos líneas del error controlado llevan `❌` (emoji en el `error.log` real).
-- `0`: ninguna línea con `nivel=` queda sin su emoji.
-- `0`: ninguna línea `Logging error` ni `UnicodeEncodeError` (la salida admite UTF-8). Si es mayor que 0, detente y avisa: las líneas del registro se estarían perdiendo (bitacora-01-07).
-
-Si los números son el doble, la hipótesis del manejador de PythonAnywhere se confirma: no hagas retroceso por esto (la información está completa); anótalo y el agente propondrá el ajuste.
-
-> **Decisión del desarrollador (2026-10-25), si el emoji no se escribe bien:** si en vez de `❌` el `error.log` muestra `\u274c` (la línea y su traza llegan completas), se **sigue** y se corrige después, sin retroceso. Solo se retrocede si se pierden líneas (`Logging error` y la línea del error no llega).
-
-| Conteo | Valor |
-| :----- | :---- |
-| Líneas de la ruta | |
-| Formato antiguo | |
-| Trazas | |
-| Líneas del error con `❌` | |
-| Líneas con `nivel=` sin emoji | |
-| `Logging error` o `UnicodeEncodeError` | |
+- El error controlado quedó registrado **una sola vez en cada archivo**: no hay duplicación dentro de un mismo archivo.
+- La salida admite UTF-8: el `❌` se escribe sin problemas y no hay `Logging error`.
+- Lo que se repite es el **destino** (el mismo error en `error.log` y en `server.log`, con formatos distintos). Es el hallazgo descrito al inicio de esta parte.
+- Desde la recarga no hay otras líneas `ERROR` ni `WARNING` además de las del pago.
 
 ### C4. PDF sin `fontTools` y sin `django.server` **[Navegador]** y **[PA · Bash]**
 
 1. **[Navegador]** Abre una cotización y genera su **PDF**.
-2. **[PA · Bash]**:
+2. **[PA · Bash]** Comprueba primero que el PDF se generó dentro del período medido, con `access.log` (UTC, sin mostrar IP):
 
 ```bash
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c 'fontTools'
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -c 'registrador=django.server'
-awk -v d="$DESDE" 'substr($0,1,19) >= d' $L | grep -o 'nivel=[A-Z]*' | sort | uniq -c
+A=/var/log/manzagrafica.pythonanywhere.com.access.log
+grep -E '26/Oct/2026:00:(2[7-9]|[3-5][0-9])' $A | grep -i pdf | awk '{print $4, $5, $6, $7, $9}'
 ```
 
-**Esperado:**
+3. Luego los conteos:
 
-- `0` líneas de `fontTools` (antes, cientos por PDF).
-- `0` de `django.server`: solo existe en `runserver`, y los accesos siguen en `access.log`.
-- Por nivel, solo los `ERROR` del error controlado (2), salvo otros errores reales: en ese caso, anota solo su tipo y su hora.
+```bash
+desde $L "$DESDE" | grep -c 'fontTools'
+desde $S "$DESDE_CL" | grep -c 'fontTools'
+desde $S "$DESDE_CL" | grep -c 'registrador=django.server'
+desde $S "$DESDE_CL" | grep -o 'nivel=[A-Z]*' | sort | uniq -c
+```
+
+**Esperado:** la petición del PDF con código `200`; `0` líneas de `fontTools` en ambos archivos (antes, cientos por PDF); `0` de `django.server`; y, por nivel, solo los `ERROR` del error controlado (2), salvo otros errores reales.
 
 | Dato | Valor |
 | :--- | :---- |
-| PDF generado | |
-| Líneas de `fontTools` | |
-| Líneas de `django.server` | |
-| Líneas por nivel | |
+| PDF generado | `GET /cotizaciones/27/pdf/ 200` a las `26/Oct/2026:00:54:55 +0000` (21:54:55, hora de Chile) |
+| Líneas de `fontTools` | `0` en `error.log` y `0` en `server.log` |
+| Líneas de `django.server` | `0` |
+| Líneas por nivel | `2 nivel=ERROR` (las del error controlado) |
+
+Además, `error.log` mide 14 líneas desde `DESDE` (después del PDF): el ruido de `fontTools` (cientos de líneas por PDF antes del cambio, como las del 2026-10-23) no volvió.
 
 ### C5. Eventos en el admin y purga **[Navegador]** y **[PA · Bash]**
 
-1. **[Navegador]** Abre `https://manzagrafica.pythonanywhere.com/acceso-manzagrafica-admin/pedidos/registroevento/`. Debe haber al menos un `acceso_exitoso` con tu usuario y la hora de tu inicio de sesión de B7, con `(UTC-0300)`. No debe haber un `pago_eliminado`: la página de C1 solo se abrió.
+1. **[Navegador]** Abre `https://manzagrafica.pythonanywhere.com/acceso-manzagrafica-admin/pedidos/registroevento/`. Debe haber al menos un `acceso_exitoso` con tu usuario y la hora de tu inicio de sesión, con `(UTC-0300)`. No debe haber un `pago_eliminado`: la página de C1 solo se abrió.
 2. **[PA · Bash]**:
 
 ```bash
 python manage.py purgar_registros
 python manage.py shell -c "from collections import Counter; from pedidos.models import RegistroEvento as R; print(sorted(Counter(R.objects.values_list('tipo', flat=True)).items()))" | tail -n 1
-grep -c 'Error capturado por decorador' "/var/log/manzagrafica.pythonanywhere.com.server.log"
+grep -c 'Error capturado por decorador' "$S"
 ```
 
 **Esperado:**
 
 - `Eventos eliminados: 0 (… retención de 365 días).`
 - Los eventos por tipo: al menos `('acceso_exitoso', 1)`.
-- El conteo de `server.log` no sube respecto de antes del despliegue: desde 01-03, esos mensajes van a `error.log` con `logging`, no a `server.log`.
+- El conteo de `server.log` pasa de `0` (C0) a `1`: ahora es **nuestra propia línea** con formato, no el `print` antiguo, que ya no existe.
+
+**Primera medición (después de B7 y de C1):** la tabla estaba **vacía** (`0 Registro de eventos` en el admin y `[]` en el conteo por tipo), aunque se había revisado la aplicación. La explicación más probable es que B7 se hizo con una **sesión ya iniciada** antes del despliegue: Django guarda las sesiones en la base de datos y sobreviven a la recarga, y una sesión que continúa no registra un «acceso exitoso» (las lecturas tampoco generan eventos, por diseño). El desarrollador no confirmó si B7 fue con sesión nueva, así que esta explicación **no está verificada**. Para descartar una falla del servicio se hizo una prueba directa.
+
+**Prueba directa en producción:** cerrar sesión; en el acceso, escribir el usuario `nacho` con una contraseña **inventada** (rechazada); entrar con la contraseña real; revisar el admin y el conteo por tipo.
 
 | Dato | Valor |
 | :--- | :---- |
-| Evento en el admin (tipo, usuario, hora) | |
-| ¿Hay `pago_eliminado`? | |
-| Salida de `purgar_registros` | |
-| Eventos por tipo | |
+| Evento en el admin (tipo, usuario, hora) | «Acceso fallido» (usuario `-`, resumen «Usuario intentado: nacho») a las `25-10-2026 22:12:58 (UTC-0300)` y «Acceso exitoso» (usuario `nacho`, «Acceso de usuario #1») a las `25-10-2026 22:13:10 (UTC-0300)`. 2 registros |
+| ¿Hay `pago_eliminado`? | No |
+| Salida de `purgar_registros` | `Eventos eliminados: 0 (anteriores al 25-10-2025 22:05, hora de Chile; retención de 365 días).` |
+| Eventos por tipo | Antes de la prueba: `[]`. Después: `[('acceso_exitoso', 1), ('acceso_fallido', 1)]` |
+| «Error capturado por decorador» en `server.log` | `1` (base `0`): es nuestra línea con formato |
+| Otros `ERROR` o `WARNING` en `server.log` | Ninguno (salvo los del pago controlado) |
 
-Agrega la fila en `docs/operacion/despliegue.md`, sección 5, con la etiqueta, el commit, el SHA-256 del respaldo (12 primeros) y el resultado.
+Conclusión: el servicio de eventos escribe en producción con el formato esperado, y el acceso fallido guarda el nombre del usuario que existe sin la contraseña escrita.
 
 ---
 
 ## Parte D · Siete días después del despliegue
 
-**[PA · Bash]** (define `PROYECTO`, `VENV`, `DESDE` y `L` como en B1 y B6):
+> **Nota (2026-10-25):** los comandos de registros están **adaptados** a lo que se observó en la parte C: el formato `nivel=…` está en **`server.log`** (hora de Chile) y no en `error.log`. Si la decisión pendiente sobre los dos destinos de registro cambia dónde escribe la aplicación, el agente ajusta esta parte antes de que se ejecute.
+
+**[PA · Bash]** (define `PROYECTO`, `VENV`, `L`, `S`, `DESDE` y `DESDE_CL` como en B1, B6 y la preparación de la parte C; la medición sirve al cumplirse los siete días, hacia el domingo 2026-11-01 a la misma hora del despliegue):
 
 ```bash
 cd "$PROYECTO"; source "$VENV/bin/activate"
@@ -527,14 +581,15 @@ with connection.cursor() as c:
     c.execute('SELECT AVG(CHAR_LENGTH(resumen)) FROM pedidos_registroevento')
     print('resumen_promedio', c.fetchone()[0])
 " | tail -n 5
-zcat -f $L* | awk -v d="$DESDE" 'substr($0,1,19) >= d' | grep -o 'nivel=[A-Z]*' | sort | uniq -c
-zcat -f $L* | awk -v d="$DESDE" 'substr($0,1,19) >= d' | grep -o 'registrador=[a-zA-Z_.]*' | sort | uniq -c
-zcat -f $L* | awk -v d="$DESDE" 'substr($0,1,19) >= d' | grep -c 'fontTools'
+zcat -f $S* | awk -v d="$DESDE_CL" '/^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] / && substr($0,1,19) >= d' | grep -o 'nivel=[A-Z]*' | sort | uniq -c
+zcat -f $S* | awk -v d="$DESDE_CL" '/^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] / && substr($0,1,19) >= d' | grep -o 'registrador=[a-zA-Z_.]*' | sort | uniq -c
+zcat -f $L* | awk -v d="$DESDE" '/^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] / && substr($0,1,19) >= d' | grep -c 'fontTools'
+zcat -f $S* | awk -v d="$DESDE_CL" '/^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] / && substr($0,1,19) >= d' | grep -c 'fontTools'
 ```
 
 - El `print` dentro de `shell -c` es parte de la consulta en la consola, no código de la aplicación.
 - `information_schema` puede tener hasta 24 horas de atraso (`linea-base-produccion.md`, sección 2): el peso es referencial. El agente lo contrasta con filas × tamaño estimado.
-- `zcat -f $L*` lee también los registros rotados (método de 00-01).
+- `zcat -f $S*` y `zcat -f $L*` leen también los registros rotados (método de 00-01). Los filtros descartan las líneas sin fecha; en `server.log` las líneas de la aplicación son de una sola línea (los saltos de la traza van como `#012`), así que el conteo por nivel y por registrador es exacto. Las líneas de la traza de `error.log` no se cuentan aquí.
 - Pega también el uso de disco de **[PA · Panel]** (Dashboard: MB usados de 512).
 - **Respaldo semanal de rutina** (`respaldo.md`, sección 5): verifícalo con el script nuevo de B8. Esperado: `19 de 19`, `Tablas faltantes: ninguna`, código `0`.
 
@@ -546,9 +601,9 @@ zcat -f $L* | awk -v d="$DESDE" 'substr($0,1,19) >= d' | grep -c 'fontTools'
 | Filas por día | |
 | `information_schema` (filas, datos, índices) | |
 | Largo promedio del resumen | |
-| Líneas de `error.log` por nivel | |
+| Líneas de `server.log` por nivel | |
 | Líneas por registrador | |
-| Líneas de `fontTools` | |
+| Líneas de `fontTools` (en `error.log` y en `server.log`) | |
 | Disco del panel | |
 | Respaldo semanal (tablas y código) | |
 
@@ -558,14 +613,24 @@ zcat -f $L* | awk -v d="$DESDE" 'substr($0,1,19) >= d' | grep -c 'fontTools'
 
 `docs/operacion/retroceso.md`. Con la 0007 aplicada es el **caso 2**, que en la práctica es el **caso 1** (volver el código a `v0.2-correcciones`): la tabla nueva no molesta al código anterior. Revierte la migración solo si estorba, y siempre **antes** de volver el código.
 
+---
+
 ## Respuesta del desarrollador
 
 **Parte A (2026-10-25, noche; las pruebas corrieron a las 20:59 y a las 21:11, hora de Chile):** completada sin incidencias. Las 79 pruebas pasaron dos veces (la segunda, con la réplica restaurada y la 0007 aplicada), `check --deploy` mostró solo los cinco avisos esperados, el SQL de la 0007 es Clase 2, el respaldo previo verificó 18 de 18 con código 0, la restauración en la réplica tardó 3,6 s, la migración se aplicó y se revirtió sin problemas (1,46 s, 1,07 s y 1,78 s) y la etiqueta `v1.1-observabilidad` quedó publicada sobre el commit `d6768d00274a575e48b1a800f6d9145231784b9b`.
 
 Observación: durante las pruebas aparece un aviso de GLib sobre una aplicación de Outlook de Windows (`GLib-GIO-WARNING … supports 5 extensions but has no verbs`). Viene de las bibliotecas gráficas que usa WeasyPrint en Windows, no de la aplicación ni de Django, y no afecta los resultados.
 
-**Parte B (2026-10-25, entre las 21:19 y las 21:27, hora de Chile; 00:19 a 00:27 UTC del 2026-10-26):** el servidor pasó de `v0.2-correcciones` a `v1.1-observabilidad` (commit `d6768d0`). Antes del cambio, la 0007 no estaba aplicada y `check --deploy` mostraba cuatro avisos. `migrate --plan` listó solo la 0007, `migrate` la aplicó en 2,659 s, y `check --deploy` quedó igual que antes, con `ERRORS` en 0. La plantilla de eliminar pago sigue faltando y el pago 1056 existe, así que el error controlado de C1 es reproducible. El desarrollador recargó la aplicación a las 21:27:15 (Chile) y revisó acceso, panel, listado y detalle de un pedido, todo sin problemas.
+**Parte B (2026-10-25, entre las 21:19 y las 21:27, hora de Chile; 00:19 a 00:27 UTC del 2026-10-26):** el servidor pasó de `v0.2-correcciones` a `v1.1-observabilidad` (commit `d6768d0`). Antes del cambio, la 0007 no estaba aplicada y `check --deploy` mostraba cuatro avisos. `migrate --plan` listó solo la 0007, `migrate` la aplicó en 2,659 s, y `check --deploy` quedó igual que antes, con `ERRORS` en 0. La plantilla de eliminar pago sigue faltando y el pago 1056 existe, así que el error controlado de C1 fue reproducible. La aplicación se recargó (reinicio a las 21:26:25 según `server.log`) y se revisaron acceso, panel, listado y detalle de un pedido, todo sin problemas.
 
-Observación: la variable `DESDE` de B6 se definió con el texto de la plantilla entre `<` y `>` y no pasó la validación. Se corrige antes de la parte C (ver B6).
+Observación: la variable `DESDE` de B6 se definió la primera vez con el texto de la plantilla entre `<` y `>` y no pasó la validación; se corrigió a las 00:31 UTC y quedó válida.
 
-_(B8, C y D: pendientes.)_
+**Parte C (2026-10-25, 21:40 a 22:13, hora de Chile):**
+
+- El error controlado (pago 1056) quedó registrado **con su traza completa** en `error.log` y con el formato propio, emoji y contexto en `server.log`; el diagnóstico tomó unos 2 minutos.
+- La página 500 cumplió en escritorio, a 360 px y con foco.
+- El PDF de la cotización 27 se generó (`200` a las 21:54:55) sin dejar ni una línea de `fontTools` ni de `django.server`.
+- El servicio de eventos escribe en producción: tras cerrar sesión, un acceso fallido con `nacho` y una contraseña inventada, y un acceso correcto, el admin mostró 2 eventos con hora de Chile. La tabla había quedado vacía después de B7; la explicación probable es una sesión reutilizada, pero **no está verificada**.
+- **Hallazgo:** cada error queda escrito en dos archivos con dos formatos (`error.log`: el de PythonAnywhere; `server.log`: el nuestro con emoji y contexto). La suposición «nuestras líneas caen en `error.log`» era incorrecta. Claude Code investiga la causa y las opciones; la decisión está pendiente. No es motivo de retroceso: no se perdió ninguna línea y la traza completa está en ambos archivos.
+
+_(Parte D: pendiente, hacia el domingo 2026-11-01. Decisión sobre los dos destinos de registro: pendiente.)_

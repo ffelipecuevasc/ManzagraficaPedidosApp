@@ -122,6 +122,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~02-01 · Dónde se documenta la infraestructura de pruebas: `docs/operacion/pruebas.md` o una sección de `replica-local.md`~~ Resuelto el 2026-10-25: `docs/operacion/pruebas.md` y punto 1 de `despliegue.md` | 02-01, tarea 6 | Desarrollador |
 | `PENDIENTE_DESARROLLADOR` · Precisar la regla 4 de `AGENTS.md` (servicio de registro = `logging` + `registrar_evento`); propuesta de texto en bitacora-01-03; la revisa el desarrollador | 01-03, RDA-013 | Desarrollador |
 | Normalizar el fin de línea de `PedidosApp/settings.py` (hoy mezcla CRLF y LF; las líneas de `LOGGING` y `TEST` quedaron en LF). Decisión del 2026-10-25: queda como propuesta, sin cambios por ahora | 01-03 | Desarrollador |
+| `PENDIENTE_DESARROLLADOR` · 01-06, dos destinos de registro: nuestro formato con emoji termina en `server.log` y `error.log` recibe los mismos errores en el formato de PythonAnywhere. Elegir A (aceptar y diagnosticar en `server.log`, recomendada), B (no cambiar nada), C (aplicar nuestro formateador al manejador de PythonAnywhere, `v1.2`) o D (contexto dentro del mensaje, `v1.2`). Análisis en [bitacora-01-06-produccion](../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md) | 01-06, RDA-013 | Desarrollador |
 | ~~Responder [evidencia-01-05](../10_epicas/epica-01-observabilidad/evidencia-01-05.md): revisión manual del admin de eventos en la réplica~~ Resuelto el 2026-10-25: 9 puntos verificados | 01-05 | Desarrollador |
 
 ## 4. Propuestas fuera de alcance
