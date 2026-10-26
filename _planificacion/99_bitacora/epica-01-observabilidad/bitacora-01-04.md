@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador, con el ajuste del acceso fallido); sin desplegar; se despliega en 01-06. **Sin migraciones.**
+- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador, con el ajuste del acceso fallido); sin desplegar; se despliega en 01-06. **Sin migraciones.** **Actualización 2026-10-26:** desplegada el 2026-10-25 en `v1.1-observabilidad` (commit `d6768d0`).
 
 ## Resumen
 

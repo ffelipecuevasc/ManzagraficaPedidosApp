@@ -2,13 +2,13 @@
 
 - **Estado:** En curso
 - **Fase del plan:** 1 (`plan-de-trabajo.md`, «FASE 1»)
-- **Objetivo:** dejar de estar ciego, con dos herramientas para dos públicos distintos. **Para el desarrollador:** que todo error de producción quede en el registro de errores de PythonAnywhere (`error.log`) con su traza completa y el contexto de la petición, en un formato ordenado y sin ruido. **Para el negocio:** que las acciones críticas dejen constancia de quién hizo qué y cuándo, consultable en el admin de Django.
+- **Objetivo:** dejar de estar ciego, con dos herramientas para dos públicos distintos. **Para el desarrollador:** que todo error de producción quede en el registro del servidor de PythonAnywhere con su traza completa y el contexto de la petición, en un formato ordenado y sin ruido. **Para el negocio:** que las acciones críticas dejen constancia de quién hizo qué y cuándo, consultable en el admin de Django. **Corrección del 2026-10-26:** el diagnóstico se hace en `server.log`, no en `error.log` (opción A, medida en la 01-06; ver RDA-013).
 - **Precondición:** Épica 00 cerrada (2026-10-25). Puede avanzar en paralelo con la Épica 02; la iteración 01-02 necesita la infraestructura de pruebas de 02-01.
-- **Última revisión:** 2026-10-25, rediseño por decisión del desarrollador (ver «Decisiones de la épica»).
+- **Última revisión:** 2026-10-26, criterio de término con `server.log`, emojis nuevos de la 01-07 y estado de 01-08 y 01-09 (decisiones del desarrollador). Rediseño del 2026-10-25 en «Decisiones de la épica».
 
 ## Alcance
 
-1. **Registro de la aplicación (logging):** configuración de `logging` de Python que envía los errores a la salida de error, que PythonAnywhere guarda en `error.log`. Formato `clave=valor` fácil de leer y de filtrar con `grep`, traza completa, sin datos sensibles y sin el ruido de `fontTools`.
+1. **Registro de la aplicación (logging):** configuración de `logging` de Python que envía los errores a la salida de error, que PythonAnywhere guarda en `server.log` (corregido el 2026-10-26: la redacción original decía `error.log`; ver RDA-013, opción A). Formato `clave=valor` fácil de leer y de filtrar con `grep`, traza completa, sin datos sensibles y sin el ruido de `fontTools`.
 2. **Retiro de la supresión de trazas:** se retira `ErrorHandlingMiddleware` y el `print` de `@transaccion_segura` pasa a `logger.exception`, para que ninguna excepción se pierda.
 3. **Registro de eventos de negocio:** una tabla nueva (Clase 2) con índices, retención y purga desde el inicio, y un servicio que escribe en ella solo cuando la operación se confirmó.
 4. **Instrumentación** del inventario de eventos de negocio.
@@ -26,16 +26,16 @@
 | 01-03 | Retiro del middleware y trazas completas (Terminada) | 1.3 |
 | 01-04 | Instrumentación de eventos de negocio (Terminada) | 1.4 |
 | 01-05 | Consulta de eventos en el admin (Terminada) | 1.5 |
-| 01-07 | Marcas visuales en el registro de errores (Terminada) | 1.2 (ampliación) |
+| 01-07 | Marcas visuales en el registro de errores (en revisión: desplegada en `v1.1-observabilidad`, reabierta el 2026-10-26 para cambiar los emojis; viaja en `v1.2`) | 1.2 (ampliación) |
 | 01-06 | Despliegue y validación de la observabilidad (desplegada el 2026-10-25 como `v1.1-observabilidad`; falta la parte D, hacia el 2026-11-01) | 1.6 |
 | 01-08 | Comentarios de registro alineados con la opción A, solo texto (en revisión, ejecutada el 2026-10-26) | 1.2 (ajuste) |
-| 01-09 | Capturas amplias que incumplen la regla 4 (redactada, sin ejecutar) | — (deuda detectada en 01-06) |
+| 01-09 | Capturas amplias que incumplen la regla 4 (en revisión, implementada en local el 2026-10-26; viaja en `v1.2`) | — (deuda detectada en 01-06) |
 
 ## Decisiones de la épica
 
-- **2026-10-25 · Iteraciones 01-08 y 01-09 (decisión del desarrollador).** Las dos están por definir y sin implementar.
+- **2026-10-25 · Iteraciones 01-08 y 01-09 (decisión del desarrollador).** Las dos están por definir y sin implementar. **Actualización 2026-10-26:** las dos están implementadas en local y en revisión; viajan juntas en `v1.2` con la 01-07 reabierta.
   - **01-08:** corrige, solo en texto, los comentarios que dicen que los errores quedan en `error.log` (bloque `LOGGING` de `settings.py`, `decorators.py`, `views.py:194` y `eventos.py`). El comentario de `settings.py` que afirma que configurar la raíz evita líneas dobles fue desmentido por producción en la 01-06.
-  - **01-09:** solo para las 6 capturas amplias que incumplen la regla 4: `views.py:270`, `:766` y `:810` (AUD-01-002), `:1128` (AUD-02-006), y `:1168` y `:1191` (restauración, entradas nuevas de la sección 3 del registro). La corrección todavía no se propone.
+  - **01-09:** solo para las 6 capturas amplias que incumplen la regla 4: `views.py:270`, `:766` y `:810` (AUD-01-002), `:1128` (AUD-02-006), y `:1168` y `:1191` (restauración, entradas nuevas de la sección 3 del registro). La corrección todavía no se propone (decidida el 2026-10-26: opción A para ítems y C para respaldo y restauración; ver iteración 01-09).
 
 - **2026-10-25 · Errores en el registro del servidor, no en MySQL (RDA-013, decisión del desarrollador).** La observabilidad técnica es responsabilidad del desarrollador, no del usuario final. Los errores se escriben con `logging` a la salida de error (The Twelve-Factor App, factor XI: la aplicación emite sus registros como flujo y el entorno los guarda) y se leen en `error.log` de PythonAnywhere. Se descarta la tabla de errores y el código visible en la página 500 (YAGNI). Con esto desaparecen dos de las cuatro trampas originales: el aislamiento transaccional y la dependencia circular de los errores.
 - **2026-10-25 · Eventos en MySQL, consultados en el admin de Django (decisión del desarrollador).** Los eventos son registro de auditoría del negocio («quién hizo qué y cuándo»): se guardan en la base, se respaldan con ella y se consultan en `/admin`. Una pantalla propia con el diseño de la app queda fuera de la épica.
@@ -44,7 +44,7 @@
 - **2026-10-25 · Acceso fallido sin lo escrito (decisión del desarrollador, ajuste de 01-04).** El evento `acceso_fallido` guarda el nombre de usuario solo si existe como usuario (el registrado en la base); si no existe, el resumen dice «usuario desconocido». **Motivo:** que una contraseña escrita por error en el campo de usuario nunca quede en la tabla ni en los respaldos.
 - **2026-10-25 · Admin de eventos sin jerarquía por fecha (decisión del desarrollador, 01-05).** `date_hierarchy` agrupa con truncado y conversión de zona horaria en MySQL, contra la regla técnica 6 de `AGENTS.md`. La fecha se filtra con `DateFieldListFilter` (rangos de instantes en hora de Chile).
 - **2026-10-25 · Error controlado de la 01-06 (decisión del desarrollador).** Se abre la página de eliminar un pago (`/pagos/eliminar/<id>/`, AUD-02-002) sin confirmar: falla por la plantilla faltante y no escribe nada. `id` 1056 (caso real del 2026-10-22) o el último pago; antes se confirma que la plantilla sigue sin existir.
-- **2026-10-25 · Emoji del nivel en `error.log` (decisión del desarrollador, 01-07).** Cada línea lleva al inicio un emoji según su nivel (❌ ERROR, ⚠️ WARNING, ❕ INFO, ❗❌❗ CRITICAL, 🛠️ DEBUG), sin cambiar los campos `clave=valor`. La 01-07 va antes de la 01-06, para un solo despliegue y una sola validación.
+- **2026-10-25 · Emoji del nivel en el registro (decisión del desarrollador, 01-07).** Cada línea lleva al inicio un emoji según su nivel, sin cambiar los campos `clave=valor`. En producción el emoji se ve en `server.log` (opción A). La 01-07 va antes de la 01-06, para un solo despliegue y una sola validación. **Cambio del 2026-10-26 (01-07 reabierta, estético):** 🔴 ERROR, 🟡 WARNING, 🔵 INFO, 🔴🔴 CRITICAL, 🟢 DEBUG; un nivel personalizado, sin emoji. Viaja en `v1.2`. Para filtrar se busca `nivel=ERROR`, no el emoji: «🔴🔴 nivel=CRITICAL» contiene «🔴 nivel=».
 - **2026-10-25 · Sin identificador de petición (decisión del desarrollador).** Cada línea de error lleva hora, método, ruta y usuario; con eso basta para cruzar `error.log` con `access.log` en una aplicación de este tamaño.
 - Las iteraciones 01-01 a 01-05 se trabajan en local, contra la réplica, y se despliegan **juntas** en 01-06 con la etiqueta `v1.1-observabilidad` (RDA-007: cada fase parte en `.1`). La migración de la tabla de eventos va en un único despliegue con respaldo previo.
 - Mientras exista `@transaccion_segura` (hasta la Épica 03), el decorador captura las excepciones antes de que lleguen a Django. Por eso 01-03 cambia su `print` por `logger.exception`, sin tocar todavía su lógica.
@@ -77,6 +77,6 @@ Observaciones de otras iteraciones que la épica debe revisar. Son hipótesis, n
 
 ## Criterio de término
 
-- Un error real en producción se diagnostica en menos de cinco minutos desde `error.log`: tipo de excepción, traza completa, método, ruta, usuario y hora, medido en 01-06.
+- Un error real en producción se diagnostica en menos de cinco minutos desde `server.log`: tipo de excepción, traza completa, método, ruta, usuario y hora, medido en 01-06. (Decía «desde `error.log`»; cambiado el 2026-10-26 por decisión del desarrollador, opción A. Medido: unos 2 minutos, 01-06 C2.)
 - `error.log` no tiene líneas informativas de `fontTools` después del despliegue.
 - Una semana después del despliegue, el crecimiento real de la tabla de eventos está medido y dentro de la estimación de 01-01 (o el inventario se ajustó).

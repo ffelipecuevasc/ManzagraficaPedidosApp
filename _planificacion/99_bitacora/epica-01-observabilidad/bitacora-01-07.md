@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** Terminada (2026-10-25, cerrada por el desarrollador; la revisión de la terminal de PyCharm no se reportó por escrito). Se despliega dentro de la 01-06 (`v1.1-observabilidad`). **Sin migraciones; no requiere respaldo propio** (la 01-06 lo exige por la 0007).
+- **Estado final:** En revisión (reabierta el 2026-10-26, ver «Reapertura del 2026-10-26» al final). Antes: Terminada (2026-10-25, cerrada por el desarrollador; la revisión de la terminal de PyCharm no se reportó por escrito). Se despliega dentro de la 01-06 (`v1.1-observabilidad`). **Sin migraciones; no requiere respaldo propio** (la 01-06 lo exige por la 0007).
 
 ## Resumen
 
@@ -106,5 +106,17 @@ eliminar_pago_get=500
 
 ## Pendientes
 
-- Que el desarrollador mire la terminal de PyCharm (comando arriba).
+- ~~Que el desarrollador mire la terminal de PyCharm (comando arriba).~~ Cubierto el 2026-10-26 con su reporte por escrito (ver la reapertura).
 - Revisión del desarrollador. Después, ejecutar la 01-06 cuando lo indique.
+
+## Reapertura del 2026-10-26
+
+- **Motivo:** decisión del desarrollador, cambio estético de los emojis. El desarrollador ya verificó que los emojis nuevos se ven bien en la terminal de PyCharm y en PythonAnywhere.
+- **Tabla nueva** (`EMOJI_POR_NIVEL` en `pedidos/registro.py`): 🔴 ERROR, 🟡 WARNING, 🔵 INFO, 🔴🔴 CRITICAL, 🟢 DEBUG. Un nivel personalizado sigue sin emoji. Los campos `clave=valor` y su orden no cambian.
+- **Pruebas:** ninguna nueva. Se actualizaron solo los valores esperados de las pruebas existentes de `pedidos/tests/test_registro.py` que comparan emojis (`FormatoRegistroTests`: 3; `EmojiPorNivelTests`: `CASOS`, `test_debug_lleva_su_emoji` y `test_la_traza_no_lleva_emoji`).
+- **Verificación:** `python manage.py test pedidos`, una ejecución: **86 pruebas en `OK`** (83,0 s).
+- **Filtrar registros:** se busca por `nivel=ERROR`, no por el emoji, porque «🔴🔴 nivel=CRITICAL» contiene «🔴 nivel=».
+- **Criterio de la terminal de PyCharm:** cubierto con el reporte por escrito del desarrollador.
+- **Despliegue:** viaja en el próximo despliegue, `v1.2`, junto con la 01-08 y la 01-09. Sin migraciones; el respaldo previo lo pide la 01-09, no esta iteración. Estado: **En revisión** hasta ese despliegue.
+- **Historia conservada:** las evidencias y bitácoras de la 01-06 conservan los emojis de ese día (❌ …), que son los que se desplegaron en `v1.1-observabilidad`. Esta bitácora también conserva arriba la tabla y las salidas originales.
+- **Documentos actualizados:** iteración 01-07, `definicion-epica-01.md`, RDA-013 (`decisiones.md`), `docs/operacion/despliegue.md` y `registro-pendientes.md`.

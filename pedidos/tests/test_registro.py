@@ -33,7 +33,7 @@ class FormatoRegistroTests(TestCase):
         cabecera = linea.splitlines()[0]
         self.assertEqual(
             cabecera,
-            f'❌ nivel=ERROR registrador=pedidos.views metodo=GET ruta=/pagos/eliminar/1056/ '
+            f'🔴 nivel=ERROR registrador=pedidos.views metodo=GET ruta=/pagos/eliminar/1056/ '
             f'usuario={request.user.pk} excepcion=LookupError mensaje="No se pudo eliminar el pago"',
         )
         self.assertIn('Traceback (most recent call last):', linea)
@@ -56,7 +56,7 @@ class FormatoRegistroTests(TestCase):
         linea = formatear_como_error_log(capturado.records[0])
         self.assertEqual(
             linea,
-            '❕ nivel=INFO registrador=pedidos.eventos metodo=- ruta=- usuario=- excepcion=- '
+            '🔵 nivel=INFO registrador=pedidos.eventos metodo=- ruta=- usuario=- excepcion=- '
             'mensaje="Mensaje \\"con comillas\\"\\nen dos líneas"',
         )
 
@@ -72,7 +72,7 @@ class FormatoRegistroTests(TestCase):
         record.request = request
         with mock.patch('sys.stderr', new_callable=io.StringIO) as salida_error:
             linea = formatear_como_error_log(record)
-        self.assertTrue(linea.startswith('❌ nivel=ERROR registrador=pedidos.views'))
+        self.assertTrue(linea.startswith('🔴 nivel=ERROR registrador=pedidos.views'))
         self.assertIn('Fallo del filtro de contexto: RuntimeError', salida_error.getvalue())
 
 
@@ -116,11 +116,11 @@ class EmojiPorNivelTests(TestCase):
     """01-07: emoji del nivel al inicio de la línea; el resto no cambia."""
 
     CASOS = [
-        (logging.CRITICAL, 'CRITICAL', '❗❌❗'),
-        (logging.ERROR, 'ERROR', '❌'),
-        (logging.WARNING, 'WARNING', '⚠️'),
-        (logging.INFO, 'INFO', '❕'),
-        (logging.DEBUG, 'DEBUG', '🛠️'),
+        (logging.CRITICAL, 'CRITICAL', '🔴🔴'),
+        (logging.ERROR, 'ERROR', '🔴'),
+        (logging.WARNING, 'WARNING', '🟡'),
+        (logging.INFO, 'INFO', '🔵'),
+        (logging.DEBUG, 'DEBUG', '🟢'),
     ]
 
     def linea(self, nivel, nombre='pedidos.views'):
@@ -137,8 +137,8 @@ class EmojiPorNivelTests(TestCase):
                 )
 
     def test_debug_lleva_su_emoji(self):
-        # Decisión del desarrollador (2026-10-25): DEBUG lleva 🛠️, como dice la tabla de la 01-07.
-        self.assertTrue(self.linea(logging.DEBUG).startswith('🛠️ nivel=DEBUG '))
+        # Decisión del desarrollador (2026-10-26, 01-07 reabierta): DEBUG lleva 🟢.
+        self.assertTrue(self.linea(logging.DEBUG).startswith('🟢 nivel=DEBUG '))
 
     def test_nivel_personalizado_sin_emoji(self):
         # Sin addLevelName, para no dejar un nivel global registrado: se llama «Level 25».
@@ -156,9 +156,9 @@ class EmojiPorNivelTests(TestCase):
             import sys
             record = logging.LogRecord('pedidos.views', logging.ERROR, __file__, 1, 'Error', None, sys.exc_info())
         lineas = formatear_como_error_log(record).splitlines()
-        self.assertTrue(lineas[0].startswith('❌ nivel=ERROR'))
+        self.assertTrue(lineas[0].startswith('🔴 nivel=ERROR'))
         self.assertEqual(lineas[1], 'Traceback (most recent call last):')
-        self.assertEqual(sum('❌' in l for l in lineas), 1)
+        self.assertEqual(sum('🔴' in l for l in lineas), 1)
 
 
 class SalidaSinEmojisTests(TestCase):

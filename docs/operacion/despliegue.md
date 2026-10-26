@@ -32,7 +32,7 @@ Esperado: `PROYECTO y VENV correctos`. Si no aparece, revisa los dos valores ant
 
 | Archivo | Hora | Qué tiene |
 | :------ | :--- | :-------- |
-| `/var/log/manzagrafica.pythonanywhere.com.server.log` | **Chile** | **El archivo de diagnóstico.** Nuestra línea con emoji y `clave=valor` (nivel, registrador, método, ruta, usuario, excepción y mensaje), con la traza en la misma línea y los saltos escritos como `#012`. |
+| `/var/log/manzagrafica.pythonanywhere.com.server.log` | **Chile** | **El archivo de diagnóstico.** Nuestra línea con emoji y `clave=valor` (nivel, registrador, método, ruta, usuario, excepción y mensaje), con la traza en la misma línea y los saltos escritos como `#012`. Emojis desde `v1.2` (01-07 reabierta): 🔴 ERROR, 🟡 WARNING, 🔵 INFO, 🔴🔴 CRITICAL, 🟢 DEBUG; en `v1.1-observabilidad` eran ❌ ⚠️ ❕ ❗❌❗ 🛠️. |
 | `/var/log/manzagrafica.pythonanywhere.com.error.log` | **UTC** | Los mismos errores en el formato de PythonAnywhere (`fecha,ms: mensaje` y la traza debajo), sin método, ruta ni usuario. Se deja como está. |
 
 Para leer la traza de `server.log`, recupera los saltos de línea con `sed 's/#012/\n/g'`. En `error.log`, las líneas de la traza no llevan fecha: para cortar por hora, empieza en la primera línea con fecha ≥ la buscada y deja pasar las siguientes, porque comparar texto con `substr($0,1,19)` deja pasar como «nuevas» las líneas antiguas que empiezan con letra.
@@ -219,6 +219,7 @@ grep "nivel=" $L | tail -n 20 | cut -c1-200
 ```
 
 - `L` apunta a `server.log`, el archivo de diagnóstico (opción A del 2026-10-25), que escribe la hora de **Chile**. Si quieres mirar `error.log`, recuerda que está en **UTC** (Chile está 3 horas atrás en horario de verano).
+- Filtra por `nivel=ERROR` (o `nivel=`), nunca por el emoji: «🔴🔴 nivel=CRITICAL» contiene «🔴 nivel=».
 - Revisa solo las líneas con hora posterior a la recarga. Lo esperado es ninguna línea `Error`, `Traceback` ni `DisallowedHost` después de la recarga.
 - Si hay errores, copia en la evidencia **solo el tipo de error y la hora**, no el texto completo: puede traer datos de clientes.
 

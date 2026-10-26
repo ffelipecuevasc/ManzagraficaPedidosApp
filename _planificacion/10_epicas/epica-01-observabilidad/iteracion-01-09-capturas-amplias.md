@@ -1,7 +1,7 @@
 # Iteración 01-09 · Capturas amplias que incumplen la regla 4
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión. Implementada en local el 2026-10-26 ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)) con las opciones decididas: **A** para los ítems y **C** para respaldo y restauración. Se despliega **después** de la parte D de la 01-06 (2026-11-01).
+- **Estado:** En revisión hasta el despliegue (`v1.2`, con la 01-08 y la 01-07 reabierta). Criterios marcados y revisión visual hecha por el desarrollador el 2026-10-26. Implementada en local el 2026-10-26 ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)) con las opciones decididas: **A** para los ítems y **C** para respaldo y restauración. Se despliega **después** de la parte D de la 01-06 (2026-11-01).
 - **Subfase del plan:** ninguna propia. Es deuda detectada en la revisión de la 01-06 (2026-10-25) y adelanta parte de 3.2 (supresión silenciosa) y de 3.4 (contrato de error) **solo en lo que pide la regla 4**: registrar y no mostrar `str(e)`.
 - **Depende de:** 01-06 (detección de las capturas y opción A: el diagnóstico se lee en `server.log`).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-008 (inventario de eventos), RDA-013 (errores con `logging`).
@@ -114,17 +114,17 @@ Revisado en `pedidos/utils.py:13-70` y `pedidos/views.py:1075-1111` y en la plan
 1. **Pruebas primero (regla 8.15).** Por cada captura que se corrija, una prueba que falla hoy y pasa con la corrección, simulando el fallo con `mock` (sin ejecutar `mysql` ni `mysqldump`, como `test_restauracion_fallida_no_deja_evento`). Cada prueba comprueba lo que corresponda a la opción: hay un registro `ERROR` de `pedidos.views` con traza, el mensaje que ve el usuario no contiene el texto de la excepción y no aparece `Traceback` en la respuesta.
 2. Aplicar las opciones elegidas en `pedidos/views.py` (y en `pedidos/utils.py` solo con la opción B de respaldo).
 3. Verificar: `python manage.py test pedidos` (79 más las nuevas, en `OK`), `check` y `makemigrations --check --dry-run`.
-4. Revisión manual en la réplica local, en escritorio y a 360 px: comprobar los caminos de error de respaldo y restauración. **Sin restauración real** (decisión 7, 2026-10-26): la restauración queda «no verificada en real» y la cubren las 7 pruebas con `mock` y los caminos de error comprobados en la réplica. La revisión visual en escritorio y a 360 px la hace el desarrollador.
+4. Revisión manual en la réplica local, en escritorio y a 360 px: comprobar los caminos de error de respaldo y restauración. **Sin restauración real** (decisión 7, 2026-10-26): la restauración queda «no verificada en real» y la cubren las 7 pruebas con `mock` y los caminos de error comprobados en la réplica. La revisión visual en escritorio y a 360 px la hace el desarrollador. **Hecha el 2026-10-26** por el desarrollador, que además borró los dos `.sql` vacíos de la réplica.
 5. Bitácora `bitacora-01-09.md` con el diff, las pruebas y los resultados. Actualizar `registro-pendientes.md` (entradas de `:270` a `:1191`) y, si corresponde, `auditoria-tecnica.md` (avance de AUD-01-002 y AUD-02-006, sin cerrarlos).
 
 ## Criterios de aceptación
 
-- [ ] Cada una de las seis capturas tiene la opción elegida por el desarrollador, o queda anotada como «sin cambios, se corrige en <iteración>».
-- [ ] Ninguna de las capturas corregidas silencia el error: cada una deja en el registro un `ERROR` con traza y, en vistas, con método, ruta y usuario.
-- [ ] Ninguna de las capturas corregidas muestra `str(e)` ni texto técnico al usuario.
-- [ ] Hay una prueba por captura corregida que falla antes de la corrección y pasa con ella.
-- [ ] `python manage.py test pedidos` en `OK`, `check` sin errores, `makemigrations --check`: `No changes detected`.
-- [ ] El diff no toca transacciones, métodos HTTP, plantillas ni el inventario de eventos.
+- [x] Cada una de las seis capturas tiene la opción elegida por el desarrollador, o queda anotada como «sin cambios, se corrige en <iteración>». A en `:270`, `:766` y `:810`; C en `:1128`, `:1168` y `:1191` ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
+- [x] Ninguna de las capturas corregidas silencia el error: cada una deja en el registro un `ERROR` con traza y, en vistas, con método, ruta y usuario. Pruebas y revisión en la réplica ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
+- [x] Ninguna de las capturas corregidas muestra `str(e)` ni texto técnico al usuario. Textos fijos aprobados ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
+- [x] Hay una prueba por captura corregida que falla antes de la corrección y pasa con ella. 7 pruebas nuevas ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
+- [x] `python manage.py test pedidos` en `OK`, `check` sin errores, `makemigrations --check`: `No changes detected`. 86 pruebas ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
+- [x] El diff no toca transacciones, métodos HTTP, plantillas ni el inventario de eventos. Diff en [bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md). Revisión visual en escritorio y a 360 px hecha por el desarrollador el 2026-10-26.
 
 ## Riesgos
 

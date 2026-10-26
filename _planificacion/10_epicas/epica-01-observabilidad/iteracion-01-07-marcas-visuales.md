@@ -1,7 +1,7 @@
 # Iteración 01-07 · Marcas visuales en el registro de errores
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega dentro de la 01-06)
+- **Estado:** En revisión (reabierta el 2026-10-26 por decisión del desarrollador para cambiar los emojis, cambio estético; la versión original se desplegó en `v1.1-observabilidad` el 2026-10-25; los emojis nuevos viajan en el próximo despliegue, `v1.2`, junto con la 01-08 y la 01-09)
 - **Subfase del plan:** 1.2 (amplía el formato de 01-02; iteración nueva, sin subfase propia en el plan)
 - **Depende de:** 01-02
 - **RDA relacionadas:** RDA-013
@@ -14,15 +14,19 @@
 
 Que el nivel de cada línea de `error.log` se reconozca a simple vista, con un emoji al inicio de la línea, sin cambiar los campos `clave=valor` ni su orden (`grep "nivel=ERROR"` sigue funcionando). En producción, PythonAnywhere antepone su fecha:
 
-`2026-10-25 19:19:05,412: ❌ nivel=ERROR registrador=pedidos.decorators metodo=GET ruta=/pagos/eliminar/1056/ ...`
+`2026-10-25 19:19:05,412: 🔴 nivel=ERROR registrador=pedidos.decorators metodo=GET ruta=/pagos/eliminar/1056/ ...`
 
 | Nivel | Emoji |
 | :---- | :---- |
-| ERROR | ❌ |
-| WARNING | ⚠️ |
-| INFO | ❕ |
-| CRITICAL | ❗❌❗ |
-| DEBUG | 🛠️ |
+| ERROR | 🔴 |
+| WARNING | 🟡 |
+| INFO | 🔵 |
+| CRITICAL | 🔴🔴 |
+| DEBUG | 🟢 |
+
+Un nivel personalizado va sin emoji. **Tabla vigente desde el 2026-10-26** (01-07 reabierta, decisión del desarrollador). La tabla original (❌ ERROR, ⚠️ WARNING, ❕ INFO, ❗❌❗ CRITICAL, 🛠️ DEBUG) es la que se desplegó en `v1.1-observabilidad` y la que muestran las evidencias de la 01-06.
+
+**Para filtrar se busca `nivel=ERROR`, no el emoji:** «🔴🔴 nivel=CRITICAL» contiene «🔴 nivel=», así que buscar por el emoji mezclaría los dos niveles.
 
 ## Tareas
 
@@ -35,11 +39,11 @@ Que el nivel de cada línea de `error.log` se reconozca a simple vista, con un e
 ## Criterios de aceptación
 
 - [x] Cada nivel lleva su emoji al inicio de la línea y el resto de la línea es idéntico al formato de 01-02 (pruebas). `EmojiPorNivelTests`.
-- [x] La regla de `DEBUG` está cubierta por una prueba. Decisión del desarrollador: DEBUG lleva 🛠️; un nivel personalizado va sin emoji.
+- [x] La regla de `DEBUG` está cubierta por una prueba. Decisión del desarrollador: DEBUG lleva su emoji (🛠️ hasta el 2026-10-26, 🟢 desde entonces); un nivel personalizado va sin emoji.
 - [x] `grep "nivel=ERROR"` (o su equivalente en la prueba) sigue encontrando la línea.
 - [x] Con un flujo `ascii`, el registro no rompe la petición; el comportamiento está documentado en la bitácora. Ojo: se pierde la línea completa, no solo el emoji (bitácora).
-- [ ] La terminal de PyCharm y PowerShell 7 muestran bien los emojis (salida en la bitácora). PowerShell 7.6.8 verificado por el agente. El desarrollador cerró la iteración el 2026-10-25; la revisión de la terminal de PyCharm no se reportó por escrito.
-- [x] `python manage.py check` sin errores, `makemigrations --check` sin cambios y `python manage.py test pedidos` en verde. 79 pruebas, tres veces.
+- [x] La terminal de PyCharm y PowerShell 7 muestran bien los emojis (salida en la bitácora). PowerShell 7.6.8 verificado por el agente. El desarrollador cerró la iteración el 2026-10-25; la revisión de la terminal de PyCharm no se reportó por escrito. **Cubierto el 2026-10-26** con el reporte por escrito del desarrollador: los emojis nuevos se ven bien en PyCharm y en PythonAnywhere ([bitacora-01-07](../../99_bitacora/epica-01-observabilidad/bitacora-01-07.md), «Reapertura del 2026-10-26»).
+- [x] `python manage.py check` sin errores, `makemigrations --check` sin cambios y `python manage.py test pedidos` en verde. 79 pruebas, tres veces. Reapertura del 2026-10-26: suite completa en verde tras actualizar los valores esperados (bitácora).
 
 ## Fuera de alcance
 

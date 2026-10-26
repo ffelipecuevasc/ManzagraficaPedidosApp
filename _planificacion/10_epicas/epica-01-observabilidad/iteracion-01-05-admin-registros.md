@@ -1,7 +1,7 @@
 # Iteración 01-05 · Consulta de eventos en el admin
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega en 01-06)
+- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega en 01-06). **Actualización 2026-10-26:** desplegada el 2026-10-25 en `v1.1-observabilidad` (commit `d6768d0`).
 - **Subfase del plan:** 1.5
 - **Depende de:** 01-01
 - **RDA relacionadas:** RDA-008, RDA-013

@@ -5,6 +5,7 @@
 - **Iteración:** [01-06](iteracion-01-06-despliegue-validacion.md). Etiqueta `v1.1-observabilidad`; partida y destino de retroceso `v0.2-correcciones`.
 - **Criterios que dependen de esta evidencia:** todos los de la 01-06.
 - **Estado (2026-10-25, noche; 2026-10-26 en UTC):** partes A, B y C completadas; el error controlado, la página 500, el PDF y los eventos se validaron en producción. Hallazgo: cada error queda en dos archivos con dos formatos (decisión pendiente). B8: pruebas del agente hechas, verificación en el PC pendiente. D pendiente (hacia el domingo 2026-11-01).
+- **Actualización 2026-10-26:** resueltos la decisión de los dos destinos (opción A: el diagnóstico se hace en `server.log`; RDA-013), la verificación B8 en el PC (respaldo de A2 con el script nuevo: 18 de 19, código 1), la comparación literal del SQL de la 0007 y el contraste del contenido de la etiqueta ([bitacora-01-06-produccion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md)), y las filas de `respaldo.md` y `replica-local.md`. **Solo queda pendiente la parte D.**
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide, sin datos de clientes: conteos, horas, tipos de error y códigos.
 >
@@ -68,11 +69,11 @@ Estructura: un `CREATE TABLE`, un `ALTER TABLE … ADD CONSTRAINT … FOREIGN KE
 | 1 | Pruebas (`Ran N tests`, `OK`) | `Ran 79 tests in 71.016s` · `OK` (advertencia `mysql.W002`, esperada) |
 | 2 | `check --deploy` (códigos) | `W004`, `W008`, `W009`, `W012`, `W016` (5 avisos, 0 silenciados) |
 | 3 | `makemigrations --check` | `No changes detected` |
-| 4 | `sqlmigrate 0007` igual a la bitácora; Clase 2 | Estructura esperada (ver SQL arriba); Clase 2. Comparación literal pendiente del agente |
+| 4 | `sqlmigrate 0007` igual a la bitácora; Clase 2 | Estructura esperada (ver SQL arriba); Clase 2. Comparación literal pendiente del agente. **Hecha** ([bitacora-01-06-produccion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md)) |
 | 5 | Respaldo verificado (A2) | Sí: `VÁLIDO`, 18 de 18, código 0 |
 | 6 | Estilos compilados | No aplica |
 | 7 | Etiqueta publicada (A5) | Sí: `v1.1-observabilidad` en el remoto |
-| 8 | Solo la Épica 01 (más el bloque de pruebas de 02-01) | Según el mensaje de la etiqueta (01-01 a 01-05, 01-07 y el bloque de pruebas de 02-01). Contraste con `git diff` pendiente del agente |
+| 8 | Solo la Épica 01 (más el bloque de pruebas de 02-01) | Según el mensaje de la etiqueta (01-01 a 01-05, 01-07 y el bloque de pruebas de 02-01). Contraste con `git diff` pendiente del agente. **Hecho:** `git diff --stat v0.2-correcciones v1.1-observabilidad` ([bitacora-01-06-produccion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md)) |
 
 Prueba de regresión de eliminar pago: `Ran 1 test in 2.722s` · `OK`.
 
@@ -96,7 +97,7 @@ $LASTEXITCODE
 | Tablas | 18 de 18 esperadas; faltantes: ninguna; adicionales: ninguna |
 | Código | `0` · `Resultado: VÁLIDO` · línea de cierre «-- Dump completed» presente |
 
-Agrega la fila en `docs/operacion/respaldo.md`, sección 6 (motivo: «Previo al despliegue `v1.1-observabilidad` (iteración 01-06)»). _(Pendiente de registrar en el documento.)_
+Agrega la fila en `docs/operacion/respaldo.md`, sección 6 (motivo: «Previo al despliegue `v1.1-observabilidad` (iteración 01-06)»). _(Pendiente de registrar en el documento.)_ **Registrada** (`respaldo.md`, sección 6; comprobado el 2026-10-26).
 
 ### A3. Ensayo de retroceso por restauración en la réplica **[PC · PowerShell 7]**
 
@@ -121,7 +122,7 @@ python manage.py shell -c "from django.db import connection; print('pedidos_regi
 | Últimas migraciones | `[X] 0006_remove_pedido_valor_abonado_and_more` y `[ ] 0007_registroevento` |
 | ¿Existe `pedidos_registroevento`? | `False` |
 
-Anota el refresco en la tabla de `replica-local.md`, sección 9. _(Pendiente de registrar en el documento.)_
+Anota el refresco en la tabla de `replica-local.md`, sección 9. _(Pendiente de registrar en el documento.)_ **Registrado** (`replica-local.md`, sección 9; comprobado el 2026-10-26).
 
 ### A4. Ensayo de la migración y de su reversión **[PC · PowerShell 7]**
 
@@ -373,7 +374,7 @@ El cambio va en un commit después de la etiqueta: el script corre en tu PC, no 
 | Dato | Valor |
 | :--- | :---- |
 | Pruebas sintéticas del agente (con y sin la tabla) | Con la tabla: `19 de 19`, VÁLIDO, código `0`. Sin ella: `18 de 19`, NO VÁLIDO (1 tabla faltante), código `1` |
-| Respaldo de A2 con el script nuevo (tablas y código) | _Pendiente: se ejecuta en el PC (esperado `18 de 19`, falta `pedidos_registroevento`, código `1`)_ |
+| Respaldo de A2 con el script nuevo (tablas y código) | _Pendiente: se ejecuta en el PC (esperado `18 de 19`, falta `pedidos_registroevento`, código `1`)_ **Hecho por el desarrollador:** `18 de 19`, falta `pedidos_registroevento`, `NO VÁLIDO`, código `1`, SHA-256 `f3163addfce2…`, el mismo de A2 (criterio B8 de la iteración 01-06) |
 
 ---
 

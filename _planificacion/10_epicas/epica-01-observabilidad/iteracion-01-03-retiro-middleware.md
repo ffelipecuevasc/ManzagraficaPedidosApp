@@ -1,7 +1,7 @@
 # Iteración 01-03 · Retiro del middleware y trazas completas
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega en 01-06, donde también se revisa la página 500 a 360 px)
+- **Estado:** Terminada (2026-10-25; sin desplegar; se despliega en 01-06, donde también se revisa la página 500 a 360 px). **Actualización 2026-10-26:** desplegada el 2026-10-25 en `v1.1-observabilidad` (commit `d6768d0`).
 - **Subfase del plan:** 1.3
 - **Depende de:** 01-02
 - **RDA relacionadas:** RDA-013

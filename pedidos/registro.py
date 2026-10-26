@@ -28,11 +28,11 @@ def _usuario(request):
 
 
 EMOJI_POR_NIVEL = {
-    logging.CRITICAL: '❗❌❗',
-    logging.ERROR: '❌',
-    logging.WARNING: '⚠️',
-    logging.INFO: '❕',
-    logging.DEBUG: '🛠️',
+    logging.CRITICAL: '🔴🔴',
+    logging.ERROR: '🔴',
+    logging.WARNING: '🟡',
+    logging.INFO: '🔵',
+    logging.DEBUG: '🟢',
 }
 
 

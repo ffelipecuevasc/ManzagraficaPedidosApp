@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** iteración redactada, sin ejecutar; sin decisiones abiertas (ajuste del 2026-10-25, al final). La ejecución, la evidencia de producción y el contraste de la semana van en `bitacora-01-06-produccion.md`.
+- **Estado final:** (de esta bitácora, que cubre solo la etapa de redacción) iteración redactada, sin ejecutar; sin decisiones abiertas (ajuste del 2026-10-25, al final). La ejecución, la evidencia de producción y el contraste de la semana van en `bitacora-01-06-produccion.md`. **Aclaración 2026-10-26:** la iteración ya se ejecutó y desplegó (`v1.1-observabilidad`, 2026-10-25) y sigue En curso hasta la parte D; su estado vigente está en `registro-pendientes.md`.
 
 ## Resumen
 

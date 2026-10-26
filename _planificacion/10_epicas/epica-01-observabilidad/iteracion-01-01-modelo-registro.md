@@ -1,7 +1,7 @@
 # Iteración 01-01 · Modelo de registro de eventos
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Terminada (2026-10-25; sin desplegar, se despliega en 01-06 con `v1.1-observabilidad`)
+- **Estado:** Terminada (2026-10-25; sin desplegar, se despliega en 01-06 con `v1.1-observabilidad`). **Actualización 2026-10-26:** desplegada el 2026-10-25 en `v1.1-observabilidad` (commit `d6768d0`).
 - **Subfase del plan:** 1.1
 - **Depende de:** Épica 00
 - **RDA relacionadas:** RDA-003, RDA-005 (reemplazada en parte), RDA-008, RDA-013 (nueva, se escribe aquí)

@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador); sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere. Sin migraciones.
+- **Estado final:** Terminada (2026-10-25, revisada por el desarrollador); sin desplegar; en 01-06 se comprueba que `error.log` no reciba líneas duplicadas por un manejador propio de PythonAnywhere. Sin migraciones. **Actualización 2026-10-26:** desplegada el 2026-10-25 en `v1.1-observabilidad` (commit `d6768d0`).
 
 ## Resumen
 
