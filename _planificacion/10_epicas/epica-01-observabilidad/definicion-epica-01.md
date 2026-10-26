@@ -28,8 +28,14 @@
 | 01-05 | Consulta de eventos en el admin (Terminada) | 1.5 |
 | 01-07 | Marcas visuales en el registro de errores (Terminada) | 1.2 (ampliación) |
 | 01-06 | Despliegue y validación de la observabilidad (desplegada el 2026-10-25 como `v1.1-observabilidad`; falta la parte D, hacia el 2026-11-01) | 1.6 |
+| 01-08 | Comentarios de registro alineados con la opción A, solo texto (por definir) | 1.2 (ajuste) |
+| 01-09 | Capturas amplias que incumplen la regla 4 (por definir) | — (deuda detectada en 01-06) |
 
 ## Decisiones de la épica
+
+- **2026-10-25 · Iteraciones 01-08 y 01-09 (decisión del desarrollador).** Las dos están por definir y sin implementar.
+  - **01-08:** corrige, solo en texto, los comentarios que dicen que los errores quedan en `error.log` (bloque `LOGGING` de `settings.py`, `decorators.py`, `views.py:194` y `eventos.py`). El comentario de `settings.py` que afirma que configurar la raíz evita líneas dobles fue desmentido por producción en la 01-06.
+  - **01-09:** solo para las 6 capturas amplias que incumplen la regla 4: `views.py:270`, `:766` y `:810` (AUD-01-002), `:1128` (AUD-02-006), y `:1168` y `:1191` (restauración, entradas nuevas de la sección 3 del registro). La corrección todavía no se propone.
 
 - **2026-10-25 · Errores en el registro del servidor, no en MySQL (RDA-013, decisión del desarrollador).** La observabilidad técnica es responsabilidad del desarrollador, no del usuario final. Los errores se escriben con `logging` a la salida de error (The Twelve-Factor App, factor XI: la aplicación emite sus registros como flujo y el entorno los guarda) y se leen en `error.log` de PythonAnywhere. Se descarta la tabla de errores y el código visible en la página 500 (YAGNI). Con esto desaparecen dos de las cuatro trampas originales: el aislamiento transaccional y la dependencia circular de los errores.
 - **2026-10-25 · Eventos en MySQL, consultados en el admin de Django (decisión del desarrollador).** Los eventos son registro de auditoría del negocio («quién hizo qué y cuándo»): se guardan en la base, se respaldan con ella y se consultan en `/admin`. Una pantalla propia con el diseño de la app queda fuera de la épica.
