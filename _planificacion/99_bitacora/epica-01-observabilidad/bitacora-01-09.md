@@ -51,9 +51,10 @@ Cada prueba comprueba, después de la corrección: un solo `ERROR` de `pedidos.v
 
 - **Generar respaldo (camino normal):** con el cliente de pruebas de Django contra la réplica local y el primer superusuario, `GET /base_datos/respaldar_bd/accion/` respondió **302**, no la descarga. Causa: `mysqldump` no está en el PATH de este equipo Windows (`FileNotFoundError: [WinError 2]`). El camino de error nuevo funcionó en condiciones reales: un `ERROR` «Error al generar el respaldo» con traza en el registro y el mensaje fijo aprobado en pantalla. El listado `respaldar_bd` respondió 200.
 - **Efecto secundario:** `generar_respaldo_mysql()` abre el `.sql` antes de llamar a `mysqldump` y solo lo borra ante `CalledProcessError`, no ante `FileNotFoundError`. Los dos intentos dejaron **dos archivos `.sql` vacíos** en `backups/` de la réplica. El agente no los abrió ni los borró (eliminar requiere consulta): los borra el desarrollador. Anotado como propuesta en `registro-pendientes.md` (fuera de alcance: toca `utils.py`).
-- **Camino normal pendiente:** para comprobar la descarga hace falta el cliente de MySQL 8.0 (`mysqldump` y `mysql`) en el PATH, o ejecutar la prueba desde donde esté instalado. `PENDIENTE_DESARROLLADOR`.
-- **Restauración real contra la réplica:** no ejecutada; requiere autorización explícita del desarrollador. Sin `mysqldump` en el PATH terminaría en «Operación cancelada…» porque el respaldo previo fallaría antes de tocar la base.
-- **Pantallas en escritorio y 360 px:** el diff no toca plantillas; los mensajes usan el bloque de mensajes de `base.html`. Revisión visual pendiente del desarrollador.
+- **Camino normal en local:** no verificado. Decisión del desarrollador (2026-10-26): no se instala el cliente de MySQL en su equipo. El camino normal se valida después del despliegue: generar un respaldo desde la aplicación y comprobar que se descarga.
+- **Restauración real: no verificada en real.** Decisión del desarrollador (2026-10-26): no se hace en local ni en producción. La cubren las 7 pruebas con `mock` y la comprobación de los caminos de error en la réplica.
+- **En producción nunca se provoca** un fallo de respaldo ni de restauración.
+- **Archivos vacíos y pantallas:** los dos `.sql` vacíos de la réplica los borra el desarrollador. El diff no toca plantillas (los mensajes usan el bloque de `base.html`); la revisión visual en escritorio y a 360 px está a cargo del desarrollador.
 
 ## Diff
 
@@ -164,4 +165,4 @@ index dc78ade..299cbbd 100644
 ## Hallazgos
 
 - AUD-01-002 y AUD-02-006 **avanzan sin cerrarse**: el fallo queda registrado y sin texto técnico, pero la pérdida de ítems (03-02) y el GET de `generar_respaldo_bd` (04-01) siguen abiertos.
-- Nuevo (propuesta): `generar_respaldo_mysql()` deja un `.sql` vacío en `backups/` si `mysqldump` no existe en el PATH.
+- Nuevo (pendiente registrado, sin implementar): `generar_respaldo_mysql()` deja un `.sql` vacío en `backups/` si `mysqldump` no existe en el PATH.

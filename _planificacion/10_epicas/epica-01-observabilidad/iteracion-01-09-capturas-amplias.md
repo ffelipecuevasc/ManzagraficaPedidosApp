@@ -114,7 +114,7 @@ Revisado en `pedidos/utils.py:13-70` y `pedidos/views.py:1075-1111` y en la plan
 1. **Pruebas primero (regla 8.15).** Por cada captura que se corrija, una prueba que falla hoy y pasa con la corrección, simulando el fallo con `mock` (sin ejecutar `mysql` ni `mysqldump`, como `test_restauracion_fallida_no_deja_evento`). Cada prueba comprueba lo que corresponda a la opción: hay un registro `ERROR` de `pedidos.views` con traza, el mensaje que ve el usuario no contiene el texto de la excepción y no aparece `Traceback` en la respuesta.
 2. Aplicar las opciones elegidas en `pedidos/views.py` (y en `pedidos/utils.py` solo con la opción B de respaldo).
 3. Verificar: `python manage.py test pedidos` (79 más las nuevas, en `OK`), `check` y `makemigrations --check --dry-run`.
-4. Revisión manual en la réplica local, en escritorio y a 360 px: generar un respaldo (camino normal) y ver los mensajes de error con un fallo simulado. **Restauración real solo contra la réplica local de Docker, nunca contra producción, y solo cuando el desarrollador lo pida al ejecutar la iteración** (decisión 6). Después se refresca la réplica según `docs/operacion/replica-local.md` si quedó con otros datos.
+4. Revisión manual en la réplica local, en escritorio y a 360 px: comprobar los caminos de error de respaldo y restauración. **Sin restauración real** (decisión 7, 2026-10-26): la restauración queda «no verificada en real» y la cubren las 7 pruebas con `mock` y los caminos de error comprobados en la réplica. La revisión visual en escritorio y a 360 px la hace el desarrollador.
 5. Bitácora `bitacora-01-09.md` con el diff, las pruebas y los resultados. Actualizar `registro-pendientes.md` (entradas de `:270` a `:1191`) y, si corresponde, `auditoria-tecnica.md` (avance de AUD-01-002 y AUD-02-006, sin cerrarlos).
 
 ## Criterios de aceptación
@@ -143,7 +143,7 @@ Revisado en `pedidos/utils.py:13-70` y `pedidos/views.py:1075-1111` y en la plan
 - **La 01-08 viaja en el mismo despliegue:** sus comentarios están en `main` y no tienen despliegue propio. La etiqueta de la 01-09 los incluye. El registro de despliegue de `despliegue.md` debe nombrar las dos iteraciones.
 - **Cuándo:** se implementa en local el 2026-10-26 y se despliega **después** de cerrar la parte D de la 01-06 (2026-11-01), para que la medición no mezcle versiones (decisión 5).
 - **Respaldo previo:** no hay migraciones ni cambios de datos, así que la iteración no lo exige por sí misma. Las vistas que se tocan son las de respaldo y restauración: si el despliegue sale mal, el botón de respaldo de la aplicación puede ser justo lo que no funcione. **Decidido: respaldo descargado antes del despliegue**, según el protocolo de `docs/operacion/despliegue.md` (decisión 6).
-- **Pruebas con la réplica:** pruebas automáticas con `mock` en todos los casos. Contra la réplica local, el camino normal de generar respaldo y una **restauración real**, autorizada por el desarrollador solo contra la réplica de Docker y solo cuando él lo pida al ejecutar la iteración (decisión 6). La restauración reemplaza los datos de la réplica: después se refresca según `docs/operacion/replica-local.md`.
+- **Pruebas con la réplica:** pruebas automáticas con `mock` en todos los casos. Contra la réplica local, solo los caminos de error (sin cliente de MySQL en el equipo no hay camino normal ni restauración real). La restauración queda «no verificada en real» (decisión 7).
 - **Validación en producción:** pasos para el desarrollador. Generar un respaldo desde la aplicación (camino normal) y comprobar que se descarga. **No** se provoca a propósito un fallo de respaldo ni de restauración en producción.
 
 ## Decisiones del desarrollador
@@ -155,7 +155,9 @@ Todas resueltas el 2026-10-26.
 3. **Textos que ve el usuario:** los de la tabla «Textos aprobados». En `:1191`, el nombre del archivo solo aparece si el respaldo de emergencia se generó en `:1168`.
 4. **`:1128`:** `messages.error` con el texto fijo y redirección a `respaldar_bd`.
 5. **Cuándo y con qué etiqueta:** se despliega después de la parte D de la 01-06 (2026-11-01), con `v1.2-capturas`. La 01-08 viaja en ese despliegue. **Cambio del 2026-10-26:** la implementación se adelanta y se hace ahora en local; solo el despliegue espera a la parte D.
-6. **Respaldo y restauración real:** respaldo previo al despliegue, sí. Restauración real autorizada **solo contra la réplica local de Docker**, nunca contra producción, y solo cuando el desarrollador lo pida al ejecutar la iteración.
+6. **Respaldo y restauración real:** respaldo previo al despliegue, sí. ~~Restauración real autorizada solo contra la réplica local de Docker.~~ Reemplazado por la decisión 7.
+
+7. **Sin restauración real (2026-10-26):** no se instala el cliente de MySQL en el equipo del desarrollador ni se hace la restauración real en local. Queda «no verificada en real»: la cubren las 7 pruebas con `mock` y la comprobación de los caminos de error en la réplica. Validación posterior al despliegue: solo generar un respaldo por el camino normal y comprobar que se descarga; nunca se provoca un fallo de respaldo ni de restauración en producción. El `.sql` vacío que deja `utils.py` cuando falta `mysqldump` queda como pendiente registrado, sin implementar; los dos archivos vacíos de la réplica los borra el desarrollador, y la revisión visual (escritorio y 360 px) está a su cargo.
 
 ## Datos requeridos del cliente
 
