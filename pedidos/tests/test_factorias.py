@@ -1,4 +1,5 @@
 """Las funciones de datos de prueba construyen objetos coherentes (02-01)."""
+from datetime import timezone as tz_utc
 from decimal import Decimal
 
 from django.test import TestCase
@@ -22,3 +23,16 @@ class FactoriasTests(TestCase):
     def test_valores_unicos_por_llamada(self):
         self.assertNotEqual(factorias.crear_usuario().username, factorias.crear_usuario().username)
         self.assertNotEqual(factorias.crear_cliente().nombre, factorias.crear_cliente().nombre)
+
+    def test_momento_chile_es_mediodia_local_y_consciente(self):
+        # Octubre de 2026 es horario de verano en Chile continental (UTC-3).
+        momento = factorias.momento_chile(2026, 10, 15)
+        self.assertIsNotNone(momento.utcoffset())
+        self.assertEqual((momento.hour, momento.minute), (12, 0))
+        self.assertEqual(momento.astimezone(tz_utc.utc).hour, 15)
+
+    def test_pago_con_fecha_dada(self):
+        fecha = factorias.momento_chile(2026, 9, 10)
+        pago = factorias.crear_pago(monto=1_000, fecha=fecha)
+        pago.refresh_from_db()
+        self.assertEqual(pago.fecha, fecha)

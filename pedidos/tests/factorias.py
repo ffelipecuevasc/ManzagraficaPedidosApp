@@ -7,8 +7,10 @@ Reglas (docs/operacion/pruebas.md):
 - No aplican reglas de negocio de las vistas (por ejemplo, no recalculan `valor_venta`
   ni `estado_pago`): eso es lo que prueban 02-02 y 02-03.
 """
+from datetime import datetime
 from decimal import Decimal
 from itertools import count
+from zoneinfo import ZoneInfo
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -18,6 +20,13 @@ from pedidos.models import (
 )
 
 _correlativo = count(1)
+
+ZONA_CHILE = ZoneInfo('America/Santiago')
+
+
+def momento_chile(anio, mes, dia, hora=12, minuto=0):
+    """Instante consciente en hora de Chile (por defecto, mediodía), para fechas de prueba (02-02)."""
+    return datetime(anio, mes, dia, hora, minuto, tzinfo=ZONA_CHILE)
 
 
 def _siguiente():

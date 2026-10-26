@@ -1,7 +1,7 @@
 # Iteración 02-02 · Pruebas de la lógica de dinero
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** Redactada, sin ejecutar
+- **Estado:** En revisión (ejecutada el 2026-10-26; [bitacora-02-02](../../99_bitacora/epica-02-red-seguridad/bitacora-02-02.md))
 - **Subfase del plan:** 2.2
 - **Depende de:** 02-01
 - **RDA relacionadas:** RDA-006
@@ -54,14 +54,14 @@ El agente confirma cada punto en el archivo indicado; si algo difiere, lo anota 
 
 ## Criterios de aceptación
 
-- [ ] `pedidos/tests/test_dinero.py` existe, con pruebas por cada punto de las tareas 1 a 5, y no hay accesorios estáticos.
-- [ ] Cada regla sin confirmar tiene su comentario `PENDIENTE_CLIENTE` y figura en `registro-pendientes.md`.
-- [ ] Las diferencias del oráculo de IVA frente al cálculo del modelo están en la bitácora, aunque sean cero.
-- [ ] Las cifras del panel coinciden con el cálculo ingenuo en el conjunto conocido, o la diferencia está explicada y registrada como hallazgo.
-- [ ] Ninguna prueba depende del reloj real ni del orden de ejecución.
-- [ ] `python manage.py test pedidos` en verde (más las pruebas nuevas) en tres ejecuciones seguidas; `check` sin errores; `makemigrations --check --dry-run` sin cambios.
-- [ ] El diff no toca `pedidos/models.py`, `views.py`, `forms.py` ni ningún otro código de la aplicación.
-- [ ] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas.
+- [x] `pedidos/tests/test_dinero.py` existe, con pruebas por cada punto de las tareas 1 a 5, y no hay accesorios estáticos.
+- [x] Cada regla sin confirmar tiene su comentario `PENDIENTE_CLIENTE` y figura en `registro-pendientes.md`.
+- [x] Las diferencias del oráculo de IVA frente al cálculo del modelo están en la bitácora, aunque sean cero.
+- [x] Las cifras del panel coinciden con el cálculo ingenuo en el conjunto conocido, o la diferencia está explicada y registrada como hallazgo.
+- [x] Ninguna prueba depende del reloj real ni del orden de ejecución.
+- [x] `python manage.py test pedidos` en verde (más las pruebas nuevas) en tres ejecuciones seguidas; `check` sin errores; `makemigrations --check --dry-run` sin cambios.
+- [x] El diff no toca `pedidos/models.py`, `views.py`, `forms.py` ni ningún otro código de la aplicación.
+- [x] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas.
 
 ## Fuera de alcance
 
@@ -72,9 +72,11 @@ El agente confirma cada punto en el archivo indicado; si algo difiere, lo anota 
 
 ## Decisiones del desarrollador
 
-1. **Diferencias de IVA de un peso** entre el modelo y el cálculo comercial: solo anotarlas en la bitácora (propuesta) o, si aparecen, declararlas como regresión en 02-04. `PENDIENTE_DESARROLLADOR`.
-2. **Qué vistas de panel entran** en la tarea 5 (propuesta: `dashboard`, `estadisticas_pagos` y `estadisticas_pedidos`; el agente propone la lista final tras leerlas). `PENDIENTE_DESARROLLADOR`.
-3. **Congelar la hora** con `mock.patch` sobre `django.utils.timezone.now` (propuesta, sin dependencia nueva) o agregar una librería. `PENDIENTE_DESARROLLADOR`.
+Resueltas por el desarrollador el 2026-10-26:
+
+1. **D1 · Diferencias de IVA de un peso** entre el modelo y el oráculo (`Decimal`, `ROUND_HALF_UP`): solo se anotan en la bitácora, con la tabla de casos. No se crean regresiones.
+2. **D2 · Vistas del panel con oráculo:** `dashboard`, `estadisticas_pagos` y `estadisticas_pedidos`. Si el agente cree que falta o sobra alguna, lo propone en la bitácora sin aplicarlo.
+3. **D3 · Congelar la hora** con `unittest.mock.patch`, sin dependencias nuevas, parchando el nombre donde se busca, al mediodía de Chile. Si alguna ruta usa `date.today()` o `datetime.now()` y no se puede parchar sin tocar la aplicación, el agente se detiene y lo reporta. Resultado: las tres vistas usan solo `timezone.now()` del módulo, así que basta parchar `django.utils.timezone.now`.
 
 ## Datos requeridos del cliente
 
