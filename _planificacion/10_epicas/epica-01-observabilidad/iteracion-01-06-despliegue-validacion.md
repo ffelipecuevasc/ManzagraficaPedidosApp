@@ -1,7 +1,7 @@
 # Iteración 01-06 · Despliegue y validación de la observabilidad
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Pendiente (redactada, sin ejecutar; lista para ejecutarse el 2026-10-25 cuando el desarrollador lo indique)
+- **Estado:** En curso (desplegada el 2026-10-25 como `v1.1-observabilidad`; partes A, B y C validadas; falta la parte D, medición de siete días hacia el 2026-11-01). No pasa a `En revisión` ni a `Terminada` hasta medir la parte D, porque el criterio de la semana depende de ella.
 - **Subfase del plan:** 1.6
 - **Depende de:** 01-01, 01-02, 01-03, 01-04 y 01-05 (terminadas el 2026-10-25), 01-07 (marcas visuales; terminada el 2026-10-25) y 02-01 (su bloque de `settings.py` viaja aquí)
 - **RDA relacionadas:** RDA-003, RDA-007, RDA-008, RDA-013
@@ -79,19 +79,19 @@ No quedan decisiones abiertas.
 
 ## Criterios de aceptación
 
-- [ ] La lista de comprobación previa está completa en la bitácora (79 pruebas, `check --deploy`, `makemigrations --check`, `sqlmigrate` de la 0007 con su SQL y su clase) y el respaldo está verificado.
-- [ ] El ensayo en la réplica está medido: restauración del respaldo previo, aplicación de la 0007, reversión a la 0006 y nueva aplicación, todo sin errores.
-- [ ] La evidencia prueba que la 0007 no estaba aplicada en producción antes del `checkout` y que `migrate --plan` listaba solo la 0007.
-- [ ] La evidencia muestra la etiqueta `v1.1-observabilidad`, la migración aplicada en producción y `check --deploy` del servidor sin errores nuevos.
-- [ ] El error controlado aparece en `error.log` de producción con tipo de excepción, traza completa, método, ruta, usuario y hora.
-- [ ] El tiempo de diagnóstico medido es menor a cinco minutos.
-- [ ] Cada línea del error controlado aparece una sola vez en `error.log`, sin líneas del formato antiguo.
-- [ ] La página 500 se revisó en escritorio y a 360 px.
-- [ ] Después del despliegue, `error.log` no tiene líneas de `fontTools` ni de `django.server`.
-- [ ] Una acción real o de prueba aparece en el admin de eventos con su usuario, y `purgar_registros` corrió en el servidor.
-- [ ] Las líneas de `server.log` de producción llevan su emoji (01-07) y no hay líneas `Logging error` ni `UnicodeEncodeError` en `server.log` ni en `error.log` (corregido el 2026-10-25: el emoji no aparece en `error.log`, que conserva el formato de PythonAnywhere).
-- [ ] El crecimiento de una semana de la tabla de eventos está medido en filas y MB y comparado con la estimación.
-- [ ] `verificar_respaldo.py` exige la tabla de eventos después de migrar: volcado sintético con la tabla, código 0; sin ella, código 1; `respaldo.md` actualizado.
+- [x] La lista de comprobación previa está completa en la bitácora (79 pruebas, `check --deploy`, `makemigrations --check`, `sqlmigrate` de la 0007 con su SQL y su clase) y el respaldo está verificado. Evidencia A1 (filas 1 a 5: `Ran 79 tests` `OK`; 5 avisos; `No changes detected`; SQL **idéntico carácter por carácter** al de bitacora-01-06 y bitacora-01-01, comparado por el agente; Clase 2) y A2 (`VÁLIDO`, 18 de 18, código 0).
+- [x] El ensayo en la réplica está medido: restauración del respaldo previo, aplicación de la 0007, reversión a la 0006 y nueva aplicación, todo sin errores. Evidencia A3 (código 0, 3,6 s, 18 tablas, tabla `False`) y A4 (1,46 s, 1,07 s y 1,78 s, todo `OK`).
+- [x] La evidencia prueba que la 0007 no estaba aplicada en producción antes del `checkout` y que `migrate --plan` listaba solo la 0007. Evidencia B2 (`[X] 0006` sin 0007, `tabla_eventos: False`, `No planned migration operations.`) y B4 (solo `pedidos.0007_registroevento`).
+- [x] La evidencia muestra la etiqueta `v1.1-observabilidad`, la migración aplicada en producción y `check --deploy` del servidor sin errores nuevos. Evidencia A5 (objeto de la etiqueta `45817771…` sobre `d6768d0`, igual al `git rev-parse` local del agente), B3 (servidor en `d6768d0`) y B4 (`[X] 0007_registroevento`; los mismos 4 códigos que en B2; `ERRORS`: 0).
+- [x] El error controlado aparece en el registro de producción con tipo de excepción, traza completa, método, ruta, usuario y hora. Corregido el 2026-10-25 por la opción A: la línea con todo el contexto está en `server.log`; `error.log` tiene la traza y la hora, sin método ni usuario. Evidencia C2 (cabecera del decorador con `metodo=GET ruta=/pagos/eliminar/1056/ usuario=1 excepcion=TemplateDoesNotExist` a las 21:40:36; traza completa en ambos archivos).
+- [x] El tiempo de diagnóstico medido es menor a cinco minutos. Evidencia C2, última fila: unos 2 minutos (error a las 21:40:36; causa y traza a la vista a las 21:42; medido con el reloj del desarrollador).
+- [x] Cada registro del error controlado aparece una sola vez dentro de cada archivo. Corregido el 2026-10-25 por la opción A: `error.log` conserva el formato de PythonAnywhere por decisión (tarea 6). Evidencia C3 (`server.log`: 2 líneas de la ruta, las 2 con `❌`; `error.log`: 1 mensaje del decorador, 1 `Internal Server Error`, 1 traza y 1 `TemplateDoesNotExist`; 14 líneas en total desde `DESDE`, exactamente la composición esperada).
+- [x] La página 500 se revisó en escritorio y a 360 px. Evidencia C1 (texto correcto, se ve bien en ambos anchos y el foco es visible en «Recargar» e «Ir al inicio»).
+- [x] Después del despliegue, ni `error.log` ni `server.log` tienen líneas de `fontTools` ni de `django.server`. Evidencia C4 (PDF `GET /cotizaciones/27/pdf/ 200` a las 00:54:55 UTC, dentro del período; `fontTools`: 0 en ambos archivos; `registrador=django.server`: 0 en `server.log`). En `error.log` no se contó `django.server` por separado, pero sus 14 líneas desde `DESDE` son todas del error controlado (C3), así que no hay ninguna.
+- [x] Una acción real o de prueba aparece en el admin de eventos con su usuario, y `purgar_registros` corrió en el servidor. Evidencia C5 (un acceso fallido y un acceso exitoso, con usuario y hora `UTC-0300`; `Eventos eliminados: 0 …`; sin `pago_eliminado`). La tabla vacía tras B7 se explica porque se usó una sesión ya abierta (confirmado por el desarrollador).
+- [x] Las líneas de `server.log` de producción llevan su emoji (01-07) y no hay líneas `Logging error` ni `UnicodeEncodeError` en `server.log` ni en `error.log` (corregido el 2026-10-25: el emoji no aparece en `error.log`, que conserva el formato de PythonAnywhere). Evidencia C2 (las dos cabeceras empiezan con `❌` y se ven bien en el visor del panel) y C3 (líneas con `nivel=` sin emoji: 0; `Logging error` o `UnicodeEncodeError`: 0 en `server.log` y 0 en `error.log`).
+- [ ] El crecimiento de una semana de la tabla de eventos está medido en filas y MB y comparado con la estimación. **Pendiente: parte D**, hacia el domingo 2026-11-01.
+- [x] `verificar_respaldo.py` exige la tabla de eventos después de migrar: volcado sintético con la tabla, código 0; sin ella, código 1; `respaldo.md` actualizado. Evidencia B8: pruebas sintéticas del agente, y verificación del desarrollador en su PC con el respaldo de A2 (18 de 19, falta `pedidos_registroevento`, `NO VÁLIDO`, código 1, SHA-256 `f3163addfce2…`, el mismo de A2).
 
 ## Fuera de alcance
 

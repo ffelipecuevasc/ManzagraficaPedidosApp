@@ -2,7 +2,76 @@
 
 - **Fecha:** 2026-10-25
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado:** en curso. Partes A y B completadas por el desarrollador; B8 con la parte del agente lista; C y D en curso. La evidencia completa de la parte C se integra cuando el desarrollador la entregue.
+- **Estado:** en curso. Desplegada el 2026-10-25 como `v1.1-observabilidad` (`d6768d0`). Partes A, B y C validadas: 12 de 13 criterios cumplidos. Falta la parte D (siete días, hacia el domingo 2026-11-01). No pasa a `En revisión` ni a `Terminada` hasta entonces, porque el criterio de la semana depende de esa medición.
+
+## Resumen de la ejecución (2026-10-25, 20:59 a 22:13, hora de Chile)
+
+Fuente: [evidencia-01-06](../../10_epicas/epica-01-observabilidad/evidencia-01-06.md), con sus partes A, B y C completas y la respuesta del desarrollador. Solo se citan conteos, horas y códigos.
+
+| Parte | Resultado |
+| :---- | :-------- |
+| A1 · Lista de comprobación | `Ran 79 tests` · `OK` (71,0 s); `check --deploy` con 5 avisos (`W004`, `W008`, `W009`, `W012`, `W016`); `No changes detected`; regresión de eliminar pago en `OK` |
+| A2 · Respaldo previo | `respaldo_25-10-2026_21-02-34.sql`, 1.446.507 bytes, 18 de 18, `VÁLIDO`, código 0, SHA-256 `f3163addfce2…` |
+| A3 · Restauración en la réplica | Código 0, 3,6 s, 18 tablas, `[X] 0006`, tabla de eventos `False` |
+| A4 · Migración y reversión | Aplicar 1,46 s, revertir 1,07 s, aplicar de nuevo 1,78 s; plan de reversión con solo `Undo Create model RegistroEvento` |
+| A5 · Pruebas y etiqueta | `Ran 79 tests` · `OK` (76,3 s) con la réplica migrada; etiqueta sobre `d6768d0`, `HEAD` igual a `origin/main`; objeto `45817771…` en el remoto |
+| B2 · Antes del cambio | Sin 0007, `tabla_eventos: False`, `No planned migration operations.`; `check --deploy` con 4 códigos (sin `W009`: la clave de producción pasa) |
+| B3 · `checkout` | `d6768d0`; sin cambios en `requirements.txt` ni en `pedidos/static`; en `pedidos/migrations`, solo la 0007 |
+| B4 · Migración | Solo la 0007 en el plan; `Applying … OK` en 2,659 s a las 00:23 UTC; `check --deploy` igual a B2, `ERRORS`: 0 (tarea 5 cumplida) |
+| B5 · Antes de recargar | Plantilla faltante (el caso sigue), pago 1056 existe, `eventos: 0` |
+| B6 · Recarga | Anotada a las 00:27:15 UTC; reinicio en `server.log` a las 21:26:25 de Chile (00:26:25 UTC). `DESDE` se definió primero con el texto de la plantilla y se corrigió a las 00:31 UTC |
+| B7 · Revisión | Acceso, panel, listado y detalle correctos, con la **sesión que el desarrollador ya tenía abierta** (confirmado): por eso no se registró un `acceso_exitoso`, y no es una falla |
+| B8 · Verificador | Sintéticos del agente: 19 de 19 con código 0 y 18 de 19 con código 1. **En el PC del desarrollador**, el respaldo de A2 con el script nuevo dio 18 de 19, falta `pedidos_registroevento`, `NO VÁLIDO (1 tabla(s) faltante(s))`, código 1 y SHA-256 `f3163addfce276441938c03419d646770ffecd10ef48d96739c8b2fc89490aa9` (el mismo de A2). Es el resultado esperado |
+| C1 · Página 500 | «Algo salió mal», correcta en escritorio y a 360 px, foco visible |
+| C2 · Diagnóstico | Cabeceras con `❌` y todo el contexto en `server.log`; traza completa en ambos archivos; unos 2 minutos |
+| C3 · Conteos | `server.log`: 2, 2, 0 y 0. `error.log`: 1, 1, 1, 1 y 0, con **14 líneas desde `DESDE`**, exactamente la composición esperada (mensaje, `Traceback`, 10 líneas de traza, excepción e `Internal Server Error`) |
+| C4 · PDF | `GET /cotizaciones/27/pdf/ 200` a las 00:54:55 UTC; `fontTools` 0 en ambos archivos; `django.server` 0; solo 2 `nivel=ERROR` |
+| C5 · Eventos | Tras la prueba directa (acceso fallido con contraseña inventada y acceso correcto), 2 eventos con hora `UTC-0300`; `purgar_registros`: 0 eliminados; sin `pago_eliminado` |
+
+## Comprobaciones del agente
+
+**SQL de la 0007: idéntico carácter por carácter.** Comparé el bloque `sql` pegado en A1 con el de [bitacora-01-06](bitacora-01-06.md) y con el de [bitacora-01-01](bitacora-01-01.md): los tres son iguales (674 caracteres, sin diferencias en espacios ni en saltos de línea). Clase 2, como se aprobó en 01-01.
+
+**Contenido de la etiqueta.** `git diff --stat v0.2-correcciones v1.1-observabilidad`: 59 archivos, 3.790 inserciones y 283 eliminaciones.
+- Hashes resueltos en el repositorio local:
+  - `v0.2-correcciones` → `7944943`;
+  - `v1.1-observabilidad` → objeto `45817771de0a…` sobre `d6768d00274a…`, igual que en A5 y B3.
+- **Código:**
+  - `settings.py`: sale `ErrorHandlingMiddleware`, más el bloque 3 de `TEST` y `LOGGING`;
+  - `admin.py`, `apps.py`, `decorators.py`, `eventos.py`, `registro.py`, `senales.py`, `models.py`, `utils.py`, `views.py` y la plantilla 500;
+  - la orden `purgar_registros`, la migración 0007, `middleware.py` eliminado y `tests.py` reemplazado por el paquete `pedidos/tests/`.
+- **Documentos:** `_planificacion/` y `docs/operacion/` (`despliegue.md` y `pruebas.md`).
+- **Fuera de lo esperado:** nada.
+  - En `views.py`, las líneas que no son de eventos ni de registro son la condición `estado_anterior != nuevo_estado` del evento de cambio de estado (01-04) y la limpieza de `print`.
+  - No hay cambios en `requirements.txt`, `pedidos/static` ni `scripts/`: el cambio de `verificar_respaldo.py` (B8) va en un commit posterior a la etiqueta, como estaba previsto.
+
+**Lo que no pude comprobar yo:** los datos del servidor (B2 a C5) y del PC del desarrollador (A1 a A5, la verificación de B8). Se toman de la evidencia tal como los entregó el desarrollador. El hash de la etiqueta sí lo comprobé contra el repositorio local.
+
+## Criterios de la 01-06
+
+| Criterio | Estado | Respaldo |
+| :------- | :----- | :------- |
+| Lista de comprobación y respaldo | Cumplido | A1, filas 1 a 5, y A2; comparación literal del SQL hecha por el agente |
+| Ensayo en la réplica | Cumplido | A3 y A4 |
+| 0007 no aplicada antes; plan con solo la 0007 | Cumplido | B2 y B4 |
+| Etiqueta, migración y `check --deploy` | Cumplido | A5, B3 y B4 |
+| Error con tipo, traza, método, ruta, usuario y hora | Cumplido (redacción corregida por la opción A: en `server.log`) | C2 |
+| Diagnóstico en menos de cinco minutos | Cumplido | C2: unos 2 minutos |
+| Una sola vez por archivo | Cumplido (redacción corregida por la opción A) | C3 |
+| Página 500 en escritorio y a 360 px | Cumplido | C1 |
+| Sin `fontTools` ni `django.server` | Cumplido | C4. En `error.log` no hay un conteo directo de `django.server`, pero sus 14 líneas son todas del error controlado (C3) |
+| Evento en el admin y purga | Cumplido | C5 |
+| Emoji en `server.log`; sin `Logging error` ni `UnicodeEncodeError` en ambos | Cumplido | C2 y C3 |
+| `verificar_respaldo.py` con la tabla de eventos | Cumplido | B8: sintéticos del agente y respaldo de A2 en el PC |
+| **Crecimiento de una semana** | **Pendiente** | Parte D, hacia el domingo 2026-11-01: filas, MB y contraste con la estimación de 01-01 |
+
+## Documentación de operación completada
+
+- **`docs/operacion/respaldo.md`, sección 6:** fila del respaldo previo a `v1.1-observabilidad` (tamaño, SHA-256 y los dos resultados según la versión del script).
+- **`docs/operacion/replica-local.md`, sección 9:** fila del refresco de A3. La comprobación completa de paridad (sección 7) **no se repitió**: la fila lo dice, en lugar de dar por cumplida una paridad que no se midió.
+- **`docs/operacion/despliegue.md`, sección 5:**
+  - la fila de `v0.2-correcciones` que faltaba: 2026-10-23 18:35, `7944943`, sin respaldo previo porque no tocaba datos;
+  - la fila de `v1.1-observabilidad`: 2026-10-25 21:26, `d6768d0`, respaldo `f3163addfce2`.
 
 ## Hallazgo: dos destinos de registro
 
@@ -150,3 +219,25 @@ Los criterios que mencionan `error.log` y aún no se marcan (diagnóstico, dupli
 - No se comprobó dentro del proceso web, y la documentación encontrada no lo describe.
 - Con la opción A no hace falta confirmarlo: el diagnóstico no depende de ese manejador.
 - Si PythonAnywhere lo quitara o lo cambiara, `error.log` dejaría de recibir los errores, pero `server.log` seguiría teniéndolos.
+
+## Capturas amplias y regla 4 (registradas, sin asignar)
+
+- **Revisión del 2026-10-25:** hay 8 `except Exception` fuera de `registro.py` y `eventos.py`, y ningún `except:` sin tipo ni `except BaseException`.
+  - `decorators.py:20` y `views.py:193` registran el error con `logging` y cumplen la regla 4 vigente.
+  - Las otras 6 no la cumplen.
+- **Ya registradas, se enlazan:**
+  - `views.py:270`, `:766` y `:810` (`pass` al guardar ítems): AUD-01-002.
+  - `views.py:1128` (`generar_respaldo_bd`, `str(e)` al navegador): AUD-02-006.
+- **Nuevas:** `views.py:1168` y `:1191` (`restaurar_bd`). No registran el error y muestran `str(e)` al usuario.
+- Las seis quedaron en la sección 3 del registro como `PENDIENTE_DESARROLLADOR`, sin proponer corrección ni iteración.
+
+## Decisiones abiertas del desarrollador
+
+1. **Comentarios de código que siguen diciendo «error.log».** El comentario del bloque `LOGGING` en `settings.py` dice:
+   - «Todo va a stderr, que PythonAnywhere guarda en error.log»;
+   - «Configurar la raíz reemplaza cualquier manejador previo del entorno y evita líneas dobles».
+
+   Lo segundo quedó desmentido en producción. `decorators.py`, `views.py:194` y `eventos.py` también dicen «queda en error.log». El código funciona, pero los comentarios ya no describen la opción A. Cambiarlos toca `settings.py`, que requiere consulta. ¿Se corrigen, y en qué iteración?
+2. **Usuario escrito en la evidencia.** C5 de `evidencia-01-06.md` nombra al usuario con el que se hizo la prueba de acceso (en la tabla y en la descripción de la prueba). Si es el nombre de una persona, choca con la regla 7.4 de `AGENTS.md` (sin datos personales en la documentación). No edité la evidencia: ¿lo reemplazas por «usuario #1» o lo dejas porque es tu propio usuario técnico?
+3. **Asignación de las 6 capturas amplias** (sección 3 del registro).
+4. **Parte D:** medición del domingo 2026-11-01. Con ella se marca el último criterio y la 01-06 pasa a `En revisión`.

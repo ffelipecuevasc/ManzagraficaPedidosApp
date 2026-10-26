@@ -94,3 +94,4 @@ Una línea por respaldo verificado (o fallido). Solo fecha, tamaño, hash y resu
 | :-------------------- | :----- | :------------- | :------ | :-------- |
 | 2026-10-20 13:09:17 | Primer respaldo verificado (iteración 00-02) | 1.438.471 | `0fea064cb65fa1fc620663f2d66f6406d943489cd426a6e0cb37f31249d8d008` | VÁLIDO (código 0) |
 | 2026-10-22 23:56:36 | Previo al despliegue `v0.1-higiene` (iteración 00-05) | 1.444.819 | `90765c548e5c8f9676431c3c774e4d5aea6deed2559c91cdec0f773130de5fbe` | VÁLIDO (código 0) |
+| 2026-10-25 21:02:34 | Previo al despliegue `v1.1-observabilidad` (iteración 01-06) | 1.446.507 | `f3163addfce276441938c03419d646770ffecd10ef48d96739c8b2fc89490aa9` | VÁLIDO (código 0, 18 de 18, con la versión de `v0.2-correcciones`). Con el script de 19 tablas da NO VÁLIDO por `pedidos_registroevento`, código 1: es lo esperado, porque es anterior a la 0007 |

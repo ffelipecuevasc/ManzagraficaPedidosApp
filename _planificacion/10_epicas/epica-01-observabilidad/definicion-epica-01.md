@@ -27,7 +27,7 @@
 | 01-04 | Instrumentación de eventos de negocio (Terminada) | 1.4 |
 | 01-05 | Consulta de eventos en el admin (Terminada) | 1.5 |
 | 01-07 | Marcas visuales en el registro de errores (Terminada) | 1.2 (ampliación) |
-| 01-06 | Despliegue y validación de la observabilidad (redactada, sin ejecutar; ventana: 2026-10-25) | 1.6 |
+| 01-06 | Despliegue y validación de la observabilidad (desplegada el 2026-10-25 como `v1.1-observabilidad`; falta la parte D, hacia el 2026-11-01) | 1.6 |
 
 ## Decisiones de la épica
 

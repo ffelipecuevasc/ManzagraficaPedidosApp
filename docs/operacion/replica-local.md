@@ -218,3 +218,4 @@ Cuando los datos queden viejos (por ejemplo, antes de ensayar una migración o u
 | Fecha del refresco | Volcado (fecha en hora de Chile) | Tiempo de restauración (s) | Paridad |
 | :----------------- | :------------------------------- | :------------------------- | :------ |
 | 2026-10-21 (primera restauración, 00-03) | 2026-10-20 13:09:17 | 4,17 | 7 de 8 coinciden; Python aceptado; `pip freeze` 21/21 |
+| 2026-10-25 (ensayo de retroceso de la 01-06, parte A3) | 2026-10-25 21:02:34 | 3,6 | No se repitió la comprobación completa de la sección 7. Se comprobaron 18 tablas, `[X] 0006` como última migración y 79 pruebas en `OK` con la réplica restaurada y migrada (A5) |
