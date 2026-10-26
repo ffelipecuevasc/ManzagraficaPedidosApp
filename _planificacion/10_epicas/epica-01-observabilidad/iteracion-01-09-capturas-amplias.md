@@ -1,7 +1,7 @@
 # Iteración 01-09 · Capturas amplias que incumplen la regla 4
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Redactada, sin ejecutar. Opciones decididas por el desarrollador el 2026-10-26 (sección «Decisiones del desarrollador»): **A** para los ítems y **C** para respaldo y restauración. Se ejecuta y se despliega **después** de la parte D de la 01-06 (2026-11-01).
+- **Estado:** En revisión. Implementada en local el 2026-10-26 ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)) con las opciones decididas: **A** para los ítems y **C** para respaldo y restauración. Se despliega **después** de la parte D de la 01-06 (2026-11-01).
 - **Subfase del plan:** ninguna propia. Es deuda detectada en la revisión de la 01-06 (2026-10-25) y adelanta parte de 3.2 (supresión silenciosa) y de 3.4 (contrato de error) **solo en lo que pide la regla 4**: registrar y no mostrar `str(e)`.
 - **Depende de:** 01-06 (detección de las capturas y opción A: el diagnóstico se lee en `server.log`).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-008 (inventario de eventos), RDA-013 (errores con `logging`).
@@ -141,7 +141,7 @@ Revisado en `pedidos/utils.py:13-70` y `pedidos/views.py:1075-1111` y en la plan
 
 - **Cambia código, así que necesita despliegue con etiqueta** (RDA-007): **`v1.2-capturas`** (decisión 5), con partida en `v1.1-observabilidad`.
 - **La 01-08 viaja en el mismo despliegue:** sus comentarios están en `main` y no tienen despliegue propio. La etiqueta de la 01-09 los incluye. El registro de despliegue de `despliegue.md` debe nombrar las dos iteraciones.
-- **Cuándo:** se ejecuta y se despliega **después** de cerrar la parte D de la 01-06 (2026-11-01), para que la medición no mezcle versiones (decisión 5).
+- **Cuándo:** se implementa en local el 2026-10-26 y se despliega **después** de cerrar la parte D de la 01-06 (2026-11-01), para que la medición no mezcle versiones (decisión 5).
 - **Respaldo previo:** no hay migraciones ni cambios de datos, así que la iteración no lo exige por sí misma. Las vistas que se tocan son las de respaldo y restauración: si el despliegue sale mal, el botón de respaldo de la aplicación puede ser justo lo que no funcione. **Decidido: respaldo descargado antes del despliegue**, según el protocolo de `docs/operacion/despliegue.md` (decisión 6).
 - **Pruebas con la réplica:** pruebas automáticas con `mock` en todos los casos. Contra la réplica local, el camino normal de generar respaldo y una **restauración real**, autorizada por el desarrollador solo contra la réplica de Docker y solo cuando él lo pida al ejecutar la iteración (decisión 6). La restauración reemplaza los datos de la réplica: después se refresca según `docs/operacion/replica-local.md`.
 - **Validación en producción:** pasos para el desarrollador. Generar un respaldo desde la aplicación (camino normal) y comprobar que se descarga. **No** se provoca a propósito un fallo de respaldo ni de restauración en producción.
@@ -154,7 +154,7 @@ Todas resueltas el 2026-10-26.
 2. **Capturas de respaldo y restauración (`:1128`, `:1168`, `:1191`):** opción C.
 3. **Textos que ve el usuario:** los de la tabla «Textos aprobados». En `:1191`, el nombre del archivo solo aparece si el respaldo de emergencia se generó en `:1168`.
 4. **`:1128`:** `messages.error` con el texto fijo y redirección a `respaldar_bd`.
-5. **Cuándo y con qué etiqueta:** se ejecuta y se despliega después de la parte D de la 01-06 (2026-11-01), con `v1.2-capturas`. La 01-08 viaja en ese despliegue.
+5. **Cuándo y con qué etiqueta:** se despliega después de la parte D de la 01-06 (2026-11-01), con `v1.2-capturas`. La 01-08 viaja en ese despliegue. **Cambio del 2026-10-26:** la implementación se adelanta y se hace ahora en local; solo el despliegue espera a la parte D.
 6. **Respaldo y restauración real:** respaldo previo al despliegue, sí. Restauración real autorizada **solo contra la réplica local de Docker**, nunca contra producción, y solo cuando el desarrollador lo pida al ejecutar la iteración.
 
 ## Datos requeridos del cliente

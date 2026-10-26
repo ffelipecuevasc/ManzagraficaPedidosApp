@@ -268,7 +268,9 @@ def editar_pedido(request, pk):
                             precio_unitario=int(item['precio_unitario'])
                         )
                 except Exception:
-                    pass
+                    # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en server.log.
+                    logger.exception('Error procesando items del pedido %s', pedido.pk,
+                                     extra={'request': request})
             registrar_evento('pedido_modificado', request.user, 'pedido', pedido.pk,
                              f'Pedido #{pedido.pk} modificado')
             # Redirigir al detalle del pedido editado
@@ -763,9 +765,10 @@ def crear_cotizacion(request):
                             cantidad=float(item['cantidad']),
                             precio_unitario=int(item['precio_unitario'])
                         )
-                except Exception as e:
-                    # En producción podrías loguear esto
-                    pass
+                except Exception:
+                    # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en server.log.
+                    logger.exception('Error procesando items de la cotización %s', cotizacion.pk,
+                                     extra={'request': request})
             # -------------------------------------------------------------
 
             # Redirigimos al detalle para revisar antes de "enviar"
@@ -808,7 +811,9 @@ def editar_cotizacion(request, pk):
                             precio_unitario=int(item['precio_unitario'])
                         )
                 except Exception:
-                    pass
+                    # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en server.log.
+                    logger.exception('Error procesando items de la cotización %s', cotizacion.pk,
+                                     extra={'request': request})
             return redirect('detalle_cotizacion', pk=pk)
     else:
         form = CotizacionForm(instance=cotizacion)
@@ -1125,8 +1130,11 @@ def generar_respaldo_bd(request):
         nombre_archivo = os.path.basename(ruta_archivo)
         response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
         return response
-    except Exception as e:
-        return HttpResponse(f"Error crítico: {str(e)}")
+    except Exception:
+        # El detalle técnico (salida de mysqldump, rutas) va solo a server.log.
+        logger.exception('Error al generar el respaldo', extra={'request': request})
+        messages.error(request, 'No se pudo generar el respaldo. El detalle quedó en el registro del servidor.')
+        return redirect('respaldar_bd')
 
 @login_required
 @user_passes_test(es_superusuario)
@@ -1149,6 +1157,7 @@ def restaurar_bd(request):
             messages.error(request, "Error: El archivo debe tener extensión .sql")
             return redirect('restaurar_bd')
 
+        respaldo_previo = None  # nombre del respaldo de emergencia, si llega a generarse
         try:
             # 3. Guardar el archivo temporalmente en 'backups/tmp/'
             # (Usamos FileSystemStorage para manejar la subida de forma segura)
@@ -1164,13 +1173,15 @@ def restaurar_bd(request):
             # EL AIRBAG: Respaldo de Emergencia Automático
             # ====================================================
             try:
-                generar_respaldo_mysql()  # Si esto falla, NO restauramos
-            except Exception as e:
+                respaldo_previo = os.path.basename(generar_respaldo_mysql())  # Si esto falla, NO restauramos
+            except Exception:
                 # Si no podemos hacer el respaldo de seguridad, ABORTAMOS la misión.
                 # Es mejor no restaurar que restaurar sin red de seguridad.
+                logger.exception('Error al crear el respaldo de seguridad previo a restaurar',
+                                 extra={'request': request})
                 if os.path.exists(ruta_absoluta): os.remove(ruta_absoluta)  # Limpieza
-                messages.error(request,
-                               f"Operación abortada: No se pudo crear el respaldo de seguridad previo ({str(e)}).")
+                messages.error(request, 'Operación cancelada: no se pudo crear el respaldo de seguridad '
+                                        'previo, así que la base no se tocó.')
                 return redirect('restaurar_bd')
 
             # ====================================================
@@ -1188,8 +1199,15 @@ def restaurar_bd(request):
             if os.path.exists(ruta_absoluta):
                 os.remove(ruta_absoluta)
 
-        except Exception as e:
-            messages.error(request, f"Error crítico al restaurar: {str(e)}")
+        except Exception:
+            # El detalle técnico (salida de mysql, rutas) va solo a server.log.
+            logger.exception('Error en la restauración de la base de datos', extra={'request': request})
+            mensaje = ('La restauración falló. La base puede haber quedado restaurada en parte: '
+                       'revisa el registro del servidor antes de seguir.')
+            if respaldo_previo:
+                mensaje += (f' El respaldo de seguridad previo es {respaldo_previo}. '
+                            'Está en la carpeta backups/ del servidor.')
+            messages.error(request, mensaje)
 
         return redirect('restaurar_bd')
 
