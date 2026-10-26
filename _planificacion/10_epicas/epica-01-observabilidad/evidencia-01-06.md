@@ -348,7 +348,7 @@ Ventana privada: inicio de sesión, panel, listado de pedidos y detalle de un pe
 | Acceso y panel | Correcto, según el desarrollador |
 | Listado y detalle de pedido | Correcto: se revisó hasta el detalle de un pedido y están todos los datos (según el desarrollador) |
 
-Sin respuestas 500 en las pantallas revisadas: no corresponde retroceso. Se esperaba un evento `acceso_exitoso` por el inicio de sesión de B7, pero la tabla estaba vacía al revisarla en C5. La explicación probable es una sesión reutilizada (no verificada); la prueba directa de C5 confirmó que el servicio escribe.
+Sin respuestas 500 en las pantallas revisadas: no corresponde retroceso. Se esperaba un evento `acceso_exitoso` por el inicio de sesión de B7, pero la tabla estaba vacía al revisarla en C5. El desarrollador confirmó que B7 se hizo con la sesión que ya tenía abierta, y una sesión que continúa no registra un «acceso exitoso» (las lecturas tampoco generan eventos, por diseño). La prueba directa de C5 confirmó que el servicio escribe.
 
 Si algo responde 500 en estas pantallas, sigue `retroceso.md`, caso 1, con destino `v0.2-correcciones` (la tabla nueva puede quedarse: el código anterior la ignora).
 
@@ -384,7 +384,7 @@ El cambio va en un commit después de la etiqueta: el script corre en tu PC, no 
 > - **`error.log`** (UTC): lo escribe PythonAnywhere. Lleva el mensaje, la **traza completa** y `Internal Server Error: <ruta>`. Sin emoji, sin `nivel=` y sin método, ruta ni usuario en la primera línea.
 > - **`server.log`** (hora de Chile): lleva **nuestro formato** (`❌ nivel=ERROR registrador=… metodo=… ruta=… usuario=… excepcion=… mensaje="…"`), con los saltos de línea de la traza escritos como `#012`.
 >
-> La suposición de las iteraciones 01-02 a 01-06 («nuestras líneas caen en `error.log`») era incorrecta. Claude Code investiga la causa y las opciones; la decisión sobre qué hacer está pendiente (`registro-pendientes.md`, sección 3). Los comandos de esta parte quedaron **adaptados** a lo que realmente ocurre.
+> La suposición de las iteraciones 01-02 a 01-06 («nuestras líneas caen en `error.log`») era incorrecta. Claude Code investigó la causa y el desarrollador decidió la **opción A** (2026-10-25): el diagnóstico se hace en `server.log` y `error.log` queda como lo escribe PythonAnywhere, sin cambios de código ni v1.2. Los comandos de esta parte quedaron **adaptados** a lo que realmente ocurre.
 
 ### Preparación de la consola **[PA · Bash]**
 
@@ -541,7 +541,7 @@ grep -c 'Error capturado por decorador' "$S"
 - Los eventos por tipo: al menos `('acceso_exitoso', 1)`.
 - El conteo de `server.log` pasa de `0` (C0) a `1`: ahora es **nuestra propia línea** con formato, no el `print` antiguo, que ya no existe.
 
-**Primera medición (después de B7 y de C1):** la tabla estaba **vacía** (`0 Registro de eventos` en el admin y `[]` en el conteo por tipo), aunque se había revisado la aplicación. La explicación más probable es que B7 se hizo con una **sesión ya iniciada** antes del despliegue: Django guarda las sesiones en la base de datos y sobreviven a la recarga, y una sesión que continúa no registra un «acceso exitoso» (las lecturas tampoco generan eventos, por diseño). El desarrollador no confirmó si B7 fue con sesión nueva, así que esta explicación **no está verificada**. Para descartar una falla del servicio se hizo una prueba directa.
+**Primera medición (después de B7 y de C1):** la tabla estaba **vacía** (`0 Registro de eventos` en el admin y `[]` en el conteo por tipo), aunque se había revisado la aplicación. La explicación es que B7 se hizo con una **sesión ya iniciada** antes del despliegue: Django guarda las sesiones en la base de datos y sobreviven a la recarga, y una sesión que continúa no registra un «acceso exitoso» (las lecturas tampoco generan eventos, por diseño). El desarrollador confirmó después que B7 se hizo con la sesión que ya tenía abierta, de modo que la explicación quedó **confirmada**. Aun así, para descartar una falla del servicio se hizo una prueba directa.
 
 **Prueba directa en producción:** cerrar sesión; en el acceso, escribir el usuario `nacho` con una contraseña **inventada** (rechazada); entrar con la contraseña real; revisar el admin y el conteo por tipo.
 
@@ -560,7 +560,7 @@ Conclusión: el servicio de eventos escribe en producción con el formato espera
 
 ## Parte D · Siete días después del despliegue
 
-> **Nota (2026-10-25):** los comandos de registros están **adaptados** a lo que se observó en la parte C: el formato `nivel=…` está en **`server.log`** (hora de Chile) y no en `error.log`. Si la decisión pendiente sobre los dos destinos de registro cambia dónde escribe la aplicación, el agente ajusta esta parte antes de que se ejecute.
+> **Nota (2026-10-25):** los comandos de registros están **adaptados** a lo que se observó en la parte C: el formato `nivel=…` está en **`server.log`** (hora de Chile) y no en `error.log`. La decisión sobre los dos destinos de registro quedó resuelta (opción A): el diagnóstico se hace en `server.log`, así que estos comandos no cambian.
 
 **[PA · Bash]** (define `PROYECTO`, `VENV`, `L`, `S`, `DESDE` y `DESDE_CL` como en B1, B6 y la preparación de la parte C; la medición sirve al cumplirse los siete días, hacia el domingo 2026-11-01 a la misma hora del despliegue):
 
@@ -630,7 +630,7 @@ Observación: la variable `DESDE` de B6 se definió la primera vez con el texto 
 - El error controlado (pago 1056) quedó registrado **con su traza completa** en `error.log` y con el formato propio, emoji y contexto en `server.log`; el diagnóstico tomó unos 2 minutos.
 - La página 500 cumplió en escritorio, a 360 px y con foco.
 - El PDF de la cotización 27 se generó (`200` a las 21:54:55) sin dejar ni una línea de `fontTools` ni de `django.server`.
-- El servicio de eventos escribe en producción: tras cerrar sesión, un acceso fallido con `nacho` y una contraseña inventada, y un acceso correcto, el admin mostró 2 eventos con hora de Chile. La tabla había quedado vacía después de B7; la explicación probable es una sesión reutilizada, pero **no está verificada**.
-- **Hallazgo:** cada error queda escrito en dos archivos con dos formatos (`error.log`: el de PythonAnywhere; `server.log`: el nuestro con emoji y contexto). La suposición «nuestras líneas caen en `error.log`» era incorrecta. Claude Code investiga la causa y las opciones; la decisión está pendiente. No es motivo de retroceso: no se perdió ninguna línea y la traza completa está en ambos archivos.
+- El servicio de eventos escribe en producción: tras cerrar sesión, un acceso fallido con `nacho` y una contraseña inventada, y un acceso correcto, el admin mostró 2 eventos con hora de Chile. La tabla había quedado vacía después de B7 porque se usó una sesión ya abierta (confirmado por el desarrollador).
+- **Hallazgo:** cada error queda escrito en dos archivos con dos formatos (`error.log`: el de PythonAnywhere; `server.log`: el nuestro con emoji y contexto). La suposición «nuestras líneas caen en `error.log`» era incorrecta. Claude Code investigó la causa y el desarrollador decidió la **opción A** (2026-10-25): el diagnóstico se hace en `server.log`; `error.log` queda como lo escribe PythonAnywhere; sin cambios de código ni v1.2. El manejador de PythonAnywhere sigue siendo una deducción no confirmada. No es motivo de retroceso: no se perdió ninguna línea y la traza completa está en ambos archivos.
 
-_(Parte D: pendiente, hacia el domingo 2026-11-01. Decisión sobre los dos destinos de registro: pendiente.)_
+_(Parte D: pendiente, hacia el domingo 2026-11-01. Decisión sobre los dos destinos de registro: resuelta, opción A.)_
