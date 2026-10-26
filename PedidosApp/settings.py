@@ -204,9 +204,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # REGISTRO (iteración 01-02, RDA-013)
-# Todo va a stderr, que PythonAnywhere guarda en error.log (con su fecha UTC al inicio de
-# cada línea: por eso el formato no repite la fecha). Sin archivos de registro propios.
-# Configurar la raíz reemplaza cualquier manejador previo del entorno y evita líneas dobles.
+# Todo va a stderr. En PythonAnywhere, stderr termina en server.log (hora de Chile, con la
+# traza en una línea y los saltos como #012): es el archivo de diagnóstico (opción A, 01-06).
+# error.log recibe además los mismos errores en el formato de PythonAnywhere, por un manejador
+# del entorno que esta configuración no reemplaza (deducción no confirmada). El formato no
+# lleva fecha porque el recolector la antepone. Sin archivos de registro propios.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

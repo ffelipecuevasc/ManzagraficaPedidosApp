@@ -19,8 +19,8 @@ def transaccion_segura(view_func):
             return view_func(request, *args, **kwargs)
         except Exception as e:
             # Si algo falla, capturamos el error aquí mismo
-            # Traza completa a error.log con el contexto de la petición (01-03). El rediseño
-            # del decorador es de la Épica 03.
+            # Traza completa con el contexto de la petición (01-03); en producción se lee en
+            # server.log (opción A, 01-06). El rediseño del decorador es de la Épica 03.
             logger.exception('Error capturado por decorador en %s', view_func.__name__,
                              extra={'request': request})
 

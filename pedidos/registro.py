@@ -66,7 +66,7 @@ class FiltroContextoPeticion(logging.Filter):
                 record.ruta = request.path  # sin la cadena de consulta
                 record.usuario = _usuario(request)
         except Exception as error:  # noqa: BLE001
-            # Única captura amplia permitida (AGENTS.md, regla 4): el registrador nunca puede
+            # Captura amplia permitida (AGENTS.md, regla 4), como las de eventos.py: el registrador nunca puede
             # hacer fallar una petición. Se emite el problema a stderr antes de absorberlo.
             sys.stderr.write(f'nivel=ERROR registrador=pedidos.registro mensaje="Fallo del filtro de contexto: '
                              f'{type(error).__name__}"\n')

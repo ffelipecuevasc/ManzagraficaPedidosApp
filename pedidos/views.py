@@ -191,7 +191,7 @@ def crear_pedido(request):
                                 precio_unitario=int(item['precio_unitario'])
                             )
                     except Exception as e:
-                        # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en error.log.
+                        # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en server.log.
                         logger.exception('Error procesando items del pedido %s', pedido.pk,
                                          extra={'request': request})
                         # No detenemos el proceso, los items son recuperables o editables

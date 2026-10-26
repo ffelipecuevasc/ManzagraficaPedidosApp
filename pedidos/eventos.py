@@ -44,7 +44,7 @@ def registrar_evento(tipo, usuario=None, entidad='', entidad_id=None, resumen=''
         transaction.on_commit(lambda: _escribir_evento(datos))
     except Exception:  # noqa: BLE001
         # Captura amplia permitida (AGENTS.md, regla 4): el servicio de registro nunca puede
-        # hacer fallar una petición. El problema queda en error.log con su traza.
+        # hacer fallar una petición. El problema queda en server.log con su traza.
         logger.exception('No se pudo programar el evento %s', tipo)
 
 

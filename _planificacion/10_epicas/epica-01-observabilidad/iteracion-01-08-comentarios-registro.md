@@ -1,7 +1,7 @@
 # Iteración 01-08 · Comentarios del registro alineados con la opción A
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** Redactada, sin ejecutar. Se ejecuta **ahora, antes de la medición de la parte D de la 01-06** (decisión del desarrollador del 2026-10-26), una vez que el desarrollador apruebe expresamente el diff.
+- **Estado:** En revisión (ejecutada el 2026-10-26, antes de la parte D de la 01-06). Bitácora: [bitacora-01-08](../../99_bitacora/epica-01-observabilidad/bitacora-01-08.md).
 - **Subfase del plan:** 1.2 (ajuste de texto de 01-02 y 01-03; iteración nueva, sin subfase propia en el plan)
 - **Depende de:** 01-06 (hallazgo «dos destinos de registro» y decisión A del desarrollador, 2026-10-25)
 - **RDA relacionadas:** RDA-013 (con su actualización del 2026-10-25)
@@ -81,11 +81,11 @@ Busqué `error.log`, `server.log`, `stderr`, «salida estándar», «salida de e
 
 ## Criterios de aceptación
 
-- [ ] Los cinco lugares tienen el texto propuesto u otro aprobado por el desarrollador.
-- [ ] El diff de `settings.py` lo aprobó el desarrollador antes de aplicarlo, y coincide con el de esta iteración.
-- [ ] El diff total cambia solo comentarios: ninguna línea de código, configuración, plantilla ni prueba. El resto del diff es nulo.
-- [ ] `python manage.py test pedidos`: **79 pruebas en `OK`**. `check` sin errores. `makemigrations --check`: `No changes detected`.
-- [ ] Ningún comentario del código afirma que los errores se leen en `error.log` ni que `LOGGING` evita líneas dobles. Lo comprueba un `grep` que se pega en la bitácora.
+- [x] Los cinco lugares tienen el texto propuesto u otro aprobado por el desarrollador.
+- [x] El diff de `settings.py` lo aprobó el desarrollador antes de aplicarlo, y coincide con el de esta iteración.
+- [x] El diff total cambia solo comentarios: ninguna línea de código, configuración, plantilla ni prueba. El resto del diff es nulo.
+- [x] `python manage.py test pedidos`: **79 pruebas en `OK`**. `check` sin errores. `makemigrations --check`: `No changes detected`.
+- [x] Ningún comentario del código afirma que los errores se leen en `error.log` ni que `LOGGING` evita líneas dobles. Lo comprueba un `grep` que se pega en la bitácora.
 
 ## Despliegue
 
@@ -104,7 +104,7 @@ Busqué `error.log`, `server.log`, `stderr`, «salida estándar», «salida de e
 
 ## Decisiones del desarrollador
 
-1. **Diff de `settings.py` y de los demás archivos:** `PENDIENTE_DESARROLLADOR`. El desarrollador lo revisa y da su aprobación expresa antes de que se aplique cualquier cambio.
+1. **Diff de `settings.py` y de los demás archivos:** aprobados tal como están en esta iteración (2026-10-26).
 2. **Punto 5 (`registro.py:69`, «Única captura amplia»):** se incluye (2026-10-26).
 3. **Cuándo ejecutarla:** ahora, antes de la medición de la parte D de la 01-06 (2026-10-26).
 4. **Despliegue:** no necesita uno propio; viaja en el siguiente despliegue con cambios de código (2026-10-26).
