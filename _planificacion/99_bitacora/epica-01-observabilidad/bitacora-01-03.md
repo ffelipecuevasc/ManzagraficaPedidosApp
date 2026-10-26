@@ -60,6 +60,8 @@ No matches found
 
 ## Propuesta para `AGENTS.md`, regla 4 (`PENDIENTE_DESARROLLADOR`)
 
+**Adoptada el 2026-10-26.** El desarrollador comprobó que `AGENTS.md` ya tiene la versión final acordada de la regla 4 («norma general que exige registrar»). El texto de abajo se conserva como historia; `AGENTS.md` no se modificó desde esta bitácora.
+
 Solo como propuesta: el agente no edita `AGENTS.md`.
 
 - **Archivo y sección:** `AGENTS.md`, sección 8, regla 4.
@@ -128,5 +130,5 @@ PowerShell 7, `DB_NAME=manzagrafica_replica`.
 ## Pendientes
 
 - Revisión del desarrollador.
-- Decisión sobre la propuesta de la regla 4 de `AGENTS.md`.
+- ~~Decisión sobre la propuesta de la regla 4 de `AGENTS.md`.~~ Resuelta el 2026-10-26: adoptada.
 - Revisión visual de la página 500 a 360 px.
