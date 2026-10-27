@@ -1,6 +1,6 @@
 # Épica 02 · Red de seguridad
 
-- **Estado:** En curso (02-01 a 02-03 terminadas; 02-04 en revisión; 02-05 redactada, sin ejecutar)
+- **Estado:** En curso (02-01 a 02-03 terminadas; 02-04 terminadas; 02-05 en revisión)
 - **Fase del plan:** 2 (`plan-de-trabajo.md`, «FASE 2»)
 - **Objetivo:** construir las pruebas automatizadas que permiten refactorizar la lógica crítica sin miedo. La aplicación maneja dinero y, hasta la 02-01, tenía cero pruebas.
 - **Precondición:** Épica 00 completa. Puede avanzar en paralelo con la Épica 01.
@@ -11,7 +11,7 @@
 1. Infraestructura de pruebas contra MySQL en Docker (RDA-006), con funciones o factorías de datos y archivos organizados por dominio.
 2. Pruebas de la lógica de dinero: IVA y redondeo, totales, saldos, porcentajes, abonos, sobrepagos y las agregaciones del panel financiero comparadas contra un cálculo ingenuo.
 3. Pruebas de los flujos críticos: crear y editar pedidos con ítems, convertir cotizaciones, cambiar estados, duplicar pedidos.
-4. Pruebas de regresión que **fallan hoy** a propósito y pasarán cuando se corrija cada defecto. Además de las del plan (pérdida de ítems, métricas duplicadas, escritura por GET), incluye las de la Auditoría 02: eliminación de pagos (AUD-02-002), fechas en UTC con la hora fijada a las 22:00 de Chile (AUD-02-003), `estado_pago` desincronizado (AUD-02-004), doble conversión de cotizaciones (AUD-02-005), borrado en cascada del historial de un cliente (AUD-02-001), el porcentaje pagado calculado con `float` (AUD-02-025, agregado tras la 02-02), la fecha de entrega vacía al convertir una cotización (AUD-02-027) y el pedido duplicado sin `creado_por` (AUD-02-028), agregados tras la 02-03. Recuento previsto: 19 regresiones.
+4. Pruebas de regresión que **fallan hoy** a propósito y pasarán cuando se corrija cada defecto. Además de las del plan (pérdida de ítems, métricas duplicadas, escritura por GET), incluye las de la Auditoría 02: eliminación de pagos (AUD-02-002), fechas en UTC con la hora fijada a las 22:00 de Chile (AUD-02-003), `estado_pago` desincronizado (AUD-02-004), doble conversión de cotizaciones (AUD-02-005), borrado en cascada del historial de un cliente (AUD-02-001), el porcentaje pagado calculado con `float` (AUD-02-025, agregado tras la 02-02), la fecha de entrega vacía al convertir una cotización (AUD-02-027) y el pedido duplicado sin `creado_por` (AUD-02-028), agregados tras la 02-03. Recuento: 18 regresiones (19 previstas; R5, de las métricas duplicadas, no se confirmó y queda cubierta por R8).
 5. Pruebas de control de acceso: anónimos, usuarios sin superusuario en las vistas de base de datos y endpoints JSON sin sesión.
 
 Las reglas de negocio sin confirmar (`registro-pendientes.md`, sección 2) se fijan con el comportamiento actual y un comentario `PENDIENTE_CLIENTE` en la prueba, para que cambiarlas sea una decisión visible y no un accidente.
@@ -45,8 +45,8 @@ Una prueba de caracterización nunca afirma que el comportamiento actual sea cor
 | 02-01 | [Infraestructura de pruebas](iteracion-02-01-infraestructura-pruebas.md) | 2.1 | Terminada (2026-10-25; desplegada en `v1.1-observabilidad`) | AUD-01-015, AUD-02-020 |
 | 02-02 | [Pruebas de la lógica de dinero](iteracion-02-02-logica-dinero.md) | 2.2 | Terminada (2026-10-26; sin despliegue propio) | AUD-01-015, AUD-02-014, AUD-02-015 |
 | 02-03 | [Pruebas de flujos críticos](iteracion-02-03-flujos-criticos.md) | 2.3 | Terminada (2026-10-27; sin despliegue propio) | AUD-01-015, AUD-02-013, AUD-02-014 |
-| 02-04 | [Pruebas de regresión de defectos conocidos](iteracion-02-04-regresiones.md) | 2.4 | En revisión (2026-10-27; sin despliegue propio) | AUD-01-002, AUD-01-006, AUD-02-001 a AUD-02-006, AUD-02-008, AUD-02-025, AUD-02-027, AUD-02-028 |
-| 02-05 | [Pruebas de control de acceso](iteracion-02-05-control-acceso.md) | 2.5 | Redactada, sin ejecutar | AUD-01-015, AUD-01-018 |
+| 02-04 | [Pruebas de regresión de defectos conocidos](iteracion-02-04-regresiones.md) | 2.4 | Terminada (2026-10-27; sin despliegue propio) | AUD-01-002, AUD-01-006, AUD-02-001 a AUD-02-006, AUD-02-008, AUD-02-025, AUD-02-027, AUD-02-028 |
+| 02-05 | [Pruebas de control de acceso](iteracion-02-05-control-acceso.md) | 2.5 | En revisión (2026-10-27; sin despliegue propio) | AUD-01-015, AUD-01-018 |
 
 **Orden recomendado:** 02-02 → 02-03 → 02-04 → 02-05. La 02-04 reutiliza las ayudas de la 02-03 (cómo enviar el formulario de ítems, cómo congelar la hora). La 02-05 es independiente y puede adelantarse si conviene.
 
@@ -94,3 +94,5 @@ Se usan como `PENDIENTE_CLIENTE` en las pruebas; ninguno bloquea la ejecución. 
 - **2026-10-26 (cierre de la 02-02):** 02-02 terminada con 111 pruebas. AUD-02-025 (porcentaje pagado con `float`) se suma a la 02-04 como R15: recuento previsto de 17 regresiones (antes, alrededor de 16). AUD-02-026 (pedido de $0 en `estadisticas_pagos`) queda solo en la auditoría. AUD-02-014 (valor de la cotización) lo fija la 02-03.
 - **2026-10-27 (cierre de la 02-03):** 02-03 terminada. El precio del ítem que ajusta a mano el vendedor es regla de negocio confirmada (sin hallazgo). AUD-02-027 (fecha de entrega vacía al convertir) y AUD-02-028 (duplicado sin `creado_por`) se suman a la 02-04 como R18 y R19: recuento previsto de 19 regresiones. La 02-04 suma una tarea 0 para unificar `congelar_hora`.
 - **2026-10-27 (02-04):** 18 regresiones en `test_regresiones.py`, `OK (expected failures=18)` en tres ejecuciones. R5 (AUD-01-006) no se confirmó y no se escribió: el previsto de 19 queda en 18. Decisiones D1 a D5 en la iteración.
+- **2026-10-27 (cierre de la 02-04):** 02-04 terminada. R5 queda cubierta por R8; `dashboard` y `estadisticas_bd` no se suman como regresión (06-01).
+- **2026-10-27 (02-05):** control de acceso fijado en `test_acceso.py` (13 pruebas). Mecanismo: decoradores vista por vista. Sin rutas públicas nuevas en `pedidos/urls.py`; recuento de la 02-04 sin cambios (18). Hallazgo propuesto principal: `@transaccion_segura` convierte el 404 en 500.

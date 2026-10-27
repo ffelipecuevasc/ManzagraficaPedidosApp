@@ -179,8 +179,8 @@ class ItemsTodoONadaTests(RegresionBase):
 # ---------------------------------------------------------------------------
 # Dos llamadas a `registrar_metricas_diarias()` en el mismo instante, a mediodía de Chile,
 # dejan UNA fila: la prueba dio «unexpected success» y no se marca como regresión
-# (bitacora-02-04.md). A las 22:00 de Chile sí deja dos, pero ese es el día en UTC
-# (AUD-02-003), que ya comprueba R8 en la base.
+# (bitacora-02-04.md). A las 22:00 de Chile sí deja dos, por el día en UTC (AUD-02-003).
+# Decisión del desarrollador (2026-10-27): R5 queda cubierta por R8 y sigue sin asignar.
 
 
 # ---------------------------------------------------------------------------
@@ -221,7 +221,7 @@ class EscrituraPorGetTests(RegresionBase):
 
         with mock.patch.object(views, 'generar_respaldo_mysql', return_value=ruta) as generar:
             respuesta = self.ejecutar('get', '/base_datos/respaldar_bd/accion/')
-        respuesta.close()  # Cierra el archivo que abre FileResponse.
+        ayudas.cerrar_respuesta(respuesta)  # Cierra el archivo sin romper la transacción.
 
         self.assertEqual((respuesta.status_code, generar.called), (405, False))
 
@@ -388,7 +388,7 @@ class HistorialClienteTests(TestCase):
 # ---------------------------------------------------------------------------
 class PorcentajePagadoTests(TestCase):
     @tag('regresion')
-    @expectedFailure  # R15 · AUD-02-025: int(29 / 100 * 100) da 28 por el float. Lo corrige la 07-02 (antes 06-05).
+    @expectedFailure  # R15 · AUD-02-025: int(29 / 100 * 100) da 28 por el float. Lo corrige la 06-05, junto con AUD-02-015.
     def test_r15_porcentaje_pagado_con_enteros(self):
         pedido = crear_pedido(valor_venta=100)
         crear_pago(pedido, monto=29)

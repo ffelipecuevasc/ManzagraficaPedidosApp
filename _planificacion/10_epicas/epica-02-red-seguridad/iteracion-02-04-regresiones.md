@@ -1,7 +1,7 @@
 # Iteración 02-04 · Pruebas de regresión de defectos conocidos
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** En revisión (ejecutada el 2026-10-27; [bitacora-02-04](../../99_bitacora/epica-02-red-seguridad/bitacora-02-04.md))
+- **Estado:** Terminada (ejecutada y cerrada el 2026-10-27; [bitacora-02-04](../../99_bitacora/epica-02-red-seguridad/bitacora-02-04.md), [bitacora-02-04-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-04-cierre.md))
 - **Subfase del plan:** 2.4
 - **Depende de:** 02-01 y 02-03 (reutiliza sus ayudas y factorías)
 - **RDA relacionadas:** RDA-006
@@ -36,7 +36,7 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 | R2 | AUD-01-002 | Lo mismo al **editar una cotización** | Igual que R1 | 03-02 / 03-03 |
 | R3 | AUD-02-008 | Si falla un ítem al **crear un pedido**, no queda un pedido a medias | `transaction.atomic` existe, pero el `try/except` interno lo anula y el pedido queda con ítems parciales | 03-03 |
 | R4 | AUD-01-002 | Lo mismo al **crear una cotización** | Cotización con ítems parciales | 03-03 |
-| R5 | AUD-01-006 | Llamar dos veces `registrar_metricas_diarias()` el mismo día deja **una** fila de `HistorialBD` | Deja dos; la comprobación de duplicados no funciona (producción: 187 filas en 121 días). **No confirmada el 2026-10-27:** a mediodía deja una fila (`unexpected success`); no se escribió (ver bitácora) | 06-01 |
+| R5 | AUD-01-006 | Llamar dos veces `registrar_metricas_diarias()` el mismo día deja **una** fila de `HistorialBD` | Deja dos; la comprobación de duplicados no funciona (producción: 187 filas en 121 días). **No confirmada, sin prueba (2026-10-27):** a mediodía deja una fila (`unexpected success`). Por decisión del desarrollador queda cubierta por R8; R5 sigue sin asignar | 06-01 |
 | R6 | AUD-02-006 y plan 4.1 | `cambiar_estado`, `duplicar_pedido` y `generar_respaldo_bd` rechazan GET (405) | Responden y escriben con GET | 04-01 |
 | R7 | AUD-02-002 | La eliminación de un pago muestra una página de confirmación (200) | La plantilla `pedidos/pago_confirm_delete.html` no existe: error 500 (confirmado en producción) | 04-01 |
 | R8 | AUD-02-003 | A las 22:00 de Chile, el panel y el chequeo diario usan el **día de Chile**, no el de UTC | Con 22:00 de Chile ya es el día siguiente en UTC | 06-01 |
@@ -92,6 +92,12 @@ Resueltas por el desarrollador el 2026-10-27:
 3. **D3 · Numeración:** se deja como está (R1 a R15, R16 reservado, R17 libre, R18 y R19). No se renumera.
 4. **D4 · Inventario de rutas que escriben por GET:** el agente lo lista en la bitácora (ruta, vista, qué escribe, si lo cubre R6 o R7). No se escriben pruebas fuera de R6; el desarrollador decide cuáles se suman.
 5. **D5 · Iteraciones:** AUD-02-028 (R19) sigue `PENDIENTE_DESARROLLADOR`; AUD-02-027 (R18) la corrige la 03-04.
+
+Resueltas por el desarrollador el 2026-10-27, tras la revisión ([bitacora-02-04-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-04-cierre.md)):
+
+6. **R5:** queda cubierta por R8; «no confirmada, sin prueba»; el número sigue sin asignar.
+7. **`dashboard` y `estadisticas_bd`** (escriben `HistorialBD` con GET): no se suman como regresión; quedan en el inventario D4 y se resuelven en la 06-01.
+8. **AUD-02-028 (R19):** sigue `PENDIENTE_DESARROLLADOR`.
 
 ## Datos requeridos del cliente
 

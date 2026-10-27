@@ -5,10 +5,14 @@
   Cuando la 04-01 las pase a POST, se cambia solo aquí (y las pruebas que lo declaran).
 - `congelar_hora`: fija `timezone.now()` donde lo buscan las vistas (decisión D3 de la 02-02).
   Es la única definición: `test_dinero.py` la importa desde aquí (tarea 0 de la 02-04).
+- `cerrar_respuesta`: cierra un `FileResponse` sin romper la transacción de la prueba (02-05).
 - `estado_pago_esperado`: oráculo de `estado_pago` para las regresiones R10 a R12 (02-04).
 """
 import json
 from unittest import mock
+
+from django.core.signals import request_finished
+from django.db import close_old_connections
 
 from .factorias import momento_chile
 
@@ -55,3 +59,17 @@ def estado_pago_esperado(pedido):
     if pagado > 0:
         return 'PARCIAL'
     return 'PENDIENTE'
+
+
+def cerrar_respuesta(respuesta):
+    """Cierra la respuesta (y el archivo de un `FileResponse`) sin cerrar la conexión.
+
+    `respuesta.close()` emite `request_finished`, que llama a `close_old_connections`: dentro
+    de la transacción de `TestCase` eso deja la conexión marcada para revertir y la siguiente
+    consulta falla. El cliente de pruebas de Django desconecta la misma señal en cada petición.
+    """
+    request_finished.disconnect(close_old_connections)
+    try:
+        respuesta.close()
+    finally:
+        request_finished.connect(close_old_connections)

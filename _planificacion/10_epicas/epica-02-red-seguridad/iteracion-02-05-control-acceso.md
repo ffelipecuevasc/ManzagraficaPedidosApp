@@ -1,7 +1,7 @@
 # Iteración 02-05 · Pruebas de control de acceso
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** Redactada, sin ejecutar
+- **Estado:** En revisión (ejecutada el 2026-10-27; [bitacora-02-05](../../99_bitacora/epica-02-red-seguridad/bitacora-02-05.md))
 - **Subfase del plan:** 2.5
 - **Depende de:** 02-01
 - **RDA relacionadas:** RDA-006
@@ -36,15 +36,15 @@ Son pruebas de **caracterización**: fijan la respuesta real de hoy. Si una prue
 
 ## Criterios de aceptación
 
-- [ ] La prueba de inventario cubre todas las rutas de `pedidos/urls.py` y falla si aparece una ruta nueva sin protección ni lista blanca.
-- [ ] Las cuatro vistas de gestión de la base de datos rechazan a un usuario que no es superusuario, y las funciones de respaldo y restauración **no se invocan**.
-- [ ] Los puntos JSON tienen su comportamiento sin sesión fijado y documentado.
-- [ ] Ningún POST anónimo cambia la base.
-- [ ] Ninguna prueba ejecuta `mysql` ni `mysqldump` ni escribe en `backups/` o `media/` reales.
-- [ ] Cualquier comportamiento que deje pasar de más queda como hallazgo en el registro y, si procede, como regresión propuesta para 02-04.
-- [ ] `python manage.py test pedidos` en verde (más las nuevas) en tres ejecuciones seguidas; `check` sin errores; `makemigrations --check --dry-run` sin cambios.
-- [ ] El diff no toca código de la aplicación.
-- [ ] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas.
+- [x] La prueba de inventario cubre todas las rutas de `pedidos/urls.py` y falla si aparece una ruta nueva sin protección ni lista blanca.
+- [x] Las cuatro vistas de gestión de la base de datos rechazan a un usuario que no es superusuario, y las funciones de respaldo y restauración **no se invocan**.
+- [x] Los puntos JSON tienen su comportamiento sin sesión fijado y documentado.
+- [x] Ningún POST anónimo cambia la base.
+- [x] Ninguna prueba ejecuta `mysql` ni `mysqldump` ni escribe en `backups/` o `media/` reales.
+- [x] Cualquier comportamiento que deje pasar de más queda como hallazgo en el registro y, si procede, como regresión propuesta para 02-04.
+- [x] `python manage.py test pedidos` en verde (más las nuevas) en tres ejecuciones seguidas; `check` sin errores; `makemigrations --check --dry-run` sin cambios.
+- [x] El diff no toca código de la aplicación.
+- [x] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas.
 
 ## Fuera de alcance
 
@@ -54,8 +54,10 @@ Son pruebas de **caracterización**: fijan la respuesta real de hoy. Si una prue
 
 ## Decisiones del desarrollador
 
-1. **Lista de rutas públicas** de la prueba de inventario (propuesta: `robots.txt` y el acceso; el agente propone la lista final tras enumerar las rutas). `PENDIENTE_DESARROLLADOR`.
-2. **Qué hacer si una ruta resulta pública sin querer:** propuesta, registrar el hallazgo y declararla como regresión en 02-04, no cambiar la prueba para que pase. `PENDIENTE_DESARROLLADOR`.
+Resueltas por el desarrollador el 2026-10-27:
+
+1. **D1 · Lista de rutas públicas:** solo `robots.txt` y el acceso (`login`). Si aparece otra ruta pública, no se agrega a la lista: se reporta y decide el desarrollador. Resultado: en `pedidos/urls.py` no apareció ninguna; fuera de ella, la recuperación de contraseña y el acceso del panel de administración responden sin sesión (reportados en la bitácora).
+2. **D2 · Ruta pública o abierta sin querer:** no se cambia la prueba para que pase; se registra el hallazgo (siguiente ID libre) y una regresión en la 02-04. Resultado: no se activó; el recuento de la 02-04 sigue en 18.
 
 ## Datos requeridos del cliente
 

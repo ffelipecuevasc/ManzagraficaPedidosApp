@@ -115,11 +115,12 @@ En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=18`.
 | R12 | `EstadoPagoTests.test_r12_mover_pago_recalcula_ambos_pedidos` | AUD-02-004 | El pedido anterior sigue `PAGADO` | 03-03 |
 | R13 | `ConvertirCotizacionTests.test_r13_convertir_dos_veces_crea_un_solo_pedido` | AUD-02-005 | Crea dos pedidos | 03-03 |
 | R14 | `HistorialClienteTests.test_r14_eliminar_cliente_con_pedidos_se_rechaza` | AUD-02-001 | No lanza `ProtectedError`: borra en cascada | 04-06 |
-| R15 | `PorcentajePagadoTests.test_r15_porcentaje_pagado_con_enteros` | AUD-02-025 | Da 28 en vez de 29 (`float`) | 07-02 (antes 06-05) |
+| R15 | `PorcentajePagadoTests.test_r15_porcentaje_pagado_con_enteros` | AUD-02-025 | Da 28 en vez de 29 (`float`) | 06-05, junto con AUD-02-015 (decisión del 2026-10-26; numeración anterior a RDA-014) |
 | R18 | `ConvertirCotizacionTests.test_r18_convertir_sin_fecha_de_entrega_no_responde_500` | AUD-02-027 | `ValidationError` por la fecha vacía: 500 | 03-04 |
 | R19 | `DuplicarPedidoTests.test_r19_duplicado_queda_con_el_usuario_que_duplica` | AUD-02-028 | `creado_por` queda nulo | `PENDIENTE_DESARROLLADOR` |
 
-- **R5 (AUD-01-006) no está:** dos llamadas a `registrar_metricas_diarias()` en el mismo instante, a mediodía, dejan una fila (`unexpected success`). El duplicado de las 22:00 lo cubre R8. **R16** está reservado para AUD-02-021 y **R17** está libre.
+- **R5 (AUD-01-006): no confirmada, sin prueba.** Dos llamadas a `registrar_metricas_diarias()` a mediodía dejan una fila. Por decisión del desarrollador (2026-10-27), R5 queda cubierta por R8, que comprueba en la base el duplicado de las 22:00 de Chile; el número R5 sigue sin asignar. **R16** está reservado para AUD-02-021 y **R17** está libre.
+- **`dashboard` y `estadisticas_bd`** escriben `HistorialBD` con GET: no son regresión (decisión del 2026-10-27); se resuelven en la 06-01.
 - **Cómo se retira una regresión:** la iteración que corrige el defecto quita `@expectedFailure` y `@tag('regresion')` de su prueba, baja N en esta sección y en la bitácora, y deja la prueba como prueba normal. Si la corrección deja de registrar el error, `absorber_errores` no la hace fallar.
 - **Hora en R8 y R9:** se parcha `django.utils.timezone.now` con un instante en **UTC** (22:00 de Chile = 01:00 UTC del día siguiente), igual que el reloj real con `USE_TZ`.
 - **Oráculo de `estado_pago`:** `ayudas.estado_pago_esperado`, con su propia prueba (`OraculoEstadoPagoTests`, en verde).
@@ -173,3 +174,23 @@ Pruebas de caracterización de la iteración 02-03, en `test_pedidos.py` y `test
 Ninguna prueba escribe en el `media/` real ni ejecuta `mysql` o `mysqldump`.
 
 **Regla de negocio confirmada: el precio de cada ítem lo fija el vendedor** (decisión del desarrollador, 2026-10-27). `CrearPedidoTests.test_el_precio_lo_envia_el_navegador` fija que el servidor guarda el precio unitario que llega en `items_json` sin compararlo con el catálogo. No es un defecto: el vendedor (hoy, el dueño, único usuario y superusuario) ajusta a mano el precio de cada ítem para dar trato diferenciado a distintos clientes. Por eso no hay hallazgo ni regresión. **Advertencia:** ningún cambio de las Épicas 03 a 06 debe validar el precio del ítem contra el catálogo, ni recalcularlo en el servidor, sin consultar antes al desarrollador.
+
+## 10. Control de acceso fijado
+
+Pruebas de caracterización de la iteración 02-05, en `pedidos/tests/test_acceso.py`. **Mecanismo:** no hay `LoginRequiredMiddleware`. Cada vista lleva `@login_required` y las cuatro de la base de datos suman `@user_passes_test(es_superusuario)`. Una vista nueva **sin decorador queda pública**: `InventarioRutasTests` la detecta, porque recorre con `subTest` las 40 rutas de `pedidos/urls.py`, leídas del módulo con sus nombres y construidas con `reverse`.
+
+**Lista de rutas públicas** (decisión D1 del desarrollador, 2026-10-27): solo `robots.txt` y el acceso (`/accounts/login/`). Una ruta pública que no esté en la lista **no se agrega** para que la prueba pase: se registra como hallazgo y como regresión en la 02-04 (D2).
+
+| Rutas | Política | Anónimo | Usuario común | Superusuario | Prueba |
+| :---- | :------- | :------ | :------------ | :----------- | :----- |
+| `robots.txt` | Pública | 200 | 200 | 200 | `InventarioRutasTests`, `RobotsTxtTests` |
+| `/accounts/login/` | Pública | 200 | — | — | `InventarioRutasTests.test_el_acceso_es_publico` |
+| Las 35 rutas de pedidos, clientes, cotizaciones, productos, pagos, panel y `api/…` | `@login_required` | 302 al acceso, por GET y por POST, sin escribir | Entra | Entra | `InventarioRutasTests`, `AnonimoNoEscribeTests` |
+| `api/cliente/nuevo/`, `api/producto/nuevo/` | `@login_required` + `@require_POST` | 302 al acceso **en HTML** (no JSON ni 401), sin crear | POST: JSON `success`; GET: 405 | Igual | `PuntosJsonTests` |
+| `base_datos/respaldar_bd/`, `…/accion/`, `restaurar_bd/`, `estadisticas_bd/` | `@login_required` + `@user_passes_test(es_superusuario)` | 302 al acceso | **302 al acceso** (no 403), sin invocar respaldo ni restauración y sin escribir métricas | Entra (200) | `BaseDeDatosPermisosTests` |
+| Rutas con `pk` inexistente, sin `@transaccion_segura` (6) | — | — | 404 | — | `PkInexistenteTests.test_vistas_sin_decorador_responden_404` |
+| Rutas con `pk` inexistente, con `@transaccion_segura` (12) | — | — | **500**: el decorador captura el `Http404` (hallazgo propuesto en la 02-05) | — | `PkInexistenteTests.test_vistas_con_transaccion_segura_responden_500` |
+
+- `eliminar_pago` queda fuera de las pruebas de `pk` inexistente: su GET es la regresión R7.
+- Las respuestas de archivo (`FileResponse`) se cierran con `ayudas.cerrar_respuesta`. `respuesta.close()` emite `request_finished`, que cierra la conexión dentro de la transacción de la prueba.
+- Fuera de `pedidos/urls.py`, sin sesión también responden: las cuatro rutas de recuperación de contraseña de `django.contrib.auth.urls` (200) y el acceso propio del panel de administración. No están en la lista pública: quedan como hallazgo propuesto para que decida el desarrollador (D1).
