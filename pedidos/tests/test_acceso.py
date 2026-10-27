@@ -290,8 +290,9 @@ class PkInexistenteTests(TestCase):
         f'/cotizaciones/{PK_INEXISTENTE}/pdf/',
     )
     # Vistas con @transaccion_segura: el decorador captura también el Http404 y responde 500.
-    # Hallazgo propuesto en bitacora-02-05 (H1); se fija tal cual hasta que el desarrollador
-    # decida si pasa a regresión en la 02-04. eliminar_pago queda fuera (R7 de la 02-04).
+    # AUD-02-029 (decisión del desarrollador, 2026-10-27): se fija el 500 de hoy. Se corresponde
+    # con la regresión R20 (test_regresiones.PkInexistenteTests), que afirma 404 con estas
+    # mismas rutas; al corregir (03-01), esta prueba pasa a 404. eliminar_pago queda fuera (R7).
     CON_500 = (
         f'/pedido/editar/{PK_INEXISTENTE}/', f'/pedido/eliminar/{PK_INEXISTENTE}/',
         f'/pedido/duplicar/{PK_INEXISTENTE}/',  # GET: declara la ruta actual (04-01)

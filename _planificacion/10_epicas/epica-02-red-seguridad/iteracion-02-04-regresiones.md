@@ -5,7 +5,7 @@
 - **Subfase del plan:** 2.4
 - **Depende de:** 02-01 y 02-03 (reutiliza sus ayudas y factorías)
 - **RDA relacionadas:** RDA-006
-- **Hallazgos que avanza:** AUD-01-002, AUD-01-006, AUD-02-001, AUD-02-002, AUD-02-003, AUD-02-004, AUD-02-005, AUD-02-006, AUD-02-008, AUD-02-025, AUD-02-027 y AUD-02-028. No cierra ninguno: cada prueba **documenta** el defecto y lo cerrará la iteración que lo corrija.
+- **Hallazgos que avanza:** AUD-01-002, AUD-01-006, AUD-02-001, AUD-02-002, AUD-02-003, AUD-02-004, AUD-02-005, AUD-02-006, AUD-02-008, AUD-02-025, AUD-02-027, AUD-02-028 y AUD-02-029. No cierra ninguno: cada prueba **documenta** el defecto y lo cerrará la iteración que lo corrija.
 - **Cambio de esquema:** Ninguno
 - **Respaldo previo al despliegue:** No (no despliega nada: solo agrega pruebas)
 
@@ -49,8 +49,9 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 | R15 | AUD-02-025 | Un pago de $29 sobre un pedido de $100 da `porcentaje_pagado == 29` (cálculo con enteros) | Da 28: divide con `float` y trunca (decisión del desarrollador, 2026-10-26, tras la 02-02) | 06-05 |
 | R18 | AUD-02-027 | Convertir una cotización con `fecha_entrega` vacía **no** responde 500: rechaza la petición sin crear el pedido | Por lectura del código: el guardado del `DateField` falla y el decorador responde 500 (decisión del desarrollador, 2026-10-27, tras la 02-03) | 03-04 (decisión D5, 2026-10-27) |
 | R19 | AUD-02-028 | El pedido duplicado queda con `creado_por` igual al usuario que lo duplicó | `creado_por` queda nulo (decisión del desarrollador, 2026-10-27, tras la 02-03) | `PENDIENTE_DESARROLLADOR` (04-01 o 03-03) |
+| R20 | AUD-02-029 | Con un `pk` inexistente, las 12 vistas con `@transaccion_segura` responden 404 | Responden 500: el decorador captura el `Http404` (decisión del desarrollador, 2026-10-27, tras la 02-05) | 03-01 |
 
-R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una cada una. El total previsto era de **19**; el resultado es **18**, porque R5 no se confirmó (16 al redactar, más R15 agregada el 2026-10-26, más R18 y R19 agregadas el 2026-10-27). Los números R16 y R17 no tienen fila: R16 queda reservado para AUD-02-021 (decisión 2) y R17 sin asignar; R18 y R19 se numeraron así por decisión del desarrollador, sin renumerar las anteriores. La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
+R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una cada una. **Recuento vigente: 19** (2026-10-27): 18 al cerrar la iteración (19 previstas menos R5, que no se confirmó), más R20 agregada tras la 02-05. El total previsto era de 19 (16 al redactar, más R15 agregada el 2026-10-26, más R18 y R19 agregadas el 2026-10-27). Los números R16 y R17 no tienen fila: R16 queda reservado para AUD-02-021 (decisión 2) y R17 sin asignar; R18 y R19 se numeraron así por decisión del desarrollador, sin renumerar las anteriores. La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
 
 **Condiciones propias de R18 y R19:**
 
@@ -73,7 +74,7 @@ R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una c
 - [x] La bitácora muestra, para cada una, el fallo real sin la marca y que su causa es el defecto descrito.
 - [x] **Tres ejecuciones seguidas** de `python manage.py test pedidos` dan el mismo resultado: todo en verde salvo `expected failures=N`, sin `unexpected successes` y sin errores.
 - [x] `python manage.py test pedidos --exclude-tag regresion` queda en verde.
-- [x] `docs/operacion/pruebas.md` lista las regresiones y el valor de `N` (sección 7.1, N = 18); `despliegue.md` acepta ese número (paso 1, sin cambios: remite a `pruebas.md`).
+- [x] `docs/operacion/pruebas.md` lista las regresiones y el valor de `N` (sección 7.1, N = 18 al cerrar; 19 desde el 2026-10-27 con R20); `despliegue.md` acepta ese número (paso 1, sin cambios: remite a `pruebas.md`).
 - [x] El diff no toca código de la aplicación.
 - [x] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas (salvo la iteración que corrige AUD-02-028, que el desarrollador dejó abierta a propósito, D5).
 
@@ -96,8 +97,13 @@ Resueltas por el desarrollador el 2026-10-27:
 Resueltas por el desarrollador el 2026-10-27, tras la revisión ([bitacora-02-04-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-04-cierre.md)):
 
 6. **R5:** queda cubierta por R8; «no confirmada, sin prueba»; el número sigue sin asignar.
-7. **`dashboard` y `estadisticas_bd`** (escriben `HistorialBD` con GET): no se suman como regresión; quedan en el inventario D4 y se resuelven en la 06-01.
+7. **`dashboard` y `estadisticas_bd`** (escriben `HistorialBD` con GET): no se suman como regresión; quedan en el inventario D4 y se resuelven en la 06-02 (corregido el 2026-10-27; ver decisión 10).
 8. **AUD-02-028 (R19):** sigue `PENDIENTE_DESARROLLADOR`.
+
+Decisiones del 2026-10-27, tras la revisión de la 02-05 ([bitacora-02-05-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-05-cierre.md)):
+
+9. **R20 · AUD-02-029:** el 404 que hoy responde 500 en 12 vistas se suma como regresión R20; la corrige la 03-01. Recuento: 19. Sin renumerar R1 a R19.
+10. **Corrección de referencia:** `dashboard` y `estadisticas_bd` no se resuelven en la 06-01 (que corrige las fechas en UTC) sino en la 06-02 (orden de mantención diaria), que retira la invocación desde el panel y desde las estadísticas de la base.
 
 ## Datos requeridos del cliente
 

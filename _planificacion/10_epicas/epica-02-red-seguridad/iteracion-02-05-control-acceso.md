@@ -1,7 +1,7 @@
 # Iteración 02-05 · Pruebas de control de acceso
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** En revisión (ejecutada el 2026-10-27; [bitacora-02-05](../../99_bitacora/epica-02-red-seguridad/bitacora-02-05.md))
+- **Estado:** Terminada (ejecutada y cerrada el 2026-10-27; [bitacora-02-05](../../99_bitacora/epica-02-red-seguridad/bitacora-02-05.md), [bitacora-02-05-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-05-cierre.md))
 - **Subfase del plan:** 2.5
 - **Depende de:** 02-01
 - **RDA relacionadas:** RDA-006
@@ -58,6 +58,14 @@ Resueltas por el desarrollador el 2026-10-27:
 
 1. **D1 · Lista de rutas públicas:** solo `robots.txt` y el acceso (`login`). Si aparece otra ruta pública, no se agrega a la lista: se reporta y decide el desarrollador. Resultado: en `pedidos/urls.py` no apareció ninguna; fuera de ella, la recuperación de contraseña y el acceso del panel de administración responden sin sesión (reportados en la bitácora).
 2. **D2 · Ruta pública o abierta sin querer:** no se cambia la prueba para que pase; se registra el hallazgo (siguiente ID libre) y una regresión en la 02-04. Resultado: no se activó; el recuento de la 02-04 sigue en 18.
+
+Resueltas por el desarrollador el 2026-10-27, tras la revisión ([bitacora-02-05-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-05-cierre.md)):
+
+3. **H1 · 404 que responde 500:** AUD-02-029 (Baja, 03-01), regresión R20 en la 02-04 (recuento 19). La caracterización de esta iteración se mantiene y se corresponde con R20.
+4. **H2 · Recuperación de contraseña y acceso del panel de administración sin sesión:** AUD-02-030, sin regresión; la lista de rutas públicas no cambia. Se resuelve en la Épica 04.
+5. **H3 · `@login_required` sobre `es_superusuario`:** nota en AUD-01-025 (limpieza, 04-05).
+6. **H4 · 302 en vez de 401 y 403:** nota en la definición de la Épica 04.
+7. **D5 · AUD-02-028 (R19):** sigue `PENDIENTE_DESARROLLADOR`.
 
 ## Datos requeridos del cliente
 
