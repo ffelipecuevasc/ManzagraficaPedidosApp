@@ -1,6 +1,6 @@
 # Épica 02 · Red de seguridad
 
-- **Estado:** En curso (02-01 a 02-03 terminadas; 02-05 terminadas)
+- **Estado:** Terminada (2026-10-27). Sin despliegue propio: sus pruebas llegan al servidor con la próxima etiqueta (`v1.2`) y allí no se ejecutan. Cierre en [bitacora-02-cierre-epica](../../99_bitacora/epica-02-red-seguridad/bitacora-02-cierre-epica.md)
 - **Fase del plan:** 2 (`plan-de-trabajo.md`, «FASE 2»)
 - **Objetivo:** construir las pruebas automatizadas que permiten refactorizar la lógica crítica sin miedo. La aplicación maneja dinero y, hasta la 02-01, tenía cero pruebas.
 - **Precondición:** Épica 00 completa. Puede avanzar en paralelo con la Épica 01.
@@ -73,10 +73,83 @@ Se usan como `PENDIENTE_CLIENTE` en las pruebas; ninguno bloquea la ejecución. 
 
 ## Criterio de término
 
-- Las pruebas de regresión de 02-04 fallan de forma reproducible en tres ejecuciones seguidas, demostrando que capturan los defectos reales; el resto del conjunto está en verde.
-- La lógica de dinero (02-02), los flujos críticos (02-03) y el control de acceso (02-05) tienen pruebas en verde, con las reglas sin confirmar marcadas `PENDIENTE_CLIENTE`.
-- El comando de pruebas forma parte de la lista de comprobación de `docs/operacion/despliegue.md` (hecho en 02-01).
-- `docs/operacion/pruebas.md` lista cada regresión declarada con su hallazgo y la iteración que la hará pasar.
+Cumplido el 2026-10-27 (decisión del desarrollador de cerrar la épica).
+
+- [x] Las pruebas de regresión de 02-04 fallan de forma reproducible en tres ejecuciones seguidas, demostrando que capturan los defectos reales; el resto del conjunto está en verde. **Evidencia** ([bitacora-02-05-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-05-cierre.md)): tres ejecuciones de `python manage.py test pedidos -v 2` con `Ran 184 tests` y `OK (expected failures=19)`; `--exclude-tag regresion`: 165 en `OK`; `--tag regresion`: 19 fallos esperados. Cada regresión se ejecutó antes sin la marca para confirmar el motivo real del fallo ([bitacora-02-04](../../99_bitacora/epica-02-red-seguridad/bitacora-02-04.md)). Corrida de control del cierre de la épica en [bitacora-02-cierre-epica](../../99_bitacora/epica-02-red-seguridad/bitacora-02-cierre-epica.md).
+- [x] La lógica de dinero (02-02), los flujos críticos (02-03) y el control de acceso (02-05) tienen pruebas en verde, con las reglas sin confirmar marcadas `PENDIENTE_CLIENTE`. **Evidencia:** `test_dinero.py` (02-02), `test_pedidos.py` y `test_cotizaciones.py` (02-03), `test_acceso.py` (02-05), todas dentro de las 165 en verde; las reglas sin confirmar, con su prueba, en «Resultados de la épica».
+- [x] El comando de pruebas forma parte de la lista de comprobación de `docs/operacion/despliegue.md` (hecho en 02-01). **Evidencia:** paso 1 de `despliegue.md`, que acepta `OK (expected failures=N)` solo si N coincide con las regresiones declaradas.
+- [x] `docs/operacion/pruebas.md` lista cada regresión declarada con su hallazgo y la iteración que la hará pasar. **Evidencia:** sección 7.1, 19 filas (R1 a R4, R6a a R6c, R7 a R15, R18 a R20) y «Valor vigente: `expected failures=19`».
+
+## Resultados de la épica
+
+Resumen al cierre (2026-10-27). Detalle y lecciones en [bitacora-02-cierre-epica](../../99_bitacora/epica-02-red-seguridad/bitacora-02-cierre-epica.md).
+
+### Pruebas
+
+De **86** (línea base al redactar las iteraciones 02-02 a 02-05, que ya incluía las 7 nuevas de la 02-01: de 10 a 17) a **184**: **98 nuevas**.
+
+| Iteración | Pruebas al terminar | Nuevas | Archivos |
+| :-------- | :------------------ | :----- | :------- |
+| Línea base (incluye la 02-01) | 86 | — | `test_entorno.py`, `test_factorias.py` y las de la Épica 01 |
+| 02-02 | 111 | 25 | `test_dinero.py` (23) y 2 de `momento_chile` en las factorías |
+| 02-03 | 151 | 40 | `ayudas.py`, `test_pedidos.py`, `test_cotizaciones.py` |
+| 02-04 | 170 | 19 | `test_regresiones.py`: 18 regresiones y la prueba del oráculo de `estado_pago` |
+| 02-05 | 183 | 13 | `test_acceso.py` |
+| Cierre de la 02-05 | 184 | 1 | R20 en `test_regresiones.py` |
+| **Total** | **184** | **98** | 165 en verde y 19 fallos esperados |
+
+### Regresiones (19)
+
+La columna «La vuelve verde» usa la numeración vigente, con la anterior entre paréntesis cuando cambió (RDA-014). En `test_regresiones.py` y `pruebas.md`, R15 conserva «06-05» porque se escribió antes de esa regla.
+
+| # | Hallazgo | Motivo real del fallo (sin la marca) | La vuelve verde |
+| :- | :------- | :----------------------------------- | :-------------- |
+| R1 | AUD-01-002 | Editar un pedido con un ítem que falla borra el ítem anterior y deja solo el nuevo | 03-03 |
+| R2 | AUD-01-002 | Lo mismo al editar una cotización | 03-03 |
+| R3 | AUD-02-008 | Crear un pedido con un ítem que falla deja el pedido con 1 ítem de 2 | 03-03 |
+| R4 | AUD-01-002 | Crear una cotización con un ítem que falla deja la cotización con 1 ítem de 2 | 03-03 |
+| R6a | AUD-02-006 | GET a `cambiar_estado` responde 302 y cambia el estado | 04-01 |
+| R6b | AUD-02-006 | GET a `duplicar_pedido` responde 302 y crea el duplicado | 04-01 |
+| R6c | AUD-02-006 | GET a `generar_respaldo_bd` responde 200 y genera el respaldo (simulado) | 04-01 |
+| R7 | AUD-02-002 | Confirmar la eliminación de un pago responde 500: falta la plantilla | 04-01 |
+| R8 | AUD-02-003 | A las 22:00 de Chile, un pedido de hoy cuenta como crítico y el panel escribe una 2.ª fila de métricas | 06-01 |
+| R9 | AUD-02-003 | El 31 a las 22:00 de Chile, «ingresos del mes» da 0 (usa noviembre en UTC) | 06-01 |
+| R10 | AUD-02-004 | Crear con abono deja `estado_pago` en `PENDIENTE` | 03-03 |
+| R11 | AUD-02-004 | Subir `valor_venta` deja `estado_pago` en `PAGADO` | 03-03 |
+| R12 | AUD-02-004 | Mover un pago de pedido deja el anterior en `PAGADO` | 03-03 |
+| R13 | AUD-02-005 | Convertir dos veces la misma cotización crea 2 pedidos | 03-03 |
+| R14 | AUD-02-001 | Eliminar un cliente con pedidos no lanza `ProtectedError` (borra en cascada) | 04-06 |
+| R15 | AUD-02-025 | `porcentaje_pagado` da 28 en vez de 29 (`float`) | 07-02 (antes 06-05), junto con AUD-02-015 |
+| R18 | AUD-02-027 | Convertir sin fecha de entrega responde 500 (`ValidationError`) | 03-04 |
+| R19 | AUD-02-028 | El duplicado queda con `creado_por` nulo | `PENDIENTE_DESARROLLADOR` |
+| R20 | AUD-02-029 | Con un `pk` inexistente, 12 vistas responden 500 en vez de 404 | 03-01 |
+
+- **R5 (AUD-01-006): no confirmada, sin prueba.** Dos llamadas a `registrar_metricas_diarias()` a mediodía dejan una fila. Queda cubierta por R8 (decisión del desarrollador, 2026-10-27). El número R5 sigue sin asignar.
+- **R16** reservado para AUD-02-021; **R17** libre.
+
+### Hallazgos nuevos de la épica
+
+| ID | Severidad | Hallazgo | Estado |
+| :- | :-------- | :------- | :----- |
+| AUD-02-025 | Baja | Porcentaje pagado con `float` | Abierto; R15; 07-02 (antes 06-05) |
+| AUD-02-026 | Baja | Pedido de $0 en `estadisticas_pagos` cuenta como pagado y sin abono | Abierto; sin regresión hasta que el cliente responda |
+| AUD-02-027 | Baja | Fecha de entrega vacía al convertir: 500 | Abierto; R18; 03-04 |
+| AUD-02-028 | Baja | Duplicado con `creado_por` nulo | Abierto; R19; iteración `PENDIENTE_DESARROLLADOR` |
+| AUD-02-029 | Baja | `@transaccion_segura` convierte el 404 en 500 | Abierto; R20; 03-01 |
+| AUD-02-030 | Baja | Recuperación de contraseña y acceso del panel de administración sin sesión | Abierto; sin regresión; Épica 04 |
+
+Además: notas sin ID nuevo en AUD-01-006 (causa más consistente, no verificada en producción), AUD-01-025 (`@login_required` sobre `es_superusuario`) y la definición de la Épica 04 (302 en vez de 401 y 403). Regla de negocio confirmada: el precio de cada ítem lo fija el vendedor (no es defecto).
+
+### Datos del cliente fijados como `PENDIENTE_CLIENTE`
+
+| Dato | Prueba que lo fija |
+| :--- | :----------------- |
+| ¿El valor de la cotización es neto o incluye IVA? (AUD-02-014) | `test_cotizaciones.ConvertirCotizacionTests.test_valor_venta_es_el_valor_total_sin_iva` |
+| ¿El valor de venta del pedido debe ser igual a la suma de sus ítems? (AUD-02-014) | `test_dinero.SubtotalItemsTests.test_valor_venta_distinto_de_la_suma_de_items_se_acepta` |
+| Un pedido de $0, ¿cuenta como pagado al 100 %? | `test_dinero.SaldoPedidoTests.test_matriz_de_saldos`, `AbonoInicialTests.test_matriz_de_abonos`, `EstadisticasPagosOraculoTests.test_pedido_de_valor_cero_cuenta_como_pagado_y_sin_abono` |
+| ¿Se permite el sobrepago? | `test_dinero.SaldoPedidoTests.test_matriz_de_saldos` y el conjunto de `EstadisticasPagosOraculoTests` |
+| Al duplicar un pedido, ¿se copian ítems y pagos? | `test_pedidos.DuplicarPedidoTests.test_lo_que_no_se_copia` |
+| ¿Un pedido `ENTREGADO` atrasado es crítico? ¿Cómo se tratan los pedidos sin fecha? (AUD-02-013) | `test_dinero.DashboardOraculoTests`, `test_pedidos.ClasificacionTests.test_trabajo_semanal` y `test_panel` |
 
 ## Fuera de alcance de la épica
 
@@ -97,3 +170,4 @@ Se usan como `PENDIENTE_CLIENTE` en las pruebas; ninguno bloquea la ejecución. 
 - **2026-10-27 (cierre de la 02-04):** 02-04 terminada. R5 queda cubierta por R8; `dashboard` y `estadisticas_bd` no se suman como regresión (los resuelve la 06-02; corregido el 2026-10-27, antes decía 06-01).
 - **2026-10-27 (02-05):** control de acceso fijado en `test_acceso.py` (13 pruebas). Mecanismo: decoradores vista por vista. Sin rutas públicas nuevas en `pedidos/urls.py`; recuento de la 02-04 sin cambios (18). Hallazgo propuesto principal: `@transaccion_segura` convierte el 404 en 500.
 - **2026-10-27 (cierre de la 02-05):** 02-05 terminada. AUD-02-029 (el 404 que responde 500) con regresión R20 en la 02-04: recuento de 19. AUD-02-030 (recuperación de contraseña y acceso del panel de administración sin sesión) sin regresión, para la Épica 04. Nota en AUD-01-025 (`@login_required` sobre `es_superusuario`) y en la definición de la Épica 04 (302 en vez de 401 y 403).
+- **2026-10-27 (cierre de la épica):** decisiones del desarrollador. (1) La épica se cierra ahora: su criterio de término está cumplido; no despliega nada por sí misma y sus pruebas llegan al servidor con `v1.2`, donde no se ejecutan. (2) Numeración: lo escrito antes de RDA-014 no se reescribe; toda referencia nueva usa la numeración vigente con la anterior entre paréntesis, por ejemplo «07-02 (antes 06-05)»; R15 queda con «06-05» en los documentos ya escritos. (3) AUD-02-028 (R19) sigue `PENDIENTE_DESARROLLADOR`. Detalle en [bitacora-02-cierre-epica](../../99_bitacora/epica-02-red-seguridad/bitacora-02-cierre-epica.md).
