@@ -2,7 +2,7 @@
 
 **Fuente única de verdad del trabajo pendiente.** Si discrepa con cualquier otro documento de planificación sobre el estado del trabajo, prevalece este archivo.
 
-- **Última actualización:** 2026-10-26
+- **Última actualización:** 2026-10-27
 - **Iteración activa:** 01-06, desplegada el 2026-10-25 como `v1.1-observabilidad`; falta la parte D (medición de siete días, hacia el 2026-11-01)
 - **Próximo hito:** Fase 1: observabilidad (Épica 01) y red de pruebas (Épica 02)
 - **Entrega comprometida:** sin fecha comprometida; el plan es una secuencia de dependencias, no un cronograma
@@ -12,7 +12,7 @@
 
 ## 1. Estado de épicas e iteraciones
 
-Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archivo detallado de cada iteración se escribe cuando su épica se acerca.
+Las épicas 03 a 14 tienen sus iteraciones nombradas en su definición; el archivo detallado de cada iteración se escribe cuando su épica se acerca. **Desde el 2026-10-27 las épicas se numeran según su orden de ejecución, de 00 a 14 (RDA-014):** los documentos anteriores a esa fecha usan la numeración antigua y se leen con la tabla de equivalencias de RDA-014.
 
 | Iteración | Nombre | Épica | Estado | Depende de | Bitácoras |
 | :-------- | :----- | :---- | :----- | :--------- | :-------- |
@@ -36,35 +36,62 @@ Las épicas 02 a 07 tienen sus iteraciones nombradas en su definición; el archi
 | 02-03 | Pruebas de flujos críticos | 02 | En revisión (ejecutada el 2026-10-26; solo pruebas y documentación, sin despliegue propio) | 02-01 | [bitacora-02-03](../99_bitacora/epica-02-red-seguridad/bitacora-02-03.md) |
 | 02-04 | Pruebas de regresión de defectos conocidos | 02 | Pendiente | 02-01 | — |
 | 02-05 | Pruebas de control de acceso | 02 | Pendiente | 02-01 | — |
-| 03-01 | Rediseño del decorador transaccional | 03 | Pendiente | Épicas 01 y 02 | — |
+| 03-01 | Rediseño del decorador transaccional | 03 | Pendiente | 01-06 (parte D) y Épica 02 | — |
 | 03-02 | Erradicación de la supresión silenciosa | 03 | Pendiente | 03-01 | — |
 | 03-03 | Fronteras transaccionales por vista | 03 | Pendiente | 03-02 | — |
 | 03-04 | Contrato de error hacia el usuario | 03 | Pendiente | 03-03 | — |
 | 03-05 | Validación y despliegue de la integridad | 03 | Pendiente | 03-04 | — |
-| 04-01 | Mutaciones solo por POST | 04 | Pendiente | Épica 02 | — |
-| 04-02 | Configuración de producción | 04 | Pendiente | Épica 02 | — |
-| 04-03 | Credenciales y secretos | 04 | Pendiente | Épica 02 | — |
-| 04-04 | Endurecimiento de la restauración | 04 | Pendiente | Épica 02, 01-04 | — |
-| 04-05 | Correcciones de configuración | 04 | Pendiente | Épica 02 | — |
-| 04-06 | Protección del historial ante borrados en cascada | 04 | Pendiente | Épica 02 | — |
-| 05-01 | Reducción del arranque en frío | 05 | Pendiente | Épica 02, medición inicial de 05-06 | — |
-| 05-02 | Consultas por fila en plantillas | 05 | Pendiente | Épica 02, medición inicial de 05-06 | — |
+| 04-01 | Mutaciones solo por POST | 04 | Pendiente | Épica 02; se ejecuta después de la Épica 03 | — |
+| 04-02 | Configuración de producción | 04 | Pendiente | Épica 02; después de la Épica 03 | — |
+| 04-03 | Credenciales y secretos | 04 | Pendiente | Épica 02; después de la Épica 03 | — |
+| 04-04 | Endurecimiento de la restauración | 04 | Pendiente | Épica 02, 01-04; después de la Épica 03 | — |
+| 04-05 | Correcciones de configuración | 04 | Pendiente | Épica 02; después de la Épica 03 | — |
+| 04-06 | Protección del historial ante borrados en cascada | 04 | Pendiente | Épica 02; después de la Épica 03 | — |
+| 04-07 | Sanitización del HTML enriquecido y revisión de inyección SQL | 04 | Pendiente | Épica 02; después de la Épica 03 | — |
+| 04-08 | Protección del acceso y límites de entrada | 04 | Pendiente | Épica 02; después de la Épica 03 | — |
+| 04-09 | Política de seguridad de contenido en observación | 04 | Pendiente | 04-02 | — |
+| 05-00 | Medición inicial del servidor | 05 | Pendiente | Épica 02; después de la Épica 04 | — |
+| 05-01 | Reducción del arranque en frío | 05 | Pendiente | 05-00 | — |
+| 05-02 | Consultas por fila en plantillas | 05 | Pendiente | 05-00 | — |
 | 05-03 | Índices de base de datos | 05 | Pendiente | 05-02 | — |
-| 05-04 | Compilación local de estilos | 05 | Pendiente | Épica 02, medición inicial de 05-06 | — |
-| 05-05 | Consolidación de recursos externos | 05 | Pendiente | 05-04 | — |
-| 05-06 | Medición de rendimiento | 05 | Pendiente | Épica 02 | — |
+| 05-06 | Medición final del servidor | 05 | Pendiente | 05-01, 05-02, 05-03 | — |
 | 06-01 | Fechas locales y registro diario de métricas | 06 | Pendiente | Épicas 01, 02 y 03 | — |
-| 06-02 | Orden de mantención diaria | 06 | Pendiente | 06-01 | — |
+| 06-02 | Orden de mantención diaria y tarea programada | 06 | Pendiente | 06-01 | — |
 | 06-03 | Gestión del disco | 06 | Pendiente | 06-02 | — |
-| 06-04 | Modularización de las vistas | 06 | Pendiente | Épicas 01, 02 y 03 | — |
-| 06-05 | Capa de servicios | 06 | Pendiente | 06-04 | — |
-| 06-06 | Deuda técnica menor | 06 | Pendiente | 06-04 | — |
-| 07-01 | Vigilancia de la expiración de la web app | 07 | Pendiente | 00-01 | — |
-| 07-02 | Ritual de despliegue consolidado | 07 | Pendiente | Épica 06 | — |
-| 07-03 | Revisión periódica de registros | 07 | Pendiente | Épica 01 | — |
-| 07-04 | Ensayo de recuperación ante desastres | 07 | Pendiente | 00-05 | — |
-| 07-05 | Deuda diferida y evolución | 07 | Pendiente | Épica 06 | — |
-| 07-06 | Criterios para evaluar el cambio de plan | 07 | Pendiente | 00-01 | — |
+| 06-04 | Rediseño del módulo de base de datos | 06 | Pendiente | 06-02, 04-01 | — |
+| 07-01 | Modularización de las vistas | 07 | Pendiente | Épicas 01, 02 y 03 | — |
+| 07-02 | Capa de servicios y selectores | 07 | Pendiente | 07-01 | — |
+| 07-03 | Modelos por dominio | 07 | Pendiente | 07-01 | — |
+| 07-04 | Deuda técnica menor | 07 | Pendiente | 07-01 | — |
+| 08-01 | Medición inicial del navegador | 08 | Pendiente | Épica 07 | — |
+| 08-02 | Estáticos y plantillas globales | 08 | Pendiente | 08-01, 04-05 | — |
+| 08-03 | Parciales de plantilla | 08 | Pendiente | 08-02 | — |
+| 08-04 | Plantillas en carpetas semánticas | 08 | Pendiente | 08-03 | — |
+| 08-05 | Compilación local de Tailwind con pnpm | 08 | Pendiente | 08-03 | — |
+| 08-06 | Tipografías e íconos autoalojados | 08 | Pendiente | 08-05 | — |
+| 08-07 | Librerías JavaScript sin CDN | 08 | Pendiente | 08-05, 04-07 | — |
+| 08-08 | Política de seguridad de contenido estricta | 08 | Pendiente | 08-06, 08-07, 04-09 | — |
+| 08-09 | Medición final del navegador | 08 | Pendiente | 08-08 | — |
+| 09-01 | Control de acceso centralizado por rol | 09 | Pendiente | 04-07, 04-08, Épicas 07 y 08, 02-05 | — |
+| 09-02 | Módulo de gestión de usuarios | 09 | Pendiente | 09-01 | — |
+| 09-03 | Eliminación de usuarios con confirmación | 09 | Pendiente | 09-02 | — |
+| 10-01 | Definición funcional de las mejoras del tablero | 10 | Pendiente | Épicas 07 y 08, 05-02, 04-01 | — |
+| 11-01 | Canal de correo | 11 | Pendiente | 06-02, Épica 09 | — |
+| 11-02 | Configuración de automatizaciones desde la web | 11 | Pendiente | 11-01 | — |
+| 11-03 | Aviso de pedidos impagos | 11 | Pendiente | 11-02 | — |
+| 11-04 | Aviso de pedidos muy atrasados | 11 | Pendiente | 11-02 | — |
+| 12-01 | Carga comprometida | 12 | Pendiente | 06-01, Épica 07, 08-07 | — |
+| 12-02 | Proyección estadística y validación con el pasado | 12 | Pendiente | 12-01 | — |
+| 12-03 | Pantalla de proyección | 12 | Pendiente | 12-02 | — |
+| 13-01 | Vigilancia de la expiración de la web app y de la tarea programada | 13 | Pendiente | 00-01 | — |
+| 13-02 | Ritual de despliegue consolidado | 13 | Pendiente | Épica 08 | — |
+| 13-03 | Revisión periódica de registros | 13 | Pendiente | Épica 01 | — |
+| 13-04 | Ensayo de recuperación ante desastres | 13 | Pendiente | 00-05 | — |
+| 13-05 | Deuda diferida y evolución | 13 | Pendiente | Épica 07 | — |
+| 13-06 | Criterios para evaluar el cambio de plan | 13 | Pendiente | 00-01 | — |
+| 14-01 | Cuenta de AWS y seguridad | 14 | Pendiente | 06-02, 06-03 | — |
+| 14-02 | Respaldo de la base en S3 | 14 | Pendiente | 14-01 | — |
+| 14-03 | Restauración ensayada desde S3 | 14 | Pendiente | 14-02 | — |
 
 ## 2. Datos pendientes del cliente
 
@@ -76,8 +103,8 @@ Reglas de negocio que solo puede confirmar Manza Gráfica. Mientras falten, se u
 | Un pedido con valor de venta $0, ¿cuenta como pagado al 100 %? | — | 02-02 | Pendiente (prioridad baja: producción no tiene pedidos con valor $0, medido el 2026-10-20). Lo fijan `test_dinero.SaldoPedidoTests.test_matriz_de_saldos` (casos «valor 0»: 100 %), `AbonoInicialTests.test_matriz_de_abonos` (caso «valor 0 con abono»: se acepta) y `EstadisticasPagosOraculoTests.test_pedido_de_valor_cero_cuenta_como_pagado_y_sin_abono` |
 | ¿Se permite registrar pagos que superan el saldo (sobrepago)? | — | 02-02 | Pendiente. Lo fija `test_dinero.SaldoPedidoTests.test_matriz_de_saldos` (caso «sobrepago»: saldo negativo, 120 %) y el pedido sobrepagado del conjunto de `EstadisticasPagosOraculoTests` |
 | Al reabrir (duplicar) un pedido, ¿se copian sus ítems? | — | 02-03 | Pendiente. Lo fija `test_pedidos.DuplicarPedidoTests.test_lo_que_no_se_copia` (hoy no se copian ítems, pagos ni `creado_por`) |
-| ¿Un pedido `ENTREGADO` atrasado debe contar como crítico? ¿Cómo se tratan los pedidos sin fecha de entrega en el trabajo semanal? | AUD-02-013 | 02-03, 06-06 | Pendiente. En el panel lo fija `test_dinero.DashboardOraculoTests` (hoy «crítico» incluye `ENTREGADO`); en el trabajo semanal y el panel, `test_pedidos.ClasificacionTests.test_trabajo_semanal` y `test_panel` (`ENTREGADO` atrasado es crítico; sin fecha, fuera de las categorías y dentro del total) |
-| Número de usuarios, sus roles y los dispositivos que usan | — | `producto.md` | Pendiente (dato medido en la réplica: 1 usuario, superusuario, en el volcado del 2026-10-20; faltan roles y dispositivos) |
+| ¿Un pedido `ENTREGADO` atrasado debe contar como crítico? ¿Cómo se tratan los pedidos sin fecha de entrega en el trabajo semanal? | AUD-02-013 | 02-03, 06-06 (ahora 07-04, RDA-014) | Pendiente. En el panel lo fija `test_dinero.DashboardOraculoTests` (hoy «crítico» incluye `ENTREGADO`); en el trabajo semanal y el panel, `test_pedidos.ClasificacionTests.test_trabajo_semanal` y `test_panel` (`ENTREGADO` atrasado es crítico; sin fecha, fuera de las categorías y dentro del total) |
+| Número de usuarios, sus roles y los dispositivos que usan | — | `producto.md` | Pendiente (dato medido en la réplica: 1 usuario, superusuario, en el volcado del 2026-10-20). **Roles definidos por el desarrollador el 2026-10-27:** superusuario y operador (RDA-017, Épica 09); faltan el número de usuarios y los dispositivos |
 
 ## 3. Decisiones por tomar
 
@@ -115,7 +142,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~Formato de etiquetas de despliegue (00-05, tarea 1)~~ Resuelto el 2026-10-21: `v<fase>.<correlativo>-<propósito>`, reemplaza al del 2026-10-20 | RDA-007 | Desarrollador |
 | ~~Numeración del correlativo de etiquetas~~ Resuelto el 2026-10-22: cada fase parte en `.1` (`v0.1`, `v1.1`); `v0.0-inicial` es la etiqueta del estado de partida | RDA-007 | Desarrollador |
 | ~~Ventana del despliegue de 00-04 (`v0.1-higiene`), parte B de [evidencia-00-05](../10_epicas/epica-00-blindaje/evidencia-00-05.md)~~ Resuelto el 2026-10-23: recarga a las 00:26 | 00-05 | Desarrollador |
-| Imágenes de `media/` sin ninguna copia: definir la iteración de la épica 07 que implementa el respaldo propuesto en `auditoria-tecnica.md` (notas de 00-05). Mientras tanto, la protección es manual | AUD-02-023 | Desarrollador |
+| Imágenes de `media/` sin ninguna copia: definir la iteración de la épica 07 que implementa el respaldo propuesto en `auditoria-tecnica.md` (notas de 00-05). Mientras tanto, la protección es manual. **Actualización 2026-10-27 (RDA-014):** la antigua épica 07 es la Épica 13; candidatas: una rutina manual en la 13 o el respaldo en S3 de la Épica 14 | AUD-02-023 | Desarrollador |
 | ~~02-01 · Nombre fijo de la base de pruebas en `TEST` (propuesta `test_manzagrafica`, con bloqueo de nombres reales) o mantener `test_<DB_NAME>`. Cambia `settings.py`~~ Resuelto el 2026-10-25: `test_manzagrafica` en `TEST`, con bloqueo de `manzagrafica_local` y `manzagrafica_replica` | 02-01, tarea 1 | Desarrollador |
 | ~~02-01 · Fijar `CHARSET` y `COLLATION` en `TEST` o confiar en la herencia del servidor, verificada por prueba~~ Resuelto el 2026-10-25: se fijan en `TEST` con los valores de la línea base (`utf8mb4`, `utf8mb4_unicode_ci`) | 02-01, tarea 1 | Desarrollador |
 | ~~02-01 · Modo estricto en la base de pruebas: A, paridad con producción (propuesta), o B, estricto solo en pruebas~~ Resuelto el 2026-10-25: opción A, paridad con producción; las pruebas que dependan del truncado lo declaran | AUD-02-020, 02-01, tarea 2 | Desarrollador |
@@ -123,7 +150,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~02-01 · Mecanismo de fallos esperados: `expectedFailure` con `@tag('regresion')` (propuesta) y si se incluye una prueba de demostración~~ Resuelto el 2026-10-25: `expectedFailure` con `@tag('regresion')`, sin prueba de demostración | 02-01, tarea 5 | Desarrollador |
 | ~~02-01 · Dónde se documenta la infraestructura de pruebas: `docs/operacion/pruebas.md` o una sección de `replica-local.md`~~ Resuelto el 2026-10-25: `docs/operacion/pruebas.md` y punto 1 de `despliegue.md` | 02-01, tarea 6 | Desarrollador |
 | ~~`PENDIENTE_DESARROLLADOR` · Precisar la regla 4 de `AGENTS.md` (servicio de registro = `logging` + `registrar_evento`); propuesta de texto en bitacora-01-03; la revisa el desarrollador~~ Resuelto el 2026-10-26: el desarrollador comprobó que `AGENTS.md` ya tiene la versión final acordada de la regla 4 («norma general que exige registrar»); la propuesta de bitacora-01-03 queda adoptada | 01-03, RDA-013 | Desarrollador |
-| Renovar la web app de PythonAnywhere: hacerlo el **2026-11-10** (vence el 2026-11-20) | AUD-01-019, 07-01 | Desarrollador |
+| Renovar la web app de PythonAnywhere: hacerlo el **2026-11-10** (vence el 2026-11-20) | AUD-01-019, 07-01 (ahora 13-01) | Desarrollador |
 | Normalizar el fin de línea de `PedidosApp/settings.py` (hoy mezcla CRLF y LF; las líneas de `LOGGING` y `TEST` quedaron en LF). Decisión del 2026-10-25: queda como propuesta, sin cambios por ahora | 01-03 | Desarrollador |
 | ~~01-06, dos destinos de registro: nuestro formato con emoji termina en `server.log` y `error.log` recibe los mismos errores en el formato de PythonAnywhere~~ Resuelto el 2026-10-25: opción A, el diagnóstico se hace en `server.log` y `error.log` queda como lo escribe PythonAnywhere; sin cambios de código ni configuración y sin `v1.2`. Documentos corregidos (RDA-013, RDA-005, 01-02, 01-06, 01-07, `despliegue.md`, propuesta de regla 4). Análisis en [bitacora-01-06-produccion](../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md) | 01-06, RDA-013 | Desarrollador |
 | **Implementado en la 01-09 (2026-10-26, en revisión, sin desplegar).** · Capturas amplias que no cumplen la regla 4 vigente de `AGENTS.md` y **ya registradas**: `pedidos/views.py:270` (`editar_pedido`), `:766` (`crear_cotizacion`) y `:810` (`editar_cotizacion`) silencian con `pass` el fallo al guardar ítems, sin registrarlo: quedan cubiertas por AUD-01-002 («supresión silenciosa al guardar ítems»). `pedidos/views.py:1128` (`generar_respaldo_bd`) no registra el error y devuelve `str(e)` al navegador: cubierta por AUD-02-006. Solo se anotan las líneas. **Asignadas el 2026-10-25 a la iteración 01-09.** Decidido el 2026-10-26: opción A para `:270`, `:766` y `:810` (registrar, sin cambiar lo que ve el usuario; el fondo queda en 03-02) y opción C para `:1128` | AUD-01-002, AUD-02-006, regla 4, 01-09 | Desarrollador |
@@ -131,7 +158,7 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | **Implementado en la 01-09 (2026-10-26, en revisión, sin desplegar).** · **Captura amplia sin registrar (nueva).** `pedidos/views.py:1191` (`restaurar_bd`, la restauración misma): `except Exception as e` solo muestra «Error crítico al restaurar: …» con `str(e)`. **Incumple la regla 4:** no registra con `logging` y muestra `str(e)`. **Riesgo:** expone el texto técnico de la excepción (puede incluir la salida de `mysql` o rutas del servidor); un fallo de la restauración, la operación más destructiva de la aplicación, no deja traza en `server.log` ni indica en qué estado quedó la base. Detectado en la revisión del 2026-10-25 (01-06). **Asignada a la 01-09.** Decidido el 2026-10-26: opción C (registrar y texto fijo aprobado) | Regla 4, 01-09 | Desarrollador |
 | **Asignado a la 04-04 (decisión del desarrollador, 2026-10-26).** · `generar_respaldo_mysql()` (`pedidos/utils.py`) abre el `.sql` antes de llamar a `mysqldump` y solo lo borra ante `CalledProcessError`: si `mysqldump` no existe (`FileNotFoundError`), queda un `.sql` vacío en `backups/` que la rotación cuenta entre los cinco. Visto en la réplica local, donde `mysqldump` no está en el PATH (dos archivos vacíos, ya borrados por el desarrollador el 2026-10-26). Pendiente registrado, sin implementar; se corrige en la 04-04 (nota en `definicion-epica-04.md`) | 01-09, AUD-02-019, 04-04 | Agente, en 04-04 |
 | **Resuelto en la 01-08 (2026-10-26, en revisión).** · **Iteración 01-08, comentarios que dicen «error.log».** Comentarios del bloque `LOGGING` de `PedidosApp/settings.py`, de `pedidos/decorators.py`, de `pedidos/views.py:194` y de `pedidos/eventos.py` que todavía dicen que los errores quedan en `error.log`. Con la opción A, el diagnóstico se hace en `server.log`. El comentario de `settings.py` que afirma que configurar la raíz «reemplaza cualquier manejador previo del entorno y evita líneas dobles» **fue desmentido por producción** (01-06: el manejador de PythonAnywhere sigue escribiendo en `error.log`). Iteración aparte, solo texto, por definir; tocar `settings.py` requiere consulta | 01-06, RDA-013, 01-08 | Desarrollador |
-| ~~Iteración que corrige AUD-02-025 (porcentaje pagado con `float`, regresión R15 de la 02-04)~~ Resuelto el 2026-10-26: la 06-05, junto con AUD-02-015 ([bitacora-02-02-cierre](../99_bitacora/epica-02-red-seguridad/bitacora-02-02-cierre.md)) | AUD-02-025 | Desarrollador |
+| ~~Iteración que corrige AUD-02-025 (porcentaje pagado con `float`, regresión R15 de la 02-04)~~ Resuelto el 2026-10-26: la 06-05, junto con AUD-02-015 ([bitacora-02-02-cierre](../99_bitacora/epica-02-red-seguridad/bitacora-02-02-cierre.md)). **Actualización 2026-10-27 (RDA-014):** la antigua 06-05 es la 07-02 | AUD-02-025 | Desarrollador |
 | ~~Iteración 02-03, decisión 1: flujos de pagos~~ Resuelto el 2026-10-26 (D1): solo el camino feliz de `ingresar_pago` y `editar_pago`; `eliminar_pago` queda en la 02-04 | 02-03 | Desarrollador |
 | ~~Iteración 02-03, decisión 2: pantallas de lectura~~ Resuelto el 2026-10-26 (D2): solo el detalle del pedido; sin listado, filtros ni paginación | 02-03 | Desarrollador |
 | ~~Iteración 02-03, decisión 3: transiciones de estado~~ Resuelto el 2026-10-26 (D3): se fija que hoy se acepta cualquier transición; no se decide cuáles deberían existir | 02-03 | Desarrollador |
@@ -139,6 +166,19 @@ Decisiones del desarrollador que bloquean o condicionan trabajo. Mientras falten
 | ~~Iteración 02-02, decisión 2: vistas del panel con oráculo~~ Resuelto el 2026-10-26 (D2): `dashboard`, `estadisticas_pagos` y `estadisticas_pedidos`; propuestas de cambio en la bitácora | 02-02 | Desarrollador |
 | ~~Iteración 02-02, decisión 3: congelar la hora~~ Resuelto el 2026-10-26 (D3): `unittest.mock.patch`, sin dependencias nuevas, al mediodía de Chile | 02-02 | Desarrollador |
 | ~~Responder [evidencia-01-05](../10_epicas/epica-01-observabilidad/evidencia-01-05.md): revisión manual del admin de eventos en la réplica~~ Resuelto el 2026-10-25: 9 puntos verificados | 01-05 | Desarrollador |
+| 04-07 · Cómo se sanitiza el HTML enriquecido (al guardar, al mostrar o ambos) y con qué herramienta (`nh3` recomendada, dependencia nueva con RDA) | AUD-03-001 | Desarrollador |
+| 04-08 · Mecanismo contra fuerza bruta: contador propio en la caché local o `django-axes` (dependencia y tabla nuevas) | AUD-03-004 | Desarrollador |
+| 06-02 · Hora de la tarea programada (en UTC) | RDA-009 | Desarrollador |
+| 07-04 · Regla de pedidos `ENTREGADO` atrasados y sin fecha de entrega, si el cliente no responde antes (la necesita la Épica 10) | AUD-02-013 | Desarrollador |
+| 08-07 · Qué librerías de JavaScript se mantienen, reemplazan o agregan (Summernote, Select2, SweetAlert2; candidatas HTMX, Alpine.js, Chart.js), cada una con RDA | RDA-016, AUD-03-005 | Desarrollador |
+| 09-01 · Respuesta a un operador que entra a una ruta prohibida (403 o redirección) | RDA-017 | Desarrollador |
+| 09-03 · ¿Copia del nombre del usuario en una columna propia de los eventos (Clase 2) para que la autoría sobreviva al borrado? | RDA-017 | Desarrollador |
+| 10-01 · Qué mejoras del tablero «Trabajo Semanal» se construyen y en qué orden (ideas A a I de la definición) | — | Desarrollador |
+| 11-01 · Canal de correo (Gmail con contraseña de aplicación o API por HTTPS) y cuenta del negocio | — | Desarrollador |
+| 11 · Qué automatizaciones propuestas se implementan además de impagos y atrasados | — | Desarrollador |
+| 12-01 y 12-02 · Proyectar solo cantidad o también monto; margen y meses a proyectar | RDA-018 | Desarrollador |
+| 14-01 · Quién abre la cuenta de AWS y registra el medio de pago (`PENDIENTE_CLIENTE`); región y retención en el bucket | — | Desarrollador y cliente |
+| 14-02 · Biblioteca para S3 (`boto3` u otra más liviana), midiendo su espacio en disco, con RDA | — | Desarrollador |
 
 ## 4. Propuestas fuera de alcance
 
@@ -151,7 +191,7 @@ Ideas detectadas durante el trabajo que no forman parte del plan. Se evalúan ap
 | Hallazgo propuesto (02-03): el precio unitario de cada ítem (pedido y cotización) lo envía el navegador en `items_json` y el servidor lo guarda sin compararlo con el catálogo (`AGENTS.md`, sección 9: nunca se confía en precios del navegador). Fijado en `test_pedidos.CrearPedidoTests.test_el_precio_lo_envia_el_navegador`. Podría ampliar AUD-02-014 | [bitacora-02-03](../99_bitacora/epica-02-red-seguridad/bitacora-02-03.md) | 2026-10-26 |
 | Hallazgo propuesto (02-03), por lectura y sin prueba: `convertir_a_pedido` pasa `fecha_entrega` del POST sin validar; si llega vacía, el guardado del `DateField` falla y el decorador responde 500. La plantilla marca el campo `required`, así que solo ocurre fuera del navegador. Camino de fallo: candidato a la 02-04 | [bitacora-02-03](../99_bitacora/epica-02-red-seguridad/bitacora-02-03.md) | 2026-10-26 |
 | Hallazgo propuesto (02-03): `duplicar_pedido` deja `creado_por` nulo (no copia el del original ni usa el usuario que duplica). Fijado en `test_pedidos.DuplicarPedidoTests.test_lo_que_no_se_copia` | [bitacora-02-03](../99_bitacora/epica-02-red-seguridad/bitacora-02-03.md) | 2026-10-26 |
-| Hallazgo menor, prioridad baja: `/favicon.ico` responde 404 en producción porque la app no define favicon (el navegador lo pide solo y deja una línea `Not Found` en el registro de errores). Se evalúa junto con 05-05 o 06-06 | 00-06, parte B3 de la evidencia | 2026-10-25 |
+| Hallazgo menor, prioridad baja: `/favicon.ico` responde 404 en producción porque la app no define favicon (el navegador lo pide solo y deja una línea `Not Found` en el registro de errores). Se evalúa junto con 05-05 o 06-06. **Actualización 2026-10-27 (RDA-014):** incluido en la 08-06 | 00-06, parte B3 de la evidencia | 2026-10-25 |
 
 ## 5. Historial
 
@@ -213,3 +253,4 @@ Una fila por cambio, en una sola línea, con enlace a la bitácora que tiene el 
 | 2026-10-26 | Cierre documental de la 02-02 (decisiones del desarrollador): H1 pasa a AUD-02-025 con regresión R15 en la 02-04 (17 previstas) y H2 a AUD-02-026, solo auditoría; se quitan ambas notas de la sección 4; D2 confirmada; AUD-02-014 (valor de cotización) pasa a la 02-03; IVA de $1 anotado en AUD-02-015; 02-02 terminada ([bitacora-02-02-cierre](../99_bitacora/epica-02-red-seguridad/bitacora-02-02-cierre.md)). |
 | 2026-10-26 | Decisiones del desarrollador: la sección de decisiones de la revisión de la 02-02 pasa a [bitacora-02-02-cierre](../99_bitacora/epica-02-red-seguridad/bitacora-02-02-cierre.md) (regla 5.4) y `bitacora-02-02.md` vuelve a su versión entregada; AUD-02-025 lo corrige la 06-05. |
 | 2026-10-26 | Iteración 02-03 ejecutada y en revisión: `ayudas.py`, `test_pedidos.py` y `test_cotizaciones.py` con 40 pruebas de caracterización; 151 en `OK` en tres ejecuciones; decisiones D1 a D3 registradas; 3 hallazgos propuestos en la sección 4; sin cambios en el código de la aplicación ([bitacora-02-03](../99_bitacora/epica-02-red-seguridad/bitacora-02-03.md)). |
+| 2026-10-27 | Reorganización de las épicas pendientes (decisiones del desarrollador, RDA-014 a RDA-018): numeración por orden de ejecución de 00 a 14; 03 con contrato de error sin identificador y precondición explícita; 04 ampliada (04-07 a 04-09); 05 reordenada (05-00 y 05-06); la antigua 06 se separa en 06 (mantención y respaldos, con respaldo programado los días 1 y 15 y 06-04) y 07 (arquitectura); nuevas 08 (frontend), 09 (usuarios y roles), 10 (Trabajo Semanal), 11 (automatizaciones), 12 (proyección sin aprendizaje automático) y 14 (AWS); operación continua pasa de 07 a 13. Auditoría 03 con AUD-03-001 a AUD-03-005; anexo en `plan-de-trabajo.md`; `producto.md` y `README.md` de la carpeta actualizados. Sin cambios en el código ni en los documentos de la Épica 02. |

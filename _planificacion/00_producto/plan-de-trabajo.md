@@ -665,4 +665,35 @@ Cada hallazgo de la auditoría, con su severidad y la subfase que lo resuelve.
 
 ---
 
+## 5. Anexo · Reorganización de fases (2026-10-27)
+
+Agregado sin reescribir el plan, por decisión del desarrollador durante la Fase 2 (fila del 2026-10-27 en el historial de `registro-pendientes.md`). El detalle de cada épica vive en su definición (`_planificacion/10_epicas/`) y las equivalencias de numeración en RDA-014.
+
+### 5.1. Qué cambia en las fases existentes
+
+| Fase del plan | Qué cambia | Épica |
+|---|---|---|
+| 3 | Sin cambio de alcance. El contrato de error se apoya en el registro del servidor, sin identificador de correlación ni tabla de errores (RDA-013). La precondición se precisa: validación de siete días de la observabilidad en producción y Fase 2 completa. | 03 |
+| 4 | Se amplía con sanitización del HTML enriquecido (XSS), protección del acceso contra fuerza bruta, límites de subida y política de seguridad de contenido en modo observación. Se ejecuta después de la Fase 3. Una protección contra DoS o DDoS dentro de la aplicación queda descartada: con un solo proceso no es efectiva. | 04 |
+| 5 | Se limita al servidor (arranque en frío, consultas por fila, índices) y la medición se divide en inicial y final. La compilación de estilos (5.4), los recursos externos (5.5) y las métricas del navegador pasan a la Épica 08. | 05 |
+| 6 | Se separa en dos. Las subfases 6.1 a 6.3 (métricas, orden diaria, disco) forman la Épica 06, que suma el respaldo automático los días 1 y 15 y el rediseño del módulo de base de datos. Las subfases 6.4 a 6.6 (vistas, servicios, deuda menor) forman la Épica 07, que suma selectores y modelos por dominio (RDA-015). | 06 y 07 |
+| 7 | Sin cambio de alcance; pasa al final como Épica 13 y suma la renovación de la tarea programada cada cuatro semanas. | 13 |
+
+### 5.2. Fases nuevas
+
+| Épica | Nombre | Qué | Por qué |
+|---|---|---|---|
+| 08 | Frontend: estáticos, plantillas y estilos | Carpeta `static/` y `templates/` globales, parciales de DTL, plantillas por dominio, Tailwind compilado con pnpm, tipografías e íconos SVG autoalojados, librerías sin CDN y política de seguridad de contenido estricta. | Elimina unos 400 KB de JavaScript por página y las dependencias de terceros en tiempo de ejecución, y deja una base reutilizable para las pantallas nuevas. Sin migración a React (RDA-016). |
+| 09 | Usuarios y roles | Módulo para que los superusuarios administren cuentas con dos roles, superusuario y operador, con borrado físico y doble confirmación. | El dueño necesita sumar personas a su equipo sin darles acceso a la base de datos ni a la gestión de usuarios (RDA-017). |
+| 10 | Mejoras para el negocio: Trabajo Semanal | Mejoras del tablero más usado, ideadas y elegidas por el desarrollador. | El tablero demostró su valor después de construido; mejorarlo es el mayor retorno funcional. |
+| 11 | Automatizaciones y notificaciones | Avisos por correo configurables desde la web (impagos, atrasados y otros), ejecutados por la orden diaria. | Que el sistema avise sin que nadie tenga que entrar a mirar, dentro de la única tarea diaria del plan gratuito. |
+| 12 | Proyección de pedidos | Carga comprometida y proyección estadística con la biblioteca estándar de Python, validada contra los meses pasados. | Responder con datos cuánto trabajo viene; sin aprendizaje automático, porque diez meses de historia no lo sostienen (RDA-018). |
+| 14 | Tecnología en la nube (AWS) | Cuenta de AWS protegida y respaldos programados en Amazon S3, con restauración ensayada. | Sacar las copias del mismo disco que la base; `.amazonaws.com` está en la lista blanca del plan gratuito. |
+
+### 5.3. Orden
+
+Las fases 0 a 3 conservan su orden estricto. Desde ahí, el orden de ejecución es el número de la épica: 04, 05, 06, 07, 08, 09, 10, 11, 12, 13 y 14. La Épica 13 instala rutinas que no terminan y se ejecuta junto con la 14.
+
+---
+
 *Documento de trabajo técnico. Sujeto a revisión al completar cada fase.*

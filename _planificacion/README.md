@@ -44,7 +44,20 @@ Documentos vivos que describen el producto completo.
 
 ### 2.2 `10_epicas/`
 
-Una subcarpeta por épica, con nombre descriptivo en ASCII (`epica-00-blindaje/`). **Cada épica corresponde a una fase del plan de trabajo con el mismo número**, y cada iteración, a una subfase: la iteración `00-03` es la subfase 0.3. Cada una contiene su definición, sus iteraciones y, solo si fue necesario, los archivos de evidencia de producción.
+Una subcarpeta por épica, con nombre descriptivo en ASCII (`epica-00-blindaje/`). **Las épicas se numeran según su orden de ejecución, de 00 a 14 (RDA-014, desde el 2026-10-27).** Cada definición dice de qué fase o subfase del plan viene (o que es nueva) en su cabecera y en su tabla de iteraciones; el anexo de `plan-de-trabajo.md` describe las épicas que el plan original no tenía. En las épicas 00 a 04 la iteración sigue coincidiendo con la subfase (la `00-03` es la 0.3). Cada carpeta contiene su definición, sus iteraciones y, solo si fue necesario, los archivos de evidencia de producción.
+
+| Épica | Carpeta | Épica | Carpeta |
+| :---- | :------ | :---- | :------ |
+| 00 | `epica-00-blindaje` | 08 | `epica-08-frontend` |
+| 01 | `epica-01-observabilidad` | 09 | `epica-09-usuarios-roles` |
+| 02 | `epica-02-red-seguridad` | 10 | `epica-10-mejoras-negocio` |
+| 03 | `epica-03-integridad-transaccional` | 11 | `epica-11-automatizaciones` |
+| 04 | `epica-04-seguridad` | 12 | `epica-12-proyeccion-pedidos` |
+| 05 | `epica-05-rendimiento` | 13 | `epica-13-operacion-continua` |
+| 06 | `epica-06-mantencion-respaldos` | 14 | `epica-14-nube-aws` |
+| 07 | `epica-07-arquitectura-codigo` | | |
+
+Los documentos escritos antes del 2026-10-27 usan la numeración anterior (por ejemplo, «07-01» para la vigilancia de la expiración, hoy 13-01): se leen con la tabla de equivalencias de RDA-014.
 
 ### 2.3 `99_bitacora/`
 
@@ -52,7 +65,7 @@ Una subcarpeta por épica, con el mismo nombre que la carpeta de la épica en `1
 
 ## 3. Convenciones
 
-- **Numeración:** épicas `00`–`99`, con el mismo número que la fase del plan; iteraciones `XX-YY`, donde `XX` es la épica e `YY` el número de la subfase. Una iteración que no existía en el plan toma el siguiente correlativo libre de su épica.
+- **Numeración:** épicas `00`–`99`, numeradas según su orden de ejecución (RDA-014; reemplaza a RDA-011); iteraciones `XX-YY`, donde `XX` es la épica e `YY` su correlativo, que en las épicas 00 a 04 coincide con la subfase del plan. Una iteración nueva toma el siguiente correlativo libre de su épica, y un número que quedó sin uso no se reasigna.
 - **Nombres de archivo y carpeta:** minúsculas, guiones y solo caracteres ASCII, sin tildes ni ñ (`epica-03-integridad-transaccional/`). El contenido sí lleva tildes y ñ.
 - **Iteraciones:** `iteracion-XX-YY-descripcion-corta.md`.
 - **Bitácoras:** `bitacora-XX-YY.md` para la primera de la iteración; las siguientes llevan un sufijo descriptivo (`bitacora-XX-YY-correccion.md`, `bitacora-XX-YY-produccion.md`) y, si el sufijo se repite, un número (`bitacora-XX-YY-ajustes-2.md`). La fecha va dentro del archivo, no en el nombre.

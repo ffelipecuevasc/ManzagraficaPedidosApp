@@ -16,9 +16,14 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-008 | Registro de eventos limitado a errores y eventos de negocio críticos (D7) | Aceptada |
 | RDA-009 | Una sola orden de gestión de mantención diaria (D8) | Aceptada |
 | RDA-010 | Tailwind CSS v3 compilado localmente con pnpm (D9) | Aceptada |
-| RDA-011 | Épicas numeradas igual que las fases del plan | Aceptada |
+| RDA-011 | Épicas numeradas igual que las fases del plan | Reemplazada por RDA-014 |
 | RDA-012 | Procedimientos operativos en `docs/operacion/` | Aceptada |
 | RDA-013 | Errores en el registro del servidor con `logging`; eventos de negocio en MySQL | Aceptada |
+| RDA-014 | Épicas numeradas según su orden de ejecución, de 00 a 14 | Aceptada |
+| RDA-015 | Vistas delgadas con servicios y selectores; sin patrón repositorio sobre el ORM | Aceptada |
+| RDA-016 | Interfaz renderizada en el servidor con plantillas de Django; sin migración a React | Aceptada |
+| RDA-017 | Dos roles sobre la tabla nativa de usuarios y borrado físico con doble confirmación | Aceptada |
+| RDA-018 | Proyección de pedidos con la biblioteca estándar de Python; sin aprendizaje automático | Aceptada |
 
 ---
 
@@ -118,6 +123,8 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Alternativas consideradas:** tres tareas separadas (imposible en el plan); mantener las métricas dentro de las vistas (descartado: escritura impredecible en el ciclo de petición).
 **Consecuencias:** hay que medir el consumo de CPU de la orden y vigilar los días en que no se ejecuta.
 
+**Actualización 2026-10-27 (decisión del desarrollador, reorganización RDA-014):** el paso de respaldo se ejecuta solo los días 1 y 15 de cada mes, en hora de Chile; métricas y purga siguen siendo diarias. Las automatizaciones de la Épica 11 se suman como un paso más, con su propio manejo de errores. Verificado en el panel (PDF de la pestaña **Tasks** del 2026-10-27) y en la ayuda de PythonAnywhere: la cuenta conserva una tarea diaria por ser anterior al 2026-01-15, y la tarea gratuita se detiene cada cuatro semanas si no se renueva (rutina de la 13-01). La orden se implementa en la 06-02.
+
 ## RDA-010 · Tailwind CSS v3 compilado localmente con pnpm (D9)
 
 - **Fecha:** 2026-10-19
@@ -128,15 +135,19 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Alternativas consideradas:** seguir con el CDN (descartado); npm (descartado: pnpm verifica la integridad por paquete y reduce la superficie ante ataques de cadena de suministro); Tailwind v4 (no elegido en el plan).
 **Consecuencias:** compilar antes de desplegar pasa a ser un paso obligatorio de la lista de comprobación; si se olvida, los estilos nuevos no llegan a producción.
 
+**Actualización 2026-10-27 (reorganización RDA-014):** la implementación pasa de la 05-04 a la 08-05 (Épica 08, frontend). Node.js y pnpm se usan solo en la máquina del desarrollador; PythonAnywhere sirve el CSS compilado y no necesita Node.
+
 ## RDA-011 · Épicas numeradas igual que las fases del plan
 
 - **Fecha:** 2026-10-19
-- **Estado:** Aceptada
+- **Estado:** Reemplazada por RDA-014
 
 **Contexto:** el plan de trabajo numera sus fases de 0 a 7 y sus subfases como 0.1, 0.2…
 **Decisión:** la Épica `NN` es la Fase `N` y la iteración `NN-MM` es la subfase `N.M` (la iteración `00-03` es la subfase 0.3). Las iteraciones que no existían en el plan toman el siguiente correlativo libre de su épica.
 **Alternativas consideradas:** numerar las épicas desde 01 (descartado: obliga a traducir cada número entre el plan y la planificación).
 **Consecuencias:** existe una Épica 00, y los commits de la primera fase se escriben como `Épica 0 - Iteración 00-NN: …`.
+
+**Reemplazada por RDA-014 (2026-10-27):** la reorganización agrega épicas que no existen en el plan y separa fases; desde la Épica 05 el número de iteración ya no coincide siempre con la subfase.
 
 ## RDA-012 · Procedimientos operativos en `docs/operacion/`
 
@@ -163,3 +174,72 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Actualización 2026-10-25 (01-06, medido en producción):** la salida de error del proceso web termina en **`server.log`**, en hora de Chile, con la traza en la misma línea y los saltos escritos como `#012`. Ahí queda la línea completa con emoji y `clave=valor`. `error.log`, en UTC, recibe los mismos errores en el formato de PythonAnywhere (`fecha,ms: mensaje` y la traza debajo), sin método, ruta ni usuario. Decisión del desarrollador (opción A): **el diagnóstico se hace en `server.log`** y `error.log` se deja como lo escribe PythonAnywhere, sin cambiar código ni configuración. Que `error.log` lo alimente un manejador propio de PythonAnywhere en el registrador raíz es una deducción no confirmada ([bitacora-01-06-produccion](../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md)).
 
 **Actualización 2026-10-26 (01-07 reabierta, decisión del desarrollador):** cambian los emojis del nivel, sin cambiar los campos: 🔴 ERROR, 🟡 WARNING, 🔵 INFO, 🔴🔴 CRITICAL, 🟢 DEBUG; un nivel personalizado sigue sin emoji. Viaja en `v1.2`. Para filtrar se busca `nivel=ERROR`, no el emoji, porque «🔴🔴 nivel=CRITICAL» contiene «🔴 nivel=».
+
+## RDA-014 · Épicas numeradas según su orden de ejecución, de 00 a 14
+
+- **Fecha:** 2026-10-27
+- **Estado:** Aceptada
+- **Reemplaza a:** RDA-011
+
+**Contexto:** el desarrollador pidió, durante la Épica 02, sumar al plan trabajo que no existía en él: reorganizar el frontend, un módulo de usuarios con roles, mejoras del tablero «Trabajo Semanal», automatizaciones por correo, una proyección de pedidos y servicios de AWS. Además separó la antigua Fase 6 en dos (mantención y arquitectura) y sacó de la Fase 5 los estilos y recursos del navegador. Con eso, la regla «la Épica `NN` es la Fase `N`» de RDA-011 deja de ser posible.
+**Decisión:** las épicas se numeran según su **orden de ejecución**, de 00 a 14, y el número de cada épica coincide con su lugar en la secuencia. El origen en el plan queda escrito en la cabecera de cada definición («Fase del plan») y en el anexo de `plan-de-trabajo.md`. Las iteraciones nuevas toman el correlativo libre de su épica; los números que quedan sin uso no se reasignan, para que ninguna referencia antigua apunte a otra cosa. Las referencias a la numeración anterior en documentos escritos antes de esta fecha (bitácoras, iteraciones cerradas, evidencias, Auditorías 01 y 02, documentos de la Épica 02 y `docs/operacion/`) no se reescriben: se leen con la tabla de equivalencias de abajo.
+
+| Antes | Ahora | Contenido |
+| :---- | :---- | :-------- |
+| Épicas 00 a 04 | Épicas 00 a 04 | Sin cambio de número (la 03 ajusta su contrato de error; la 04 suma 04-07 a 04-09) |
+| 05-01, 05-02, 05-03 | 05-01, 05-02, 05-03 | Sin cambio |
+| 05-04 | 08-05 | Compilación local de Tailwind |
+| 05-05 | 08-06 y 08-07 | Tipografías e íconos; librerías JavaScript |
+| 05-06 | 05-00 y 05-06 (servidor); 08-01 y 08-09 (navegador) | Medición inicial y final |
+| 06-01, 06-02, 06-03 | 06-01, 06-02, 06-03 | Sin cambio (la 06-02 suma la tarea programada y el respaldo de los días 1 y 15) |
+| — | 06-04 | Rediseño del módulo de base de datos (nueva) |
+| 06-04 | 07-01 | Modularización de las vistas |
+| 06-05 | 07-02 | Capa de servicios (y selectores) |
+| — | 07-03 | Modelos por dominio (nueva) |
+| 06-06 | 07-04 | Deuda técnica menor |
+| — | Épicas 08 a 12 | Frontend; usuarios y roles; mejoras del negocio; automatizaciones; proyección de pedidos (nuevas) |
+| 07-01 a 07-06 (Épica 07) | 13-01 a 13-06 (Épica 13) | Operación continua |
+| — | Épica 14 | Tecnología en la nube (AWS) (nueva) |
+
+**Alternativas consideradas:** mantener RDA-011 y agregar las épicas nuevas como 08 en adelante con la operación continua en 07 (descartada por el desarrollador: la operación continua debe ir al final y el número debe decir el orden); renumerar también los documentos cerrados (descartado: las bitácoras no se editan y la tabla basta).
+**Consecuencias:** el commit sigue el formato `Épica N - Iteración NN-NN: …` con el número nuevo. Un número de iteración desde la Épica 05 en adelante ya no se traduce directo a una subfase del plan: la tabla de iteraciones de cada definición dice su origen. Quien lea un documento anterior al 2026-10-27 debe usar la tabla.
+
+## RDA-015 · Vistas delgadas con servicios y selectores; sin patrón repositorio sobre el ORM
+
+- **Fecha:** 2026-10-27
+- **Estado:** Aceptada (aprobada por el desarrollador junto con la reorganización del 2026-10-27)
+
+**Contexto:** `pedidos/views.py` tiene 1.624 líneas con la lógica de negocio dentro de las vistas. El desarrollador pidió aplicar SOLID y evaluar los patrones repository y service, controladores por dominio y DTOs para los modelos.
+**Decisión:** (1) vistas por dominio en `pedidos/views/`, que hacen de controlador y delegan; (2) `services` por dominio para los casos de uso que escriben, donde viven las transacciones; (3) `selectors` por dominio para las lecturas reutilizables; (4) modelos por dominio en `pedidos/models/`; (5) `dataclasses` solo para resultados compuestos de un servicio. Se implementa en la Épica 07.
+**Alternativas consideradas:** patrón repositorio sobre el ORM (descartado: el `QuerySet` ya es un repositorio componible y perezoso, y envolverlo agrega código de paso y quita capacidades); DTOs como copia de cada modelo (descartado: duplican los campos sin aportar validación, que ya hacen los formularios de Django); dejar todo en las vistas (descartado: la lógica de negocio solo se prueba vía HTTP).
+**Consecuencias:** la lógica de negocio se prueba directamente; cada iteración de la Épica 07 es una refactorización pura con su propio despliegue. Las funciones nuevas (Épicas 09 a 12) nacen en esta estructura.
+
+## RDA-016 · Interfaz renderizada en el servidor con plantillas de Django; sin migración a React
+
+- **Fecha:** 2026-10-27
+- **Estado:** Aceptada (aprobada por el desarrollador junto con la reorganización del 2026-10-27)
+
+**Contexto:** el desarrollador consultó si convenía migrar funciones del frontend a librerías de React para ganar fluidez y profesionalismo. La aplicación es un monolito Django que renderiza HTML con DTL, en un plan con un solo proceso y 512 MiB de disco, y la Épica 08 busca quitar JavaScript del navegador.
+**Decisión:** la interfaz sigue renderizada en el servidor con DTL, parciales y estáticos propios. La fluidez se busca con librerías livianas que se evalúan en la 08-07, cada una con consulta y RDA propia (candidatas: HTMX para actualizar partes de una página, Alpine.js para interacciones pequeñas y Chart.js para gráficos).
+**Alternativas consideradas:** aplicación de una sola página en React (descartada: exige una API, duplicar autenticación y CSRF, un segundo proyecto con su propia compilación y más JavaScript en el navegador; además no reemplaza la generación de PDF, que ocurre en el servidor con WeasyPrint).
+**Consecuencias:** no se agrega Django REST Framework ni un proyecto de frontend separado. Si en el futuro apareciera un cliente distinto del navegador (por ejemplo, una aplicación móvil), se evalúa con una RDA nueva.
+
+## RDA-017 · Dos roles sobre la tabla nativa de usuarios y borrado físico con doble confirmación
+
+- **Fecha:** 2026-10-27
+- **Estado:** Aceptada (decisión del desarrollador)
+
+**Contexto:** hoy existe un solo usuario, superusuario. El dueño necesita crear cuentas para su equipo con un rol que pueda hacer todo el trabajo diario, salvo el módulo de base de datos y la gestión de usuarios.
+**Decisión:** dos roles sobre `auth_user`: **superusuario** (`is_superuser=True`, `is_staff=True`) y **operador** (activo, `is_superuser=False`, `is_staff=False`), sin grupos ni permisos por modelo. Un usuario se elimina con **borrado físico** (no se desactiva), detrás de una página de confirmación con las consecuencias y una segunda confirmación que exige escribir el nombre de usuario. La vista impide borrarse a sí mismo y dejar el sistema sin superusuario. Se implementa en la Épica 09.
+**Alternativas consideradas:** `Group` de Django «Operador» (descartado por el desarrollador: con dos roles basta el indicador); desactivar en vez de borrar (descartado por el desarrollador).
+**Consecuencias:** al borrar un usuario, `Pedido.creado_por`, `Pago.registrado_por` y `RegistroEvento.usuario` quedan en nulo (`SET_NULL`) y la autoría solo sobrevive en el resumen de los eventos; si se quiere conservarla en todos, hace falta una columna de Clase 2 (pendiente en la 09-03). Un tercer rol obligaría a revisar esta RDA. La sanitización del HTML (04-07) es requisito previo, porque un operador no debe poder inyectar código que se ejecute en la sesión de un superusuario.
+
+## RDA-018 · Proyección de pedidos con la biblioteca estándar de Python; sin aprendizaje automático
+
+- **Fecha:** 2026-10-27
+- **Estado:** Aceptada (decisión del desarrollador)
+
+**Contexto:** el negocio quiere ver cuántos pedidos vienen en los próximos meses. La historia disponible son diez meses de 2026 (línea base, sección 5), y el disco es de 512 MiB.
+**Decisión:** la proyección se calcula con la biblioteca estándar de Python 3.13 (`statistics`, `datetime`, `calendar`): carga comprometida real, ritmo del mes en curso, promedio móvil, tendencia lineal (`statistics.linear_regression`) y un margen, validados contra los meses pasados. No se usa aprendizaje automático, ni en el servidor ni en la nube. Se implementa en la Épica 12.
+**Alternativas consideradas:** modelo supervisado con scikit-learn (descartado: diez puntos no permiten aprender estacionalidad ni generalizar, y numpy, scipy y scikit-learn ocupan una parte importante del disco); servicios de aprendizaje automático de AWS (descartados: costo y complejidad desproporcionados para el volumen).
+**Consecuencias:** sin dependencias nuevas; la pantalla debe decir con cuántos meses de historia se calcula la estimación.
