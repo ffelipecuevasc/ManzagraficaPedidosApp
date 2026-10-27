@@ -1,7 +1,7 @@
 # Iteración 02-02 · Pruebas de la lógica de dinero
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** En revisión (ejecutada el 2026-10-26; [bitacora-02-02](../../99_bitacora/epica-02-red-seguridad/bitacora-02-02.md))
+- **Estado:** Terminada (2026-10-26; [bitacora-02-02](../../99_bitacora/epica-02-red-seguridad/bitacora-02-02.md))
 - **Subfase del plan:** 2.2
 - **Depende de:** 02-01
 - **RDA relacionadas:** RDA-006
@@ -81,3 +81,10 @@ Resueltas por el desarrollador el 2026-10-26:
 ## Datos requeridos del cliente
 
 - Ninguno para ejecutar. Los cuatro datos de la sección 2 de `registro-pendientes.md` ligados a esta iteración (valor de cotización neto o con IVA; valor de venta frente a la suma de ítems; pedido de $0; sobrepago) se fijan como `PENDIENTE_CLIENTE` hasta que el cliente responda.
+
+### Decisiones tras la revisión (2026-10-26)
+
+- **D2 confirmada:** `dashboard` y `estadisticas_pedidos` se mantienen en la 02-02, aunque no muestran dinero, porque fijan los criterios de «crítico», «urgente» y «mes actual».
+- **H1 → AUD-02-025:** regresión R15 en la 02-04. **H2 → AUD-02-026:** solo auditoría, sin regresión hasta que el cliente responda sobre los pedidos de $0.
+- **AUD-02-014 (valor de la cotización neto o con IVA):** no se cubre aquí; lo fija la 02-03 en la conversión de cotización.
+- **IVA con diferencias de $1:** solo anotado (D1), como nota de AUD-02-015.
