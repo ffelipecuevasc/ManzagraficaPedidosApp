@@ -13,7 +13,7 @@
 4. Un repositorio sin configuración del IDE ni credenciales, con plantilla de variables de entorno y dependencias legibles.
 5. Procedimientos de despliegue y de retroceso, con el retroceso ensayado.
 6. Un despliegue temprano y aislado con cuatro correcciones de riesgo nulo.
-7. Un segundo despliegue temprano y aislado: desactivar `btn-confirmar-pedido` al primer envío de «Nuevo pedido» (00-07, AUD-04-001). El lado del servidor, los demás formularios y la regresión R21 siguen en la 03-04.
+7. Un segundo despliegue temprano y aislado: desactivar `btn-confirmar-pedido` («Crear Pedido») al primer envío del formulario de pedido, al crear y al editar (plantilla compartida `pedido_form.html`), con la etiqueta `v0.3-doble-envio` después de validar `v1.2-capturas` (00-07, AUD-04-001). Las cotizaciones no se tocan. El lado del servidor, los demás formularios y la regresión R21 siguen en la 03-04.
 
 Esta épica no corrige defectos de lógica de negocio: los mide y deja la red de seguridad para corregirlos después.
 
@@ -31,7 +31,7 @@ El agente no accede a producción (`AGENTS.md`, sección 6). En esta épica eso 
 | 00-04 | Higiene del repositorio (Terminada) | 0.4 |
 | 00-05 | Protocolo de versionado, despliegue y retroceso (Terminada) | 0.5 |
 | 00-06 | Correcciones tempranas de riesgo nulo (Terminada) | 0.6 |
-| 00-07 | Correcciones tempranas II (Pendiente; creada el 2026-10-27) | 0.6 (continuación) |
+| 00-07 | Correcciones tempranas II (Pendiente; creada el 2026-10-27; crear y editar pedido, `v0.3-doble-envio`) | 0.6 (continuación) |
 
 ## Decisiones de la épica
 
@@ -68,3 +68,4 @@ La épica se cerró por decisión del desarrollador con la evidencia C1 de la 00
 ## Notas
 
 - **2026-10-27 · Reapertura para la 00-07 (decisión del desarrollador).** Los registros de producción del 2026-10-27 verificaron un pedido duplicado por doble clic (AUD-04-001, Auditoría 04). Se crea la 00-07 con una sola corrección del lado del cliente y despliegue propio, y la épica se reabre solo para ella. La 00-06 y su bitácora no cambian. Los criterios de término de arriba siguen cumplidos; la épica se vuelve a cerrar cuando la 00-07 termine.
+- **2026-10-27 · Decisiones del desarrollador sobre la 00-07:** alcance crear y editar pedido; script propio en `pedido_form.html`; etiqueta `v0.3-doble-envio` con retroceso a `v1.2-capturas`; despliegue el domingo 2026-11-01 después de validar `v1.2-capturas` ([iteracion-00-07](iteracion-00-07-correcciones-tempranas-ii.md)).

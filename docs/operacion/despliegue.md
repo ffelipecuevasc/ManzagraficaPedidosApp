@@ -68,6 +68,21 @@ git tag -n
 - `git tag -n` debe listar la etiqueta con su mensaje.
 - Si `push` responde `rejected` o `already exists`, la etiqueta ya existe en GitHub: no la fuerces. Usa el correlativo siguiente.
 
+**Etiquetar un commit anterior a la punta.** Cuando `main` ya tiene el trabajo del despliegue siguiente (por ejemplo, la 00-07 sobre `v1.2-capturas`), la etiqueta se crea sobre el hash del último commit que pertenece a este despliegue, no sobre la punta:
+
+```powershell
+git log --oneline -n 15
+git diff --stat <hash>..main -- . ":(exclude)_planificacion" ":(exclude)docs"
+$hoy = Get-Date -Format "yyyy-MM-dd"
+git tag -a <etiqueta> <hash> -m "Iteración XX-YY · desplegada el $hoy"
+git tag -n <etiqueta>
+git push origin <etiqueta>
+```
+
+- El `diff` debe listar solo los archivos ejecutables del despliegue siguiente; cualquier otro archivo significa que el hash elegido deja fuera algo de este despliegue o mete algo del siguiente: detente.
+- El resto de las reglas no cambia: `git status --short` vacío y `main` igual a `origin/main` antes de etiquetar.
+- El destino de retroceso del despliegue siguiente es esta etiqueta, aunque su número de fase sea mayor (por ejemplo, `v0.3-doble-envio` vuelve a `v1.2-capturas`). El destino es la etiqueta desplegada antes, no la anterior en el orden de `git tag -n`.
+
 ## 2. Lista de comprobación previa
 
 Se completa **antes** de tocar el servidor. Cópiala en la evidencia del despliegue con el resultado de cada punto. Si un punto falla, no despliegues.
@@ -79,9 +94,9 @@ Se completa **antes** de tocar el servidor. Cópiala en la evidencia del desplie
 | 3 | Sin cambios de modelo sin migración | PC | `makemigrations --check --dry-run` → `No changes detected`. |
 | 4 | Migraciones nuevas clasificadas | PC | Cada migración nueva con su clase según `sqlmigrate`. Ninguna de Clase 3. |
 | 5 | Respaldo verificado | PC | Si el despliegue toca datos o esquema (o es el primer despliegue de una fase): volcado descargado y `verificar_respaldo.py` con código `0` (`docs/operacion/respaldo.md`). |
-| 6 | Estilos compilados | PC | Cuando el proyecto compile Tailwind (05-04). Hasta entonces: «no aplica». |
+| 6 | Estilos compilados | PC | Cuando el proyecto compile Tailwind (08-05; antes 05-04, RDA-014). Hasta entonces: «no aplica». |
 | 7 | Etiqueta anotada creada y publicada | PC | Sección 1. `git ls-remote --tags origin <etiqueta>` devuelve una línea. |
-| 8 | Solo despliegue de 00-04 | PA | Sección 4. |
+| 8 | Pasos propios del despliegue | PA | Los que indique la evidencia de la iteración (por ejemplo, la sección 4 para la 00-04). |
 
 **[PC · PowerShell 7]** Puntos 2 a 4:
 

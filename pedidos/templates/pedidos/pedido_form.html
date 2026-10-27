@@ -415,9 +415,11 @@
                         <div class="mt-8 pt-6 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-3">
                             <button type="submit"
                                     id="btn-confirmar-pedido"
-                                    class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center">
-                                <span class="material-icons-round mr-2 text-xl">check_circle</span>
-                                Crear Pedido
+                                    class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center disabled:cursor-wait disabled:opacity-75 disabled:hover:bg-primary disabled:hover:shadow-md">
+                                <span class="material-icons-round mr-2 text-xl" aria-hidden="true" data-icono-normal>check_circle</span>
+                                <span class="material-icons-round mr-2 text-xl animate-spin hidden" aria-hidden="true" data-icono-procesando>autorenew</span>
+                                <span data-texto-normal>Crear Pedido</span>
+                                <span data-texto-procesando class="hidden">Guardando…</span>
                             </button>
                         </div>
                     </div>
@@ -425,4 +427,40 @@
             </form>
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Evita el doble envío del pedido al crear y al editar (00-07, patrón de la 00-06 en login.html).
+    // Va atado a submit y no a click: si la validación nativa impide el envío, el botón sigue activo.
+    (function () {
+        var form = document.getElementById('pedidoForm');
+        var boton = document.getElementById('btn-confirmar-pedido');
+        if (!form || !boton) return;
+
+        function mostrar(procesando) {
+            boton.disabled = procesando;
+            boton.setAttribute('aria-busy', procesando ? 'true' : 'false');
+            boton.querySelectorAll('[data-texto-normal],[data-icono-normal]').forEach(function (el) {
+                el.classList.toggle('hidden', procesando);
+            });
+            boton.querySelectorAll('[data-texto-procesando],[data-icono-procesando]').forEach(function (el) {
+                el.classList.toggle('hidden', !procesando);
+            });
+        }
+
+        form.addEventListener('submit', function (evento) {
+            if (boton.disabled) {
+                evento.preventDefault();
+                return;
+            }
+            mostrar(true);
+        });
+
+        // pageshow se dispara también cuando el navegador recupera la página desde su caché («atrás»).
+        window.addEventListener('pageshow', function () {
+            mostrar(false);
+        });
+    })();
+</script>
 {% endblock %}
