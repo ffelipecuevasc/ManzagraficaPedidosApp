@@ -116,7 +116,9 @@ class CrearPedidoTests(FlujoBase):
 
     def test_el_precio_lo_envia_el_navegador(self):
         # El servidor guarda el precio que llega en items_json, sin compararlo con el
-        # catálogo (hallazgo propuesto en bitacora-02-03).
+        # catálogo. Regla de negocio confirmada el 2026-10-27: el vendedor ajusta a mano el
+        # precio de cada ítem (bitacora-02-03-cierre.md). No validar contra el catálogo sin
+        # consultar al desarrollador.
         self.ejecutar('post', '/pedidos/nuevo/', self.datos(
             items_json=ayudas.items_json((self.tarjetas, '1', 1))))
 

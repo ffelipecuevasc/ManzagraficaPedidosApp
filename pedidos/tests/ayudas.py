@@ -4,6 +4,8 @@
 - `cambiar_estado` y `duplicar`: concentran el método HTTP ACTUAL de esas rutas (GET).
   Cuando la 04-01 las pase a POST, se cambia solo aquí (y las pruebas que lo declaran).
 - `congelar_hora`: fija `timezone.now()` donde lo buscan las vistas (decisión D3 de la 02-02).
+  Es la única definición: `test_dinero.py` la importa desde aquí (tarea 0 de la 02-04).
+- `estado_pago_esperado`: oráculo de `estado_pago` para las regresiones R10 a R12 (02-04).
 """
 import json
 from unittest import mock
@@ -39,3 +41,17 @@ def congelar_hora(momento=MEDIODIA):
     original al cargar la clase): esas fechas se pasan explícitas o se acotan con el reloj.
     """
     return mock.patch('django.utils.timezone.now', return_value=momento)
+
+
+def estado_pago_esperado(pedido):
+    """Oráculo de `estado_pago` (02-04, tarea 2), con la regla de
+    `scripts/diagnostico/linea_base.sql`: `PAGADO` si el saldo es menor o igual a 0;
+    `PARCIAL` si hay pagos; `PENDIENTE` si no. Suma los pagos en Python, sin usar las
+    propiedades del modelo ni la función de la vista.
+    """
+    pagado = sum(pago.monto for pago in pedido.pagos.all())
+    if pedido.valor_venta - pagado <= 0:
+        return 'PAGADO'
+    if pagado > 0:
+        return 'PARCIAL'
+    return 'PENDIENTE'

@@ -94,6 +94,36 @@ class EliminarPagoTests(TestCase):
 - Si el defecto se corrige y la prueba pasa, aparece como `unexpected successes` y el conjunto **falla**: hay que quitar `@expectedFailure` (y la etiqueta) en la misma iteración que corrige.
 - No se usa `skip`: no ejecuta la prueba y no avisa cuando el defecto se corrige.
 
+### 7.1 Regresiones declaradas (iteración 02-04)
+
+En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=18`.** Cada prueba afirma el comportamiento correcto y hoy falla por el defecto indicado. El despliegue (`despliegue.md`, paso 1) acepta solo este número.
+
+| # | Prueba | Hallazgo | Por qué falla hoy | La vuelve verde |
+| :- | :----- | :------- | :---------------- | :-------------- |
+| R1 | `ItemsTodoONadaTests.test_r1_editar_pedido_con_item_fallido_no_deja_rastro` | AUD-01-002 | Borra los ítems anteriores y deja solo los creados antes del fallo | 03-03 |
+| R2 | `ItemsTodoONadaTests.test_r2_editar_cotizacion_con_item_fallido_no_deja_rastro` | AUD-01-002 | Igual que R1, en cotizaciones | 03-03 |
+| R3 | `ItemsTodoONadaTests.test_r3_crear_pedido_con_item_fallido_no_deja_rastro` | AUD-02-008 | Queda el pedido con un ítem de dos | 03-03 |
+| R4 | `ItemsTodoONadaTests.test_r4_crear_cotizacion_con_item_fallido_no_deja_rastro` | AUD-01-002 | Queda la cotización con un ítem de dos | 03-03 |
+| R6a | `EscrituraPorGetTests.test_r6_cambiar_estado_rechaza_get` | AUD-02-006 | GET cambia el estado y redirige (302) | 04-01 |
+| R6b | `EscrituraPorGetTests.test_r6_duplicar_pedido_rechaza_get` | AUD-02-006 | GET crea el duplicado y redirige (302) | 04-01 |
+| R6c | `EscrituraPorGetTests.test_r6_generar_respaldo_rechaza_get` | AUD-02-006 | GET genera el respaldo (200); `mysqldump` se reemplaza en la prueba | 04-01 |
+| R7 | `EliminarPagoTests.test_r7_confirmacion_de_eliminar_pago_responde_200` | AUD-02-002 | Falta la plantilla de confirmación: 500 | 04-01 |
+| R8 | `BordesDeHoraChileTests.test_r8_panel_y_chequeo_diario_usan_el_dia_de_chile` | AUD-02-003 | A las 22:00 de Chile un pedido de hoy cuenta como crítico, y el panel escribe una segunda fila de métricas | 06-01 |
+| R9 | `BordesDeHoraChileTests.test_r9_ingresos_del_mes_usan_el_mes_de_chile` | AUD-02-003 | El 31 a las 22:00 de Chile, «ingresos del mes» da 0 (usa noviembre) | 06-01 |
+| R10 | `EstadoPagoTests.test_r10_crear_con_abono_deja_estado_pago_coherente` | AUD-02-004 | Queda `PENDIENTE` con abono | 03-03 |
+| R11 | `EstadoPagoTests.test_r11_editar_valor_venta_recalcula_estado_pago` | AUD-02-004 | Sigue `PAGADO` tras subir el valor | 03-03 |
+| R12 | `EstadoPagoTests.test_r12_mover_pago_recalcula_ambos_pedidos` | AUD-02-004 | El pedido anterior sigue `PAGADO` | 03-03 |
+| R13 | `ConvertirCotizacionTests.test_r13_convertir_dos_veces_crea_un_solo_pedido` | AUD-02-005 | Crea dos pedidos | 03-03 |
+| R14 | `HistorialClienteTests.test_r14_eliminar_cliente_con_pedidos_se_rechaza` | AUD-02-001 | No lanza `ProtectedError`: borra en cascada | 04-06 |
+| R15 | `PorcentajePagadoTests.test_r15_porcentaje_pagado_con_enteros` | AUD-02-025 | Da 28 en vez de 29 (`float`) | 07-02 (antes 06-05) |
+| R18 | `ConvertirCotizacionTests.test_r18_convertir_sin_fecha_de_entrega_no_responde_500` | AUD-02-027 | `ValidationError` por la fecha vacía: 500 | 03-04 |
+| R19 | `DuplicarPedidoTests.test_r19_duplicado_queda_con_el_usuario_que_duplica` | AUD-02-028 | `creado_por` queda nulo | `PENDIENTE_DESARROLLADOR` |
+
+- **R5 (AUD-01-006) no está:** dos llamadas a `registrar_metricas_diarias()` en el mismo instante, a mediodía, dejan una fila (`unexpected success`). El duplicado de las 22:00 lo cubre R8. **R16** está reservado para AUD-02-021 y **R17** está libre.
+- **Cómo se retira una regresión:** la iteración que corrige el defecto quita `@expectedFailure` y `@tag('regresion')` de su prueba, baja N en esta sección y en la bitácora, y deja la prueba como prueba normal. Si la corrección deja de registrar el error, `absorber_errores` no la hace fallar.
+- **Hora en R8 y R9:** se parcha `django.utils.timezone.now` con un instante en **UTC** (22:00 de Chile = 01:00 UTC del día siguiente), igual que el reloj real con `USE_TZ`.
+- **Oráculo de `estado_pago`:** `ayudas.estado_pago_esperado`, con su propia prueba (`OraculoEstadoPagoTests`, en verde).
+
 ## 8. Reglas de dinero fijadas
 
 Pruebas de caracterización de la iteración 02-02, en `pedidos/tests/test_dinero.py`: fijan cómo calcula **hoy** la aplicación, sea correcto o no. Cambiar una de estas reglas obliga a cambiar su prueba en la misma iteración, con la decisión que lo respalda.

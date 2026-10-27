@@ -1,7 +1,7 @@
 # Iteración 02-04 · Pruebas de regresión de defectos conocidos
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** Redactada, sin ejecutar
+- **Estado:** En revisión (ejecutada el 2026-10-27; [bitacora-02-04](../../99_bitacora/epica-02-red-seguridad/bitacora-02-04.md))
 - **Subfase del plan:** 2.4
 - **Depende de:** 02-01 y 02-03 (reutiliza sus ayudas y factorías)
 - **RDA relacionadas:** RDA-006
@@ -36,7 +36,7 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 | R2 | AUD-01-002 | Lo mismo al **editar una cotización** | Igual que R1 | 03-02 / 03-03 |
 | R3 | AUD-02-008 | Si falla un ítem al **crear un pedido**, no queda un pedido a medias | `transaction.atomic` existe, pero el `try/except` interno lo anula y el pedido queda con ítems parciales | 03-03 |
 | R4 | AUD-01-002 | Lo mismo al **crear una cotización** | Cotización con ítems parciales | 03-03 |
-| R5 | AUD-01-006 | Llamar dos veces `registrar_metricas_diarias()` el mismo día deja **una** fila de `HistorialBD` | Deja dos; la comprobación de duplicados no funciona (producción: 187 filas en 121 días) | 06-01 |
+| R5 | AUD-01-006 | Llamar dos veces `registrar_metricas_diarias()` el mismo día deja **una** fila de `HistorialBD` | Deja dos; la comprobación de duplicados no funciona (producción: 187 filas en 121 días). **No confirmada el 2026-10-27:** a mediodía deja una fila (`unexpected success`); no se escribió (ver bitácora) | 06-01 |
 | R6 | AUD-02-006 y plan 4.1 | `cambiar_estado`, `duplicar_pedido` y `generar_respaldo_bd` rechazan GET (405) | Responden y escriben con GET | 04-01 |
 | R7 | AUD-02-002 | La eliminación de un pago muestra una página de confirmación (200) | La plantilla `pedidos/pago_confirm_delete.html` no existe: error 500 (confirmado en producción) | 04-01 |
 | R8 | AUD-02-003 | A las 22:00 de Chile, el panel y el chequeo diario usan el **día de Chile**, no el de UTC | Con 22:00 de Chile ya es el día siguiente en UTC | 06-01 |
@@ -47,10 +47,10 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 | R13 | AUD-02-005 | Convertir dos veces la misma cotización crea **un** pedido y rechaza la segunda | Crea dos pedidos | 03-03 |
 | R14 | AUD-02-001 | Eliminar un cliente con pedidos no borra su historial (se rechaza con `ProtectedError`) | Borra en cascada pedidos, ítems, pagos y cotizaciones | 04-06 |
 | R15 | AUD-02-025 | Un pago de $29 sobre un pedido de $100 da `porcentaje_pagado == 29` (cálculo con enteros) | Da 28: divide con `float` y trunca (decisión del desarrollador, 2026-10-26, tras la 02-02) | 06-05 |
-| R18 | AUD-02-027 | Convertir una cotización con `fecha_entrega` vacía **no** responde 500: rechaza la petición sin crear el pedido | Por lectura del código: el guardado del `DateField` falla y el decorador responde 500 (decisión del desarrollador, 2026-10-27, tras la 02-03) | 03-04 (propuesta) |
+| R18 | AUD-02-027 | Convertir una cotización con `fecha_entrega` vacía **no** responde 500: rechaza la petición sin crear el pedido | Por lectura del código: el guardado del `DateField` falla y el decorador responde 500 (decisión del desarrollador, 2026-10-27, tras la 02-03) | 03-04 (decisión D5, 2026-10-27) |
 | R19 | AUD-02-028 | El pedido duplicado queda con `creado_por` igual al usuario que lo duplicó | `creado_por` queda nulo (decisión del desarrollador, 2026-10-27, tras la 02-03) | `PENDIENTE_DESARROLLADOR` (04-01 o 03-03) |
 
-R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una cada una. El total previsto es de **19** (16 al redactar, más R15 agregada el 2026-10-26, más R18 y R19 agregadas el 2026-10-27). Los números R16 y R17 no tienen fila: R16 queda reservado para AUD-02-021 (decisión 2) y R17 sin asignar; R18 y R19 se numeraron así por decisión del desarrollador, sin renumerar las anteriores. La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
+R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una cada una. El total previsto era de **19**; el resultado es **18**, porque R5 no se confirmó (16 al redactar, más R15 agregada el 2026-10-26, más R18 y R19 agregadas el 2026-10-27). Los números R16 y R17 no tienen fila: R16 queda reservado para AUD-02-021 (decisión 2) y R17 sin asignar; R18 y R19 se numeraron así por decisión del desarrollador, sin renumerar las anteriores. La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
 
 **Condiciones propias de R18 y R19:**
 
@@ -69,13 +69,13 @@ R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una c
 
 ## Criterios de aceptación
 
-- [ ] Existe una regresión por cada fila de la tabla (R1 a R15, R18 y R19), con `@tag('regresion')`, `@unittest.expectedFailure` y su comentario.
-- [ ] La bitácora muestra, para cada una, el fallo real sin la marca y que su causa es el defecto descrito.
-- [ ] **Tres ejecuciones seguidas** de `python manage.py test pedidos` dan el mismo resultado: todo en verde salvo `expected failures=N`, sin `unexpected successes` y sin errores.
-- [ ] `python manage.py test pedidos --exclude-tag regresion` queda en verde.
-- [ ] `docs/operacion/pruebas.md` lista las regresiones y el valor de `N`; `despliegue.md` acepta ese número.
-- [ ] El diff no toca código de la aplicación.
-- [ ] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas.
+- [x] Existe una regresión por cada fila de la tabla (R1 a R15, R18 y R19, salvo R5, que no se confirmó y queda explicada en la bitácora), con `@tag('regresion')`, `@unittest.expectedFailure` y su comentario.
+- [x] La bitácora muestra, para cada una, el fallo real sin la marca y que su causa es el defecto descrito.
+- [x] **Tres ejecuciones seguidas** de `python manage.py test pedidos` dan el mismo resultado: todo en verde salvo `expected failures=N`, sin `unexpected successes` y sin errores.
+- [x] `python manage.py test pedidos --exclude-tag regresion` queda en verde.
+- [x] `docs/operacion/pruebas.md` lista las regresiones y el valor de `N` (sección 7.1, N = 18); `despliegue.md` acepta ese número (paso 1, sin cambios: remite a `pruebas.md`).
+- [x] El diff no toca código de la aplicación.
+- [x] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas (salvo la iteración que corrige AUD-02-028, que el desarrollador dejó abierta a propósito, D5).
 
 ## Fuera de alcance
 
@@ -85,9 +85,13 @@ R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una c
 
 ## Decisiones del desarrollador
 
-1. **Contrato de R1 a R4:** la prueba afirma «todo o nada» (si falla un ítem, no queda rastro en la base), que es el criterio de término de la Épica 03. Confirmar o ajustar. `PENDIENTE_DESARROLLADOR`.
-2. **AUD-02-021** (errores de plantilla en las pantallas de alta de las tres entidades principales): su causa sigue sin conocerse (falta el comando que entrega la fecha y el mensaje completo de cada error). Propuesta: **no** incluirlo aquí y agregarlo como R16 si antes se identifica la causa. `PENDIENTE_DESARROLLADOR`.
-3. **Inventario de rutas que escriben por GET** (más allá de las tres de R6): propuesta, el agente lo lista leyendo `urls.py` y las vistas y el desarrollador decide cuáles se suman. `PENDIENTE_DESARROLLADOR`.
+Resueltas por el desarrollador el 2026-10-27:
+
+1. **D1 · Contrato de R1 a R4:** «todo o nada». Si falla un ítem, no queda rastro en la base: ni pedido o cotización a medias, ni ítems anteriores borrados.
+2. **D2 · AUD-02-021:** no entra en la 02-04. R16 queda reservado; no se escribe esa prueba.
+3. **D3 · Numeración:** se deja como está (R1 a R15, R16 reservado, R17 libre, R18 y R19). No se renumera.
+4. **D4 · Inventario de rutas que escriben por GET:** el agente lo lista en la bitácora (ruta, vista, qué escribe, si lo cubre R6 o R7). No se escriben pruebas fuera de R6; el desarrollador decide cuáles se suman.
+5. **D5 · Iteraciones:** AUD-02-028 (R19) sigue `PENDIENTE_DESARROLLADOR`; AUD-02-027 (R18) la corrige la 03-04.
 
 ## Datos requeridos del cliente
 

@@ -18,6 +18,7 @@ from pedidos import views
 from pedidos.forms import PedidoForm
 from pedidos.models import HistorialBD, Pago, Pedido
 
+from .ayudas import MEDIODIA, congelar_hora
 from .factorias import (
     crear_cliente, crear_cotizacion, crear_item_pedido, crear_pago, crear_pedido,
     crear_producto, crear_usuario, momento_chile,
@@ -30,13 +31,9 @@ def iva_comercial(valor_neto):
 
 
 # Decisión D3: hora congelada al mediodía de Chile, lejos de los bordes de día y de mes
-# (los bordes en UTC son AUD-02-003 y se prueban en 02-04).
-AHORA = momento_chile(2026, 10, 15)
-
-
-def congelar_hora():
-    """Las vistas y `registrar_metricas_diarias` leen la hora con `timezone.now()` del módulo."""
-    return mock.patch('django.utils.timezone.now', return_value=AHORA)
+# (los bordes en UTC son AUD-02-003 y se prueban en 02-04). `congelar_hora` vive en
+# `ayudas.py` (unificada en la 02-04) y congela este mismo instante por defecto.
+AHORA = MEDIODIA
 
 
 # ---------------------------------------------------------------------------
