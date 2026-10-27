@@ -72,6 +72,20 @@ Decisiones del desarrollador del 2026-10-27:
   - El registro llama a la próxima etiqueta `v1.2-capturas` (historial del 2026-10-26) y esta decisión la llama `v1.2`.
 - **AUD-02-028:** iteración que lo corrige, `PENDIENTE_DESARROLLADOR`.
 
+## Correcciones posteriores al cierre
+
+Decisión del desarrollador del 2026-10-27: se corrigen las tres primeras discrepancias de «Pendientes y riesgos». Solo cambian archivos `.md`, sin tocar estados.
+
+| Archivo | Cambio | Por qué |
+| :------ | :----- | :------ |
+| `_planificacion/10_epicas/epica-02-red-seguridad/iteracion-02-04-regresiones.md` | En la enumeración de pruebas (`:54`) se agrega «R20 (404 en lugar de 500, AUD-02-029, la corrige la 03-01)». En el criterio de aceptación (`:73`), «R1 a R15, R18 y R19» pasa a «R1 a R15, R18, R19 y R20» | Las enumeraciones no nombraban R20, aunque el recuento vigente de 19 sí la incluye |
+| `_planificacion/10_epicas/epica-06-mantencion-respaldos/definicion-epica-06.md` | El criterio de término que exigía pasar a verde «las pruebas de regresión de fechas en UTC y de métricas duplicadas» ahora apunta a R8 (día de Chile en el panel y en el chequeo diario, incluida la segunda fila de `HistorialBD`) y R9 (mes de Chile), que vuelve verdes la 06-01, y aclara que R5 no se confirmó | La regresión de métricas duplicadas no existe; el alcance del criterio no cambia |
+| `_planificacion/10_epicas/epica-02-red-seguridad/definicion-epica-02.md` | Alcance 4: la mención de «métricas duplicadas» entre las regresiones del plan dice ahora que la regresión prevista (R5) no se confirmó y que el defecto real, el duplicado que deja el día en UTC, lo cubre R8 | La frase podía leerse como si existiera una regresión de métricas duplicadas |
+
+**Otras menciones de la regresión de métricas duplicadas en documentos vigentes:** ninguna más. La búsqueda en `_planificacion/10_epicas/`, `_planificacion/00_producto/` y `docs/` solo encontró estas dos y `decisiones.md:45` (contexto de RDA-006: «métricas duplicadas» como ejemplo de defecto que necesita historia acumulada). Esa no nombra una regresión y no se tocó. También aparece en la carpeta antigua `epica-06-arquitectura-automatizacion`, que el desarrollador va a borrar.
+
+La cuarta discrepancia (`v1.2` frente a `v1.2-capturas`) sigue pendiente.
+
 ## Commit sugerido
 
 `Épica 2 - Cierre: termina la épica con 184 pruebas (19 regresiones), agrega los resultados y el informe de las carpetas anteriores a RDA-014`

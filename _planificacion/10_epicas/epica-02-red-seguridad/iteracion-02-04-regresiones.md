@@ -51,7 +51,7 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 | R19 | AUD-02-028 | El pedido duplicado queda con `creado_por` igual al usuario que lo duplicó | `creado_por` queda nulo (decisión del desarrollador, 2026-10-27, tras la 02-03) | `PENDIENTE_DESARROLLADOR` (04-01 o 03-03) |
 | R20 | AUD-02-029 | Con un `pk` inexistente, las 12 vistas con `@transaccion_segura` responden 404 | Responden 500: el decorador captura el `Http404` (decisión del desarrollador, 2026-10-27, tras la 02-05) | 03-01 |
 
-R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una cada una. **Recuento vigente: 19** (2026-10-27): 18 al cerrar la iteración (19 previstas menos R5, que no se confirmó), más R20 agregada tras la 02-05. El total previsto era de 19 (16 al redactar, más R15 agregada el 2026-10-26, más R18 y R19 agregadas el 2026-10-27). Los números R16 y R17 no tienen fila: R16 queda reservado para AUD-02-021 (decisión 2) y R17 sin asignar; R18 y R19 se numeraron así por decisión del desarrollador, sin renumerar las anteriores. La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
+R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18, R19 y R20, una cada una (R20: 404 en lugar de 500, AUD-02-029, la corrige la 03-01; agregada el 2026-10-27). **Recuento vigente: 19** (2026-10-27): 18 al cerrar la iteración (19 previstas menos R5, que no se confirmó), más R20 agregada tras la 02-05. El total previsto era de 19 (16 al redactar, más R15 agregada el 2026-10-26, más R18 y R19 agregadas el 2026-10-27). Los números R16 y R17 no tienen fila: R16 queda reservado para AUD-02-021 (decisión 2) y R17 sin asignar; R18 y R19 se numeraron así por decisión del desarrollador, sin renumerar las anteriores. La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
 
 **Condiciones propias de R18 y R19:**
 
@@ -70,7 +70,7 @@ R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una c
 
 ## Criterios de aceptación
 
-- [x] Existe una regresión por cada fila de la tabla (R1 a R15, R18 y R19, salvo R5, que no se confirmó y queda explicada en la bitácora), con `@tag('regresion')`, `@unittest.expectedFailure` y su comentario.
+- [x] Existe una regresión por cada fila de la tabla (R1 a R15, R18, R19 y R20, salvo R5, que no se confirmó y queda explicada en la bitácora), con `@tag('regresion')`, `@unittest.expectedFailure` y su comentario.
 - [x] La bitácora muestra, para cada una, el fallo real sin la marca y que su causa es el defecto descrito.
 - [x] **Tres ejecuciones seguidas** de `python manage.py test pedidos` dan el mismo resultado: todo en verde salvo `expected failures=N`, sin `unexpected successes` y sin errores.
 - [x] `python manage.py test pedidos --exclude-tag regresion` queda en verde.

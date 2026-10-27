@@ -47,7 +47,7 @@
 - La tarea diaria se ejecuta sola durante siete días seguidos y cada ejecución deja su evento.
 - Un respaldo generado por la tarea un día 1 o 15 existe en el servidor, se verifica con `scripts/verificar_respaldo.py` y queda su evento.
 - Ninguna vista de lectura escribe en la base (prueba con conteo de escrituras).
-- Las pruebas de regresión de fechas en UTC y de métricas duplicadas pasan de fallo esperado a verde.
+- Las regresiones de fechas en UTC de la 02-04 pasan de fallo esperado a verde con la 06-01: R8 (el panel y el chequeo diario de métricas usan el día de Chile; incluye que una visita a las 22:00 de Chile no escriba una segunda fila de `HistorialBD` el mismo día) y R9 (los ingresos del mes usan el mes de Chile). La regresión prevista de métricas duplicadas (R5) no se confirmó: el duplicado real lo cubre R8 (corregido el 2026-10-27).
 - El uso de disco tiene un umbral vigilado por la orden de mantención.
 - La pantalla de estadísticas de la base muestra el uso de disco, la antigüedad del último respaldo y las filas por tabla con datos de la orden diaria.
 
