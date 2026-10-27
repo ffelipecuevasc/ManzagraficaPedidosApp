@@ -418,7 +418,7 @@
                                     class="px-8 py-3 rounded-lg bg-primary hover:bg-yellow-400 text-black font-bold shadow-md hover:shadow-lg transition-all text-sm uppercase tracking-wide flex items-center disabled:cursor-wait disabled:opacity-75 disabled:hover:bg-primary disabled:hover:shadow-md">
                                 <span class="material-icons-round mr-2 text-xl" aria-hidden="true" data-icono-normal>check_circle</span>
                                 <span class="material-icons-round mr-2 text-xl animate-spin hidden" aria-hidden="true" data-icono-procesando>autorenew</span>
-                                <span data-texto-normal>Crear Pedido</span>
+                                <span data-texto-normal>{% if form.instance.pk %}Editar Pedido{% else %}Crear Pedido{% endif %}</span>
                                 <span data-texto-procesando class="hidden">Guardando…</span>
                             </button>
                         </div>

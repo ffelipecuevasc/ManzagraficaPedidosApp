@@ -1,7 +1,7 @@
 # Iteración 00-07 · Correcciones tempranas II
 
 - **Épica:** 00 · Blindaje y punto de retorno (reabierta el 2026-10-27 solo para esta iteración)
-- **Estado:** En revisión (implementada en local el 2026-10-27; faltan `test pedidos` con el contenedor MySQL encendido y la revisión manual del desarrollador)
+- **Estado:** En revisión (implementada y verificada en local el 2026-10-27, [bitacora-00-07-revision](../../99_bitacora/epica-00-blindaje/bitacora-00-07-revision.md); quedan los criterios de producción del domingo 2026-11-01)
 - **Subfase del plan:** 0.6 (continuación; nueva, por hallazgos de producción del 2026-10-27)
 - **Depende de:** 00-05 (protocolo de despliegue). En producción, va después de validar `v1.2-capturas` (decisión 5).
 - **RDA relacionadas:** RDA-007
@@ -40,13 +40,14 @@ El 2026-10-27 a las 14:36:20, dos `POST /pedidos/nuevo/` en el mismo segundo cre
 
 ## Criterios de aceptación
 
-- [ ] En la réplica, un doble clic rápido en «Crear Pedido» al crear deja un solo pedido nuevo (conteo de pedidos antes y después en la bitácora). ~~«Confirmar» de «Nuevo pedido»~~
-- [ ] En la réplica, un doble clic rápido en «Crear Pedido» al editar deja un solo guardado (la edición tampoco se envía dos veces).
-- [ ] El botón queda desactivado y muestra «Guardando…» con su ícono tras el primer clic, con contraste y foco visibles (escritorio y 360 px, modo claro y oscuro).
-- [ ] Si la validación nativa del navegador impide el envío, el botón sigue disponible.
-- [ ] Al volver con «atrás» después de enviar, el botón vuelve a su estado normal (`pageshow`).
-- [ ] «Nueva cotización» se comporta igual que antes.
-- [ ] `python manage.py test pedidos` sin cambios en el recuento (`Ran 184 tests`, `OK (expected failures=19)`), `check` sin errores y `makemigrations --check --dry-run` sin cambios. **2026-10-27:** `check` sin problemas y `makemigrations` sin cambios; las pruebas no corrieron porque el contenedor MySQL estaba apagado (bitácora).
+- [x] En la réplica, un doble clic rápido en «Crear Pedido» al crear deja un solo pedido nuevo (conteo de pedidos antes y después en la bitácora). ~~«Confirmar» de «Nuevo pedido»~~
+- [x] En la réplica, un doble clic rápido en «Crear Pedido» al editar deja un solo guardado (la edición tampoco se envía dos veces).
+- [x] El botón queda desactivado y muestra «Guardando…» con su ícono tras el primer clic, con contraste y foco visibles (escritorio y 360 px, modo claro y oscuro).
+- [x] Si la validación nativa del navegador impide el envío, el botón sigue disponible.
+- [x] Al volver con «atrás» después de enviar, el botón vuelve a su estado normal (`pageshow`).
+- [x] «Nueva cotización» se comporta igual que antes.
+- [x] `python manage.py test pedidos` sin cambios en el recuento (`Ran 184 tests`, `OK (expected failures=19)`), `check` sin errores y `makemigrations --check --dry-run` sin cambios. **2026-10-27:** `check` sin problemas y `makemigrations` sin cambios; las pruebas no corrieron porque el contenedor MySQL estaba apagado (bitácora). **Revisión del 2026-10-27:** `Ran 184 tests`, `OK (expected failures=19)`, antes y después del cambio de texto ([bitacora-00-07-revision](../../99_bitacora/epica-00-blindaje/bitacora-00-07-revision.md)).
+- [x] El botón dice «Editar Pedido» al editar y «Crear Pedido» al crear (decisión 7; observado por el desarrollador en la revisión del 2026-10-27).
 - [ ] Desplegada con su propia etiqueta, `v0.3-doble-envio`, distinta de `v1.2-capturas`.
 - [ ] `v1.2-capturas` apunta al último commit anterior a la 00-07, y `git diff --stat <ese commit>..v0.3-doble-envio` muestra solo `pedido_form.html` y documentos (evidencia, parte B).
 - [ ] Una semana después del despliegue, `access.log` no muestra dos `POST /pedidos/nuevo/` en el mismo segundo (evidencia, parte D).
@@ -59,7 +60,7 @@ El 2026-10-27 a las 14:36:20, dos `POST /pedidos/nuevo/` en el mismo segundo cre
 - Indicador de carga y confirmación visible en todos los envíos: Épica 08 (08-07).
 - Detectar o limpiar duplicados históricos: 06-04.
 - `index.js`, incluida la validación de montos que busca `btn-submit-pedido` (inexistente): solo se registra como propuesta.
-- El texto «Crear Pedido» en modo edición: solo se registra como propuesta.
+- ~~El texto «Crear Pedido» en modo edición: solo se registra como propuesta.~~ Reemplazado el 2026-10-27 por la decisión 7: entra en esta iteración.
 - La compatibilidad del ícono que gira con `DESIGN.md` (sección 8): pendiente registrado, no se resuelve aquí.
 
 ## Datos requeridos del cliente
@@ -74,6 +75,8 @@ El 2026-10-27 a las 14:36:20, dos `POST /pedidos/nuevo/` en el mismo segundo cre
 4. **Etiqueta:** `v0.3-doble-envio`. **Destino de retroceso:** `v1.2-capturas`.
 5. **Orden en producción (domingo 2026-11-01):** parte D de la 01-06 → `v1.2-capturas` → validación de `v1.2` → `v0.3-doble-envio` → validación. Si `v1.2` se retrocede, la 00-07 se pospone.
 6. **Commits y etiquetas:** el desarrollador hace el commit de la 00-07 en `main` esta semana. El domingo, `v1.2-capturas` se crea sobre el último commit anterior a la 00-07 (`git tag -a v1.2-capturas <hash>`) y `v0.3-doble-envio` sobre la punta de `main`.
+
+7. **Texto del botón al editar (2026-10-27, durante la revisión):** «Editar Pedido» en modo edición y «Crear Pedido» al crear, con la condición `{% if form.instance.pk %}` que ya usa el título. Se eligió sobre «Guardar cambios» porque remite al cliente a lo que está haciendo. Requiere un commit nuevo antes del despliegue.
 
 ## Notas
 
