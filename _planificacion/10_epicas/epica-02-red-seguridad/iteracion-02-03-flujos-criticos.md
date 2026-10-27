@@ -1,7 +1,7 @@
 # Iteración 02-03 · Pruebas de flujos críticos
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** En revisión (ejecutada el 2026-10-26; [bitacora-02-03](../../99_bitacora/epica-02-red-seguridad/bitacora-02-03.md))
+- **Estado:** Terminada (ejecutada el 2026-10-26, cerrada el 2026-10-27; [bitacora-02-03](../../99_bitacora/epica-02-red-seguridad/bitacora-02-03.md), [bitacora-02-03-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-03-cierre.md))
 - **Subfase del plan:** 2.3
 - **Depende de:** 02-01 (la 02-02 no es requisito, pero conviene haberla hecho para reutilizar sus factorías)
 - **RDA relacionadas:** RDA-006
@@ -62,6 +62,12 @@ Resueltas por el desarrollador el 2026-10-26:
 1. **D1 · Pagos:** solo el camino feliz de `ingresar_pago` y `editar_pago`. `eliminar_pago` queda fuera (regresión de la 02-04).
 2. **D2 · Lectura:** solo el detalle del pedido. No se prueban el listado, los filtros ni la paginación.
 3. **D3 · Transiciones de estado:** si la vista permite cualquier cambio, se fija así y se anota; no se decide qué transiciones deberían existir. Resultado: `cambiar_estado_pedido` acepta cualquier estado de `ESTADO_CHOICES` desde cualquier otro; no se encontraron reglas que contradigan el plan.
+
+Resueltas por el desarrollador el 2026-10-27, tras la revisión ([bitacora-02-03-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-03-cierre.md)):
+
+4. **H1 · Precio del ítem:** no es defecto. El vendedor ajusta a mano el precio de cada ítem (regla de negocio confirmada). Sin hallazgo ni regresión.
+5. **H2 · Fecha de entrega vacía al convertir:** AUD-02-027, regresión R18 de la 02-04.
+6. **H3 · Duplicado sin `creado_por`:** AUD-02-028, regresión R19 de la 02-04.
 
 ## Datos requeridos del cliente
 

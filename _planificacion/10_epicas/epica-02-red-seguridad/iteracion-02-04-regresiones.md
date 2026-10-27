@@ -5,7 +5,7 @@
 - **Subfase del plan:** 2.4
 - **Depende de:** 02-01 y 02-03 (reutiliza sus ayudas y factorías)
 - **RDA relacionadas:** RDA-006
-- **Hallazgos que avanza:** AUD-01-002, AUD-01-006, AUD-02-001, AUD-02-002, AUD-02-003, AUD-02-004, AUD-02-005, AUD-02-006, AUD-02-008 y AUD-02-025. No cierra ninguno: cada prueba **documenta** el defecto y lo cerrará la iteración que lo corrija.
+- **Hallazgos que avanza:** AUD-01-002, AUD-01-006, AUD-02-001, AUD-02-002, AUD-02-003, AUD-02-004, AUD-02-005, AUD-02-006, AUD-02-008, AUD-02-025, AUD-02-027 y AUD-02-028. No cierra ninguno: cada prueba **documenta** el defecto y lo cerrará la iteración que lo corrija.
 - **Cambio de esquema:** Ninguno
 - **Respaldo previo al despliegue:** No (no despliega nada: solo agrega pruebas)
 
@@ -47,12 +47,20 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 | R13 | AUD-02-005 | Convertir dos veces la misma cotización crea **un** pedido y rechaza la segunda | Crea dos pedidos | 03-03 |
 | R14 | AUD-02-001 | Eliminar un cliente con pedidos no borra su historial (se rechaza con `ProtectedError`) | Borra en cascada pedidos, ítems, pagos y cotizaciones | 04-06 |
 | R15 | AUD-02-025 | Un pago de $29 sobre un pedido de $100 da `porcentaje_pagado == 29` (cálculo con enteros) | Da 28: divide con `float` y trunca (decisión del desarrollador, 2026-10-26, tras la 02-02) | 06-05 |
+| R18 | AUD-02-027 | Convertir una cotización con `fecha_entrega` vacía **no** responde 500: rechaza la petición sin crear el pedido | Por lectura del código: el guardado del `DateField` falla y el decorador responde 500 (decisión del desarrollador, 2026-10-27, tras la 02-03) | 03-04 (propuesta) |
+| R19 | AUD-02-028 | El pedido duplicado queda con `creado_por` igual al usuario que lo duplicó | `creado_por` queda nulo (decisión del desarrollador, 2026-10-27, tras la 02-03) | `PENDIENTE_DESARROLLADOR` (04-01 o 03-03) |
 
-R6 se escribe como tres pruebas (una por ruta); R10 a R12 y R15, una cada una. El total previsto es de 17 (16 al redactar, más R15 agregada el 2026-10-26). La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
+R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18 y R19, una cada una. El total previsto es de **19** (16 al redactar, más R15 agregada el 2026-10-26, más R18 y R19 agregadas el 2026-10-27). Los números R16 y R17 no tienen fila: R16 queda reservado para AUD-02-021 (decisión 2) y R17 sin asignar; R18 y R19 se numeraron así por decisión del desarrollador, sin renumerar las anteriores. La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
+
+**Condiciones propias de R18 y R19:**
+
+- **R18:** al ejecutarla sin la marca, el fallo debe ser el motivo descrito (respuesta 500 o excepción por la fecha vacía), no un error de montaje. Si resulta `unexpected success`, la hipótesis era falsa: se reporta en la bitácora, no se registra como defecto y se propone retirar AUD-02-027.
+- **R19:** debe fallar porque `creado_por` es nulo, no por otro motivo. No decide qué se copia al duplicar: esa pregunta del cliente (ítems y pagos) sigue abierta en `registro-pendientes.md`, sección 2.
 
 ## Tareas
 
-1. **Orden de trabajo:** R15, R13 y R14 (simples) → R7 y R6 → R10 a R12 → R5 → R8 y R9 → R1 a R4. Cada regresión sigue el procedimiento de arriba.
+0. **Limpieza previa:** unificar `congelar_hora` (hoy duplicada en `test_dinero.py` y `ayudas.py`) en un solo lugar, sin cambiar el comportamiento de ninguna prueba. Agregada el 2026-10-27; se ejecuta al empezar la 02-04, no antes.
+1. **Orden de trabajo:** R15, R19, R13 y R14 (simples) → R18 → R7 y R6 → R10 a R12 → R5 → R8 y R9 → R1 a R4. Cada regresión sigue el procedimiento de arriba.
 2. **Cálculo de referencia de `estado_pago`:** una función de pruebas que devuelve `PAGADO`, `PARCIAL` o `PENDIENTE` según la regla de `scripts/diagnostico/linea_base.sql` (`PAGADO` si `valor_venta - pagos <= 0`; `PARCIAL` si hay pagos; `PENDIENTE` si no). Sirve de oráculo para R10 a R12 y se prueba por separado.
 3. **Hora fija de R8 y R9:** 22:00 de Chile en octubre es 01:00 UTC del día siguiente (Chile está en UTC−3). El agente verifica `TIME_ZONE` y `USE_TZ` en `settings.py` y parchea `django.utils.timezone.now` para que el reloj de las vistas devuelva ese instante. Los modelos con `default=timezone.now` no se ven afectados por el parche.
 4. **Ruido de registro:** R1 a R4, R7 y R14 provocan errores que se registran; se absorben con `assertLogs`.
@@ -61,7 +69,7 @@ R6 se escribe como tres pruebas (una por ruta); R10 a R12 y R15, una cada una. E
 
 ## Criterios de aceptación
 
-- [ ] Existe una regresión por cada fila de la tabla (R1 a R15), con `@tag('regresion')`, `@unittest.expectedFailure` y su comentario.
+- [ ] Existe una regresión por cada fila de la tabla (R1 a R15, R18 y R19), con `@tag('regresion')`, `@unittest.expectedFailure` y su comentario.
 - [ ] La bitácora muestra, para cada una, el fallo real sin la marca y que su causa es el defecto descrito.
 - [ ] **Tres ejecuciones seguidas** de `python manage.py test pedidos` dan el mismo resultado: todo en verde salvo `expected failures=N`, sin `unexpected successes` y sin errores.
 - [ ] `python manage.py test pedidos --exclude-tag regresion` queda en verde.
