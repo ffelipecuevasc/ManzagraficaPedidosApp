@@ -210,15 +210,3 @@ El diff no toca `models.py`, `views.py`, `forms.py`, `utils.py` ni ningún otro 
 ## Commit sugerido
 
 `Épica 2 - Iteración 02-02: fija con 23 pruebas de caracterización el IVA, los saldos, el abono inicial y las cifras del panel frente a un oráculo, sin tocar el código de la aplicación` (183 caracteres)
-
-## Decisiones tomadas tras la revisión
-
-Decisiones del desarrollador del 2026-10-26, después de entregar esta bitácora.
-
-- **H1 → AUD-02-025** (Baja). Se suma a la 02-04 como regresión R15, que afirma 29 %; recuento previsto de la 02-04: 17. Iteración que lo corrige: `PENDIENTE_DESARROLLADOR`, propuesta 06-05.
-- **H2 → AUD-02-026** (Baja). Solo auditoría, ligado al dato `PENDIENTE_CLIENTE` del pedido de $0; sin regresión hasta que el cliente responda.
-- **D2:** `dashboard` y `estadisticas_pedidos` se mantienen en la 02-02.
-- **AUD-02-014** (valor de la cotización neto o con IVA): lo fija la 02-03 en la conversión de cotización, con `PENDIENTE_CLIENTE`.
-- **IVA con diferencias de $1** (150, 350 y 4.950; 500 valores entre 0 y 100.000): solo anotado (D1), como nota de AUD-02-015 en `auditoria-tecnica.md`.
-- Las notas H1 y H2 salen de la sección 4 de `registro-pendientes.md`; el historial lo registra.
-- Con todos los criterios marcados, la 02-02 queda **Terminada**.

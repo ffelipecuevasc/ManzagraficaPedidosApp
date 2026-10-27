@@ -59,8 +59,11 @@ Paquete `pedidos/tests/`, un archivo por dominio:
 | `test_eventos_negocio.py` | Un evento por operación del inventario y lecturas sin eventos |
 | `test_admin_eventos.py` | Admin de eventos: solo lectura, solo superusuarios, filtros, búsqueda y consultas |
 | `test_dinero.py` | Lógica de dinero: IVA, saldos, ítems, abono inicial y cifras del panel con oráculo (02-02) |
+| `ayudas.py` | Ayudas de los flujos: `items_json`, `cambiar_estado` y `duplicar` (método HTTP actual) y `congelar_hora` (02-03) |
+| `test_pedidos.py` | Flujos de pedidos y pagos: crear, editar, cambiar estado, duplicar, clasificación, detalle, ingresar y editar pago (02-03) |
+| `test_cotizaciones.py` | Flujos de cotizaciones: crear, editar y convertir en pedido (02-03) |
 
-Las iteraciones siguientes agregan los archivos que necesiten (por ejemplo `test_pedidos.py`, `test_cotizaciones.py`, `test_regresiones.py`, `test_acceso.py`). No se crean archivos vacíos.
+Las iteraciones siguientes agregan los archivos que necesiten (por ejemplo `test_regresiones.py`, `test_acceso.py`). No se crean archivos vacíos.
 
 ## 6. Datos de prueba
 
@@ -116,3 +119,25 @@ Pruebas de caracterización de la iteración 02-02, en `pedidos/tests/test_diner
 | Estadísticas de pedidos | Coinciden con el cálculo ingenuo | `EstadisticasPedidosOraculoTests` | No |
 
 Las pruebas del panel congelan la hora con `mock.patch('django.utils.timezone.now')` al mediodía de Chile del 2026-10-15 (decisión D3) y apuntan `BASE_DIR` a una carpeta temporal vacía, porque `dashboard` lista los `.sql` de `backups/`. Los bordes de día y de mes en UTC (AUD-02-003) quedan para la 02-04.
+
+## 9. Flujos fijados
+
+Pruebas de caracterización de la iteración 02-03, en `test_pedidos.py` y `test_cotizaciones.py`: recorren la URL, la vista, el formulario y la base, y fijan lo que pasa **hoy**. Los caminos de fallo y los defectos conocidos son regresiones de la 02-04.
+
+**Columna «GET»:** la prueba depende de que la ruta escriba con GET. Pasa por `ayudas.cambiar_estado` o `ayudas.duplicar`; la 04-01 cambia esas dos funciones a POST y revisa las pruebas marcadas.
+
+| Flujo | Prueba (clase) | Qué comprueba | GET | `PENDIENTE_CLIENTE` |
+| :---- | :------------- | :------------ | :-: | :------------------ |
+| Ayudas | `AyudasTests` | Formato de `items_json`, rutas de cambiar estado y duplicar, hora congelada | Sí (2 de 4) | — |
+| Crear pedido | `CrearPedidoTests` | Formulario 200; POST válido redirige al detalle; `creado_por`, estado `PENDIENTE`, ítems con cantidad `Decimal`; precio del ítem congelado al cambiar el producto; el precio lo envía el navegador; abono crea un `Pago` (método enviado o `EFECTIVO`, nota, quién lo registró); sin abono, sin pagos; sin `items_json`, sin ítems; formulario inválido no crea nada; evento `pedido_creado` | No | — |
+| Editar pedido | `EditarPedidoTests` | Ítems precargados; cambia campos y `valor_venta`; reemplaza los ítems; sin `items_json` conserva los ítems; evento `pedido_modificado` | No | — |
+| Cambiar estado | `CambiarEstadoTests` | Las 16 combinaciones de estado se aceptan (avanzar, retroceder, saltar); estado inexistente redirige sin cambio ni evento; pedido inexistente 404; no toca `estado_pago` | Sí (3 de 4) | — |
+| Duplicar pedido | `DuplicarPedidoTests` | Copia cliente, resumen, detalles, valor, fecha de entrega y la ruta de la imagen; redirige al nuevo; estado y `estado_pago` `PENDIENTE`; no copia `creado_por`, pagos ni ítems; fecha de solicitud actual; evento `pedido_duplicado`. `MEDIA_ROOT` temporal | Sí | Sí (ítems al duplicar) |
+| Clasificación | `ClasificacionTests` | Trabajo semanal y panel con 16 pedidos (4 estados × 4 fechas) a mediodía de Chile: activos = no `TERMINADO`; crítico, urgente, normal; sin fecha fuera de las categorías pero dentro del total (presión 50 %) | No | Sí (`ENTREGADO` atrasado, sin fecha; AUD-02-013) |
+| Detalle de pedido | `DetallePedidoTests` | 200 con el pedido y sin eventos; 404 si no existe | No | — |
+| Pagos | `PagosTests` | Ingresar desde el pedido sugiere el saldo; ingresar redirige a la lista y deja `PARCIAL` o `PAGADO`; editar recalcula `estado_pago` y redirige al detalle; eventos `pago_registrado` y `pago_modificado` | No | — |
+| Crear cotización | `CrearCotizacionTests` | Formulario 200 con la fecha de hoy; POST válido crea en `BORRADOR` con sus ítems; vencimiento = emisión + validez; sin evento | No | — |
+| Editar cotización | `EditarCotizacionTests` | Cambia campos y reemplaza ítems; una `ACEPTADA` redirige al detalle sin cambios, por GET y por POST | No | — |
+| Convertir cotización | `ConvertirCotizacionTests` | Entrega sugerida a 7 días; copia cliente, resumen, detalles, ítems; fecha de entrega del POST; `creado_por`; cotización `ACEPTADA`; `valor_venta` = `valor_total` sin IVA; abono: sin abono, parcial (método `TRANSFERENCIA` por defecto), total, no numérico y negativo (sin pago) y su `estado_pago`; evento `cotizacion_convertida` | No | Sí (valor neto o con IVA; AUD-02-014) |
+
+Ninguna prueba escribe en el `media/` real ni ejecuta `mysql` o `mysqldump`.

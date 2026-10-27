@@ -46,7 +46,7 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 | R12 | AUD-02-004 | Editar un pago que cambia de pedido recalcula **ambos** pedidos | No recalcula el pedido anterior | 03-03 |
 | R13 | AUD-02-005 | Convertir dos veces la misma cotización crea **un** pedido y rechaza la segunda | Crea dos pedidos | 03-03 |
 | R14 | AUD-02-001 | Eliminar un cliente con pedidos no borra su historial (se rechaza con `ProtectedError`) | Borra en cascada pedidos, ítems, pagos y cotizaciones | 04-06 |
-| R15 | AUD-02-025 | Un pago de $29 sobre un pedido de $100 da `porcentaje_pagado == 29` (cálculo con enteros) | Da 28: divide con `float` y trunca (decisión del desarrollador, 2026-10-26, tras la 02-02) | `PENDIENTE_DESARROLLADOR` (propuesta: 06-05) |
+| R15 | AUD-02-025 | Un pago de $29 sobre un pedido de $100 da `porcentaje_pagado == 29` (cálculo con enteros) | Da 28: divide con `float` y trunca (decisión del desarrollador, 2026-10-26, tras la 02-02) | 06-05 |
 
 R6 se escribe como tres pruebas (una por ruta); R10 a R12 y R15, una cada una. El total previsto es de 17 (16 al redactar, más R15 agregada el 2026-10-26). La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
 

@@ -1,7 +1,7 @@
 # Iteración 02-03 · Pruebas de flujos críticos
 
 - **Épica:** 02 · Red de seguridad
-- **Estado:** Redactada, sin ejecutar
+- **Estado:** En revisión (ejecutada el 2026-10-26; [bitacora-02-03](../../99_bitacora/epica-02-red-seguridad/bitacora-02-03.md))
 - **Subfase del plan:** 2.3
 - **Depende de:** 02-01 (la 02-02 no es requisito, pero conviene haberla hecho para reutilizar sus factorías)
 - **RDA relacionadas:** RDA-006
@@ -40,14 +40,14 @@ Los fallos de estos flujos (ítems perdidos, doble conversión, escrituras por G
 
 ## Criterios de aceptación
 
-- [ ] Existen `test_pedidos.py` y `test_cotizaciones.py` en `pedidos/tests/`, más el módulo de ayudas, con pruebas por cada tarea 2 a 8.
-- [ ] El precio histórico del ítem se comprueba como congelado.
-- [ ] Cada regla sin confirmar (ítems al duplicar, `ENTREGADO` atrasado, pedidos sin fecha, valor de la cotización) tiene su comentario `PENDIENTE_CLIENTE` y figura en `registro-pendientes.md`.
-- [ ] Las pruebas que dependen de que `cambiar_estado` o `duplicar_pedido` usen GET lo declaran en un comentario y pasan por la ayuda de la tarea 1.
-- [ ] Ninguna prueba escribe fuera de la base de pruebas ni en el `media/` real; ninguna ejecuta `mysql` ni `mysqldump`.
-- [ ] `python manage.py test pedidos` en verde (más las nuevas) en tres ejecuciones seguidas; `check` sin errores; `makemigrations --check --dry-run` sin cambios.
-- [ ] El diff no toca código de la aplicación.
-- [ ] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas.
+- [x] Existen `test_pedidos.py` y `test_cotizaciones.py` en `pedidos/tests/`, más el módulo de ayudas, con pruebas por cada tarea 2 a 8.
+- [x] El precio histórico del ítem se comprueba como congelado.
+- [x] Cada regla sin confirmar (ítems al duplicar, `ENTREGADO` atrasado, pedidos sin fecha, valor de la cotización) tiene su comentario `PENDIENTE_CLIENTE` y figura en `registro-pendientes.md`.
+- [x] Las pruebas que dependen de que `cambiar_estado` o `duplicar_pedido` usen GET lo declaran en un comentario y pasan por la ayuda de la tarea 1.
+- [x] Ninguna prueba escribe fuera de la base de pruebas ni en el `media/` real; ninguna ejecuta `mysql` ni `mysqldump`.
+- [x] `python manage.py test pedidos` en verde (más las nuevas) en tres ejecuciones seguidas; `check` sin errores; `makemigrations --check --dry-run` sin cambios.
+- [x] El diff no toca código de la aplicación.
+- [x] Las decisiones `PENDIENTE_DESARROLLADOR` quedaron resueltas y registradas.
 
 ## Fuera de alcance
 
@@ -57,9 +57,11 @@ Los fallos de estos flujos (ítems perdidos, doble conversión, escrituras por G
 
 ## Decisiones del desarrollador
 
-1. **Flujos de pagos** (`ingresar_pago`, `editar_pago`): el plan no los lista, pero mueven dinero. Propuesta: incluir el camino feliz de registrar y editar un pago, sin tocar `eliminar_pago` (regresión en 02-04). `PENDIENTE_DESARROLLADOR`.
-2. **Pantallas de lectura** (detalle y listado de pedidos con filtros y paginación): propuesta, solo el detalle, porque lo usan las redirecciones. `PENDIENTE_DESARROLLADOR`.
-3. **Transiciones de estado:** si la vista hoy permite cualquier cambio, se fija así y se anota; no se decide aquí qué transiciones deberían existir. `PENDIENTE_DESARROLLADOR` solo si el agente encuentra reglas que contradigan el plan.
+Resueltas por el desarrollador el 2026-10-26:
+
+1. **D1 · Pagos:** solo el camino feliz de `ingresar_pago` y `editar_pago`. `eliminar_pago` queda fuera (regresión de la 02-04).
+2. **D2 · Lectura:** solo el detalle del pedido. No se prueban el listado, los filtros ni la paginación.
+3. **D3 · Transiciones de estado:** si la vista permite cualquier cambio, se fija así y se anota; no se decide qué transiciones deberían existir. Resultado: `cambiar_estado_pedido` acepta cualquier estado de `ESTADO_CHOICES` desde cualquier otro; no se encontraron reglas que contradigan el plan.
 
 ## Datos requeridos del cliente
 
