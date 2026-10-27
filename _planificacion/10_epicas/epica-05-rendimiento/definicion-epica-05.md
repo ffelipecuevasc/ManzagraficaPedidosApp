@@ -12,7 +12,8 @@
 2. **Arranque en frío (05-01):** confirmar el efecto de 00-06, diferir otras importaciones pesadas y documentar el límite que impone la hibernación.
 3. **Consultas por fila (05-02):** pasar `total_pagado_real`, `saldo_pendiente` y `porcentaje_pagado` a anotaciones en listados, detalle de pedido, trabajo semanal, detalle de pago y panel financiero, midiendo consultas antes y después con una herramienta de diagnóstico de consultas en local.
 4. **Índices (05-03):** justificados uno por uno con una consulta concreta (Clase 2), ensayados en la réplica.
-5. **Medición final (05-06):** repetir la medición de 05-00 con el mismo método y comparar, más dos semanas del registro del servidor.
+5. **Costo de una recarga (05-00, AUD-04-002 y AUD-04-005, agregado el 2026-10-27):** documentar con el registro de uWSGI el costo de recargar la aplicación (unos 10 s de 502 y un arranque de unos 8 s medidos el 2026-10-27) como cifra de referencia de la medición inicial y del arranque en frío (05-01).
+6. **Medición final (05-06):** repetir la medición de 05-00 con el mismo método y comparar, más dos semanas del registro del servidor.
 
 ## Iteraciones
 
@@ -23,6 +24,11 @@
 | 05-02 | Consultas por fila en plantillas | 5.2 | 3.º |
 | 05-03 | Índices de base de datos | 5.3 | 4.º |
 | 05-06 | Medición final del servidor | Segunda mitad de la subfase 5.6 | 5.º |
+
+## Para la redacción de 05-00
+
+- **Costo de una recarga (AUD-04-002, AUD-04-005):** 502 durante unos 10 s y primera respuesta de 5,6 a 9 s tras las recargas del 2026-10-27 (14:35 y 14:42); el resto del día, de 0,03 a 1,13 s. Medirlo con el mismo método y dejarlo en la línea base.
+- La medición de «Nuevo pedido» en el navegador no va aquí: según la decisión del 2026-10-27 de esta épica, las métricas del navegador las mide la 08-01.
 
 Los números 05-04 y 05-05 no se usan: la compilación local de estilos (antes 05-04) y la consolidación de recursos externos (antes 05-05) pasaron a la Épica 08. Se dejan libres para que las referencias antiguas a 05-04 y 05-05 no apunten a otra cosa (RDA-014).
 
@@ -40,3 +46,4 @@ Los números 05-04 y 05-05 no se usan: la compilación local de estilos (antes 0
 ## Notas
 
 - **2026-10-27 (reorganización, RDA-014):** la épica pasa a llamarse «Rendimiento del servidor». La compilación de Tailwind (RDA-010, AUD-02-017, AUD-02-018) y los recursos externos (AUD-01-010) pasan a la Épica 08, que los atiende junto con la reorganización de estáticos y plantillas pedida por el desarrollador.
+- **2026-10-27 (Auditoría 04):** se suma a la 05-00 el costo de una recarga (AUD-04-002, AUD-04-005). La medición de «Nuevo pedido» en el navegador (P1) se deriva a la 08-01 para no contradecir la decisión de la épica sobre las métricas del navegador.

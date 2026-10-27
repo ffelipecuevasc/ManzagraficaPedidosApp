@@ -30,6 +30,15 @@ Node.js y pnpm se usan **solo en la máquina del desarrollador** para compilar e
    - `pedidos/static/pedidos/js/index.js` se revisa y se ordena por página.
 8. **Política de seguridad de contenido estricta (08-08):** sin CDN, `SECURE_CSP` reemplaza al modo observación de la 04-09, con `nonce` para los scripts en línea que queden.
 9. **Medición final del navegador (08-09):** repetir 08-01 y comparar.
+10. **Hallazgos de producción del 2026-10-27:** medir «Nuevo pedido» en el navegador (peso, librerías externas, tiempo total) en la 08-01 (AUD-04-005); indicador de carga y confirmación visible en todos los envíos en la 08-07 (AUD-04-001); librerías locales con SRI mientras existan, en la 08-07 (AUD-03-005, que también explica parte de P1).
+
+## Para la redacción de 08-01
+
+- Sumar «Nuevo pedido» a las vistas medidas: peso transferido, librerías externas cargadas y tiempo total hasta que la página es usable (AUD-04-005, P1). El cliente percibe «unos 10 s» y el servidor solo lo explica tras las recargas.
+
+## Para la redacción de 08-07
+
+- **Indicador de carga y confirmación visible** en todos los envíos de formularios (AUD-04-001), coherente con el bloqueo de la 00-07 y de la 03-04.
 
 ## Iteraciones
 
@@ -69,3 +78,4 @@ Node.js y pnpm se usan **solo en la máquina del desarrollador** para compilar e
 ## Notas
 
 - **2026-10-27 (reorganización, RDA-014):** creada a pedido del desarrollador. Absorbe la compilación de estilos (antes 05-04), los recursos externos (antes 05-05) y las métricas del navegador de la antigua 05-06. `docs/operacion/despliegue.md` menciona la 05-04: se lee como 08-05.
+- **2026-10-27 (Auditoría 04):** se suman «Nuevo pedido» a la 08-01 (AUD-04-005) y el indicador de carga a la 08-07 (AUD-04-001). La medición del navegador se trajo aquí desde la propuesta para la 05-00, porque la Épica 05 deja esas métricas a esta épica.

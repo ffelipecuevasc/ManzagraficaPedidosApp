@@ -17,6 +17,8 @@
 7. **Defensa contra inyección** (nuevo, AUD-03-001): el HTML que guarda Summernote en `pedido.detalles_pedido`, `cotizacion.detalles` y `producto.descripcion` se imprime con `|safe` sin limpiar (XSS almacenado). Se sanitiza con una lista blanca de etiquetas y atributos. Hoy solo escribe un usuario de confianza, pero la Épica 09 agrega operadores y un operador no debe poder ejecutar código en la sesión de un superusuario: **esta iteración es requisito de la 09**. Se documenta además la revisión de inyección SQL: la única consulta directa (`pedidos/utils.py`, `connection.cursor()`) usa parámetros y el resto pasa por el ORM; la iteración deja una prueba o una regla que impida introducir SQL armado con texto.
 8. **Protección del acceso y límites de entrada** (nuevo, AUD-03-004): límite de intentos fallidos de acceso por usuario y por dirección (fuerza bruta), con evento registrado, en las dos entradas que existen hoy: `accounts/login/` y el acceso del admin de Django; límites de tamaño para las subidas (`DATA_UPLOAD_MAX_MEMORY_SIZE`, `FILE_UPLOAD_MAX_MEMORY_SIZE` y validación del tamaño de las imágenes de referencia).
 9. **Política de seguridad de contenido en observación** (nuevo): `ContentSecurityPolicyMiddleware` de Django 6.0 en modo `SECURE_CSP_REPORT_ONLY`, para conocer qué recursos carga la aplicación sin bloquear nada mientras existan los CDN. El modo estricto (`SECURE_CSP`) se activa en la Épica 08, cuando ya no haya recursos externos.
+10. **Datos personales en los registros de la plataforma** (AUD-04-003, agregado el 2026-10-27): decidir entre búsqueda por POST o riesgo aceptado documentado (`PENDIENTE_DESARROLLADOR`).
+11. **Credenciales del panel de PythonAnywhere** (AUD-04-002, agregado el 2026-10-27): en la 04-03, quién tiene acceso al panel; el procedimiento operativo va en la Épica 13.
 
 ## Iteraciones
 
@@ -31,6 +33,18 @@
 | 04-07 | Sanitización del HTML enriquecido y revisión de inyección SQL | Nueva (Auditoría 03) |
 | 04-08 | Protección del acceso y límites de entrada | Nueva (Auditoría 03) |
 | 04-09 | Política de seguridad de contenido en observación | Nueva (reorganización 2026-10-27) |
+
+## Para la redacción de 04-01
+
+- **AUD-03-002, evidencia nueva (2026-10-27):** `Broken pipe` el 2026-10-25 en `/base_datos/respaldar_bd/accion/`, consistente con la recarga a los 2 s. El destino sigue en esta iteración.
+
+## Para la redacción de 04-03
+
+- **Acceso al panel de PythonAnywhere (AUD-04-002):** el cliente tiene acceso al panel y recargó la aplicación dos veces el 2026-10-27. El procedimiento (quién recarga o despliega) vive en la Épica 13 (13-02); aquí se revisa quién tiene las credenciales del panel y si se comparten.
+
+## Para la iteración que se defina · datos personales en los registros (AUD-04-003)
+
+- La cadena de consulta `?busqueda=` (teléfonos y nombres de clientes) queda en `access.log` y en las líneas de petición de uWSGI en `server.log`. El registro propio de la aplicación ya la excluye (`request.path`). Opciones: búsqueda por POST o riesgo aceptado documentado. `PENDIENTE_DESARROLLADOR`.
 
 ## Decisiones de la épica
 
@@ -63,3 +77,4 @@
 - **2026-10-26, asignado a 04-04 por decisión del desarrollador · AUD-02-024:** el respaldo de emergencia que genera la restauración se guarda en `backups/` del servidor, en el mismo disco de 512 MiB que la base, sin enlace de descarga, y la rotación de cinco archivos puede borrarlo. Hallazgo hermano de AUD-02-019 y del `.sql` vacío. Solo registrado, sin corrección propuesta.
 - **2026-10-27 (reorganización, RDA-014):** se suman las iteraciones 04-07 (AUD-03-001), 04-08 (AUD-03-004) y 04-09, y AUD-03-002 a la 04-01, a pedido del desarrollador de atender la seguridad (inyección, XSS, ataques de acceso). La épica conserva su número y su lugar, después de la 03.
 - **2026-10-27 (02-05, decisión del desarrollador, sin ID nuevo) · Respuestas de rechazo:** sin sesión, los puntos JSON `api/cliente/nuevo/` y `api/producto/nuevo/` responden 302 al acceso en HTML, no un JSON de error ni 401; un usuario autenticado que no es superusuario recibe 302 al acceso, no 403, en las cuatro vistas de la base de datos (`user_passes_test`). Comportamiento fijado en `test_acceso.PuntosJsonTests` y `test_acceso.BaseDeDatosPermisosTests`: si la Épica 04 lo cambia, actualiza esas pruebas en la misma iteración y el contrato de `index.js` (`AGENTS.md`, sección 9). Además, AUD-02-030: decidir si se desactivan la recuperación de contraseña y el acceso propio del panel de administración.
+- **2026-10-27 (Auditoría 04):** se suman AUD-04-003 (datos personales en la cadena de consulta, `PENDIENTE_DESARROLLADOR`, sin iteración asignada), una nota de AUD-04-002 para la 04-03 y la evidencia nueva de AUD-03-002 para la 04-01.

@@ -1,6 +1,6 @@
 # Épica 00 · Blindaje y punto de retorno
 
-- **Estado:** Cerrada (2026-10-25)
+- **Estado:** Reabierta el 2026-10-27 solo para la 00-07 (cerrada el 2026-10-25 con 00-01 a 00-06)
 - **Fase del plan:** 0 (`plan-de-trabajo.md`, «FASE 0»)
 - **Objetivo:** construir la infraestructura que hace reversible todo lo demás. Al terminar, el desarrollador puede afirmar sin dudar: «si el próximo despliegue sale mal, vuelvo al estado anterior en menos de quince minutos, sin perder datos».
 - **Precondición:** ninguna.
@@ -13,6 +13,7 @@
 4. Un repositorio sin configuración del IDE ni credenciales, con plantilla de variables de entorno y dependencias legibles.
 5. Procedimientos de despliegue y de retroceso, con el retroceso ensayado.
 6. Un despliegue temprano y aislado con cuatro correcciones de riesgo nulo.
+7. Un segundo despliegue temprano y aislado: desactivar `btn-confirmar-pedido` al primer envío de «Nuevo pedido» (00-07, AUD-04-001). El lado del servidor, los demás formularios y la regresión R21 siguen en la 03-04.
 
 Esta épica no corrige defectos de lógica de negocio: los mide y deja la red de seguridad para corregirlos después.
 
@@ -30,6 +31,7 @@ El agente no accede a producción (`AGENTS.md`, sección 6). En esta épica eso 
 | 00-04 | Higiene del repositorio (Terminada) | 0.4 |
 | 00-05 | Protocolo de versionado, despliegue y retroceso (Terminada) | 0.5 |
 | 00-06 | Correcciones tempranas de riesgo nulo (Terminada) | 0.6 |
+| 00-07 | Correcciones tempranas II (Pendiente; creada el 2026-10-27) | 0.6 (continuación) |
 
 ## Decisiones de la épica
 
@@ -62,3 +64,7 @@ La épica se cerró por decisión del desarrollador con la evidencia C1 de la 00
 - **`favicon.ico`:** 404 en producción; hallazgo menor registrado en `registro-pendientes.md`, sección 4.
 - **Propuesta para la Épica 04:** redirigir al panel desde el acceso cuando ya hay sesión.
 - **`AGENTS.md`, sección 5:** la propuesta del comando del contenedor (bitacora-00-03) sigue pendiente de edición del desarrollador.
+
+## Notas
+
+- **2026-10-27 · Reapertura para la 00-07 (decisión del desarrollador).** Los registros de producción del 2026-10-27 verificaron un pedido duplicado por doble clic (AUD-04-001, Auditoría 04). Se crea la 00-07 con una sola corrección del lado del cliente y despliegue propio, y la épica se reabre solo para ella. La 00-06 y su bitácora no cambian. Los criterios de término de arriba siguen cumplidos; la épica se vuelve a cerrar cuando la 00-07 termine.

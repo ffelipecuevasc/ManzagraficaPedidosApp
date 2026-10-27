@@ -17,7 +17,7 @@
 
    Se retira la invocación desde el panel y desde las estadísticas de la base. La tarea se crea en la pestaña **Tasks** de PythonAnywhere: la cuenta conserva **una tarea diaria** porque es anterior al 2026-01-15, con la hora en UTC, y **la tarea gratuita se detiene cada cuatro semanas si no se renueva** desde el correo de aviso (la renovación es rutina de la 13-01). El desarrollador crea y renueva la tarea; el agente prepara el comando exacto en un archivo de evidencia.
 3. **Gestión del disco (06-03):** retención de registros, rotación de volcados **por antigüedad** y no por cantidad, que nunca borre un respaldo del día 1 o del 15 reciente (AUD-02-019), umbral de espacio libre con evento y crecimiento de `media/referencias/`. La rotación que hoy borra respaldos es código propio (`limpiar_backups_antiguos` en `pedidos/utils.py`, conserva cinco), no una política de PythonAnywhere.
-4. **Rediseño del módulo de base de datos (06-04):** con los datos confiables que deja la orden diaria, la pantalla de estadísticas muestra lo que sirve para decidir (AUD-03-003): uso del disco frente a los 512 MiB, antigüedad del último respaldo con alerta si supera los 16 días, filas por tabla de negocio y crecimiento mensual. La pantalla de respaldos lista cada `.sql` del servidor con su enlace de descarga (complementa AUD-02-024) e indica cuáles generó la tarea programada. El gráfico sigue siendo SVG calculado en el servidor, sin librerías nuevas; si la Épica 08 adopta una librería de gráficos, se migra allí.
+4. **Rediseño del módulo de base de datos (06-04):** con los datos confiables que deja la orden diaria, la pantalla de estadísticas muestra lo que sirve para decidir (AUD-03-003): uso del disco frente a los 512 MiB, antigüedad del último respaldo con alerta si supera los 16 días, filas por tabla de negocio y crecimiento mensual. Incluye una **consulta de solo lectura que detecta pedidos duplicados históricos** (mismo cliente y datos, creados con segundos de diferencia; AUD-04-001, agregado el 2026-10-27), sin borrar nada. La pantalla de respaldos lista cada `.sql` del servidor con su enlace de descarga (complementa AUD-02-024) e indica cuáles generó la tarea programada. El gráfico sigue siendo SVG calculado en el servidor, sin librerías nuevas; si la Épica 08 adopta una librería de gráficos, se migra allí.
 
 ## Iteraciones
 
@@ -27,6 +27,11 @@
 | 06-02 | Orden de mantención diaria y tarea programada | 6.2, con el respaldo de los días 1 y 15 |
 | 06-03 | Gestión del disco | 6.3 |
 | 06-04 | Rediseño del módulo de base de datos | Nueva (reorganización 2026-10-27, AUD-03-003) |
+
+## Para la redacción de 06-04
+
+- **Duplicados históricos (AUD-04-001):** consulta de solo lectura, ensayada en la réplica, que cuenta pedidos con el mismo cliente y contenido creados con pocos segundos de diferencia. Responde la pregunta abierta «¿hubo duplicados en días anteriores?». El criterio exacto de «duplicado» y qué se hace con los encontrados: `PENDIENTE_DESARROLLADOR` (y la confirmación del cliente antes de borrar cualquier pedido). La evidencia registra conteos, nunca datos de clientes.
+- **AUD-03-002:** la corrección de la descarga sigue en la 04-01 (ver «Fuera de alcance»); aquí solo se lista y descarga cada `.sql`.
 
 ## Decisiones de la épica
 
@@ -55,3 +60,4 @@
 
 - **2026-10-27 (reorganización, RDA-014):** la antigua «Épica 06 · Arquitectura y automatización» se separa en dos. Esta conserva el número y las subfases 6.1 a 6.3 (sus iteraciones conservan los números 06-01 a 06-03). La modularización, la capa de servicios y la deuda menor pasan a la Épica 07 (antes 06-04, 06-05 y 06-06). La carpeta cambia de `epica-06-arquitectura-automatizacion` a `epica-06-mantencion-respaldos`.
 - **2026-10-27 · Unificar `estado_pago`** exige Clase 3: sigue como deuda diferida, ahora en la 13-05 (antes 07-05).
+- **2026-10-27 (Auditoría 04):** se suma a la 06-04 la consulta de duplicados históricos (AUD-04-001). La recarga del respaldo (P8, AUD-03-002) sigue en la 04-01, como dice «Fuera de alcance».

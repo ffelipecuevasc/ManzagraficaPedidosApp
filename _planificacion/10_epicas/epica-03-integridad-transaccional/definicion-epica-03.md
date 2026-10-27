@@ -19,6 +19,17 @@
    - **Cómo se informa un error:** el usuario cuenta qué pantalla usaba y a qué hora; con eso, el desarrollador encuentra la traza en `server.log` filtrando por ruta y hora (`docs/operacion/`). Ningún mensaje muestra `str(e)`, rutas del servidor ni salidas de `mysql` o `mysqldump` (incluye respaldo y restauración, AUD-02-006).
    - **Peor caso a evitar:** que un formulario largo (pedido con muchos ítems) se pierda por un error del sistema. La iteración define cómo se conserva lo ingresado cuando sea posible.
 5. Validación y despliegue con vigilancia intensiva la primera semana, leyendo `server.log`.
+6. **Envío único (AUD-04-001, agregado el 2026-10-27):** token de envío único (idempotencia) en la creación de pedidos, cotizaciones y pagos, para que un envío repetido no cree un segundo registro; bloqueo del botón de envío en todos los formularios de escritura (la 00-07 solo cubre «Nuevo pedido»); regresión **R21** en la 02-04: dos POST idénticos crean un solo pedido.
+
+## Para la redacción de 03-02
+
+- **Evidencia nueva de AUD-02-008 (P3, 2026-10-27):** el cliente reporta que «a veces al guardar sale error y no se guarda». No se reprodujo (ningún POST con 4xx o 5xx ni excepciones de `crear_pedido` en 41 h), pero el `try/except Exception` interno de `crear_pedido` confirma el pedido sin ítems si estos fallan. Al corregirlo, la iteración revisa si existen pedidos sin ítems en la réplica (conteo, sin datos personales).
+
+## Para la redacción de 03-04
+
+- **Envío único (AUD-04-001):** token de envío único en pedido, cotización y pago; definir qué ve el usuario ante un envío repetido (redirigir al registro ya creado o un mensaje fijo). Mecanismo `PENDIENTE_DESARROLLADOR`: sin dependencias nuevas ni tabla nueva si basta la sesión; si exige tabla, Clase 2 con retención.
+- **Bloqueo en todos los formularios de escritura**, con el patrón de la 00-07 y de la 00-06.
+- **Regresión R21** (siguiente número libre; R5, R16 y R17 no se reasignan): dos `POST /pedidos/nuevo/` idénticos crean un solo pedido. Se escribe como fallo esperado antes de corregir y pasa a verde con la corrección.
 
 ## Iteraciones
 
@@ -42,7 +53,9 @@
 - Una operación compuesta que falla a mitad de camino no deja rastro en la base, queda en `server.log` con traza completa y el usuario recibe un mensaje comprensible y sin detalles técnicos.
 - Un error de validación en la creación o edición de un pedido devuelve el formulario con los datos ingresados (prueba automatizada).
 - Una semana de producción sin errores nuevos asociados a las vistas modificadas, según la revisión de `server.log`.
+- R21 pasa de fallo esperado a verde y `access.log` no muestra pedidos duplicados por envío repetido (AUD-04-001).
 
 ## Notas
 
 - **2026-10-27 (reorganización, RDA-014):** se reescribe el contrato de error (punto 4) y el criterio de término, que pedían un identificador de correlación y una «tabla de errores» que RDA-013 descartó. Se explicita la precondición real. La épica conserva su número y sus iteraciones.
+- **2026-10-27 (Auditoría 04):** se suma el punto 6 del alcance (envío único, AUD-04-001, con R21) y las secciones «Para la redacción» de 03-02 (evidencia P3 de AUD-02-008) y 03-04. La corrección temprana del botón de «Nuevo pedido» va antes, en la 00-07.
