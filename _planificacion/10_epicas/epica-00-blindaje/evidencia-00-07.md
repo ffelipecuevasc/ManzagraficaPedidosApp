@@ -6,7 +6,9 @@
 
 > Este archivo existe porque el agente no puede obtener estos datos por su cuenta. Responde solo lo que se pide.
 >
-> **Orden (domingo 2026-11-01, decisión 5):** parte D de la 01-06 → despliegue y validación de `v1.2-capturas` → **parte A** (si no se hizo antes) → **parte B** (etiquetas) → **parte C** (despliegue de `v0.3-doble-envio`) → una semana después, **parte D**. Si `v1.2-capturas` se retrocede, esta iteración se pospone y no se crea `v0.3-doble-envio`.
+> **Orden (domingo 2026-11-01, decisión 5):** parte D de la 01-06 → [evidencia-01-09](../epica-01-observabilidad/evidencia-01-09.md) (incluye crear `v1.2-capturas`, equivalente a B1–B3) → despliegue y validación de `v1.2-capturas` → **B4** → **parte C** → una semana después (2026-11-08), **parte D**. Si `v1.2-capturas` se retrocede, esta iteración se pospone y no se crea `v0.3-doble-envio`. (Corregido el 2026-10-27.)
+>
+> ~~**Orden (domingo 2026-11-01, decisión 5):** parte D de la 01-06 → despliegue y validación de `v1.2-capturas` → **parte A** (si no se hizo antes) → **parte B** (etiquetas) → **parte C** (despliegue de `v0.3-doble-envio`) → una semana después, **parte D**.~~
 
 ## Qué intentó el agente
 
@@ -40,7 +42,9 @@ python manage.py makemigrations --check --dry-run
 
 ## Parte B · Etiquetas (el domingo, después de validar `v1.2-capturas`) **[PC · PowerShell 7]**
 
-> Si `v1.2-capturas` ya se creó y desplegó antes (procedimiento de la 01-09), salta B3 y comprueba en B2 que `v1.2-capturas` es el commit anterior a la 00-07.
+> **B1 a B3 se hacen en la [evidencia-01-09](../epica-01-observabilidad/evidencia-01-09.md) (parte C), antes de desplegar `v1.2-capturas`:** `v1.2-capturas` va sobre `81005df`, el commit anterior a `4560874` (el primero que cambia `pedido_form.html`). El día del despliegue de la 00-07 solo se ejecuta **B4**. B1 a B3 quedan aquí como referencia. (Corregido el 2026-10-27.)
+>
+> ~~Si `v1.2-capturas` ya se creó y desplegó antes (procedimiento de la 01-09), salta B3 y comprueba en B2 que `v1.2-capturas` es el commit anterior a la 00-07.~~
 
 ### B1. Ubicar el último commit anterior a la 00-07
 

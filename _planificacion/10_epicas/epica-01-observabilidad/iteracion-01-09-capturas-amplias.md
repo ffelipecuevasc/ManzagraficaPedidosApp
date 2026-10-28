@@ -8,6 +8,10 @@
 - **Hallazgos relacionados:** AUD-01-002 (`:270`, `:766`, `:810`), AUD-02-006 (`:1128`) y las dos entradas nuevas de la sección 3 de `registro-pendientes.md` (`:1168`, `:1191`). Según la opción elegida, la iteración **avanza** esos hallazgos sin cerrarlos: AUD-01-002 se cierra en 03-02 y AUD-02-006 en 04-01 y 03-04.
 - **Cambio de esquema:** Ninguno.
 - **Respaldo previo al despliegue:** Sí, por decisión del desarrollador (las vistas tocadas son las de respaldo y restauración). La iteración no toca esquema ni datos.
+- **Etiqueta:** `v1.2-capturas` (sobre `81005df`, el commit anterior al primero de la 00-07)
+- **Partida y destino de retroceso:** `v1.1-observabilidad`
+- **Ventana:** domingo 2026-11-01, después de la parte D de la 01-06
+- **Evidencia:** [evidencia-01-09](evidencia-01-09.md)
 
 ## Objetivo
 
@@ -124,6 +128,10 @@ Revisado en `pedidos/utils.py:13-70` y `pedidos/views.py:1075-1111` y en la plan
 - [x] Ninguna de las capturas corregidas muestra `str(e)` ni texto técnico al usuario. Textos fijos aprobados ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
 - [x] Hay una prueba por captura corregida que falla antes de la corrección y pasa con ella. 7 pruebas nuevas ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
 - [x] `python manage.py test pedidos` en `OK`, `check` sin errores, `makemigrations --check`: `No changes detected`. 86 pruebas ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
+- [ ] Respaldo previo descargado y verificado antes del despliegue: `19 de 19`, `VÁLIDO`, código 0, con fila en `respaldo.md` §6 (decisión 6; evidencia-01-09, parte A). Agregado el 2026-10-27.
+- [ ] Desplegada con la etiqueta `v1.2-capturas` sobre `81005df`, sin migraciones, `pip` ni `collectstatic` (evidencia-01-09, partes C y D). Agregado el 2026-10-27.
+- [ ] En producción, un respaldo generado por el camino normal se descarga, sin provocar fallos (decisión 7; evidencia-01-09, parte E2). Agregado el 2026-10-27.
+- [ ] `server.log` sin `nivel=ERROR` nuevos después de la recarga, y las líneas nuevas con los emojis de la 01-07 (evidencia-01-09, parte E3). Agregado el 2026-10-27.
 - [x] El diff no toca transacciones, métodos HTTP, plantillas ni el inventario de eventos. Diff en [bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md). Revisión visual en escritorio y a 360 px hecha por el desarrollador el 2026-10-26.
 
 ## Riesgos
