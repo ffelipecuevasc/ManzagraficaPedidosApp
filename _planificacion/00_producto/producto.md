@@ -39,7 +39,7 @@ Cualquier sección o función adicional se cotiza por separado.
 | Equipo de atención y ventas | Atiende clientes y les escribe por WhatsApp desde la aplicación | Crear cotizaciones y pedidos rápido, encontrar al cliente por nombre o teléfono, registrar el abono en el momento |
 | Equipo de producción | Planifica la semana según fechas de entrega | Ver qué está atrasado, qué vence esta semana y cambiar el estado del pedido sin errores |
 | Dueño o administración | Revisa el estado del negocio y la cobranza | Saldos pendientes confiables, deudas de trabajos terminados, evolución mensual |
-| Superusuario (dueño y desarrollador) | Ignacio, dueño de Manza Gráfica, y el desarrollador, que mantiene el sistema | Todo lo anterior, más el módulo de base de datos (estadísticas, respaldo y restauración), la gestión de usuarios (Épica 09), las automatizaciones (Épica 11), respaldos verificables, diagnóstico de errores sin entrar al servidor y despliegues reversibles |
+| Superusuario (dueño y desarrollador) | El cliente, dueño de Manza Gráfica, y el desarrollador, que mantiene el sistema | Todo lo anterior, más el módulo de base de datos (estadísticas, respaldo y restauración), la gestión de usuarios (Épica 09), las automatizaciones (Épica 11), respaldos verificables, diagnóstico de errores sin entrar al servidor y despliegues reversibles |
 | Operador (Épica 09) | Persona del equipo con cuenta propia | Todo el trabajo diario (clientes, productos, cotizaciones, pedidos, pagos, estadísticas de negocio y trabajo semanal), sin acceso al módulo de base de datos, a la gestión de usuarios ni al admin de Django |
 
 Los roles son dos, superusuario y operador (RDA-017). El número de usuarios y los dispositivos que usan son `PENDIENTE_CLIENTE`.

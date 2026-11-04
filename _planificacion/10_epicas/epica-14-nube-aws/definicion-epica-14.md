@@ -44,7 +44,7 @@
 
 - Biblioteca para hablar con S3: `boto3` (oficial, pero ocupa decenas de MB en un disco de 512 MiB) u otra más liviana: `PENDIENTE_DESARROLLADOR`, se decide en 14-02 midiendo el espacio y con RDA (dependencia nueva). La RDA de la épica también registra el primer servicio externo de la aplicación, que RDA-004 no contemplaba.
 - Región de AWS y retención en el bucket: `PENDIENTE_DESARROLLADOR`, se deciden en 14-01 y 14-02.
-- Quién abre la cuenta y registra el medio de pago (Ignacio, con apoyo del desarrollador): `PENDIENTE_CLIENTE`.
+- Quién abre la cuenta y registra el medio de pago (el cliente, con apoyo del desarrollador): `PENDIENTE_CLIENTE`.
 - **2026-10-27 · Sin aprendizaje automático en la nube (RDA-018).**
 
 ## Fuera de alcance

@@ -2,13 +2,13 @@
 
 - **Estado:** Pendiente
 - **Fase del plan:** no existe en el plan original; anexo del plan del 2026-10-27 (RDA-014)
-- **Objetivo:** enriquecer el tablero «Trabajo Semanal», la pantalla que Ignacio revisa varias veces al día, con funciones que le ahorren pasos y le anticipen problemas.
+- **Objetivo:** enriquecer el tablero «Trabajo Semanal», la pantalla que el cliente revisa varias veces al día, con funciones que le ahorren pasos y le anticipen problemas.
 - **Precondición:** Épicas 07 y 08 completas (selectores reutilizables y parciales), 05-02 terminada (saldos por anotación, sin consultas por fila) y 04-01 desplegada (los cambios de estado son POST).
 - **Última revisión:** 2026-10-27 (creada a pedido del desarrollador).
 
 ## Cómo se define el alcance
 
-Las mejoras las idea y elige **el desarrollador**, sin una entrevista previa con el cliente (decisión del 2026-10-27). El antecedente lo justifica: Ignacio no sabía que necesitaba el tablero hasta que el desarrollador lo implementó y se lo explicó, y hoy es la pantalla que más usa. La primera iteración deja por escrito qué mejoras se construyen, con su comportamiento esperado; cada mejora elegida es después una iteración propia.
+Las mejoras las idea y elige **el desarrollador**, sin una entrevista previa con el cliente (decisión del 2026-10-27). El antecedente lo justifica: el cliente no sabía que necesitaba el tablero hasta que el desarrollador lo implementó y se lo explicó, y hoy es la pantalla que más usa. La primera iteración deja por escrito qué mejoras se construyen, con su comportamiento esperado; cada mejora elegida es después una iteración propia.
 
 ## Qué hace hoy el tablero (medido en el código, `trabajo_semanal` en `pedidos/views.py`, commit `ac70401`)
 
@@ -23,7 +23,7 @@ Las mejoras las idea y elige **el desarrollador**, sin una entrevista previa con
 
 ## Ideas propuestas para que el desarrollador elija (no son compromisos)
 
-| # | Idea | Qué le resuelve a Ignacio |
+| # | Idea | Qué le resuelve al cliente |
 | :- | :--- | :------------------------ |
 | A | **Vista por días:** columnas de lunes a sábado con los pedidos de cada día y su carga | Ver de un vistazo cómo se reparte la semana, no solo el día peak |
 | B | **Cambio de estado desde el tablero** con un formulario POST en cada tarjeta | Marcar avances sin abrir el detalle de cada pedido |

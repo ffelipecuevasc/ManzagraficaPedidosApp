@@ -190,7 +190,7 @@ Cómo se lee: si «sin ítems desde el primero con ítems» es 0, la réplica no
 - [x] `pruebas.md` y la bitácora dicen `expected failures=17`.
 - [x] `python manage.py test pedidos` → `OK (expected failures=17)` en tres ejecuciones, `check` limpio y `makemigrations --check`: `No changes detected`.
 - [x] El conteo P3 está en la bitácora con sus limitaciones declaradas (réplica con su último refresco registrado y la conversión de prueba del 2026-11-04). Ejecutado por el desarrollador el 2026-11-04: 888 pedidos, 126 sin ítems, 38 sin ítems posteriores al primero con ítems, 126 con valor mayor que 0; 27 cotizaciones, 0 sin ítems ([bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md)). Se repite tras el refresco de la réplica (decisión 4), sin bloquear el cierre.
-- [x] Revisión manual a 360 px y en escritorio de la página 500 al fallar un ítem al crear un pedido. Hecha por el desarrollador el 2026-11-04 en la réplica (`DEBUG=False`, `--insecure`): con `items_json` alterado a un `producto_id` inexistente, `POST /pedidos/nuevo/` devolvió 500 y se vio la página 500 de la aplicación en escritorio y a 360 px; traza `DoesNotExist` en `views.py:186` en `django.request`; el último pedido siguió siendo el #910 ([bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md)).
+- [x] Revisión manual a 360 px y en escritorio de la página 500 al fallar un ítem al crear un pedido. Hecha por el desarrollador el 2026-11-04 en la réplica (`DEBUG=False`, `--insecure`): con `items_json` alterado a un `producto_id` inexistente, `POST /pedidos/nuevo/` devolvió 500 y se vio la página 500 de la aplicación en escritorio y a 360 px; traza `DoesNotExist` en `views.py:186` en `django.request`; el último pedido siguió siendo el #910, un pedido de prueba de la réplica con un ítem ([bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md)).
 
 ## Fuera de alcance
 
@@ -235,4 +235,4 @@ Las decisiones 5 y 6 de la redacción (qué ve el usuario mientras tanto y lista
 
 ## Datos requeridos del cliente
 
-- Ninguno. El `PENDIENTE_CLIENTE` (¿se crean pedidos sin ítems a propósito?) se abrió porque el conteo dio más de 0 y se **cerró el 2026-11-04**: el cliente (Ignacio, dicha por él) siempre guarda pedidos con al menos 1 ítem y nunca sin ítems. No cambia el alcance ni agrega validación ([bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md)).
+- Ninguno. El `PENDIENTE_CLIENTE` (¿se crean pedidos sin ítems a propósito?) se abrió porque el conteo dio más de 0 y se **cerró el 2026-11-04**: el cliente (dicha por él) siempre guarda pedidos con al menos 1 ítem y nunca sin ítems. No cambia el alcance ni agrega validación ([bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md)).

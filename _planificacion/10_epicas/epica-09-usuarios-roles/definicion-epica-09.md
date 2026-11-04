@@ -2,7 +2,7 @@
 
 - **Estado:** Pendiente
 - **Fase del plan:** no existe en el plan original; anexo del plan del 2026-10-27 (RDA-014)
-- **Objetivo:** que Ignacio (dueño de Manza Gráfica, superusuario) pueda administrar desde la propia aplicación las cuentas de su equipo, con dos roles: **superusuario** y **operador**. Con varias personas usando el sistema, la tabla de eventos de la Épica 01 pasa a responder de verdad «quién hizo qué».
+- **Objetivo:** que el cliente (dueño de Manza Gráfica, superusuario) pueda administrar desde la propia aplicación las cuentas de su equipo, con dos roles: **superusuario** y **operador**. Con varias personas usando el sistema, la tabla de eventos de la Épica 01 pasa a responder de verdad «quién hizo qué».
 - **Precondición:** 04-07 desplegada (**obligatoria**: sin sanitizar el HTML enriquecido, un operador podría ejecutar código en la sesión de un superusuario, AUD-03-001), 04-08 desplegada (más cuentas, más superficie para fuerza bruta), Épicas 07 y 08 completas (el módulo nace en la estructura nueva y con los parciales) y 02-05 terminada (las pruebas de control de acceso son la red de esta épica).
 - **Última revisión:** 2026-10-27 (creada a pedido del desarrollador).
 
@@ -46,7 +46,7 @@ No se crean grupos, permisos por modelo ni tablas nuevas: con dos roles, el indi
 - **2026-10-27 · Borrado físico con doble confirmación (RDA-017, decisión del desarrollador).** **Consecuencia que se acepta:** `Pedido.creado_por`, `Pago.registrado_por` y `RegistroEvento.usuario` usan `on_delete=SET_NULL`, así que al borrar un usuario esos registros quedan sin autor y su autoría solo sobrevive en el texto del resumen de cada evento. La página de confirmación lo informa antes de borrar.
 - ¿El evento guarda una copia del nombre del usuario en una columna propia (Clase 2), para que la autoría sobreviva al borrado en todos los eventos y no solo en el resumen? `PENDIENTE_DESARROLLADOR`, se decide en 09-03.
 - Respuesta a un operador que entra a una ruta prohibida (403 o redirección): `PENDIENTE_DESARROLLADOR`, se decide en 09-01.
-- El admin de Django sigue disponible solo para superusuarios; el módulo nuevo existe porque el admin no está pensado para el uso diario de Ignacio.
+- El admin de Django sigue disponible solo para superusuarios; el módulo nuevo existe porque el admin no está pensado para el uso diario del cliente.
 
 ## Fuera de alcance
 

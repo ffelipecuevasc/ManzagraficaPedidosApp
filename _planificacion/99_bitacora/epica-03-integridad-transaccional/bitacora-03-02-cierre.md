@@ -38,13 +38,13 @@ Consultas 1 a 3 de la sección «Evidencia P3» de la iteración, ejecutadas por
 - «Sin ítems» **no distingue** un pedido guardado sin ítems a propósito de uno cuyo guardado de ítems falló. Es un indicio, no una medida de fallos.
 - No detecta pedidos con ítems parciales (el caso de R3) ni ediciones que perdieron ítems: solo cuenta los que quedaron sin ninguno.
 - La consulta 3 agrupa por mes en UTC, solo para ubicar los casos en el tiempo.
-- No consta si el conteo se hizo antes o después de crear el pedido de prueba #910 (ver «Revisión manual»). Si fue después y ese pedido quedó sin ítems, estaría dentro del 126 y del 38. `PENDIENTE_DESARROLLADOR`: indicarlo si se recuerda.
+- **Pedido de prueba #910 (resuelto el 2026-11-04, decisión del desarrollador):** tiene un ítem («100 IMANES 7X6 CM», visto por el desarrollador), así que **no está entre los 126 ni entre los 38**, se haya hecho el conteo antes o después de crearlo. Es un pedido de prueba en la réplica; se limpia al refrescarla al cierre de la Épica 03 (ver «Revisión manual»). Cierra el `PENDIENTE_DESARROLLADOR` que esta bitácora había dejado.
 - Se repite tras el refresco de la réplica, al cerrar la Épica 03 (decisión 4 de la iteración, AUD-05-002).
 
 ## Respuesta del cliente
 
 - **Pregunta:** ¿el cliente crea pedidos sin ítems a propósito?
-- **Respuesta (Ignacio, 2026-11-04, dicha por él, transmitida por el desarrollador):** siempre guarda pedidos con al menos 1 ítem y nunca sin ítems.
+- **Respuesta (el cliente, 2026-11-04, dicha por él, transmitida por el desarrollador):** siempre guarda pedidos con al menos 1 ítem y nunca sin ítems.
 - **Efecto:** cierra el `PENDIENTE_CLIENTE` de la iteración (el que solo aplicaba si el conteo era mayor que 0, y lo fue). **No se cambia el alcance ni se agrega validación.**
 - **Observación, sin concluir:** la respuesta y la cifra de 38 pedidos sin ítems posteriores al primero con ítems no coinciden de forma directa. Con lo medido no se sabe cuál es la causa (el conteo no distingue las causas posibles, ver «Límites»). Queda como dato para la 03-03 y la 03-05, no como conclusión.
 
@@ -53,14 +53,14 @@ Consultas 1 a 3 de la sección «Evidencia P3» de la iteración, ejecutadas por
 - **Entorno:** réplica local, `DEBUG=False` y `runserver --insecure`.
 - **Prueba:** con `items_json` alterado para apuntar a un `producto_id` inexistente, `POST /pedidos/nuevo/` devolvió **500**. El desarrollador vio la **página 500 propia de la aplicación**, en escritorio y a 360 px (dicho por el desarrollador).
 - **Traza en `django.request`:** `DoesNotExist` en `views.py:186` (`crear_pedido`). La línea 186 corresponde a `Producto.objects.get(pk=item['producto_id'])`, verificado en el código.
-- **Nada a medio crear:** el último pedido siguió siendo el #910, es decir, no apareció ningún pedido nuevo.
+- **Nada a medio crear:** el último pedido siguió siendo el #910, es decir, no apareció ningún pedido nuevo. El #910 es un pedido de prueba de la réplica, con un ítem («100 IMANES 7X6 CM», visto por el desarrollador).
 - **Inferencia:** que el id inexistente fuera 999999 es inferencia, no dato.
 - **Primer intento sin efecto:** el primer intento no ejercitó la falla (la página reescribió el campo `items_json` antes de enviar) y dejó el pedido de prueba #910 en la réplica. Se limpia al refrescar la réplica al cierre de la Épica 03 (AUD-05-002).
 
 ## Hallazgo menor · AUD-05-003
 
 - **Qué se vio (dicho por el desarrollador):** en local, con `DEBUG=False` y `--insecure`, las peticiones a `/assets/fonts/Inter-*.woff2` responden 404.
-- **Clasificación:** Baja. Por verificar en producción. **Sin corregir.** No se investigó la causa ni se comprobó si ocurre en producción.
+- **Clasificación:** Baja. Por verificar en producción. **Sin corregir y sin asignar a una iteración**; la 08-06 (tipografías e íconos autoalojados) es solo candidata, decisión del desarrollador del 2026-11-04. No se investigó la causa ni se comprobó si ocurre en producción.
 - **ID:** va en la Auditoría 05 (revisiones manuales de la réplica local). Su alcance dice «iteración 03-01»; AUD-05-003 nace de la revisión de la 03-02. Se anotó en el propio hallazgo, sin reescribir el alcance.
 
 ## Verificación
@@ -86,8 +86,13 @@ Del desarrollador, 2026-11-04:
 1. El conteo P3 se registra con sus límites y la respuesta del cliente cierra el `PENDIENTE_CLIENTE`, sin cambio de alcance ni validación nueva.
 2. La revisión manual se cierra con la constancia descrita arriba.
 3. AUD-02-008: nota fechada de avance, sin cambiar el estado.
-4. AUD-05-003: Baja, por verificar en producción, sin corregir.
+4. AUD-05-003: Baja, por verificar en producción, sin corregir y sin asignar (la 08-06 es candidata, no asignada).
 5. La 03-03 queda como siguiente iteración, sin redactarla todavía.
+
+Del desarrollador, 2026-11-04 (revisión posterior del cierre):
+
+6. El nombre propio del cliente se reemplaza por «el cliente» en toda la documentación del repositorio (regla 7.4). El historial de git conserva las versiones anteriores.
+7. El pedido #910 tiene un ítem y no está entre los 126 ni los 38; es un pedido de prueba de la réplica. Queda cerrado el `PENDIENTE_DESARROLLADOR`.
 
 ## Commit sugerido
 
