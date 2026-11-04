@@ -264,6 +264,8 @@ grep "nivel=" $L | tail -n 20 | cut -c1-200
 - Revisa solo las líneas con hora posterior a la recarga. Lo esperado es ninguna línea `Error`, `Traceback` ni `DisallowedHost` después de la recarga.
 - Si hay errores, copia en la evidencia **solo el tipo de error y la hora**, no el texto completo: puede traer datos de clientes.
 
+**Imágenes de referencia sin pedido (`media/referencias/`).** Desde la 03-03 (decisión del 2026-11-04), si crear o editar un pedido falla después de guardar la imagen del formulario, la base se revierte pero el archivo ya escrito en disco queda sin pedido: el sistema de archivos no participa en la transacción. Se acepta y no se borra de forma automática. Si un `nivel=ERROR` de `crear_pedido` o `editar_pedido` coincide con un formulario que traía imagen, anótalo. **No borres archivos de `media/` sin comprobar antes que ningún pedido los usa**: `duplicar_pedido` copia la ruta de la imagen, así que dos pedidos pueden compartir el mismo archivo, y `media/` no tiene copia (AUD-02-023).
+
 ### 3.8 Cierre
 
 - Anota en la evidencia de la iteración: etiqueta desplegada, commit, lista de comprobación, resultado de las pantallas y del registro.

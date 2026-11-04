@@ -71,6 +71,41 @@ class PagoForm(forms.ModelForm):
         # Opcional: ordenar pedidos por ID descendente para facilitar búsqueda
         self.fields['pedido'].queryset = Pedido.objects.all().order_by('-id')
 
+class ConversionCotizacionForm(forms.Form):
+    """Datos de la conversión de una cotización en pedido (03-03, AUD-02-005 y AUD-02-027).
+
+    Valida la fecha de entrega y el abono inicial. El estado de la cotización lo comprueba la
+    vista, dentro de la transacción. El método de pago se sigue leyendo de la petición, como antes.
+    """
+    fecha_entrega = forms.DateField(
+        label="Fecha de entrega",
+        error_messages={
+            'required': "Indica para cuándo es el trabajo.",
+            'invalid': "Escribe una fecha de entrega válida.",
+        },
+    )
+    valor_abonado = forms.IntegerField(
+        required=False,
+        min_value=0,
+        label="Pago inicial ($)",
+        error_messages={
+            'invalid': "El pago inicial debe ser un número entero, sin puntos ni decimales.",
+            'min_value': "El pago inicial no puede ser negativo.",
+        },
+    )
+
+    def __init__(self, *args, valor_total, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.valor_total = valor_total
+
+    def clean_valor_abonado(self):
+        """Vacío equivale a 0. No puede superar el total, salvo que el total sea 0 (como `PedidoForm`)."""
+        abono = self.cleaned_data.get('valor_abonado') or 0
+        if self.valor_total > 0 and abono > self.valor_total:
+            raise forms.ValidationError("El abono no puede ser mayor al valor total de la cotización.")
+        return abono
+
+
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto

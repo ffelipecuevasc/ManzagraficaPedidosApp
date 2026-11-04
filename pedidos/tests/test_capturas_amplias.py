@@ -1,10 +1,13 @@
 """Capturas amplias de views.py que incumplían la regla 4 (01-09).
 
+Las de ítems (pedidos y cotizaciones) desaparecieron en la 03-02 y la 03-03: sus pruebas viven en
+`test_pedidos.py` (`CrearPedidoItemFallidoTests`) y `test_fronteras_transaccionales.py`.
+Quedan las de respaldo y restauración (04-04).
+
 Cada prueba provoca el fallo con datos inválidos o con `mock` (sin ejecutar mysql ni
 mysqldump) y comprueba que queda un ERROR de `pedidos.views` con traza y con la petición,
 y que el usuario no ve el texto de la excepción.
 """
-import json
 import os
 import tempfile
 from unittest import mock
@@ -12,14 +15,12 @@ from unittest import mock
 from django.contrib.messages import get_messages
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from django.utils import timezone
 
 from pedidos import views
 
 from . import factorias
 
 TEXTO_TECNICO = 'detalle-tecnico /ruta/secreta mysqldump: error 1045'
-ITEMS_INVALIDOS = json.dumps([{'producto_id': 999999, 'cantidad': '1', 'precio_unitario': 1000}])
 
 
 class CapturasBase(TestCase):
@@ -37,42 +38,6 @@ class CapturasBase(TestCase):
 
     def mensajes(self, respuesta):
         return [str(m) for m in get_messages(respuesta.wsgi_request)]
-
-
-class CapturasItemsTests(CapturasBase):
-    """Opción A: se registra y el usuario ve lo mismo que antes (el fondo de estas tres queda en la 03-03; `crear_pedido` se corrigió en la 03-02)."""
-
-    def test_editar_pedido_registra_el_fallo_de_items(self):
-        pedido = factorias.crear_pedido()
-        with self.assertLogs('pedidos.views', 'ERROR') as registros:
-            respuesta = self.client.post(f'/pedido/editar/{pedido.pk}/', {
-                'cliente': pedido.cliente.pk, 'resumen_pedido': 'Resumen nuevo', 'valor_venta': 1_000,
-                'items_json': ITEMS_INVALIDOS,
-            })
-        self.assertRedirects(respuesta, f'/{pedido.pk}/', fetch_redirect_response=False)
-        self.assertErrorRegistrado(registros, f'pedido {pedido.pk}')
-
-    def datos_cotizacion(self, cliente):
-        return {
-            'cliente': cliente.pk, 'resumen': 'Cotización nueva', 'detalles': 'Detalle',
-            'valor_total': 1_000, 'validez': 15, 'fecha_emision': timezone.localdate().isoformat(),
-            'items_json': ITEMS_INVALIDOS,
-        }
-
-    def test_crear_cotizacion_registra_el_fallo_de_items(self):
-        cliente = factorias.crear_cliente()
-        with self.assertLogs('pedidos.views', 'ERROR') as registros:
-            respuesta = self.client.post('/cotizaciones/nueva/', self.datos_cotizacion(cliente))
-        self.assertEqual(respuesta.status_code, 302)
-        self.assertErrorRegistrado(registros, 'cotización')
-
-    def test_editar_cotizacion_registra_el_fallo_de_items(self):
-        cotizacion = factorias.crear_cotizacion()
-        with self.assertLogs('pedidos.views', 'ERROR') as registros:
-            respuesta = self.client.post(f'/cotizaciones/editar/{cotizacion.pk}/',
-                                         self.datos_cotizacion(cotizacion.cliente))
-        self.assertEqual(respuesta.status_code, 302)
-        self.assertErrorRegistrado(registros, f'cotización {cotizacion.pk}')
 
 
 class CapturasRespaldoTests(CapturasBase):

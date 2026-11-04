@@ -1,14 +1,14 @@
 # Iteración 03-03 · Fronteras transaccionales por vista
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** Redactada (2026-11-04). Sin ejecutar: solo redacción, con ocho decisiones `PENDIENTE_DESARROLLADOR` abiertas. Historial de estados: Pendiente → Redactada (2026-11-04) ([bitacora-03-03-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-redaccion.md)).
+- **Estado:** En revisión (2026-11-04). Ejecutada en local con las ocho decisiones del desarrollador del 2026-11-04 (todas la opción A) ([bitacora-03-03](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03.md)); falta su revisión manual. Sin despliegue propio: viaja con la 03-05. Historial de estados: Pendiente (redactada el 2026-11-04, [bitacora-03-03-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-redaccion.md)) → En revisión (2026-11-04).
 - **Subfase del plan:** 3.3 «Revisión de fronteras transaccionales» (`plan-de-trabajo.md:344`)
 - **Depende de:** 03-02 (Terminada el 2026-11-04)
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging` en `server.log`, sin identificador de correlación), RDA-015 (las transacciones pasarán a los servicios en la 07-02), RDA-019 (atomicidad con `transaction.atomic` explícito y la captura **fuera** del bloque).
 - **Hallazgos que cierra:** AUD-01-001 y AUD-01-002 (decisión del desarrollador del 2026-11-04: se cierran aquí, con R1, R2 y R4), AUD-02-004 (R10, R11 y R12) y AUD-02-005 (R13).
-- **Hallazgos relacionados:** AUD-02-008 (R3 ya pasó a verde en la 03-02; su estado lo decide el desarrollador), AUD-02-014 (**no se cierra**: depende del cliente), AUD-02-027 (R18; depende de la decisión 3) y AUD-02-028 (R19; decisión 5).
+- **Hallazgos relacionados:** AUD-02-008 (R3 ya pasó a verde en la 03-02; su estado lo decide el desarrollador), AUD-02-014 (**no se cierra**: depende del cliente), AUD-02-027 (R18; la cierra esta iteración: la decisión 3-A **reemplaza** la del 2026-10-27 que la dejaba en la 03-04) y AUD-02-028 (R19; la corrige la 04-01, decisión 5-A).
 - **Cambio de esquema:** Ninguno.
-- **Respaldo previo al despliegue:** No lo exige por sí misma (sin migraciones). Lo decide el desarrollador al planificar la 03-05; solo cambia si se elige la opción B o C de la decisión 6.
+- **Respaldo previo al despliegue:** No lo exige por sí misma (sin migraciones). Lo decide el desarrollador al planificar la 03-05; la decisión 6-A (no reparar datos) no agrega escrituras masivas.
 - **Etiqueta y ventana:** sin despliegue propio; viaja con la 03-05, igual que la 03-01 y la 03-02.
 
 ## Objetivo
@@ -30,9 +30,9 @@ Verificado contra `definicion-epica-03.md` (alcance 1 a 3) y `plan-de-trabajo.md
 | Conversión de cotización a pedido | Alcance 3; plan 3.3 | Sí |
 | Registro, edición y eliminación de pagos | Alcance 3; plan 3.3 | Sí |
 | `estado_pago` dentro de la misma transacción, incluido el pedido anterior si un pago cambia de pedido (AUD-02-004) | Alcance 3, primer punto | Sí |
-| Rechazar una cotización ya aceptada y validar fecha y abono con un formulario (AUD-02-005) | Alcance 3, segundo punto | Sí; el alcance de la validación es la decisión 3 |
+| Rechazar una cotización ya aceptada y validar fecha y abono con un formulario (AUD-02-005) | Alcance 3, segundo punto | Sí: decisión 3-A (fecha, abono y estado) |
 | Las 3 capturas de ítems que siguen (`editar_pedido`, `crear_cotizacion`, `editar_cotizacion`) | Alcance 2; `iteracion-03-02`, «Fuera de alcance» | Sí |
-| Imágenes de referencia huérfanas | «Decisiones de la épica» (`definicion-epica-03.md:47`); plan 3.3 «Consideración adicional» | Sí: decisión 2 |
+| Imágenes de referencia huérfanas | «Decisiones de la épica» (`definicion-epica-03.md:47`); plan 3.3 «Consideración adicional» | Sí: decisión 2-A (aceptar y documentar) |
 | Cierre de AUD-01-001 y AUD-01-002 | Registro, decisión del 2026-11-04 | Sí |
 | Mensajes al usuario, conservación del formulario y envío único (R21) | Alcance 4 y 6 | **No: 03-04** |
 | Hallazgos de otras épicas (POST, respaldo, `float`, servicios) | — | **No** (ver «Fuera de alcance») |
@@ -89,18 +89,18 @@ Verificado contra `definicion-epica-03.md` (alcance 1 a 3) y `plan-de-trabajo.md
 
 **Trampa conocida (03-02):** una excepción que sale de la vista sale también por el cliente de pruebas salvo `raise_request_exception = False`. R1, R2 y R4 deben ajustarse **antes** de corregir; si no, seguirían como fallo esperado por el error y no por los datos (`pruebas.md`, sección 7.1).
 
-## Decisiones (`PENDIENTE_DESARROLLADOR`)
+## Decisiones
 
-Ninguna está tomada. Cada una trae su recomendación; la decide el desarrollador.
+Resueltas el 2026-11-04: el desarrollador eligió la opción A, la recomendada, en las ocho. Las opciones se conservan como constancia de lo que se evaluó.
 
-### Decisión 1 · Qué ve el usuario cuando falla un ítem, hasta la 03-04
+### Decisión 1 · Qué ve el usuario cuando falla un ítem, hasta la 03-04 (elegida: A)
 
 | Opción | Qué hace | Ventajas | Riesgos |
 | :----- | :------- | :------- | :------ |
 | **A. Propagar la excepción (recomendada)** | Las tres vistas quedan como `crear_pedido` desde la 03-02: el error sale del `atomic`, se revierte todo y Django responde la página 500 con una línea `django.request` con traza | Mismo patrón que la 03-02 y que RDA-019. Cumple la regla 4 sin captura amplia. Una sola forma de fallar en las cuatro vistas de ítems. Todo viaja con la 03-04 | El usuario ve la página 500 y pierde lo que escribió hasta la 03-04; como las dos viajan con la 03-05, no llega a producción separada |
 | **B. Capturar excepciones concretas fuera del `atomic` y avisar** | `try: with transaction.atomic(): … except (json.JSONDecodeError, KeyError, TypeError, ValueError, Producto.DoesNotExist):` con `logger.exception` y `messages.error` | El usuario se entera sin ver un 500 | **El aviso no se vería**: los mensajes no se muestran fuera de `restaurar_bd.html` (ver arriba). Adelanta el contrato de la 03-04 y fija una lista de excepciones. Es la opción D de la 03-02, que el desarrollador no eligió |
 
-### Decisión 2 · Imágenes de referencia huérfanas
+### Decisión 2 · Imágenes de referencia huérfanas (elegida: A)
 
 `PedidoForm` escribe el archivo en `media/referencias/` cuando se guarda el pedido (`models.py:42`; en `crear_pedido`, `pedido.save()` en `:176`; en `editar_pedido`, `form.save()` en `:249`). El sistema de archivos no participa en la transacción: si esta se revierte, el archivo queda en disco (plan 3.3, «Consideración adicional»). Disco escaso y `media/` sin copia (AUD-02-023).
 
@@ -110,7 +110,7 @@ Ninguna está tomada. Cada una trae su recomendación; la decide el desarrollado
 | **B. Borrar el archivo recién escrito si el bloque falla, y relanzar** | `try/except` alrededor del `atomic` que borra el archivo y hace `raise` | Cumple «no deja rastro» también en disco | **Puede borrar un archivo vivo**: en `editar_pedido` sin imagen nueva, `imagen_referencia` apunta al archivo anterior; en `duplicar_pedido` el duplicado comparte la ruta del original (`views.py:410`). Un error aquí destruye datos que no tienen copia |
 | **C. Escribir el archivo después de confirmar** | Mover la escritura a `transaction.on_commit` | Nunca queda huérfano por un fallo de la base | Cambia cómo se guarda la imagen en el formulario; el más grande y el que más prueba exige |
 
-### Decisión 3 · Qué valida el formulario de la conversión
+### Decisión 3 · Qué valida el formulario de la conversión (elegida: A)
 
 La épica pide validar **fecha y abono** con un formulario (`definicion-epica-03.md`, alcance 3). Pero R18 (fecha vacía, AUD-02-027) está asignada a la 03-04 (decisión del desarrollador, 2026-10-27, `pruebas.md` fila R18). Un formulario de Django exige la fecha por defecto, así que lo que se haga con la fecha decide dónde cae R18.
 
@@ -120,7 +120,7 @@ La épica pide validar **fecha y abono** con un formulario (`definicion-epica-03
 | **B. Solo abono y estado; la fecha sigue sin validar** | El formulario valida el abono; `fecha_entrega` se sigue leyendo de `request.POST` | R18 sigue en la 03-04 como decidió el desarrollador | Formulario que ignora a propósito un campo que la misma pantalla exige; la fecha vacía sigue dando 500 hasta la 03-04 (viajan juntas a producción). El `atomic` revertiría todo, pero igual hay 500 |
 | **C. Sin formulario: validar a mano en la vista** | `try/except ValueError` ampliado y comprobaciones sueltas | Menos código nuevo | Incumple lo que pide la épica y repite lo que Django ya resuelve; deja la vista más larga justo antes de que la 07-02 la mueva a un servicio |
 
-### Decisión 4 · Qué ve el usuario ante una conversión repetida
+### Decisión 4 · Qué ve el usuario ante una conversión repetida (elegida: A)
 
 El rechazo ocurre en el servidor, dentro del `atomic` y al **inicio** de la vista (GET y POST), como ya hace `editar_cotizacion` (`views.py:779-780`).
 
@@ -130,7 +130,7 @@ El rechazo ocurre en el servidor, dentro del `atomic` y al **inicio** de la vist
 | **B. Redirigir con `messages.warning`** | Igual que A, con un aviso | Explica | **No se vería** (los mensajes no se muestran en el detalle). Sería texto sin efecto hasta que la 03-04 resuelva dónde se muestran |
 | **C. Responder un error HTTP (409)** | Página de error | Semántica clara | Es un error para un doble clic corriente; mostraría la página 500/404 de la aplicación o una nueva |
 
-### Decisión 5 · Quién corrige AUD-02-028 (R19, `duplicar_pedido` sin `creado_por`)
+### Decisión 5 · Quién corrige AUD-02-028 (R19, `duplicar_pedido` sin `creado_por`) (elegida: A)
 
 `duplicar_pedido` crea el pedido sin `creado_por` (`views.py:403-411`). Es una sola escritura: no necesita frontera transaccional. `auditoria-tecnica.md` (fila AUD-02-028) deja la iteración `PENDIENTE_DESARROLLADOR` con candidatas 04-01 y 03-03.
 
@@ -140,7 +140,7 @@ El rechazo ocurre en el servidor, dentro del `atomic` y al **inicio** de la vist
 | **B. 03-03** | Se agrega la línea y R19 pasa a verde aquí (fallos esperados finales: uno menos) | Cierra un hallazgo pequeño antes | No es transaccional: mezcla propósitos. La 04-01 vuelve a editar la misma vista |
 | **C. Dejar sin asignar** | Sin cambios | Nada que hacer ahora | El hallazgo sigue flotando |
 
-### Decisión 6 · Los `estado_pago` históricos desincronizados
+### Decisión 6 · Los `estado_pago` históricos desincronizados (elegida: A)
 
 La corrección del código evita nuevas desincronizaciones; **no** repara las filas existentes (610 de 870 en la medición del 2026-10-20). Inferido: como ninguna pantalla lee `estado_pago`, no hay efecto visible hoy.
 
@@ -150,14 +150,14 @@ La corrección del código evita nuevas desincronizaciones; **no** repara las fi
 | **B. Orden de gestión de un solo uso** | Un comando idempotente, con `--dry-run`, que recalcula desde los pagos; lo ejecuta el desarrollador en la réplica y luego en producción | Deja el dato coherente. Reversible con el respaldo previo | Escribe en producción (respaldo previo obligatorio y ensayo en la réplica). Aplica la regla provisoria de $0 y de sobrepago. Código que se usa una vez |
 | **C. Migración de datos (`RunPython`)** | Igual, dentro de una migración | Se ejecuta sola en el despliegue | Una migración que modifica datos no encaja en las clases 1 a 3 de `AGENTS.md`, sección 8, y exige consulta previa para crearla. No se puede ensayar a voluntad |
 
-### Decisión 7 · Cuántas iteraciones
+### Decisión 7 · Cuántas iteraciones (elegida: A)
 
 | Opción | Qué hace | Ventajas | Riesgos |
 | :----- | :------- | :------- | :------ |
 | **A. Una sola, con pasos ordenados (recomendada)** | Esta iteración, con un bloque de verificación por paso | Un solo propósito (integridad transaccional); sin despliegue propio. Los siete pasos son independientes entre sí salvo el orden indicado | Es la más grande de la épica: 8 vistas y entre 7 y 9 regresiones |
 | **B. Dividir en dos** | Ítems (R1, R2, R4) y pagos más conversión (R10 a R13) | Revisiones más chicas | Obliga a un número nuevo (el siguiente correlativo libre de la épica, 03-06) y a cambiar el orden y la tabla de la épica; ambas viajan juntas igual con la 03-05 |
 
-### Decisión 8 · El abono inicial que la edición descarta
+### Decisión 8 · El abono inicial que la edición descarta (elegida: A)
 
 AUD-02-004 también dice que el formulario de edición muestra el campo de abono inicial y descarta en silencio lo que se ingrese (`editar_pedido` no crea pagos). La definición de la épica, en cambio, solo pide recalcular `estado_pago`. No tiene regresión asignada.
 
@@ -195,25 +195,25 @@ Todo con `DB_NAME=manzagrafica_replica` y el MySQL local de Docker encendido. Ca
 | R11 | AUD-02-004 | 3 | Siempre |
 | R12 | AUD-02-004 | 5 | Siempre |
 | R13 | AUD-02-005 | 6 | Siempre |
-| R18 | AUD-02-027 | 6 | Solo con la decisión 3 = A |
-| R19 | AUD-02-028 | — | Solo con la decisión 5 = B |
+| R18 | AUD-02-027 | 6 | Sí (decisión 3-A) |
+| R19 | AUD-02-028 | — | No: la corrige la 04-01 (decisión 5-A) |
 
-Fallos esperados: de 17 a **10** (siete regresiones), a **9** con la decisión 3 = A y a **8** si además la decisión 5 = B. Quedan, en todo caso, R6a, R6b, R6c, R7, R8, R9, R14 y R15 (04-01, 04-06, 06-01 y 07-02), más R18 y R19 según las decisiones.
+Con las decisiones tomadas (3-A y 5-A) pasan a verde ocho regresiones y los fallos esperados bajan de 17 a **9** (predicción de la redacción: 9). Quedan R6a, R6b, R6c, R7, R8, R9, R14, R15 y R19 (04-01, 04-06, 06-01 y 07-02). **Medido:** `OK (expected failures=9)`, ver el resultado más abajo.
 
 ## Criterios de aceptación
 
-- [ ] Las decisiones 1 a 8 están registradas antes de implementar.
-- [ ] Las pruebas se escribieron antes de la corrección y fallaban por la razón correcta (R1, R2 y R4, por la aserción de los datos).
-- [ ] `editar_pedido`, `crear_cotizacion`, `editar_cotizacion`, `convertir_a_pedido`, `ingresar_pago`, `editar_pago` y `eliminar_pago` escriben dentro de **un** `transaction.atomic()` y la excepción sale del bloque; ninguna contiene `except Exception` (una prueba lo comprueba, como en la 03-02).
-- [ ] Un ítem fallido en cada una de las tres vistas de ítems no deja pedido ni cotización a medias, deja los ítems y el valor anteriores en las ediciones, no escribe evento, responde 500 con `pedidos/errors/500.html` y deja **una** línea `django.request` con traza (decisión 1 = A).
-- [ ] R1, R2, R4, R10, R11, R12 y R13 en verde y sin marcas; R18 y R19 según las decisiones 3 y 5.
-- [ ] Convertir dos veces la misma cotización crea un solo pedido, por el POST y por la URL directa (GET), y el segundo intento termina como dice la decisión 4.
-- [ ] El abono de la conversión se valida con un formulario y ya no pasa a 0 sin aviso (decisión 3); `valor_venta` sigue siendo `valor_total` sin IVA.
-- [ ] Un pago que cambia de pedido deja ambos pedidos con el `estado_pago` que da el oráculo.
-- [ ] `pruebas.md` y la bitácora dicen el mismo `expected failures=N`; `python manage.py test pedidos` → `OK (expected failures=N)` en tres ejecuciones; `check` limpio; `makemigrations --check --dry-run`: `No changes detected`.
-- [ ] AUD-01-001, AUD-01-002, AUD-02-004 y AUD-02-005 anotados como resueltos en la 03-03 (código, con despliegue en la 03-05), con la evidencia de las pruebas.
+- [x] Las decisiones 1 a 8 están registradas antes de implementar (todas A, 2026-11-04; sección «Decisiones del desarrollador»).
+- [x] Las pruebas se escribieron antes de la corrección y fallaban por la razón correcta: R1 y R2 por los ítems que quedaban (`[(2, 3.00, 4000)] != [(1, 1.00, 10000)]`), R4 por `(1, 1) != (0, 0)`; R10 a R12 por `estado_pago` (`'PENDIENTE' != 'PARCIAL'`, `'PAGADO' != 'PARCIAL'`, `'PAGADO' != 'PENDIENTE'`); R13 por `2 != 1`. Detalle en la bitácora.
+- [x] `editar_pedido`, `crear_cotizacion`, `editar_cotizacion`, `convertir_a_pedido`, `ingresar_pago`, `editar_pago` y `eliminar_pago` escriben dentro de **un** `transaction.atomic()` y la excepción sale del bloque; ninguna contiene `except Exception` (pruebas `test_la_vista_no_captura_y_abre_su_transaccion` y `test_las_vistas_de_pagos_abren_su_transaccion_y_no_capturan`).
+- [x] Un ítem fallido en cada una de las tres vistas de ítems no deja pedido ni cotización a medias, deja los ítems y el valor anteriores en las ediciones, no escribe evento, responde 500 con `pedidos/errors/500.html` y deja **una** línea `django.request` con traza (decisión 1-A; cinco causas por vista).
+- [x] R1, R2, R4, R10, R11, R12, R13 y R18 en verde y sin marcas; R19 sigue como fallo esperado hasta la 04-01 (decisión 5-A).
+- [x] Convertir dos veces la misma cotización crea un solo pedido, por el POST y por la URL directa (GET), y el segundo intento termina en el detalle de la cotización, sin mensaje (`ConversionRepetidaTests`, decisión 4-A).
+- [x] La fecha y el abono de la conversión se validan con un formulario y el abono ya no pasa a 0 sin aviso (decisión 3-A, `ConversionFormularioTests`); `valor_venta` sigue siendo `valor_total` sin IVA.
+- [x] Un pago que cambia de pedido deja ambos pedidos con el `estado_pago` que da el oráculo (R12).
+- [x] `pruebas.md` y la bitácora dicen `expected failures=9`; `python manage.py test pedidos` → 220 pruebas, `OK (expected failures=9)` en tres ejecuciones; `check` limpio; `makemigrations --check --dry-run`: `No changes detected` (detalle en la bitácora).
+- [x] AUD-01-001, AUD-01-002, AUD-02-004 y AUD-02-005 anotados como resueltos en la 03-03 (código, con despliegue en la 03-05), con la evidencia de las pruebas. Por decisión del desarrollador, también AUD-02-008, y AUD-02-027 por la decisión 3-A.
 - [ ] Revisión manual hecha (más abajo).
-- [ ] Los `PENDIENTE_CLIENTE` de AUD-02-014 y del valor $0/sobrepago siguen abiertos y sin cambios de comportamiento.
+- [x] Los `PENDIENTE_CLIENTE` de AUD-02-014 y del valor $0/sobrepago siguen abiertos y sin cambios de comportamiento (`test_valor_venta_es_el_valor_total_sin_iva` y `test_con_total_cero_cualquier_abono_se_acepta`).
 
 ## Revisión manual (la hace el desarrollador, contra la réplica local)
 
@@ -222,17 +222,26 @@ Con `DEBUG=False` y `runserver --insecure`, en escritorio y a 360 px:
 1. **Editar un pedido con un ítem fallido** (alterar `items_json` a un `producto_id` inexistente): página 500 de la aplicación; al abrir el detalle, los ítems y el `valor_venta` anteriores siguen igual.
 2. **Crear y editar una cotización con un ítem fallido:** página 500; sin cotización nueva o con la anterior intacta.
 3. **Convertir una cotización dos veces** (segundo intento desde la URL directa o con el botón «atrás»): un solo pedido; el segundo intento termina en el detalle de la cotización (decisión 4).
-4. **Convertir con un abono inválido** (si la decisión 3 es A o B): la página de conversión vuelve con el error visible y sin perder lo escrito, en ambos anchos.
+4. **Convertir con un abono inválido** (decisión 3-A): la página de conversión vuelve con el error visible y sin perder lo escrito, en ambos anchos.
 5. **Mover un pago de pedido:** el saldo y el porcentaje de ambos pedidos cambian como corresponde. `estado_pago` **no** se ve en ninguna pantalla (inferido, por búsqueda): se verifica con las pruebas y, si quieres, con una consulta de solo lectura en la réplica.
 6. Los pedidos y cotizaciones de prueba quedan en la réplica y se limpian al refrescarla al cierre de la Épica 03 (AUD-05-002).
 
 Instrucciones de lo que no puede hacer el agente (consultas a la réplica) se entregarán con la ejecución, no antes. No hay evidencia que pedir a producción.
 
+## Resultado de la ejecución (2026-11-04)
+
+Detalle y mediciones en [bitacora-03-03](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03.md).
+
+- **Pasos 0 a 8** ejecutados en orden y con la prueba primero. Línea de partida: 189 pruebas, `OK (expected failures=17)`.
+- **Qué cambió en el código:** `views.py` (siete vistas con `transaction.atomic()`, `convertir_a_pedido` con `select_for_update`, ayudante de `estado_pago` que guarda solo ese campo), `forms.py` (`ConversionCotizacionForm`) y `cotizacion_convertir.html` (errores junto a cada campo, valores conservados y método de pago elegido).
+- **Pruebas:** archivo nuevo `test_fronteras_transaccionales.py`; R1, R2, R4, R10 a R13 y R18 sin marcas; se retiraron las tres pruebas de `CapturasItemsTests` (las reemplazan las nuevas) y se sacaron de `test_abono` los dos abonos inválidos, que ahora se rechazan.
+- **Sin** `messages.*` nuevos, **sin** migraciones, sin validar ni recalcular el precio del ítem.
+
 ## Fuera de alcance
 
 - Mensajes al usuario, dónde se muestran, conservación del formulario y envío único (R21): 03-04. Hasta entonces, un ítem fallido muestra la página 500 y el formulario se pierde.
 - Validar el precio del ítem contra el catálogo o recalcularlo en el servidor: **prohibido** (regla de negocio confirmada el 2026-10-27, `pruebas.md` sección 9).
-- Hacer que los mutadores acepten solo POST (cambiar estado, duplicar, respaldo), la plantilla de eliminar pago (R7) y `duplicar_pedido` salvo la decisión 5: 04-01.
+- Hacer que los mutadores acepten solo POST (cambiar estado, duplicar, respaldo), la plantilla de eliminar pago (R7) y `duplicar_pedido`, incluido `creado_por` (R19, decisión 5-A): 04-01.
 - Respaldo y restauración, la excepción propia de `utils.py` y el `.sql` vacío: 04-04.
 - Borrado en cascada del historial (R14): 04-06.
 - `float(item['cantidad'])` en lugar de `Decimal` y el porcentaje pagado con `float` (R15): 07-02. Mover las transacciones a servicios: 07-02 (RDA-015).
@@ -264,7 +273,18 @@ Instrucciones de lo que no puede hacer el agente (consultas a la réplica) se en
 
 ## Decisiones del desarrollador
 
-Pendientes: las decisiones 1 a 8 de arriba. Se registran aquí con fecha cuando se tomen.
+Todas resueltas el 2026-11-04, con la opción A (la recomendada):
+
+1. **Propagar el error** (500, sin captura): las tres vistas de ítems quedan como `crear_pedido` desde la 03-02.
+2. **Imágenes huérfanas:** aceptarlas y documentarlo en `despliegue.md` (sección 3.7).
+3. **Formulario de la conversión con fecha, abono y estado.** **Reemplaza** la decisión del 2026-10-27 (D5 de la 02-04) que dejaba R18 y AUD-02-027 en la 03-04: pasan a esta iteración, con nota fechada en `pruebas.md`, `auditoria-tecnica.md` y `iteracion-02-04-regresiones.md`.
+4. **Conversión repetida:** redirigir al detalle de la cotización, sin mensaje.
+5. **AUD-02-028 (R19)** a la 04-01.
+6. **No reparar** los `estado_pago` históricos (610 de 870 en la medición del 2026-10-20); queda anotado con la cifra.
+7. **Una sola iteración.**
+8. **El abono inicial que la edición descarta,** fuera de alcance; propuesta en la sección 4 de `registro-pendientes.md`.
+
+Estado de la iteración: se usa «Pendiente (redactada)» mientras no se ejecuta (el README protegido no define «Redactada»).
 
 ## Datos requeridos del cliente
 

@@ -47,8 +47,8 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 | R13 | AUD-02-005 | Convertir dos veces la misma cotización crea **un** pedido y rechaza la segunda | Crea dos pedidos | 03-03 |
 | R14 | AUD-02-001 | Eliminar un cliente con pedidos no borra su historial (se rechaza con `ProtectedError`) | Borra en cascada pedidos, ítems, pagos y cotizaciones | 04-06 |
 | R15 | AUD-02-025 | Un pago de $29 sobre un pedido de $100 da `porcentaje_pagado == 29` (cálculo con enteros) | Da 28: divide con `float` y trunca (decisión del desarrollador, 2026-10-26, tras la 02-02) | 06-05 |
-| R18 | AUD-02-027 | Convertir una cotización con `fecha_entrega` vacía **no** responde 500: rechaza la petición sin crear el pedido | Por lectura del código: el guardado del `DateField` falla y el decorador responde 500 (decisión del desarrollador, 2026-10-27, tras la 02-03) | 03-04 (decisión D5, 2026-10-27) |
-| R19 | AUD-02-028 | El pedido duplicado queda con `creado_por` igual al usuario que lo duplicó | `creado_por` queda nulo (decisión del desarrollador, 2026-10-27, tras la 02-03) | `PENDIENTE_DESARROLLADOR` (04-01 o 03-03) |
+| R18 | AUD-02-027 | Convertir una cotización con `fecha_entrega` vacía **no** responde 500: rechaza la petición sin crear el pedido | Por lectura del código: el guardado del `DateField` falla y el decorador responde 500 (decisión del desarrollador, 2026-10-27, tras la 02-03) | 03-04 (decisión D5, 2026-10-27) **Nota 2026-11-04:** pasó a la 03-03 (decisión 3-A del desarrollador, que reemplaza la D5 en este punto); R18 retirada en la 03-03. |
+| R19 | AUD-02-028 | El pedido duplicado queda con `creado_por` igual al usuario que lo duplicó | `creado_por` queda nulo (decisión del desarrollador, 2026-10-27, tras la 02-03) | `PENDIENTE_DESARROLLADOR` (04-01 o 03-03) **Nota 2026-11-04:** la corrige la 04-01 (decisión 5-A del desarrollador). |
 | R20 | AUD-02-029 | Con un `pk` inexistente, las 12 vistas con `@transaccion_segura` responden 404 | Responden 500: el decorador captura el `Http404` (decisión del desarrollador, 2026-10-27, tras la 02-05) | 03-01 |
 
 R6 se escribe como tres pruebas (una por ruta); R10 a R12, R15, R18, R19 y R20, una cada una (R20: 404 en lugar de 500, AUD-02-029, la corrige la 03-01; agregada el 2026-10-27). **Recuento vigente: 19** (2026-10-27): 18 al cerrar la iteración (19 previstas menos R5, que no se confirmó), más R20 agregada tras la 02-05. El total previsto era de 19 (16 al redactar, más R15 agregada el 2026-10-26, más R18 y R19 agregadas el 2026-10-27). Los números R16 y R17 no tienen fila: R16 queda reservado para AUD-02-021 (decisión 2) y R17 sin asignar; R18 y R19 se numeraron así por decisión del desarrollador, sin renumerar las anteriores. La cifra exacta es la que queda en `pruebas.md` como `expected failures=N`.
@@ -92,7 +92,7 @@ Resueltas por el desarrollador el 2026-10-27:
 2. **D2 · AUD-02-021:** no entra en la 02-04. R16 queda reservado; no se escribe esa prueba.
 3. **D3 · Numeración:** se deja como está (R1 a R15, R16 reservado, R17 libre, R18 y R19). No se renumera.
 4. **D4 · Inventario de rutas que escriben por GET:** el agente lo lista en la bitácora (ruta, vista, qué escribe, si lo cubre R6 o R7). No se escriben pruebas fuera de R6; el desarrollador decide cuáles se suman.
-5. **D5 · Iteraciones:** AUD-02-028 (R19) sigue `PENDIENTE_DESARROLLADOR`; AUD-02-027 (R18) la corrige la 03-04.
+5. **D5 · Iteraciones:** AUD-02-028 (R19) sigue `PENDIENTE_DESARROLLADOR`; AUD-02-027 (R18) la corrige la 03-04. **Nota 2026-11-04:** AUD-02-027 (R18) la cierra la 03-03 (decisión 3-A, reemplaza esta D5 en ese punto) y AUD-02-028 (R19) la corrige la 04-01 (decisión 5-A).
 
 Resueltas por el desarrollador el 2026-10-27, tras la revisión ([bitacora-02-04-cierre](../../99_bitacora/epica-02-red-seguridad/bitacora-02-04-cierre.md)):
 

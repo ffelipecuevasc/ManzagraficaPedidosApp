@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.template.loader import render_to_string
 from django.db import transaction
 from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion, HistorialBD, Pago
-from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm
+from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm, ConversionCotizacionForm
 from .eventos import registrar_evento
 from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
 from datetime import timedelta, datetime
@@ -140,14 +140,18 @@ def dashboard(request):
 # FUNCIÓN AUXILIAR - Para determinar estado de pago
 # ==========================================
 def actualizar_estado_pago_pedido(pedido):
-    """Recalcula y guarda el estado financiero del pedido basado en sus pagos."""
+    """Recalcula y guarda el estado financiero del pedido basado en sus pagos.
+
+    Se llama dentro del mismo `transaction.atomic` que escribe el pago o el valor de venta
+    (03-03, AUD-02-004). Guarda solo `estado_pago`, para no pisar otros campos con valores viejos.
+    """
     if pedido.saldo_pendiente <= 0:
         pedido.estado_pago = 'PAGADO'
     elif pedido.total_pagado_real > 0:
         pedido.estado_pago = 'PARCIAL'
     else:
         pedido.estado_pago = 'PENDIENTE'
-    pedido.save()
+    pedido.save(update_fields=['estado_pago'])
 
 # ==========================================
 # GESTIÓN DE PEDIDOS
@@ -210,6 +214,9 @@ def crear_pedido(request):
                         nota='Abono inicial al crear pedido'
                     )
 
+                    # El estado financiero sigue al pago, dentro de la misma transacción (03-03, R10).
+                    actualizar_estado_pago_pedido(pedido)
+
                     # OJO: NO actualizamos pedido.valor_abonado.
                     # Se mantiene en 0 como solicitaste.
 
@@ -246,11 +253,15 @@ def editar_pedido(request, pk):
     if request.method == 'POST':
         form = PedidoForm(request.POST, request.FILES, instance=pedido)
         if form.is_valid():
-            pedido = form.save()
+            # El pedido, el borrado y la recreación de ítems y el estado financiero son una sola
+            # unidad (03-03, RDA-019). Si algo falla, la excepción sale del bloque atomic: quedan los
+            # ítems y el valor anteriores, no se escribe el evento y Django responde 500 con la traza.
+            # El aviso al usuario y la conservación del formulario son de la 03-04.
+            with transaction.atomic():
+                pedido = form.save()
 
-            items_json = request.POST.get('items_json')
-            if items_json:
-                try:
+                items_json = request.POST.get('items_json')
+                if items_json:
                     pedido.items.all().delete()  # Borrón
                     data_items = json.loads(items_json)
                     for item in data_items:
@@ -261,12 +272,11 @@ def editar_pedido(request, pk):
                             cantidad=float(item['cantidad']),
                             precio_unitario=int(item['precio_unitario'])
                         )
-                except Exception:
-                    # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en server.log.
-                    logger.exception('Error procesando items del pedido %s', pedido.pk,
-                                     extra={'request': request})
-            registrar_evento('pedido_modificado', request.user, 'pedido', pedido.pk,
-                             f'Pedido #{pedido.pk} modificado')
+
+                # El valor de venta pudo cambiar (R11).
+                actualizar_estado_pago_pedido(pedido)
+                registrar_evento('pedido_modificado', request.user, 'pedido', pedido.pk,
+                                 f'Pedido #{pedido.pk} modificado')
             # Redirigir al detalle del pedido editado
             return redirect('detalle_pedido', pk=pedido.pk)
     else:
@@ -736,12 +746,15 @@ def crear_cotizacion(request):
     if request.method == 'POST':
         form = CotizacionForm(request.POST)
         if form.is_valid():
-            cotizacion = form.save()
+            # La cotización y sus ítems son una sola unidad (03-03, RDA-019). Si un ítem falla, la
+            # excepción sale del bloque atomic: se revierte todo y Django responde 500 con la traza
+            # en server.log. El aviso al usuario y la conservación del formulario son de la 03-04.
+            with transaction.atomic():
+                cotizacion = form.save()
 
-            # --- NUEVA LÓGICA: Guardar Ítems (Espejo de crear_pedido) ---
-            items_json = request.POST.get('items_json')
-            if items_json:
-                try:
+                # --- Guardar Ítems (Espejo de crear_pedido) ---
+                items_json = request.POST.get('items_json')
+                if items_json:
                     data_items = json.loads(items_json)
                     for item in data_items:
                         # item es: {'producto_id': '5', 'cantidad': 2, 'precio_unitario': 15000, ...}
@@ -753,11 +766,7 @@ def crear_cotizacion(request):
                             cantidad=float(item['cantidad']),
                             precio_unitario=int(item['precio_unitario'])
                         )
-                except Exception:
-                    # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en server.log.
-                    logger.exception('Error procesando items de la cotización %s', cotizacion.pk,
-                                     extra={'request': request})
-            # -------------------------------------------------------------
+                # -----------------------------------------------
 
             # Redirigimos al detalle para revisar antes de "enviar"
             return redirect('detalle_cotizacion', pk=cotizacion.pk)
@@ -782,11 +791,13 @@ def editar_cotizacion(request, pk):
     if request.method == 'POST':
         form = CotizacionForm(request.POST, instance=cotizacion)
         if form.is_valid():
-            cotizacion = form.save()
+            # Borrar y recrear los ítems va junto con el guardado de la cotización (03-03, RDA-019):
+            # si algo falla, la excepción sale del bloque y quedan los ítems y el valor anteriores.
+            with transaction.atomic():
+                cotizacion = form.save()
 
-            items_json = request.POST.get('items_json')
-            if items_json:
-                try:
+                items_json = request.POST.get('items_json')
+                if items_json:
                     cotizacion.items.all().delete()
                     data_items = json.loads(items_json)
                     for item in data_items:
@@ -797,10 +808,6 @@ def editar_cotizacion(request, pk):
                             cantidad=float(item['cantidad']),
                             precio_unitario=int(item['precio_unitario'])
                         )
-                except Exception:
-                    # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en server.log.
-                    logger.exception('Error procesando items de la cotización %s', cotizacion.pk,
-                                     extra={'request': request})
             return redirect('detalle_cotizacion', pk=pk)
     else:
         form = CotizacionForm(instance=cotizacion)
@@ -843,73 +850,80 @@ def convertir_a_pedido(request, pk):
     """
     Toma una cotización y crea un Pedido.
     Copia el cliente, datos, productos y GENERA EL PAGO INICIAL SI EXISTE.
+
+    Todo va en una sola transacción (03-03, AUD-02-005, RDA-019): el pedido, sus ítems, el pago,
+    el estado financiero y el cierre de la cotización se confirman juntos o no queda nada. La
+    cotización se bloquea mientras se convierte, y una ya aceptada vuelve a su detalle sin crear
+    nada (la pantalla de detalle ya la muestra como ACEPTADA).
     """
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
 
     if request.method == 'POST':
-        # 1. Capturar datos del formulario
-        fecha_entrega = request.POST.get('fecha_entrega')
-        abono_input = request.POST.get('valor_abonado', 0)
-        try:
-            abono = int(abono_input)
-        except ValueError:
-            abono = 0
+        with transaction.atomic():
+            cotizacion = get_object_or_404(Cotizacion.objects.select_for_update(), pk=pk)
+            if cotizacion.estado == 'ACEPTADA':
+                return redirect('detalle_cotizacion', pk=pk)
 
-        # 2. Crear el Pedido (Cabecera)
-        # IMPORTANTE: Inicializamos valor_abonado en 0. Si hay abono, lo sumará la lógica de Pago.
-        pedido = Pedido.objects.create(
-            cliente=cotizacion.cliente,
-            resumen_pedido=cotizacion.resumen,
-            detalles_pedido=cotizacion.detalles,
-            valor_venta=cotizacion.valor_total,
-            fecha_entrega=fecha_entrega,
-            estado='PENDIENTE',
-            creado_por=request.user
-        )
+            # 1. Validar los datos del formulario (fecha y abono)
+            form = ConversionCotizacionForm(request.POST, valor_total=cotizacion.valor_total)
+            if form.is_valid():
+                abono = form.cleaned_data['valor_abonado']
 
-        # 3. Traspasar Productos
-        for item_cot in cotizacion.items.all():
-            ItemPedido.objects.create(
-                pedido=pedido,
-                producto=item_cot.producto,
-                cantidad=item_cot.cantidad,
-                precio_unitario=item_cot.precio_unitario
-            )
+                # 2. Crear el Pedido (Cabecera)
+                # IMPORTANTE: Inicializamos valor_abonado en 0. Si hay abono, lo sumará la lógica de Pago.
+                pedido = Pedido.objects.create(
+                    cliente=cotizacion.cliente,
+                    resumen_pedido=cotizacion.resumen,
+                    detalles_pedido=cotizacion.detalles,
+                    valor_venta=cotizacion.valor_total,
+                    fecha_entrega=form.cleaned_data['fecha_entrega'],
+                    estado='PENDIENTE',
+                    creado_por=request.user
+                )
 
-        # 4. --- LÓGICA DE PAGO INICIAL (CORREGIDA) ---
-        if abono > 0:
-            metodo = request.POST.get('metodo_pago', 'TRANSFERENCIA')
-            # A. Crear el registro en la tabla Pago
-            Pago.objects.create(
-                pedido=pedido,
-                monto=abono,
-                metodo=metodo,
-                fecha=timezone.now(),
-                registrado_por=request.user,
-                nota=f'Abono inicial por conversión de Cotización #{cotizacion.id}'
-            )
+                # 3. Traspasar Productos
+                for item_cot in cotizacion.items.all():
+                    ItemPedido.objects.create(
+                        pedido=pedido,
+                        producto=item_cot.producto,
+                        cantidad=item_cot.cantidad,
+                        precio_unitario=item_cot.precio_unitario
+                    )
 
-            # Calcular estado financiero
-            if pedido.saldo_pendiente <= 0:
-                pedido.estado_pago = 'PAGADO'
-            else:
-                pedido.estado_pago = 'PARCIAL'
+                # 4. --- LÓGICA DE PAGO INICIAL ---
+                if abono > 0:
+                    metodo = request.POST.get('metodo_pago', 'TRANSFERENCIA')
+                    Pago.objects.create(
+                        pedido=pedido,
+                        monto=abono,
+                        metodo=metodo,
+                        fecha=timezone.now(),
+                        registrado_por=request.user,
+                        nota=f'Abono inicial por conversión de Cotización #{cotizacion.id}'
+                    )
 
-            pedido.save()
-        # ---------------------------------------------
+                    # Calcular estado financiero
+                    actualizar_estado_pago_pedido(pedido)
+                # ---------------------------------------------
 
-        # 5. Cerrar la Cotización
-        cotizacion.estado = 'ACEPTADA'
-        cotizacion.save()
-        registrar_evento('cotizacion_convertida', request.user, 'cotizacion', cotizacion.pk,
-                         f'Cotización #{cotizacion.pk} convertida en el pedido #{pedido.pk}')
+                # 5. Cerrar la Cotización
+                cotizacion.estado = 'ACEPTADA'
+                cotizacion.save()
+                registrar_evento('cotizacion_convertida', request.user, 'cotizacion', cotizacion.pk,
+                                 f'Cotización #{cotizacion.pk} convertida en el pedido #{pedido.pk}')
 
-        # 6. Redirigir al nuevo pedido
-        messages.success(request, f"Cotización convertida exitosamente en el Pedido #{pedido.id}")
-        return redirect('detalle_pedido', pk=pedido.pk)
+                # 6. Redirigir al nuevo pedido
+                messages.success(request, f"Cotización convertida exitosamente en el Pedido #{pedido.id}")
+                return redirect('detalle_pedido', pk=pedido.pk)
+        # Datos inválidos: no se escribió nada; la página vuelve con los errores y lo escrito.
+    else:
+        if cotizacion.estado == 'ACEPTADA':
+            return redirect('detalle_cotizacion', pk=pk)
+        form = ConversionCotizacionForm(valor_total=cotizacion.valor_total)
 
     context = {
         'cotizacion': cotizacion,
+        'form': form,
         'fecha_sugerida': timezone.now().date() + timedelta(days=7)
     }
     return render(request, 'pedidos/cotizacion_convertir.html', context)
@@ -1378,41 +1392,16 @@ def ingresar_pago(request, pedido_id=None):
     if request.method == 'POST':
         form = PagoForm(request.POST)
         if form.is_valid():
-            # 2. Guardar el Pago
-            pago = form.save(commit=False)
-            pago.registrado_por = request.user
-            pago.save()
+            # El pago, el estado financiero del pedido y el evento van juntos (03-03, AUD-02-004).
+            with transaction.atomic():
+                pago = form.save(commit=False)
+                pago.registrado_por = request.user
+                pago.save()
 
-            # 3. ACTUALIZACIÓN AUTOMÁTICA DEL PEDIDO
-            pedido_relacionado = pago.pedido
-
-            # Recalcular estado financiero
-            # (Asumiendo que el modelo Pedido tiene propiedades o métodos para esto,
-            #  o que actualizamos campos manuales como valor_abonado)
-
-            # Opción A: Si usamos el campo legacy 'valor_abonado'
-            # pedido_relacionado.valor_abonado += pago.monto 
-
-            # Opción B: Si usamos propiedades calculadas en el modelo, 
-            # solo necesitamos actualizar el estado 'estado_pago' si existe.
-            # Aquí usaremos la función auxiliar definida arriba si aplica, 
-            # o lógica directa simple:
-
-            # Recalculamos el total pagado sumando todos los pagos (incluyendo el nuevo)
-            total_pagado = pedido_relacionado.pagos.aggregate(Sum('monto'))['monto__sum'] or 0
-
-            # Determinamos estado (si existe el campo estado_pago)
-            if hasattr(pedido_relacionado, 'estado_pago'):
-                if pedido_relacionado.saldo_pendiente <= 0:
-                    pedido_relacionado.estado_pago = 'PAGADO'
-                elif total_pagado > 0:
-                    pedido_relacionado.estado_pago = 'PARCIAL'
-                else:
-                    pedido_relacionado.estado_pago = 'PENDIENTE'
-
-            pedido_relacionado.save()
-            registrar_evento('pago_registrado', request.user, 'pago', pago.pk,
-                             f'Pago #{pago.pk} registrado en el pedido #{pedido_relacionado.pk}')
+                pedido_relacionado = pago.pedido
+                actualizar_estado_pago_pedido(pedido_relacionado)
+                registrar_evento('pago_registrado', request.user, 'pago', pago.pk,
+                                 f'Pago #{pago.pk} registrado en el pedido #{pedido_relacionado.pk}')
 
             messages.success(request, f"Pago de ${pago.monto} registrado correctamente.")
             return redirect('lista_pagos')
@@ -1436,12 +1425,18 @@ def editar_pago(request, pk):
     if request.method == 'POST':
         form = PagoForm(request.POST, instance=pago)
         if form.is_valid():
-            pago_guardado = form.save()
+            # El pago y el estado de los pedidos afectados van juntos (03-03, R12). `pedido_asociado`
+            # se leyó antes de armar el formulario, así que sigue siendo el pedido anterior del pago.
+            with transaction.atomic():
+                pago_guardado = form.save()
 
-            # CRÍTICO: Recalcular estado del pedido porque el monto pudo cambiar
-            actualizar_estado_pago_pedido(pago_guardado.pedido)
-            registrar_evento('pago_modificado', request.user, 'pago', pago_guardado.pk,
-                             f'Pago #{pago_guardado.pk} modificado en el pedido #{pago_guardado.pedido_id}')
+                # CRÍTICO: Recalcular estado del pedido porque el monto pudo cambiar
+                actualizar_estado_pago_pedido(pago_guardado.pedido)
+                if pedido_asociado.pk != pago_guardado.pedido_id:
+                    # El pago cambió de pedido: el anterior también deja de contarlo.
+                    actualizar_estado_pago_pedido(pedido_asociado)
+                registrar_evento('pago_modificado', request.user, 'pago', pago_guardado.pk,
+                                 f'Pago #{pago_guardado.pk} modificado en el pedido #{pago_guardado.pedido_id}')
 
             messages.success(request, 'Pago actualizado correctamente.')
             return redirect('detalle_pedido', pago_guardado.pedido.id)
@@ -1465,12 +1460,14 @@ def eliminar_pago(request, pk):
 
     if request.method == 'POST':
         monto_eliminado = pago.monto
-        pago.delete()
+        # Borrar el pago y recalcular el pedido son una sola unidad (03-03).
+        with transaction.atomic():
+            pago.delete()
 
-        # CRÍTICO: Recalcular estado del pedido tras la eliminación
-        actualizar_estado_pago_pedido(pedido)
-        registrar_evento('pago_eliminado', request.user, 'pago', pk,
-                         f'Pago #{pk} eliminado del pedido #{pedido.pk}')
+            # CRÍTICO: Recalcular estado del pedido tras la eliminación
+            actualizar_estado_pago_pedido(pedido)
+            registrar_evento('pago_eliminado', request.user, 'pago', pk,
+                             f'Pago #{pk} eliminado del pedido #{pedido.pk}')
 
         messages.warning(request, f'Se eliminó el pago de ${monto_eliminado}. El saldo del pedido ha sido actualizado.')
         return redirect('detalle_pedido', pedido.id)

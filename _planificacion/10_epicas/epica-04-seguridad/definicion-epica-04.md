@@ -36,6 +36,7 @@
 
 ## Para la redacción de 04-01
 
+- **AUD-02-028 y R19 (decisión del desarrollador, 2026-11-04):** la 04-01 reescribe `duplicar_pedido` para aceptar solo POST y, en esa misma edición, asigna `creado_por = request.user` al pedido duplicado. R19 pasa de fallo esperado a verde en la 04-01. La pregunta `PENDIENTE_CLIENTE` sobre si se copian ítems y pagos al duplicar sigue abierta y es aparte.
 - **AUD-03-002, evidencia nueva (2026-10-27):** `Broken pipe` el 2026-10-25 en `/base_datos/respaldar_bd/accion/`, consistente con la recarga a los 2 s. El destino sigue en esta iteración.
 
 ## Para la redacción de 04-03

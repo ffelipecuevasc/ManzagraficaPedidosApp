@@ -5,9 +5,9 @@ describe su comentario (`AUD-…`, qué falla hoy y qué iteración lo corrige).
 `@tag('regresion')` y `@expectedFailure`: el día que la corrección llegue, el resumen
 informa `unexpected successes` y la iteración que corrige quita las dos marcas.
 
-Numeración (decisión D3 del desarrollador, 2026-10-27): R1 a R15, R18, R19 y R20 (R20 retirada
-en la 03-01 y R3 retirada en la 03-02: ya no llevan marcas). R16 está
-reservado para AUD-02-021 y R17 está libre. R6 son tres pruebas. R5 no se escribió: el
+Numeración (decisión D3 del desarrollador, 2026-10-27): R1 a R15, R18, R19 y R20. Ya no llevan
+marcas: R20 (retirada en la 03-01), R3 (03-02) y R1, R2, R4, R10, R11, R12, R13 y R18 (03-03).
+R16 está reservado para AUD-02-021 y R17 está libre. R6 son tres pruebas. R5 no se escribió: el
 defecto no se reprodujo como estaba descrito (ver su sección).
 
 Contrato de R1 a R4 (decisión D1): «todo o nada». Si falla un ítem, no queda rastro en la
@@ -112,6 +112,8 @@ class OraculoEstadoPagoTests(TestCase):
 class ItemsTodoONadaTests(RegresionBase):
     def setUp(self):
         super().setUp()
+        # Sin esto el cliente de pruebas relanza la excepción y la prueba no mide los datos que quedan.
+        self.client.raise_request_exception = False
         self.cliente = crear_cliente()
         self.viejo = crear_producto(valor_neto=10_000)
         self.nuevo = crear_producto(valor_neto=4_000)
@@ -119,13 +121,12 @@ class ItemsTodoONadaTests(RegresionBase):
         self.items_con_fallo = ayudas.items_json((self.nuevo, '3', 4_000),
                                                  (_ProductoFalso, '1', 1_000))
 
-    @tag('regresion')
-    @expectedFailure  # R1 · AUD-01-002: hoy borra los ítems y recrea hasta el fallo. Lo corrige la 03-03.
+    # R1 · AUD-01-002: retirada en la 03-03. La edición va dentro de un atomic y la excepción sale del bloque.
     def test_r1_editar_pedido_con_item_fallido_no_deja_rastro(self):
         pedido = crear_pedido(cliente=self.cliente, valor_venta=10_000, items=[
             {'producto': self.viejo, 'cantidad': '1', 'precio_unitario': 10_000}])
 
-        with absorber_errores(self):
+        with absorber_errores(self, 'pedidos', 'django.request'):
             self.ejecutar('post', f'/pedido/editar/{pedido.pk}/', {
                 'cliente': self.cliente.pk, 'resumen_pedido': 'Editado', 'valor_venta': 15_000,
                 'items_json': self.items_con_fallo})
@@ -135,13 +136,12 @@ class ItemsTodoONadaTests(RegresionBase):
                          [(self.viejo.pk, Decimal('1.00'), 10_000)])
         self.assertEqual(pedido.valor_venta, 10_000)
 
-    @tag('regresion')
-    @expectedFailure  # R2 · AUD-01-002: igual que R1, en cotizaciones. Lo corrige la 03-03.
+    # R2 · AUD-01-002: retirada en la 03-03. Igual que R1, en cotizaciones.
     def test_r2_editar_cotizacion_con_item_fallido_no_deja_rastro(self):
         cotizacion = crear_cotizacion(cliente=self.cliente, valor_total=10_000, items=[
             {'producto': self.viejo, 'cantidad': '1', 'precio_unitario': 10_000}])
 
-        with absorber_errores(self):
+        with absorber_errores(self, 'pedidos', 'django.request'):
             self.ejecutar('post', f'/cotizaciones/editar/{cotizacion.pk}/', {
                 'cliente': self.cliente.pk, 'resumen': 'Editada', 'detalles': '<p>Detalle</p>',
                 'valor_total': 15_000, 'validez': 15, 'fecha_emision': '2026-10-15',
@@ -164,10 +164,9 @@ class ItemsTodoONadaTests(RegresionBase):
 
         self.assertEqual((Pedido.objects.count(), ItemPedido.objects.count()), (0, 0))
 
-    @tag('regresion')
-    @expectedFailure  # R4 · AUD-01-002: queda la cotización con ítems parciales. Lo corrige la 03-03.
+    # R4 · AUD-01-002: retirada en la 03-03. La cotización y sus ítems van dentro de un atomic.
     def test_r4_crear_cotizacion_con_item_fallido_no_deja_rastro(self):
-        with absorber_errores(self):
+        with absorber_errores(self, 'pedidos', 'django.request'):
             self.ejecutar('post', '/cotizaciones/nueva/', {
                 'cliente': self.cliente.pk, 'resumen': 'Nueva', 'detalles': '<p>Detalle</p>',
                 'valor_total': 13_000, 'validez': 15, 'fecha_emision': '2026-10-15',
@@ -295,8 +294,7 @@ class EstadoPagoTests(RegresionBase):
         super().setUp()
         self.cliente = crear_cliente()
 
-    @tag('regresion')
-    @expectedFailure  # R10 · AUD-02-004: crear con abono deja estado_pago PENDIENTE. Lo corrige la 03-03.
+    # R10 · AUD-02-004: retirada en la 03-03. Crear con abono recalcula estado_pago dentro del atomic.
     def test_r10_crear_con_abono_deja_estado_pago_coherente(self):
         self.ejecutar('post', '/pedidos/nuevo/', {
             'cliente': self.cliente.pk, 'resumen_pedido': 'Con abono', 'valor_venta': 10_000,
@@ -305,8 +303,7 @@ class EstadoPagoTests(RegresionBase):
         pedido = Pedido.objects.get()
         self.assertEqual(pedido.estado_pago, ayudas.estado_pago_esperado(pedido))  # PARCIAL
 
-    @tag('regresion')
-    @expectedFailure  # R11 · AUD-02-004: editar valor_venta no recalcula estado_pago. Lo corrige la 03-03.
+    # R11 · AUD-02-004: retirada en la 03-03. Editar el pedido recalcula estado_pago en la misma transacción.
     def test_r11_editar_valor_venta_recalcula_estado_pago(self):
         pedido = crear_pedido(cliente=self.cliente, valor_venta=10_000, estado_pago='PAGADO')
         crear_pago(pedido, monto=10_000)
@@ -319,8 +316,7 @@ class EstadoPagoTests(RegresionBase):
         self.assertEqual(pedido.valor_venta, 20_000)
         self.assertEqual(pedido.estado_pago, ayudas.estado_pago_esperado(pedido))  # PARCIAL
 
-    @tag('regresion')
-    @expectedFailure  # R12 · AUD-02-004: mover un pago de pedido no recalcula el pedido anterior. Lo corrige la 03-03.
+    # R12 · AUD-02-004: retirada en la 03-03. Mover un pago recalcula el pedido anterior y el nuevo.
     def test_r12_mover_pago_recalcula_ambos_pedidos(self):
         anterior = crear_pedido(cliente=self.cliente, valor_venta=10_000, estado_pago='PAGADO')
         destino = crear_pedido(cliente=self.cliente, valor_venta=10_000, estado_pago='PENDIENTE')
@@ -345,8 +341,7 @@ class ConvertirCotizacionTests(RegresionBase):
             {'cantidad': '2', 'precio_unitario': 10_000}])
         self.ruta = f'/cotizaciones/convertir/{self.cotizacion.pk}/'
 
-    @tag('regresion')
-    @expectedFailure  # R13 · AUD-02-005: la segunda conversión crea otro pedido. Lo corrige la 03-03.
+    # R13 · AUD-02-005: retirada en la 03-03. Una cotización ya aceptada no se vuelve a convertir.
     def test_r13_convertir_dos_veces_crea_un_solo_pedido(self):
         datos = {'fecha_entrega': '2026-10-30', 'valor_abonado': '0'}
         self.ejecutar('post', self.ruta, datos)
@@ -355,8 +350,8 @@ class ConvertirCotizacionTests(RegresionBase):
 
         self.assertEqual(Pedido.objects.count(), 1)
 
-    @tag('regresion')
-    @expectedFailure  # R18 · AUD-02-027: con fecha_entrega vacía el guardado falla y responde 500. Lo corrige la 03-04.
+    # R18 · AUD-02-027: retirada en la 03-03 (decisión 3-A del 2026-11-04, que reemplaza la del 2026-10-27
+    # que la dejaba en la 03-04). La fecha se valida con un formulario y la página vuelve con el error.
     def test_r18_convertir_sin_fecha_de_entrega_no_responde_500(self):
         with absorber_errores(self, 'pedidos', 'django.request'):
             respuesta = self.ejecutar('post', self.ruta, {'fecha_entrega': '', 'valor_abonado': '0'})
@@ -403,7 +398,7 @@ class PorcentajePagadoTests(TestCase):
 # ---------------------------------------------------------------------------
 class DuplicarPedidoTests(RegresionBase):
     @tag('regresion')
-    @expectedFailure  # R19 · AUD-02-028: el duplicado queda con creado_por nulo. Iteración: PENDIENTE_DESARROLLADOR.
+    @expectedFailure  # R19 · AUD-02-028: el duplicado queda con creado_por nulo. Lo corrige la 04-01 (decisión del 2026-11-04).
     def test_r19_duplicado_queda_con_el_usuario_que_duplica(self):
         original = crear_pedido(creado_por=crear_usuario())
 

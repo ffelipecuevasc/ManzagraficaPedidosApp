@@ -152,12 +152,14 @@ class ConvertirCotizacionTests(CotizacionBase):
             ('sin abono', '0', None, None, None, 'PENDIENTE'),
             ('abono parcial, método por defecto', '20000', None, 20_000, 'TRANSFERENCIA', 'PARCIAL'),
             ('abono total con método', '50000', 'EFECTIVO', 50_000, 'EFECTIVO', 'PAGADO'),
-            ('abono no numérico', 'veinte', None, None, None, 'PENDIENTE'),
-            ('abono negativo', '-5000', None, None, None, 'PENDIENTE'),
+            # El abono no numérico, negativo o mayor que el total se rechaza desde la 03-03:
+            # `test_fronteras_transaccionales.ConversionFormularioTests`.
         ]
         for descripcion, abono, metodo, monto, metodo_guardado, estado_pago in casos:
             with self.subTest(descripcion):
                 Pedido.objects.all().delete()
+                # Desde la 03-03 una cotización aceptada no se vuelve a convertir: cada caso parte de cero.
+                Cotizacion.objects.filter(pk=self.cotizacion.pk).update(estado='ENVIADA')
                 datos = {'valor_abonado': abono}
                 if metodo:
                     datos['metodo_pago'] = metodo

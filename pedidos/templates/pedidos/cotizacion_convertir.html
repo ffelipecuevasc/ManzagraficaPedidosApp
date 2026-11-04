@@ -48,9 +48,15 @@
                                     <span class="material-icons-round text-xl">event</span>
                                 </span>
                                 <input type="date" name="fecha_entrega" id="fecha_entrega" required
-                                       value="{{ fecha_sugerida|date:'Y-m-d' }}"
+                                       value="{% if form.is_bound %}{{ form.fecha_entrega.value|default:'' }}{% else %}{{ fecha_sugerida|date:'Y-m-d' }}{% endif %}"
+                                       {% if form.fecha_entrega.errors %}aria-invalid="true" aria-describedby="error-fecha_entrega"{% endif %}
                                        class="form-control w-full !pl-12 text-center font-bold text-slate-900 dark:text-white shadow-sm cursor-pointer">
                             </div>
+                            {% if form.fecha_entrega.errors %}
+                            <p id="error-fecha_entrega" role="alert" class="text-red-600 dark:text-red-400 text-xs font-bold mt-2 text-center">
+                                {{ form.fecha_entrega.errors.0 }}
+                            </p>
+                            {% endif %}
                             <p class="text-xs text-slate-400 mt-2 text-center">
                                 Fecha sugerida automática (Hoy + 7 días)
                             </p>
@@ -65,9 +71,15 @@
                                 <div class="relative max-w-[200px] mx-auto">
                                     <span class="absolute left-4 top-2.5 text-slate-400 select-none text-lg">$</span>
                                     <input type="number" name="valor_abonado" id="valor_abonado" required
-                                           value="0" min="0" max="{{ cotizacion.valor_total }}"
+                                           value="{% if form.is_bound %}{{ form.valor_abonado.value|default:'' }}{% else %}0{% endif %}" min="0" max="{{ cotizacion.valor_total }}"
+                                           {% if form.valor_abonado.errors %}aria-invalid="true" aria-describedby="error-valor_abonado"{% endif %}
                                            class="form-control w-full pl-10 font-black text-xl text-center shadow-sm border-yellow-300 focus:border-yellow-500 focus:ring-yellow-500">
                                 </div>
+                                {% if form.valor_abonado.errors %}
+                                <p id="error-valor_abonado" role="alert" class="text-red-600 dark:text-red-400 text-xs font-bold mt-2 text-center">
+                                    {{ form.valor_abonado.errors.0 }}
+                                </p>
+                                {% endif %}
                                 <p class="text-[10px] text-center text-slate-500 dark:text-slate-400 mt-2">
                                     Si no pagó nada aún, déjalo en 0.
                                 </p>
@@ -81,9 +93,9 @@
                                     <select name="metodo_pago" id="metodo_pago" disabled
                                             class="form-select w-full text-center font-bold text-slate-700 dark:text-slate-200 h-[46px] rounded-lg border-slate-300 dark:border-neutral-600 cursor-not-allowed">
                                         <option value="TRANSFERENCIA">Transferencia</option>
-                                        <option value="EFECTIVO">Efectivo</option>
-                                        <option value="DEBITO">Tarjeta Débito</option>
-                                        <option value="CREDITO">Tarjeta Crédito</option>
+                                        <option value="EFECTIVO" {% if form.data.metodo_pago == 'EFECTIVO' %}selected{% endif %}>Efectivo</option>
+                                        <option value="DEBITO" {% if form.data.metodo_pago == 'DEBITO' %}selected{% endif %}>Tarjeta Débito</option>
+                                        <option value="CREDITO" {% if form.data.metodo_pago == 'CREDITO' %}selected{% endif %}>Tarjeta Crédito</option>
                                     </select>
                                 </div>
                                 <p class="text-[10px] text-center text-slate-400 mt-2">
