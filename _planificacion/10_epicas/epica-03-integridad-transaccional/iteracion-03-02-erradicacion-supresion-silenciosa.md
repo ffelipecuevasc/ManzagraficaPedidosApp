@@ -1,7 +1,7 @@
 # Iteración 03-02 · Erradicación de la supresión silenciosa
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** En revisión (2026-11-04). Ejecutada en local con el alcance B: solo `crear_pedido` ([bitacora-03-02](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02.md)). Falta que el desarrollador ejecute el conteo de pedidos sin ítems. Sin despliegue propio: viaja con la 03-05. Historial de estados: Pendiente (redactada el 2026-11-04) → En revisión (2026-11-04).
+- **Estado:** Terminada (2026-11-04). Ejecutada en local con el alcance B: solo `crear_pedido` ([bitacora-03-02](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02.md)); cierre en [bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md). Sin despliegue propio: viaja con la 03-05. Historial de estados: Pendiente (redactada el 2026-11-04) → En revisión (2026-11-04) → Terminada (2026-11-04).
 - **Subfase del plan:** 3.2 «Erradicación de la supresión silenciosa» (`plan-de-trabajo.md:338-342`)
 - **Depende de:** 03-01 (Terminada el 2026-11-04)
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging` en `server.log`, sin identificador de correlación), RDA-015 (las transacciones vivirán en servicios en la 07-02), RDA-019 (la atomicidad se declara con `transaction.atomic` explícito y la captura fuera del bloque).
@@ -189,8 +189,8 @@ Cómo se lee: si «sin ítems desde el primero con ítems» es 0, la réplica no
 - [x] R3 está en verde y sin marcas; R1, R2 y R4 siguen como fallo esperado por la aserción de los datos.
 - [x] `pruebas.md` y la bitácora dicen `expected failures=17`.
 - [x] `python manage.py test pedidos` → `OK (expected failures=17)` en tres ejecuciones, `check` limpio y `makemigrations --check`: `No changes detected`.
-- [ ] El conteo P3 está en la bitácora con sus limitaciones declaradas (réplica con su último refresco registrado y la conversión de prueba del 2026-11-04). **Lo ejecuta el desarrollador**; se repite tras el refresco de la réplica.
-- [ ] Revisión manual a 360 px y en escritorio de la página 500 al fallar un ítem al crear un pedido (la hace el desarrollador; ver «Pendientes» de la bitácora).
+- [x] El conteo P3 está en la bitácora con sus limitaciones declaradas (réplica con su último refresco registrado y la conversión de prueba del 2026-11-04). Ejecutado por el desarrollador el 2026-11-04: 888 pedidos, 126 sin ítems, 38 sin ítems posteriores al primero con ítems, 126 con valor mayor que 0; 27 cotizaciones, 0 sin ítems ([bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md)). Se repite tras el refresco de la réplica (decisión 4), sin bloquear el cierre.
+- [x] Revisión manual a 360 px y en escritorio de la página 500 al fallar un ítem al crear un pedido. Hecha por el desarrollador el 2026-11-04 en la réplica (`DEBUG=False`, `--insecure`): con `items_json` alterado a un `producto_id` inexistente, `POST /pedidos/nuevo/` devolvió 500 y se vio la página 500 de la aplicación en escritorio y a 360 px; traza `DoesNotExist` en `views.py:186` en `django.request`; el último pedido siguió siendo el #910 ([bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md)).
 
 ## Fuera de alcance
 
@@ -235,4 +235,4 @@ Las decisiones 5 y 6 de la redacción (qué ve el usuario mientras tanto y lista
 
 ## Datos requeridos del cliente
 
-- Ninguno por ahora. `PENDIENTE_CLIENTE` solo si el conteo de pedidos sin ítems es mayor que 0 y hay que saber si se crean sin ítems a propósito.
+- Ninguno. El `PENDIENTE_CLIENTE` (¿se crean pedidos sin ítems a propósito?) se abrió porque el conteo dio más de 0 y se **cerró el 2026-11-04**: el cliente (Ignacio, dicha por él) siempre guarda pedidos con al menos 1 ítem y nunca sin ítems. No cambia el alcance ni agrega validación ([bitacora-03-02-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02-cierre.md)).
