@@ -96,13 +96,12 @@ class EliminarPagoTests(TestCase):
 
 ### 7.1 Regresiones declaradas (iteración 02-04)
 
-En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=18`** (19 hasta la 03-01, que retiró R20). Cada prueba afirma el comportamiento correcto y hoy falla por el defecto indicado. El despliegue (`despliegue.md`, paso 1) acepta solo este número.
+En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=17`** (19 hasta la 03-01, que retiró R20; 18 hasta la 03-02, que retiró R3). Cada prueba afirma el comportamiento correcto y hoy falla por el defecto indicado. El despliegue (`despliegue.md`, paso 1) acepta solo este número.
 
 | # | Prueba | Hallazgo | Por qué falla hoy | La vuelve verde |
 | :- | :----- | :------- | :---------------- | :-------------- |
 | R1 | `ItemsTodoONadaTests.test_r1_editar_pedido_con_item_fallido_no_deja_rastro` | AUD-01-002 | Borra los ítems anteriores y deja solo los creados antes del fallo | 03-03 |
 | R2 | `ItemsTodoONadaTests.test_r2_editar_cotizacion_con_item_fallido_no_deja_rastro` | AUD-01-002 | Igual que R1, en cotizaciones | 03-03 |
-| R3 | `ItemsTodoONadaTests.test_r3_crear_pedido_con_item_fallido_no_deja_rastro` | AUD-02-008 | Queda el pedido con un ítem de dos | 03-03 |
 | R4 | `ItemsTodoONadaTests.test_r4_crear_cotizacion_con_item_fallido_no_deja_rastro` | AUD-01-002 | Queda la cotización con un ítem de dos | 03-03 |
 | R6a | `EscrituraPorGetTests.test_r6_cambiar_estado_rechaza_get` | AUD-02-006 | GET cambia el estado y redirige (302) | 04-01 |
 | R6b | `EscrituraPorGetTests.test_r6_duplicar_pedido_rechaza_get` | AUD-02-006 | GET crea el duplicado y redirige (302) | 04-01 |
@@ -120,6 +119,7 @@ En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=18`*
 | R19 | `DuplicarPedidoTests.test_r19_duplicado_queda_con_el_usuario_que_duplica` | AUD-02-028 | `creado_por` queda nulo | `PENDIENTE_DESARROLLADOR` |
 
 - **R20 (AUD-02-029): retirada en la 03-01 (2026-11-04).** Al retirar `@transaccion_segura` (RDA-019), las 12 rutas con `pk` inexistente responden 404. `test_r20_pk_inexistente_responde_404` sigue en `test_regresiones.py` como prueba normal, sin `@expectedFailure` ni `@tag('regresion')`.
+- **R3 (AUD-02-008): retirada en la 03-02 (2026-11-04, alcance B).** En `crear_pedido` la excepción de un ítem ya sale del `transaction.atomic` que la vista tenía: se revierte el pedido, los ítems y el pago, y Django responde 500. `test_r3_crear_pedido_con_item_fallido_no_deja_rastro` sigue en `test_regresiones.py` como prueba normal, sin `@expectedFailure` ni `@tag('regresion')`, y con `raise_request_exception = False` (sin eso, el cliente de pruebas relanza la excepción y la prueba no mide los datos que quedan). R1, R2 y R4 siguen como fallo esperado hasta la 03-03: exigen un `transaction.atomic` que esas vistas no tienen. Hoy fallan por la aserción de los datos; cuando la 03-03 haga que la excepción salga de esas vistas, deberán ajustarse igual que R3 para no fallar por el error.
 - **R5 (AUD-01-006): no confirmada, sin prueba.** Dos llamadas a `registrar_metricas_diarias()` a mediodía dejan una fila. Por decisión del desarrollador (2026-10-27), R5 queda cubierta por R8, que comprueba en la base el duplicado de las 22:00 de Chile; el número R5 sigue sin asignar. **R16** está reservado para AUD-02-021 y **R17** está libre.
 - **`dashboard` y `estadisticas_bd`** escriben `HistorialBD` con GET: no son regresión (decisión del 2026-10-27). La 06-02 (orden de mantención diaria) retira la invocación desde el panel y desde las estadísticas de la base; la 06-01 corrige las fechas en UTC.
 - **Cómo se retira una regresión:** la iteración que corrige el defecto quita `@expectedFailure` y `@tag('regresion')` de su prueba, baja N en esta sección y en la bitácora, y deja la prueba como prueba normal. Si la corrección deja de registrar el error, `absorber_errores` no la hace fallar.

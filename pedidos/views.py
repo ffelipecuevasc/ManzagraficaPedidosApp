@@ -176,23 +176,20 @@ def crear_pedido(request):
                 pedido.save()
 
                 # 2. Procesar los Ítems (Hijos)
+                # Si un ítem falla, la excepción sale del bloque atomic: se revierte todo (pedido, ítems
+                # y pago) y Django responde 500 con la traza en server.log (03-02, RDA-019).
+                # El aviso al usuario y la conservación del formulario son de la 03-04.
                 items_json = request.POST.get('items_json')
                 if items_json:
-                    try:
-                        data_items = json.loads(items_json)
-                        for item in data_items:
-                            producto_obj = Producto.objects.get(pk=item['producto_id'])
-                            ItemPedido.objects.create(
-                                pedido=pedido,
-                                producto=producto_obj,
-                                cantidad=float(item['cantidad']),
-                                precio_unitario=int(item['precio_unitario'])
-                            )
-                    except Exception as e:
-                        # Supresión que descarta ítems: se corrige en 03-02. Mientras, queda en server.log.
-                        logger.exception('Error procesando items del pedido %s', pedido.pk,
-                                         extra={'request': request})
-                        # No detenemos el proceso, los items son recuperables o editables
+                    data_items = json.loads(items_json)
+                    for item in data_items:
+                        producto_obj = Producto.objects.get(pk=item['producto_id'])
+                        ItemPedido.objects.create(
+                            pedido=pedido,
+                            producto=producto_obj,
+                            cantidad=float(item['cantidad']),
+                            precio_unitario=int(item['precio_unitario'])
+                        )
 
                 # 3. Lógica de Pago (CORREGIDA: Variable segura y flujo directo)
                 # Extraemos el valor del formulario de manera segura

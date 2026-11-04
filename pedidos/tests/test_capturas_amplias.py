@@ -40,7 +40,7 @@ class CapturasBase(TestCase):
 
 
 class CapturasItemsTests(CapturasBase):
-    """Opción A: se registra y el usuario ve lo mismo que antes (el fondo queda en 03-02)."""
+    """Opción A: se registra y el usuario ve lo mismo que antes (el fondo de estas tres queda en la 03-03; `crear_pedido` se corrigió en la 03-02)."""
 
     def test_editar_pedido_registra_el_fallo_de_items(self):
         pedido = factorias.crear_pedido()

@@ -1,18 +1,18 @@
 # Iteración 03-02 · Erradicación de la supresión silenciosa
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** Pendiente (redactada el 2026-11-04; el alcance depende de la decisión 1)
+- **Estado:** En revisión (2026-11-04). Ejecutada en local con el alcance B: solo `crear_pedido` ([bitacora-03-02](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-02.md)). Falta que el desarrollador ejecute el conteo de pedidos sin ítems. Sin despliegue propio: viaja con la 03-05. Historial de estados: Pendiente (redactada el 2026-11-04) → En revisión (2026-11-04).
 - **Subfase del plan:** 3.2 «Erradicación de la supresión silenciosa» (`plan-de-trabajo.md:338-342`)
 - **Depende de:** 03-01 (Terminada el 2026-11-04)
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging` en `server.log`, sin identificador de correlación), RDA-015 (las transacciones vivirán en servicios en la 07-02), RDA-019 (la atomicidad se declara con `transaction.atomic` explícito y la captura fuera del bloque).
-- **Hallazgos relacionados:** AUD-01-002 (avanza; **se cierra en la 03-03** junto con R1, R2 y R4, nota del 2026-11-04), AUD-02-008 (evidencia P3; su cierre va con R3, hoy en la 03-03: la decisión 1 puede cambiarlo), AUD-02-006 (solo la parte de capturas, ya avanzada por la 01-09).
+- **Hallazgos relacionados:** AUD-01-002 (avanza; **se cierra en la 03-03** junto con R1, R2 y R4, nota del 2026-11-04), AUD-02-008 (evidencia P3; R3 pasa a verde aquí; nota fechada del 2026-11-04 y el estado lo decide el desarrollador), AUD-02-006 (solo la parte de capturas, ya avanzada por la 01-09).
 - **Cambio de esquema:** Ninguno.
 - **Respaldo previo al despliegue:** No lo exige por sí misma (sin migraciones ni datos). Ver «Despliegue».
-- **Etiqueta y ventana:** `PENDIENTE_DESARROLLADOR` (la tabla de la épica asigna el despliegue a la 03-05).
+- **Etiqueta y ventana:** sin despliegue propio; viaja con la 03-05 (decisión 2 del 2026-11-04).
 
 ## Objetivo
 
-Que ninguna captura amplia del código de la aplicación esconda un fallo o descarte datos sin que nadie se entere, según la regla 4 de `AGENTS.md`. Esta iteración trata el **fondo** de las cuatro capturas de ítems que la 01-09 solo dejó registradas. Cuánto de ese fondo se corrige aquí y cuánto queda para la 03-03 es la decisión 1 (sección «Solapamiento con la 03-03»).
+Que ninguna captura amplia del código de la aplicación esconda un fallo o descarte datos sin que nadie se entere, según la regla 4 de `AGENTS.md`. Esta iteración trata el **fondo** de las cuatro capturas de ítems que la 01-09 solo dejó registradas. Cuánto de ese fondo se corrige aquí y cuánto queda para la 03-03 lo fijó la decisión 1 (alcance B, 2026-11-04): aquí solo `crear_pedido`.
 
 ## Regla 4 de `AGENTS.md`, en resumen
 
@@ -68,6 +68,8 @@ Búsqueda sobre `pedidos/*.py` sin `tests/` ni `migrations/`: `except Exception`
 
 **Ya registradas:** las #4 a #10 (siete): la #4 desde la 01-03 y de la #5 a la #10 por la 01-09. **Sin registrar:** ninguna. Las #1 a #3 son anteriores y la regla las permite.
 
+**Después de la 03-02:** la #4 desaparece (`crear_pedido` ya no tiene captura). Las #5 a #7 siguen hasta la 03-03 y las #8 a #10 hasta la 04-04 (decisión 3). Quedan 9 `except Exception`, 3 de ellas permitidas.
+
 Capturas con excepción concreta que conviene tener a la vista:
 
 | Lugar | Qué hace | Observación |
@@ -111,7 +113,7 @@ Por eso: **R3 es la única que puede pasar a verde solo propagando la excepción
 | **C. Cuatro `atomic` mínimos (adelantar la parte de ítems de la 03-03)** | En las cuatro vistas, `try: with transaction.atomic(): …guardar cabecera e ítems… except <concretas>:` registra y vuelve al formulario con aviso. Captura **fuera** del bloque (regla 3) | 18 → **14** (R1 a R4) | Ninguna vista queda en un estado intermedio. Es el patrón correcto de la regla 3 desde el primer día. La 03-03 se concentra en pago, `estado_pago` y conversión | **Contradice la decisión del 2026-11-04** de cerrar AUD-01-002 con R1, R2 y R4 en la 03-03 (habría que revisar esas notas). Mezcla con 03-03 y con 03-04: hay que decidir qué ve el usuario y si se conserva el formulario. Cambia lo que ve el usuario ante un fallo. Más grande de revisar. Imagen huérfana (decisión de la 03-03) |
 | **D. Excepciones concretas, registro y aviso, sin transacción** | `except (json.JSONDecodeError, KeyError, TypeError, ValueError, Producto.DoesNotExist)` (lista por confirmar) con `logger.exception` y `messages.error` de texto fijo. Lo no listado sube y da 500 | 18 → **18** (R3 sigue: captura dentro del `atomic`) | Cumple los puntos 2, 3 y 4 sin tocar transacciones. El usuario **se entera** de que los ítems no se guardaron | No arregla los datos: siguen parciales (R1 a R4 siguen). Adelanta parte del contrato de error de la 03-04 (texto aprobado, qué ve el usuario). Se parece a la opción B de la 01-09, que el desarrollador no eligió. Necesita fijar la lista de excepciones y el texto |
 
-Notas que valen para todas:
+**Elegida: B** (decisión 1, 2026-11-04). Notas que valían para todas:
 
 - Ninguna opción cierra AUD-01-002: se cierra en la 03-03 (decisión del 2026-11-04). Con A o B, **R3 pasaría a verde en la 03-02** y AUD-02-008 (cuyo cierre dice «con R3 en la 03-03») habría que anotarlo; con C, también R1, R2 y R4.
 - **RDA-015:** ninguna opción cambia dónde viven las transacciones a futuro. En C, los `atomic` quedan en la vista y la 07-02 los mueve a los servicios, igual que los de la 03-03.
@@ -120,6 +122,8 @@ Notas que valen para todas:
 ## Evidencia P3 · pedidos sin ítems
 
 La Auditoría 04 (P3) recoge que el cliente dice que «a veces al guardar sale error y no se guarda» (`definicion-epica-03.md:26`). La épica pide que esta iteración revise si existen pedidos sin ítems. Se hace en la **réplica local**, con consultas de solo lectura que ejecuta el desarrollador (los agentes no usan `docker` ni `mysql`, `AGENTS.md`, sección 6).
+
+**Decisión 4 (2026-11-04):** el desarrollador ejecuta las tres consultas durante la 03-02 y las **repite tras el refresco de la réplica** (al cerrar la Épica 03, AUD-05-002). Cada cifra se registra con la fecha del último refresco de la réplica.
 
 ### Limitaciones que se declaran en la bitácora
 
@@ -163,60 +167,55 @@ Se responde en la bitácora de ejecución (no hace falta archivo de evidencia, p
 
 Cómo se lee: si «sin ítems desde el primero con ítems» es 0, la réplica no muestra el síntoma (sin descartar fallos que solo dejan ítems parciales). Si es mayor que 0, no se concluye que fueron fallos: se registra la cifra y se pregunta al cliente si crea pedidos sin ítems a propósito (`PENDIENTE_CLIENTE`, solo si la cifra es mayor que 0).
 
-## Tareas (una vez tomada la decisión 1)
+## Tareas (ejecutadas el 2026-11-04 con el alcance B)
 
-1. **Pruebas primero (regla 8.15)**, antes de tocar `views.py`:
-   - Ajustar R3 (y R1, R2 y R4 si la opción lo pide) con `raise_request_exception = False` y `absorber_errores('pedidos', 'django.request')`, para que su resultado diga lo que debe. Anotar en la bitácora cuántas pruebas fallan o dan `unexpected success` antes de corregir.
-   - Pruebas nuevas que fallen hoy y pasen con la corrección, según la opción: (A/B) un ítem inválido en `crear_pedido` deja 0 pedidos y 0 ítems, responde 500 con la plantilla de la 01-03 y deja **una** línea `django.request` con traza; (A) lo mismo en las otras tres vistas con la afirmación sobre lo que queda en la base; (C) las de A más la vuelta al formulario con aviso; (D) el aviso de texto fijo, sin `str(e)` ni `Traceback` en la respuesta.
-   - Una prueba que compruebe que las cuatro vistas ya no contienen `except Exception` (por ejemplo leyendo su fuente con `inspect`), como la prueba de la 03-01 que comprueba que el decorador no existe.
-   - Reescribir `test_capturas_amplias.CapturasItemsTests` (3 pruebas) según la opción: dejan de afirmar «redirección y `ERROR` de `pedidos.views`».
-2. **Implementar la opción elegida** en `pedidos/views.py`. No tocar `convertir_a_pedido`, `estado_pago` ni los pagos (03-03).
-3. **Retirar de la lista de regresiones** las que pasen a verde, en el mismo cambio y como indica `docs/operacion/pruebas.md` («Cómo se retira una regresión»): quitar `@expectedFailure` y `@tag('regresion')`, bajar el valor vigente de `expected failures` en `pruebas.md:99` y en la bitácora, y quitar su fila de la tabla (`:103-106`).
-4. **Comentarios:** quitar de `views.py` los cuatro comentarios «se corrige en 03-02. Mientras, queda en server.log» y, en `pruebas.md`, lo que diga que el fondo sigue pendiente.
-5. **Documentación de operación:** si cambia lo que se lee en `server.log` (una línea `django.request` donde hoy hay una de `pedidos.views`), ajustar la guía de `docs/operacion/despliegue.md` (registrador de los errores de vista, `:38`).
-6. **Conteo P3** (sección anterior): el desarrollador ejecuta las tres consultas y la bitácora transcribe los números con las limitaciones.
-7. **Verificación** (`AGENTS.md`, sección 10):
-   - `python manage.py test pedidos` en tres ejecuciones, con el `expected failures=N` que corresponda a la opción y sin `unexpected successes` ni `failures`.
-   - `check` sin errores y `makemigrations --check --dry-run` sin cambios.
-   - Revisión manual contra la réplica local, en escritorio y a 360 px, **de las pantallas que cambien** (el aviso o la página 500 al fallar un ítem). Con A o B se ve la página 500; con C o D, el aviso.
-8. **Bitácora** `bitacora-03-02.md`, registro, auditoría (AUD-01-002: nota de avance sin cerrar; AUD-02-008 si R3 pasa a verde) y estado «En revisión».
+1. **Pruebas primero (regla 8.15)**, con `DB_NAME=manzagrafica_replica` y Docker encendido:
+   - R3 ajustada: `raise_request_exception = False` y `absorber_errores` con `pedidos` y `django.request`; sin `@expectedFailure` ni `@tag('regresion')`. R1, R2 y R4 no se tocaron.
+   - Pruebas nuevas en `test_pedidos.py` (`CrearPedidoItemFallidoTests`): un ítem fallido (cinco causas) no deja pedido, ítems, pago ni evento y responde 500 con la plantilla de la 01-03; deja una sola línea `django.request` con traza; `crear_pedido` ya no contiene `except Exception`.
+   - Antes de corregir: 4 pruebas fallaban (8 fallos contando los cinco casos), R1, R2 y R4 como fallo esperado.
+2. **Corregir `crear_pedido`** (`views.py`): se quita el `try/except Exception` de los ítems; la excepción sale del `transaction.atomic` de `:166` y el bloque revierte pedido, ítems y pago. Sin cambios en mensajes al usuario (03-04).
+3. **Retirar R3** como regresión y actualizar `docs/operacion/pruebas.md` (valor vigente 17, fila de R3 fuera, viñeta que explica la retirada).
+4. **Verificación:** `python manage.py test pedidos` → `OK (expected failures=17)` en tres ejecuciones; `check`; `makemigrations --check --dry-run`.
+5. **Conteo P3:** las tres consultas quedan listas para que el desarrollador las ejecute. Criterio sin marcar.
+6. **Cierre documental:** bitácora, registro y notas fechadas en AUD-02-008 y AUD-01-002.
 
 ## Criterios de aceptación
 
-Los de cada opción se fijan con la decisión 1. Valen para todas:
-
-- [ ] La decisión 1 está registrada antes de implementar (RDA solo si cambia una decisión vigente; `PENDIENTE_DESARROLLADOR`).
-- [ ] Las pruebas se escribieron antes de la corrección y fallaban; el número consta en la bitácora.
-- [ ] En las vistas de ítems que la opción cubre no queda ningún `except Exception`; la prueba lo comprueba.
-- [ ] Ninguna respuesta lleva `str(e)` ni `Traceback`, y cada fallo deja **una** línea con traza, método, ruta y usuario.
-- [ ] Las regresiones que pasan a verde quedan sin marcas y `pruebas.md` y la bitácora dicen el nuevo `expected failures`; las demás siguen como fallo esperado **por el motivo correcto**.
-- [ ] `python manage.py test pedidos` en `OK` (con el número de fallos esperados de la opción) en tres ejecuciones, `check` limpio y `makemigrations --check`: `No changes detected`.
-- [ ] Las cuatro capturas ya no dicen «se corrige en 03-02».
-- [ ] El conteo P3 está en la bitácora con sus limitaciones declaradas (réplica con su último refresco registrado y la conversión de prueba del 2026-11-04).
-- [ ] Revisión manual a 360 px y en escritorio de las pantallas que cambien (la hace el desarrollador).
+- [x] La decisión 1 está registrada antes de implementar (alcance B, 2026-11-04). No exige RDA: no contradice RDA-019, que ya fija «captura fuera del bloque» y atomicidad explícita.
+- [x] Las pruebas se escribieron antes de la corrección y fallaban: 4 pruebas (8 fallos con los cinco casos), según la bitácora.
+- [x] `crear_pedido` no contiene `except Exception`; la prueba lo comprueba.
+- [x] Un ítem fallido en `crear_pedido` no deja pedido, ítems, pago ni evento, y responde 500 con `pedidos/errors/500.html`.
+- [x] Cada fallo deja **una** línea `django.request` con traza, método, ruta y usuario, y la respuesta no lleva `str(e)` ni `Traceback`.
+- [x] R3 está en verde y sin marcas; R1, R2 y R4 siguen como fallo esperado por la aserción de los datos.
+- [x] `pruebas.md` y la bitácora dicen `expected failures=17`.
+- [x] `python manage.py test pedidos` → `OK (expected failures=17)` en tres ejecuciones, `check` limpio y `makemigrations --check`: `No changes detected`.
+- [ ] El conteo P3 está en la bitácora con sus limitaciones declaradas (réplica con su último refresco registrado y la conversión de prueba del 2026-11-04). **Lo ejecuta el desarrollador**; se repite tras el refresco de la réplica.
+- [ ] Revisión manual a 360 px y en escritorio de la página 500 al fallar un ítem al crear un pedido (la hace el desarrollador; ver «Pendientes» de la bitácora).
 
 ## Fuera de alcance
 
-- Atomicidad nueva en `editar_pedido`, `crear_cotizacion` y `editar_cotizacion` (salvo que la decisión 1 elija C), frontera de `convertir_a_pedido`, `estado_pago` (AUD-02-004), rechazo de la doble conversión y validación del abono con formulario (AUD-02-005): 03-03.
+- Las capturas de ítems de `editar_pedido` (`views.py:267`), `crear_cotizacion` (`:759`) y `editar_cotizacion` (`:803`), con R1, R2 y R4: 03-03. Sus comentarios «se corrige en 03-02» quedan como están y se actualizan allí.
+- Atomicidad nueva en esas vistas, frontera de `convertir_a_pedido`, `estado_pago` (AUD-02-004), rechazo de la doble conversión y validación del abono con formulario (AUD-02-005): 03-03.
+- `views.py:858` (el abono que se vuelve 0 sin aviso): 03-03 (decisión 3).
 - Cierre de AUD-01-002 y de AUD-01-001: 03-03.
-- La imagen de referencia que queda en disco al revertir: 03-03 (`definicion-epica-03.md:47`).
-- Mensajes al usuario, conservación del formulario y envío único (R21): 03-04.
-- Conversión de `float` a `Decimal` en las cantidades (regla 13), salvo lo que decida la decisión 4.
-- Las capturas de respaldo y restauración, salvo lo que decida la decisión 2; la validación y el registro de eventos de la restauración y la excepción propia de `utils.py`: 04-04.
+- La imagen de referencia que queda en disco al revertir `crear_pedido`: 03-03 (`definicion-epica-03.md:47`).
+- Mensajes al usuario, conservación del formulario y envío único (R21): 03-04. Hasta entonces, un ítem fallido al crear un pedido muestra la página 500 y el formulario se pierde.
+- Las capturas de respaldo y restauración (`views.py:1118`, `:1162`, `:1187`), la excepción propia de `utils.py` y el registro de eventos de la restauración: 04-04 (decisión 3).
+- `float(item['cantidad'])` en lugar de `Decimal` (regla 13): 07-02 (decisión 3).
 - `scripts/diagnostico/paridad_replica.py` (herramienta de consola, no código de la aplicación).
 - Mover transacciones a servicios: 07-02 (RDA-015).
 
 ## Despliegue
 
-- Cambia código, así que necesita despliegue con etiqueta (RDA-007). La tabla de la épica lo asigna a la 03-05 («Validación y despliegue de la integridad», `definicion-epica-03.md:42`). Si la 03-02 viaja en ese despliegue o tiene uno propio: `PENDIENTE_DESARROLLADOR`. La 03-01 viaja con la 03-05 (decisión del 2026-11-04).
-- Sin migraciones ni cambios de datos. Respaldo previo: lo decide el desarrollador al planificar el despliegue de la 03-05.
-- Hasta el despliegue, producción sigue con las capturas registradas de `v1.2-capturas`.
+- Cambia código, así que necesita despliegue con etiqueta (RDA-007). **Viaja con la 03-05** (decisión 2 del 2026-11-04), igual que la 03-01. Sin migraciones ni cambios de datos. Respaldo previo: lo decide el desarrollador al planificar el despliegue de la 03-05.
+- Hasta ese despliegue, producción sigue con las capturas registradas de `v1.2-capturas`.
+- Cuando se despliegue: un ítem fallido al crear un pedido deja una línea de `django.request` (no de `pedidos.views`) y el usuario ve la página 500.
 
 ## Riesgos
 
 | Riesgo | Mitigación |
 | :----- | :--------- |
-| A: un fallo de ítems pasa de éxito falso a 500 en tres vistas sin transacción, con el formulario perdido | Elegir B o C, o acotar el despliegue a la 03-05 junto con la 03-03 y la 03-04 |
+| Con B, el éxito falso de `crear_pedido` pasa a un 500 y el formulario se pierde hasta la 03-04 | Viaja con la 03-05, junto con la 03-03 y la 03-04. Los datos quedan íntegros: se revierte todo |
 | La prueba de R3 sigue como fallo esperado por una razón equivocada (el error sube al cliente de pruebas) | Ajustar `raise_request_exception` y el absorbedor primero, y registrar en la bitácora el motivo de cada fallo |
 | Una regresión pasa a verde sin que la 03-03 lo sepa (R3) | Notas en AUD-02-008 y en el registro; `pruebas.md` con el valor vigente |
 | El conteo de la réplica se toma como medida de producción | La limitación va en la bitácora y en cualquier cita de la cifra |
@@ -225,16 +224,14 @@ Los de cada opción se fijan con la decisión 1. Valen para todas:
 
 ## Decisiones del desarrollador
 
-Todas `PENDIENTE_DESARROLLADOR`.
+Todas resueltas el 2026-11-04.
 
-1. **Alcance:** A, B, C o D (sección «Solapamiento con la 03-03»). Si es C, anotar qué cambia de la decisión del 2026-11-04 sobre AUD-01-002.
-2. **Capturas #8 a #10 (respaldo y restauración):** dejarlas como están (registradas, texto fijo) hasta la 04-04, o estrecharlas aquí con una excepción propia en `utils.py` (es la opción B de la 01-09).
-3. **`views.py:858` (abono que se vuelve 0 sin aviso):** tratarlo aquí o dejarlo en la 03-03 con AUD-02-005.
-4. **`float` en las cantidades de ítems (regla 13):** corregirlo aquí, dejarlo en la épica que corresponda o `PENDIENTE_DESARROLLADOR` hasta una iteración propia.
-5. **Qué ve el usuario mientras tanto** (A o B): la página 500 de la 01-03 hasta la 03-04, o un aviso provisional de texto fijo (esto último ya es la opción D).
-6. **Lista de excepciones concretas** y texto del aviso (solo en C o D).
-7. **Despliegue:** viajar con la 03-05 o tener uno propio.
-8. **Conteo P3:** cuándo lo ejecuta el desarrollador (antes o después de implementar) y si hay que preguntar al cliente por pedidos sin ítems a propósito.
+1. **Alcance B:** propagar el error solo en `crear_pedido`, que ya tiene `transaction.atomic`.
+2. **Despliegue:** la 03-02 viaja con la 03-05.
+3. **Otros temas:** respaldo y restauración, hasta la 04-04; el abono de `views.py:858`, en la 03-03; `float`/`Decimal`, en la 07-02.
+4. **Conteo de pedidos sin ítems:** lo ejecuta el desarrollador durante la 03-02 y lo repite tras el refresco de la réplica.
+
+Las decisiones 5 y 6 de la redacción (qué ve el usuario mientras tanto y lista de excepciones) no aplican con el alcance B: el usuario ve la página 500 de la 01-03 hasta la 03-04.
 
 ## Datos requeridos del cliente
 

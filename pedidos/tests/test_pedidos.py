@@ -7,6 +7,8 @@ regresiones de la 02-04 y no se prueban aquí. Las reglas sin confirmar llevan P
 TestCase no confirma la transacción: los eventos (`on_commit`) se ejecutan con
 `captureOnCommitCallbacks(execute=True)`.
 """
+import inspect
+import json
 import tempfile
 from decimal import Decimal
 
@@ -14,6 +16,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
+from pedidos import views
 from pedidos.models import ItemPedido, Pago, Pedido, RegistroEvento
 
 from . import ayudas
@@ -21,6 +24,7 @@ from .factorias import (
     crear_cliente, crear_item_pedido, crear_pago, crear_pedido, crear_producto, crear_usuario,
     momento_chile,
 )
+from .test_registro import formatear_como_error_log
 
 
 class FlujoBase(TestCase):
@@ -158,6 +162,70 @@ class CrearPedidoTests(FlujoBase):
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertFalse(Pedido.objects.exists())
+
+
+# ---------------------------------------------------------------------------
+# 03-02 · Crear pedido con un ítem que falla (alcance B)
+# ---------------------------------------------------------------------------
+@override_settings(DEBUG=False)
+class CrearPedidoItemFallidoTests(FlujoBase):
+    """El error de un ítem sale del `atomic` de `crear_pedido`: se revierte todo.
+
+    La respuesta es la página 500 de la 01-03 y el aviso al usuario queda para la 03-04.
+    El cliente de pruebas no relanza la excepción, para ver lo que recibe el usuario.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client.raise_request_exception = False
+        self.cliente = crear_cliente()
+        self.producto = crear_producto(valor_neto=10_000)
+
+    def datos(self, items_json):
+        return {'cliente': self.cliente.pk, 'resumen_pedido': 'Con ítem fallido', 'valor_venta': 13_000,
+                'abono_inicial': 5_000, 'items_json': items_json}
+
+    def item(self, **campos):
+        item = {'producto_id': str(self.producto.pk), 'cantidad': '1', 'precio_unitario': 1_000}
+        item.update(campos)
+        return item
+
+    def casos(self):
+        valido = self.item()
+        return [
+            ('producto inexistente', json.dumps([valido, self.item(producto_id='999999')])),
+            ('JSON inválido', '[{"producto_id":'),
+            ('clave ausente', json.dumps([valido, {'cantidad': '1', 'precio_unitario': 1_000}])),
+            ('cantidad no numérica', json.dumps([valido, self.item(cantidad='abc')])),
+            ('precio no numérico', json.dumps([valido, self.item(precio_unitario='abc')])),
+        ]
+
+    def test_item_fallido_no_deja_rastro_y_responde_500(self):
+        for descripcion, items_json in self.casos():
+            with self.subTest(descripcion):
+                with self.assertLogs('django.request', 'ERROR'):
+                    respuesta = self.ejecutar('post', '/pedidos/nuevo/', self.datos(items_json))
+
+                self.assertEqual(respuesta.status_code, 500)
+                self.assertTemplateUsed(respuesta, 'pedidos/errors/500.html')
+                self.assertEqual((Pedido.objects.count(), ItemPedido.objects.count(),
+                                  Pago.objects.count(), RegistroEvento.objects.count()), (0, 0, 0, 0))
+
+    def test_item_fallido_deja_una_sola_linea_con_traza(self):
+        items_json = json.dumps([self.item(), self.item(producto_id='999999')])
+
+        with self.assertLogs(level='ERROR') as capturado:
+            self.ejecutar('post', '/pedidos/nuevo/', self.datos(items_json))
+
+        self.assertEqual([r.name for r in capturado.records], ['django.request'])
+        linea = formatear_como_error_log(capturado.records[0])
+        self.assertIn('metodo=POST ruta=/pedidos/nuevo/ usuario=', linea)
+        self.assertIn('excepcion=DoesNotExist', linea)
+        self.assertIn('Traceback (most recent call last):', linea)
+        self.assertNotIn('Con ítem fallido', linea)  # nunca el contenido del formulario
+
+    def test_crear_pedido_no_tiene_captura_amplia(self):
+        self.assertNotIn('except Exception', inspect.getsource(views.crear_pedido))
 
 
 # ---------------------------------------------------------------------------

@@ -6,7 +6,7 @@ describe su comentario (`AUD-…`, qué falla hoy y qué iteración lo corrige).
 informa `unexpected successes` y la iteración que corrige quita las dos marcas.
 
 Numeración (decisión D3 del desarrollador, 2026-10-27): R1 a R15, R18, R19 y R20 (R20 retirada
-en la 03-01: ya no lleva marcas). R16 está
+en la 03-01 y R3 retirada en la 03-02: ya no llevan marcas). R16 está
 reservado para AUD-02-021 y R17 está libre. R6 son tres pruebas. R5 no se escribió: el
 defecto no se reprodujo como estaba descrito (ver su sección).
 
@@ -153,10 +153,11 @@ class ItemsTodoONadaTests(RegresionBase):
             [(self.viejo.pk, Decimal('1.00'), 10_000)])
         self.assertEqual(cotizacion.valor_total, 10_000)
 
-    @tag('regresion')
-    @expectedFailure  # R3 · AUD-02-008: el try/except interno anula el atomic; queda el pedido con ítems parciales. Lo corrige la 03-03.
+    # R3 · AUD-02-008: retirada en la 03-02 (alcance B). La excepción sale del atomic de crear_pedido y
+    # se revierte todo. Ya no lleva marcas. El cliente no relanza la excepción: el error es la respuesta 500.
     def test_r3_crear_pedido_con_item_fallido_no_deja_rastro(self):
-        with absorber_errores(self):
+        self.client.raise_request_exception = False
+        with absorber_errores(self, 'pedidos', 'django.request'):
             self.ejecutar('post', '/pedidos/nuevo/', {
                 'cliente': self.cliente.pk, 'resumen_pedido': 'Nuevo', 'valor_venta': 13_000,
                 'items_json': self.items_con_fallo})
