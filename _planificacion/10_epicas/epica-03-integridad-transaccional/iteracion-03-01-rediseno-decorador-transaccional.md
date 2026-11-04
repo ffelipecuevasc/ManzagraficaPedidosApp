@@ -1,7 +1,7 @@
 # Iteración 03-01 · Rediseño del decorador transaccional
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** En revisión (ejecutada en local el 2026-11-04 con la opción C, RDA-019; [bitacora-03-01](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-01.md)). Historial de estados: Pendiente (redactada el 2026-11-04) → En revisión (2026-11-04).
+- **Estado:** Terminada (2026-11-04). Ejecutada en local con la opción C, RDA-019 ([bitacora-03-01](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-01.md)); cierre en [bitacora-03-01-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-01-cierre.md). Sin despliegue propio: viaja con la 03-05. Historial de estados: Pendiente (redactada el 2026-11-04) → En revisión (2026-11-04) → Terminada (2026-11-04).
 - **Subfase del plan:** 3.1 «Rediseño conceptual del decorador» (`plan-de-trabajo.md:327`)
 - **Depende de:** 01-06 (parte D) y Épica 02; 00-07 desplegada y validada (cumplido el 2026-11-04; nota del 2026-11-04 en `definicion-epica-03.md`)
 - **RDA relacionadas:** RDA-003 (sin migraciones destructivas), RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging` en `server.log`, sin identificador de correlación), RDA-015 (las transacciones vivirán en servicios en la 07-02). RDA-019 si la decisión 1 lo requiere.
@@ -154,7 +154,7 @@ Se quitan las 17 líneas `@transaccion_segura` y el archivo `decorators.py`. Los
 - [x] Un error en una de las 17 vistas sigue respondiendo 500 con `pedidos/errors/500.html` y deja en el registro la traza completa con método, ruta y usuario.
 - [x] `docs/operacion/pruebas.md` dice 18 y describe las rutas con `pk` inexistente como 404.
 - [x] El caso de estudio de AUD-02-008 está en la bitácora.
-- [ ] Revisión manual contra la réplica local: un `pk` inexistente en editar cliente y en convertir cotización muestra la página 404, en escritorio y a 360 px (la hace el desarrollador).
+- [x] Revisión manual contra la réplica local: un `pk` inexistente muestra la página 404 de la aplicación, en escritorio y a 360 px. Hecha por el desarrollador el 2026-11-04 con `DEBUG=False` y `runserver --insecure`, en editar pedido y editar cliente. Convertir cotización con `pk` inexistente no se probó a mano: lo cubre R20 (decisión del desarrollador, [bitacora-03-01-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-01-cierre.md)).
 
 ## Fuera de alcance
 

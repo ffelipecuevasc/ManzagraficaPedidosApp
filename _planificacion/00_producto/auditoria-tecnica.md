@@ -236,3 +236,19 @@ Notas agregadas sin reescribir los hallazgos anteriores. Solo conteos, horas, c�
 - **AUD-04-004 · clasificación de las 8 líneas `root` (`OSError: write error`).** En 3 hay líneas de uWSGI del mismo segundo (`SIGPIPE`, «writing to a closed pipe/socket/fd (probably the client disconnected)», y `Broken pipe`): 2026-11-03 11:22:59 (`GET /`), 2026-11-03 18:58:48 (`GET /pedido/<id>/cambiar/<estado>/`) y 2026-11-04 00:12:39 (`GET /base_datos/respaldar_bd/accion/`, con un 499). Las otras 5 (2026-10-26 12:01:10 y 16:53:18, 2026-10-27 14:35:49, 2026-10-29 13:46:48 y 2026-10-31 13:08:48) solo tienen el `OSError` en `error.log`: se clasifican por la misma familia, **como inferencia**. Clasificación: desconexión del cliente, **sin acción**. Complementa la nota anterior de este mismo día.
 - **AUD-01-003 · observación (sin concluir).** El 2026-11-03 a las 18:58:48, un `GET /pedido/<id>/cambiar/<estado>/` terminó en 499 y, en el mismo segundo, el navegador repitió la petición y obtuvo 302. No se sabe si la primera alcanzó a ejecutar el cambio de estado. Es una observación, no un hallazgo nuevo: la corrección sigue en 04-01.
 - **AUD-01-020 · seguimiento.** El 2026-11-03 a las 14:19 (hora de Chile), un rastreador real (Googlebot) recibió 200 en `/robots.txt`, y otro rastreador también. Cubre la parte «un rastreador real recibe 200» del seguimiento; queda pendiente solo la tasa diaria de `Broken pipe` a 28 días (parte C2 de la 00-06, 2026-11-20).
+
+## Auditoría 05 · Revisión manual de la iteración 03-01
+
+- **Fecha:** 2026-11-04
+- **Auditor:** Francisco Felipe Cuevas Cerón (revisión manual en la réplica local), con registro documental de Claude (Sonnet 5.5)
+- **Alcance:** revisión manual de pantallas de la 03-01 contra la réplica local (`DEBUG=False`, `runserver --insecure`), en escritorio y a 360 px. Un hallazgo, ajeno a la 03-01. No incluye producción.
+
+### Resumen
+
+La revisión de la 03-01 no encontró problemas en lo que cambió. Al probar a mano la conversión de una cotización existente apareció un defecto de interfaz que no depende de la 03-01: en el listado de cotizaciones, a pantalla completa, la columna ACCIONES queda fuera de vista.
+
+### Hallazgos
+
+| ID | Severidad | Área | Hallazgo | Acción recomendada | Estado |
+| :- | :-------- | :--- | :------- | :----------------- | :----- |
+| AUD-05-001 | Media | Frontend/UX | **La columna ACCIONES del listado de cotizaciones queda fuera de vista a pantalla completa** y exige desplazamiento horizontal para llegar a los botones (observado por el desarrollador el 2026-11-04 en la réplica local). Dato leído en la plantilla: la tabla va dentro de un contenedor `overflow-x-auto` (`cotizacion_list.html:42-43`) y el encabezado «Acciones» está en `:71`. La causa no se investigó, y no se comprobó si ocurre en producción ni en los otros listados. | Corregir en la Épica 08 (iteración `PENDIENTE_DESARROLLADOR`). No se corrige en la Épica 03. | Abierto |

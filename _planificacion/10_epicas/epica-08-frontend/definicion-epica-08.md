@@ -40,6 +40,10 @@ Node.js y pnpm se usan **solo en la máquina del desarrollador** para compilar e
 
 - **Indicador de carga y confirmación visible** en todos los envíos de formularios (AUD-04-001), coherente con el bloqueo de la 00-07 y de la 03-04.
 
+## Para la redacción (iteración por definir) · nota del 2026-11-04
+
+- **Columna ACCIONES del listado de cotizaciones (AUD-05-001):** a pantalla completa queda fuera de vista y exige desplazamiento horizontal. Revisar el listado de cotizaciones y, con la medición de la 08-01, los demás listados. Iteración que lo corrige: `PENDIENTE_DESARROLLADOR`. La nota no cambia el alcance ni las iteraciones de la épica.
+
 ## Iteraciones
 
 | Iteración | Nombre | Origen |
