@@ -35,6 +35,8 @@ Esperado: `PROYECTO y VENV correctos`. Si no aparece, revisa los dos valores ant
 | `/var/log/manzagrafica.pythonanywhere.com.server.log` | **Chile** | **El archivo de diagnóstico.** Nuestra línea con emoji y `clave=valor` (nivel, registrador, método, ruta, usuario, excepción y mensaje), con la traza en la misma línea y los saltos escritos como `#012`. Emojis desde `v1.2` (01-07 reabierta): 🔴 ERROR, 🟡 WARNING, 🔵 INFO, 🔴🔴 CRITICAL, 🟢 DEBUG; en `v1.1-observabilidad` eran ❌ ⚠️ ❕ ❗❌❗ 🛠️. |
 | `/var/log/manzagrafica.pythonanywhere.com.error.log` | **UTC** | Los mismos errores en el formato de PythonAnywhere (`fecha,ms: mensaje` y la traza debajo), sin método, ruta ni usuario. Se deja como está. |
 
+**Registrador de los errores de vista (03-01, RDA-019):** desde el despliegue que lleve la 03-01 (viaja con la 03-05), un error en cualquier vista deja **una sola** línea con `registrador=django.request`, con método, ruta, usuario y traza; el nombre de la vista se lee en la traza. Las líneas con `registrador=pedidos.decorators` son de versiones anteriores, que dejaban dos líneas por error en las 17 vistas con `@transaccion_segura`.
+
 Para leer la traza de `server.log`, recupera los saltos de línea con `sed 's/#012/\n/g'`. En `error.log`, las líneas de la traza no llevan fecha: para cortar por hora, empieza en la primera línea con fecha ≥ la buscada y deja pasar las siguientes, porque comparar texto con `substr($0,1,19)` deja pasar como «nuevas» las líneas antiguas que empiezan con letra.
 
 La consola Bash consume tus 100 segundos diarios de CPU. Los comandos de este documento son cortos; no dejes procesos corriendo.

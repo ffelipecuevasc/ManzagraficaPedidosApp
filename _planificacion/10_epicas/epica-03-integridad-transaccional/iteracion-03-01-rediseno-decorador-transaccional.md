@@ -1,14 +1,14 @@
 # Iteración 03-01 · Rediseño del decorador transaccional
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** Pendiente (redactada el 2026-11-04; no se ha ejecutado)
+- **Estado:** En revisión (ejecutada en local el 2026-11-04 con la opción C, RDA-019; [bitacora-03-01](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-01.md)). Historial de estados: Pendiente (redactada el 2026-11-04) → En revisión (2026-11-04).
 - **Subfase del plan:** 3.1 «Rediseño conceptual del decorador» (`plan-de-trabajo.md:327`)
 - **Depende de:** 01-06 (parte D) y Épica 02; 00-07 desplegada y validada (cumplido el 2026-11-04; nota del 2026-11-04 en `definicion-epica-03.md`)
 - **RDA relacionadas:** RDA-003 (sin migraciones destructivas), RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging` en `server.log`, sin identificador de correlación), RDA-015 (las transacciones vivirán en servicios en la 07-02). RDA-019 si la decisión 1 lo requiere.
 - **Hallazgos relacionados:** AUD-01-001 (avanza; su fila nombra «03-01 y 03-03»), AUD-02-029 (se cierra aquí, con R20), AUD-02-008 (solo caso de estudio; se cierra con R3 en la 03-03, nota del 2026-11-04).
 - **Cambio de esquema:** Ninguno.
 - **Respaldo previo al despliegue:** No lo exige por sí misma (sin migraciones ni datos). Ver «Despliegue».
-- **Etiqueta y ventana:** `PENDIENTE_DESARROLLADOR` (ver «Despliegue»).
+- **Etiqueta y ventana:** sin despliegue propio; viaja con la 03-05 (decisión 4 del 2026-11-04).
 
 ## Objetivo
 
@@ -145,15 +145,16 @@ Se quitan las 17 líneas `@transaccion_segura` y el archivo `decorators.py`. Los
 
 ## Criterios de aceptación
 
-- [ ] La decisión 1 está registrada (RDA-019 si corresponde) antes de implementar.
-- [ ] Las pruebas nuevas se escribieron antes de la corrección y fallaban; el número consta en la bitácora.
-- [ ] Ningún componente del proyecto se llama `transaccion_segura` ni promete una transacción que no abre.
-- [ ] Ninguna respuesta lleva `str(e)` en su contexto (`mensaje_tecnico` desaparece).
-- [ ] R20 está en verde, sin `@expectedFailure` ni `@tag('regresion')`, y la caracterización de `test_acceso` afirma 404 en las 12 rutas.
-- [ ] `python manage.py test pedidos` → `OK (expected failures=18)`; ninguna otra regresión cambia de estado (R1 a R4 siguen como fallo esperado).
-- [ ] Un error en una de las 17 vistas sigue respondiendo 500 con `pedidos/errors/500.html` y deja en el registro la traza completa con método, ruta y usuario.
-- [ ] `docs/operacion/pruebas.md` dice 18 y describe las rutas con `pk` inexistente como 404.
-- [ ] El caso de estudio de AUD-02-008 está en la bitácora.
+- [x] La decisión 1 está registrada (RDA-019 si corresponde) antes de implementar.
+- [x] Las pruebas nuevas se escribieron antes de la corrección y fallaban; el número consta en la bitácora.
+- [x] Ningún componente del proyecto se llama `transaccion_segura` ni promete una transacción que no abre.
+- [x] Ninguna respuesta lleva `str(e)` en su contexto (`mensaje_tecnico` desaparece).
+- [x] R20 está en verde, sin `@expectedFailure` ni `@tag('regresion')`, y la caracterización de `test_acceso` afirma 404 en las 12 rutas.
+- [x] `python manage.py test pedidos` → `OK (expected failures=18)`; ninguna otra regresión cambia de estado (R1 a R4 siguen como fallo esperado).
+- [x] Un error en una de las 17 vistas sigue respondiendo 500 con `pedidos/errors/500.html` y deja en el registro la traza completa con método, ruta y usuario.
+- [x] `docs/operacion/pruebas.md` dice 18 y describe las rutas con `pk` inexistente como 404.
+- [x] El caso de estudio de AUD-02-008 está en la bitácora.
+- [ ] Revisión manual contra la réplica local: un `pk` inexistente en editar cliente y en convertir cotización muestra la página 404, en escritorio y a 360 px (la hace el desarrollador).
 
 ## Fuera de alcance
 
@@ -178,10 +179,12 @@ Se quitan las 17 líneas `@transaccion_segura` y el archivo `decorators.py`. Los
 
 ## Decisiones del desarrollador
 
-1. Qué hacer con el decorador (A, B o C) y si se registra como RDA-019: `PENDIENTE_DESARROLLADOR`.
-2. Nombre del componente nuevo, solo en A o B: `PENDIENTE_DESARROLLADOR`.
-3. Si AUD-01-001 se cierra en la 03-01 (opción C: el componente desaparece) o en la 03-03, como dice su fila: `PENDIENTE_DESARROLLADOR`.
-4. Despliegue propio o junto con la 03-05: `PENDIENTE_DESARROLLADOR`.
+Todas resueltas el 2026-11-04.
+
+1. **Opción C:** se retira `@transaccion_segura` de las 17 vistas y se elimina `decorators.py`; se registra como RDA-019.
+2. **Nombre del componente:** no aplica (opción C).
+3. **AUD-01-001:** queda con nota de avance y se cierra en la 03-03.
+4. **Despliegue:** sin despliegue propio; viaja con la 03-05.
 
 ## Datos requeridos del cliente
 

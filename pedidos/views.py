@@ -12,7 +12,6 @@ from django.template.loader import render_to_string
 from django.db import transaction
 from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion, HistorialBD, Pago
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm
-from .decorators import transaccion_segura
 from .eventos import registrar_evento
 from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
 from datetime import timedelta, datetime
@@ -155,7 +154,6 @@ def actualizar_estado_pago_pedido(pedido):
 # ==========================================
 
 @login_required
-@transaccion_segura
 def crear_pedido(request):
     cliente_form = ClienteForm()
     productos_disponibles = Producto.objects.all().order_by('nombre')
@@ -244,7 +242,6 @@ def crear_pedido(request):
     return render(request, 'pedidos/pedido_form.html', context)
 
 @login_required
-@transaccion_segura
 def editar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     productos_disponibles = Producto.objects.all().order_by('nombre')
@@ -298,7 +295,6 @@ def editar_pedido(request, pk):
     })
 
 @login_required
-@transaccion_segura
 def eliminar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
     if request.method == 'POST':
@@ -402,7 +398,6 @@ def lista_pedidos(request):
     return render(request, 'pedidos/pedido_list.html', context)
 
 @login_required
-@transaccion_segura
 def duplicar_pedido(request, pk):
     # 1. Obtener el pedido original
     original = get_object_or_404(Pedido, pk=pk)
@@ -586,7 +581,6 @@ def lista_clientes(request):
     return render(request, 'pedidos/cliente_list.html', context)
 
 @login_required
-@transaccion_segura
 def crear_cliente(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
@@ -599,7 +593,6 @@ def crear_cliente(request):
     return render(request, 'pedidos/cliente_form.html', {'form': form})
 
 @login_required
-@transaccion_segura
 def editar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     if request.method == 'POST':
@@ -613,7 +606,6 @@ def editar_cliente(request, pk):
     return render(request, 'pedidos/cliente_form.html', {'form': form})
 
 @login_required
-@transaccion_segura
 def eliminar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     if request.method == 'POST':
@@ -738,7 +730,6 @@ def lista_cotizaciones(request):
     return render(request, 'pedidos/cotizacion_list.html', context)
 
 @login_required
-@transaccion_segura
 def crear_cotizacion(request):
     # Inicializamos ClienteForm por si queremos crear cliente rápido (igual que en Pedidos)
     cliente_form = ClienteForm()
@@ -784,7 +775,6 @@ def crear_cotizacion(request):
     })
 
 @login_required
-@transaccion_segura
 def editar_cotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
     productos_disponibles = Producto.objects.all().order_by('nombre')
@@ -844,7 +834,6 @@ def detalle_cotizacion(request, pk):
     return render(request, 'pedidos/cotizacion_detail.html', {'cotizacion': cotizacion})
 
 @login_required
-@transaccion_segura
 def eliminar_cotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
     if request.method == 'POST':
@@ -853,7 +842,6 @@ def eliminar_cotizacion(request, pk):
     return render(request, 'pedidos/cotizacion_confirm_delete.html', {'cotizacion': cotizacion})
 
 @login_required
-@transaccion_segura
 def convertir_a_pedido(request, pk):
     """
     Toma una cotización y crea un Pedido.
@@ -990,7 +978,6 @@ def lista_productos(request):
     return render(request, 'pedidos/producto_list.html', context)
 
 @login_required
-@transaccion_segura
 def crear_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST)
@@ -1003,7 +990,6 @@ def crear_producto(request):
     return render(request, 'pedidos/producto_form.html', {'form': form})
 
 @login_required
-@transaccion_segura
 def editar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
     if request.method == 'POST':
@@ -1017,7 +1003,6 @@ def editar_producto(request, pk):
     return render(request, 'pedidos/producto_form.html', {'form': form})
 
 @login_required
-@transaccion_segura
 def eliminar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
     error_message = None  # Variable para guardar el mensaje de error
@@ -1377,7 +1362,6 @@ def lista_pagos(request):
     return render(request, 'pedidos/pago_list.html', {'pagos': page_obj})
 
 @login_required
-@transaccion_segura
 def ingresar_pago(request, pedido_id=None):
     """
     Vista para registrar un nuevo pago.
@@ -1444,7 +1428,6 @@ def ingresar_pago(request, pedido_id=None):
     })
 
 @login_required
-@transaccion_segura
 def editar_pago(request, pk):
     """
     Permite modificar un pago existente (ej: corregir monto o metodo).
@@ -1475,7 +1458,6 @@ def editar_pago(request, pk):
     })
 
 @login_required
-@transaccion_segura
 def eliminar_pago(request, pk):
     """
     Elimina un pago y actualiza el estado del pedido asociado.

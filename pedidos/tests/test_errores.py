@@ -24,6 +24,26 @@ class ErroresSinMiddlewareTests(TestCase):
         with self.assertRaises(ImportError):
             import pedidos.middleware  # noqa: F401
 
+    def test_decorador_transaccion_segura_retirado(self):
+        # 03-01, opción C (RDA-019): el decorador no abría transacción y duplicaba a Django.
+        with self.assertRaises(ImportError):
+            import pedidos.decorators  # noqa: F401
+        codigo_vistas = (settings.BASE_DIR / 'pedidos' / 'views.py').read_text(encoding='utf-8')
+        self.assertNotIn('transaccion_segura', codigo_vistas)
+
+    def test_error_en_vista_que_usaba_el_decorador_deja_una_sola_linea_con_traza(self):
+        # Antes de la 03-01 quedaban dos: la del decorador y el resumen de django.request.
+        cliente = crear_cliente()
+        with mock.patch('pedidos.views.ClienteForm', side_effect=RuntimeError('fallo unico')):
+            with self.assertLogs(level='ERROR') as capturado:
+                respuesta = self.client.get(f'/clientes/editar/{cliente.pk}/')
+        self.assertEqual(respuesta.status_code, 500)
+        self.assertEqual([r.name for r in capturado.records], ['django.request'])
+        linea = formatear_como_error_log(capturado.records[0])
+        self.assertIn(f'ruta=/clientes/editar/{cliente.pk}/', linea)
+        self.assertIn('Traceback (most recent call last):', linea)
+        self.assertIn('RuntimeError: fallo unico', linea)
+
     def test_pedido_inexistente_responde_404_con_su_plantilla(self):
         respuesta = self.client.get('/999999/')
         self.assertEqual(respuesta.status_code, 404)
@@ -43,27 +63,27 @@ class ErroresSinMiddlewareTests(TestCase):
         self.assertIn('Traceback (most recent call last):', linea)
         self.assertIn('RuntimeError: fallo forzado sin decorador', linea)
 
-    def test_excepcion_en_vista_con_transaccion_segura_registra_vista_y_traza(self):
+    def test_excepcion_en_vista_que_tenia_el_decorador_registra_vista_y_traza(self):
+        # Desde la 03-01 (RDA-019) la línea la deja django.request; la vista aparece en la traza.
         cliente = crear_cliente()
-        with mock.patch('pedidos.views.ClienteForm', side_effect=RuntimeError('fallo forzado con decorador')):
-            with self.assertLogs('django.request', 'ERROR'):  # el resumen «Internal Server Error»
-                with self.assertLogs('pedidos.decorators', 'ERROR') as capturado:
-                    respuesta = self.client.get(f'/clientes/editar/{cliente.pk}/')
+        with mock.patch('pedidos.views.ClienteForm', side_effect=RuntimeError('fallo forzado en la vista')):
+            with self.assertLogs('django.request', 'ERROR') as capturado:
+                respuesta = self.client.get(f'/clientes/editar/{cliente.pk}/')
         self.assertEqual(respuesta.status_code, 500)
+        self.assertTemplateUsed(respuesta, 'pedidos/errors/500.html')
         linea = formatear_como_error_log(capturado.records[0])
-        self.assertIn('registrador=pedidos.decorators', linea)
+        self.assertIn('registrador=django.request', linea)
         self.assertIn(f'ruta=/clientes/editar/{cliente.pk}/', linea)
         self.assertIn('excepcion=RuntimeError', linea)
         self.assertIn('editar_cliente', linea)
-        self.assertIn('RuntimeError: fallo forzado con decorador', linea)
+        self.assertIn('RuntimeError: fallo forzado en la vista', linea)
 
     def test_regresion_eliminar_pago_deja_tipo_y_traza(self):
         # Caso real del 2026-10-22 (AUD-02-002, la plantilla se corrige en 04-01). Esta prueba
         # no fija el defecto: comprueba que, mientras exista, deja su causa completa en el registro.
         pago = crear_pago()
-        with self.assertLogs('django.request', 'ERROR'):
-            with self.assertLogs('pedidos.decorators', 'ERROR') as capturado:
-                respuesta = self.client.get(f'/pagos/eliminar/{pago.pk}/')
+        with self.assertLogs('django.request', 'ERROR') as capturado:
+            respuesta = self.client.get(f'/pagos/eliminar/{pago.pk}/')
         self.assertEqual(respuesta.status_code, 500)
         linea = formatear_como_error_log(capturado.records[0])
         self.assertIn(f'metodo=GET ruta=/pagos/eliminar/{pago.pk}/', linea)

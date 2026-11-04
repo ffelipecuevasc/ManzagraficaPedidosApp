@@ -5,7 +5,8 @@ describe su comentario (`AUD-…`, qué falla hoy y qué iteración lo corrige).
 `@tag('regresion')` y `@expectedFailure`: el día que la corrección llegue, el resumen
 informa `unexpected successes` y la iteración que corrige quita las dos marcas.
 
-Numeración (decisión D3 del desarrollador, 2026-10-27): R1 a R15, R18, R19 y R20. R16 está
+Numeración (decisión D3 del desarrollador, 2026-10-27): R1 a R15, R18, R19 y R20 (R20 retirada
+en la 03-01: ya no lleva marcas). R16 está
 reservado para AUD-02-021 y R17 está libre. R6 son tres pruebas. R5 no se escribió: el
 defecto no se reprodujo como estaba descrito (ver su sección).
 
@@ -413,21 +414,17 @@ class DuplicarPedidoTests(RegresionBase):
 
 
 # ---------------------------------------------------------------------------
-# R20 · @transaccion_segura convierte el 404 en 500 (AUD-02-029)
+# R20 · @transaccion_segura convertía el 404 en 500 (AUD-02-029). Retirada en la 03-01.
 # ---------------------------------------------------------------------------
 class PkInexistenteTests(RegresionBase):
-    # Se corresponde con test_acceso.PkInexistenteTests.test_vistas_con_transaccion_segura_responden_500,
-    # que fija el 500 de hoy (caracterización). Esta afirma lo correcto con las mismas 12 rutas.
-    # Cuando la 03-01 lo corrija, se quita esta marca y se cambia aquella prueba a 404.
+    # Ya no es regresión: la 03-01 retiró el decorador (RDA-019) y se quitaron sus marcas.
+    # Usa las mismas 12 rutas que test_acceso.PkInexistenteTests.DECORADOR_RETIRADO.
 
-    @tag('regresion')
-    @expectedFailure  # R20 · AUD-02-029: el decorador captura el Http404 y responde 500. Lo corrige la 03-01.
     def test_r20_pk_inexistente_responde_404(self):
         from .test_acceso import PkInexistenteTests as Caracterizacion
 
         respuestas = {}
-        for ruta in Caracterizacion.CON_500:
-            with absorber_errores(self, 'pedidos', 'django.request'):
-                respuestas[ruta] = self.client.get(ruta).status_code
+        for ruta in Caracterizacion.DECORADOR_RETIRADO:
+            respuestas[ruta] = self.client.get(ruta).status_code
 
-        self.assertEqual(respuestas, {ruta: 404 for ruta in Caracterizacion.CON_500})
+        self.assertEqual(respuestas, {ruta: 404 for ruta in Caracterizacion.DECORADOR_RETIRADO})

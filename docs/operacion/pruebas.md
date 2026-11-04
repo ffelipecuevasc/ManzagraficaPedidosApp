@@ -96,7 +96,7 @@ class EliminarPagoTests(TestCase):
 
 ### 7.1 Regresiones declaradas (iteración 02-04)
 
-En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=19`.** Cada prueba afirma el comportamiento correcto y hoy falla por el defecto indicado. El despliegue (`despliegue.md`, paso 1) acepta solo este número.
+En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=18`** (19 hasta la 03-01, que retiró R20). Cada prueba afirma el comportamiento correcto y hoy falla por el defecto indicado. El despliegue (`despliegue.md`, paso 1) acepta solo este número.
 
 | # | Prueba | Hallazgo | Por qué falla hoy | La vuelve verde |
 | :- | :----- | :------- | :---------------- | :-------------- |
@@ -118,8 +118,8 @@ En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=19`.
 | R15 | `PorcentajePagadoTests.test_r15_porcentaje_pagado_con_enteros` | AUD-02-025 | Da 28 en vez de 29 (`float`) | 06-05, junto con AUD-02-015 (decisión del 2026-10-26; numeración anterior a RDA-014) |
 | R18 | `ConvertirCotizacionTests.test_r18_convertir_sin_fecha_de_entrega_no_responde_500` | AUD-02-027 | `ValidationError` por la fecha vacía: 500 | 03-04 |
 | R19 | `DuplicarPedidoTests.test_r19_duplicado_queda_con_el_usuario_que_duplica` | AUD-02-028 | `creado_por` queda nulo | `PENDIENTE_DESARROLLADOR` |
-| R20 | `PkInexistenteTests.test_r20_pk_inexistente_responde_404` | AUD-02-029 | Las 12 vistas con `@transaccion_segura` responden 500 ante un `pk` inexistente. Se corresponde con la caracterización `test_acceso.PkInexistenteTests.test_vistas_con_transaccion_segura_responden_500` | 03-01 |
 
+- **R20 (AUD-02-029): retirada en la 03-01 (2026-11-04).** Al retirar `@transaccion_segura` (RDA-019), las 12 rutas con `pk` inexistente responden 404. `test_r20_pk_inexistente_responde_404` sigue en `test_regresiones.py` como prueba normal, sin `@expectedFailure` ni `@tag('regresion')`.
 - **R5 (AUD-01-006): no confirmada, sin prueba.** Dos llamadas a `registrar_metricas_diarias()` a mediodía dejan una fila. Por decisión del desarrollador (2026-10-27), R5 queda cubierta por R8, que comprueba en la base el duplicado de las 22:00 de Chile; el número R5 sigue sin asignar. **R16** está reservado para AUD-02-021 y **R17** está libre.
 - **`dashboard` y `estadisticas_bd`** escriben `HistorialBD` con GET: no son regresión (decisión del 2026-10-27). La 06-02 (orden de mantención diaria) retira la invocación desde el panel y desde las estadísticas de la base; la 06-01 corrige las fechas en UTC.
 - **Cómo se retira una regresión:** la iteración que corrige el defecto quita `@expectedFailure` y `@tag('regresion')` de su prueba, baja N en esta sección y en la bitácora, y deja la prueba como prueba normal. Si la corrección deja de registrar el error, `absorber_errores` no la hace fallar.
@@ -189,8 +189,8 @@ Pruebas de caracterización de la iteración 02-05, en `pedidos/tests/test_acces
 | Las 35 rutas de pedidos, clientes, cotizaciones, productos, pagos, panel y `api/…` | `@login_required` | 302 al acceso, por GET y por POST, sin escribir | Entra | Entra | `InventarioRutasTests`, `AnonimoNoEscribeTests` |
 | `api/cliente/nuevo/`, `api/producto/nuevo/` | `@login_required` + `@require_POST` | 302 al acceso **en HTML** (no JSON ni 401), sin crear | POST: JSON `success`; GET: 405 | Igual | `PuntosJsonTests` |
 | `base_datos/respaldar_bd/`, `…/accion/`, `restaurar_bd/`, `estadisticas_bd/` | `@login_required` + `@user_passes_test(es_superusuario)` | 302 al acceso | **302 al acceso** (no 403), sin invocar respaldo ni restauración y sin escribir métricas | Entra (200) | `BaseDeDatosPermisosTests` |
-| Rutas con `pk` inexistente, sin `@transaccion_segura` (6) | — | — | 404 | — | `PkInexistenteTests.test_vistas_sin_decorador_responden_404` |
-| Rutas con `pk` inexistente, con `@transaccion_segura` (12) | — | — | **500**: el decorador captura el `Http404` (AUD-02-029; regresión R20 afirma 404) | — | `PkInexistenteTests.test_vistas_con_transaccion_segura_responden_500` |
+| Rutas con `pk` inexistente que nunca tuvieron `@transaccion_segura` (6) | — | — | 404 | — | `PkInexistenteTests.test_vistas_sin_decorador_responden_404` |
+| Rutas con `pk` inexistente que tenían `@transaccion_segura` (12) | — | — | 404 desde la 03-01 (antes 500: el decorador capturaba el `Http404`, AUD-02-029; RDA-019) | — | `PkInexistenteTests.test_vistas_que_tenian_transaccion_segura_responden_404` |
 
 - `eliminar_pago` queda fuera de las pruebas de `pk` inexistente: su GET es la regresión R7.
 - Las respuestas de archivo (`FileResponse`) se cierran con `ayudas.cerrar_respuesta`. `respuesta.close()` emite `request_finished`, que cierra la conexión dentro de la transacción de la prueba.

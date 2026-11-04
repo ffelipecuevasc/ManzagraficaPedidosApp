@@ -14,7 +14,6 @@ Ninguna prueba ejecuta mysql ni mysqldump ni escribe en backups/ o media/ reales
 """
 import os
 import tempfile
-from contextlib import contextmanager
 from unittest import mock
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -61,22 +60,6 @@ def rutas_de_pedidos():
         argumentos = {k: ARGUMENTOS[k] for k in patron.pattern.converters}
         resultado.append((patron.name, reverse(patron.name, kwargs=argumentos)))
     return resultado
-
-
-@contextmanager
-def absorber_errores(prueba, *registradores):
-    """`assertLogs` de cada registrador, sin exigir que haya registros (igual que en la 02-04)."""
-    contextos = [prueba.assertLogs(nombre, 'ERROR') for nombre in registradores or ('pedidos',)]
-    for contexto in contextos:
-        contexto.__enter__()
-    try:
-        yield
-    finally:
-        for contexto in reversed(contextos):
-            try:
-                contexto.__exit__(None, None, None)
-            except AssertionError:
-                pass
 
 
 class CarpetaTemporalMixin:
@@ -282,18 +265,17 @@ class PuntosJsonTests(TestCase):
 # Tarea 5 · Rutas con un pk inexistente
 # ---------------------------------------------------------------------------
 class PkInexistenteTests(TestCase):
-    # Vistas sin @transaccion_segura: el Http404 de get_object_or_404 llega como 404.
+    # Vistas que nunca tuvieron @transaccion_segura: el Http404 de get_object_or_404 llega como 404.
     CON_404 = (
         f'/{PK_INEXISTENTE}/', f'/cotizaciones/detalle/{PK_INEXISTENTE}/',
         f'/productos/{PK_INEXISTENTE}/', f'/pagos/detalle/{PK_INEXISTENTE}/',
         f'/pedido/{PK_INEXISTENTE}/cambiar/PENDIENTE/',  # GET: declara la ruta actual (04-01)
         f'/cotizaciones/{PK_INEXISTENTE}/pdf/',
     )
-    # Vistas con @transaccion_segura: el decorador captura también el Http404 y responde 500.
-    # AUD-02-029 (decisión del desarrollador, 2026-10-27): se fija el 500 de hoy. Se corresponde
-    # con la regresión R20 (test_regresiones.PkInexistenteTests), que afirma 404 con estas
-    # mismas rutas; al corregir (03-01), esta prueba pasa a 404. eliminar_pago queda fuera (R7).
-    CON_500 = (
+    # Vistas que tenían @transaccion_segura: el decorador capturaba el Http404 y respondía 500
+    # (AUD-02-029). La 03-01 lo retiró (RDA-019) y ahora responden 404. R20
+    # (test_regresiones.PkInexistenteTests) usa estas mismas rutas. eliminar_pago queda fuera (R7).
+    DECORADOR_RETIRADO = (
         f'/pedido/editar/{PK_INEXISTENTE}/', f'/pedido/eliminar/{PK_INEXISTENTE}/',
         f'/pedido/duplicar/{PK_INEXISTENTE}/',  # GET: declara la ruta actual (04-01)
         f'/clientes/editar/{PK_INEXISTENTE}/', f'/clientes/eliminar/{PK_INEXISTENTE}/',
@@ -311,17 +293,14 @@ class PkInexistenteTests(TestCase):
             with self.subTest(ruta=ruta):
                 self.assertEqual(self.client.get(ruta).status_code, 404)
 
-    def test_vistas_con_transaccion_segura_responden_500(self):
-        for ruta in self.CON_500:
+    def test_vistas_que_tenian_transaccion_segura_responden_404(self):
+        for ruta in self.DECORADOR_RETIRADO:
             with self.subTest(ruta=ruta):
-                with absorber_errores(self, 'pedidos', 'django.request'):
-                    respuesta = self.client.get(ruta)
-
-                self.assertEqual(respuesta.status_code, 500)
+                self.assertEqual(self.client.get(ruta).status_code, 404)
 
     def test_cubre_todas_las_rutas_con_pk_salvo_eliminar_pago(self):
         con_pk = {ruta for _, ruta in rutas_de_pedidos()
                   if '/1/' in ruta and 'eliminar_pago' not in ruta and not ruta.startswith('/pagos/eliminar/')}
-        probadas = {r.replace(str(PK_INEXISTENTE), '1') for r in self.CON_404 + self.CON_500}
+        probadas = {r.replace(str(PK_INEXISTENTE), '1') for r in self.CON_404 + self.DECORADOR_RETIRADO}
 
         self.assertEqual(con_pk, probadas)

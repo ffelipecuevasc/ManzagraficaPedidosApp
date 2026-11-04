@@ -24,6 +24,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-016 | Interfaz renderizada en el servidor con plantillas de Django; sin migración a React | Aceptada |
 | RDA-017 | Dos roles sobre la tabla nativa de usuarios y borrado físico con doble confirmación | Aceptada |
 | RDA-018 | Proyección de pedidos con la biblioteca estándar de Python; sin aprendizaje automático | Aceptada |
+| RDA-019 | Se retira `@transaccion_segura`; los errores de vista los maneja Django y la atomicidad se declara donde se escribe | Aceptada |
 
 ---
 
@@ -243,3 +244,13 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Decisión:** la proyección se calcula con la biblioteca estándar de Python 3.13 (`statistics`, `datetime`, `calendar`): carga comprometida real, ritmo del mes en curso, promedio móvil, tendencia lineal (`statistics.linear_regression`) y un margen, validados contra los meses pasados. No se usa aprendizaje automático, ni en el servidor ni en la nube. Se implementa en la Épica 12.
 **Alternativas consideradas:** modelo supervisado con scikit-learn (descartado: diez puntos no permiten aprender estacionalidad ni generalizar, y numpy, scipy y scikit-learn ocupan una parte importante del disco); servicios de aprendizaje automático de AWS (descartados: costo y complejidad desproporcionados para el volumen).
 **Consecuencias:** sin dependencias nuevas; la pantalla debe decir con cuántos meses de historia se calcula la estimación.
+
+## RDA-019 · Se retira `@transaccion_segura`; los errores de vista los maneja Django y la atomicidad se declara donde se escribe
+
+- **Fecha:** 2026-11-04
+- **Estado:** Aceptada (decisión del desarrollador, iteración 03-01)
+
+**Contexto:** `@transaccion_segura` (`pedidos/decorators.py`) estaba en 17 vistas. No abría ninguna transacción (AUD-01-001), capturaba también el `Http404` y respondía 500 en 12 rutas (AUD-02-029, R20) y pasaba `str(e)` a la plantilla. Desde la 01-03, Django ya responde la página 500 y deja la traza completa con método, ruta y usuario en `django.request`, así que cada error quedaba dos veces en `server.log`. El plan (subfase 3.1) proponía dividir el decorador en dos o unificarlo con el orden correcto.
+**Decisión:** se retira el decorador de las 17 vistas y se elimina `pedidos/decorators.py` (opción C de la iteración 03-01). Los errores de vista quedan en el manejo nativo de Django (página 500 de la 01-03 y una línea `django.request` con traza). La atomicidad no se agrega en un decorador: se declara con `transaction.atomic` explícito, con la captura **fuera** del bloque, donde se escribe (03-03), y pasa a los servicios en la 07-02 (RDA-015).
+**Alternativas consideradas:** dividir en `transaction.atomic` y un decorador de errores con nombre honesto (descartado: la mitad de errores repetía a Django, y envolver las 17 vistas adelantaba la 03-03 sin revisarlas una por una); un solo decorador con el orden correcto (descartado: juntaba dos responsabilidades y habría que deshacerlo en la 07-02).
+**Consecuencias:** un `pk` inexistente responde 404 en todas las vistas. El registrador de los errores de vista pasa de `pedidos.decorators` a `django.request`, y la vista se lee en la traza (`docs/operacion/despliegue.md`). La 03-01 no deja ninguna vista más protegida que antes: la atomicidad llega en la 03-03, donde también se cierra AUD-01-001.
