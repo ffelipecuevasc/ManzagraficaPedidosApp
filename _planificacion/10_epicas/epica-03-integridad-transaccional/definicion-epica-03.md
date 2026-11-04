@@ -3,8 +3,8 @@
 - **Estado:** Pendiente
 - **Fase del plan:** 3 (`plan-de-trabajo.md`, «FASE 3»)
 - **Objetivo:** corregir el defecto más grave del proyecto: escrituras compuestas sin atomicidad combinadas con supresión silenciosa de excepciones.
-- **Precondición real:** (1) la iteración **01-06 cerrada, incluida su parte D** (medición de siete días en producción, hacia el 2026-11-01), y (2) la **Épica 02 cerrada completa** (02-03, 02-04 y 02-05 terminadas, con las regresiones de la 02-04 fallando de forma reproducible). **No es negociable**: sin la observabilidad validada en producción no se sabe si la corrección introduce un fallo nuevo, y sin las pruebas no se puede verificar que se conservó el comportamiento correcto. Decisión del desarrollador del 2026-10-27.
-- **Última revisión:** 2026-10-27 (contrato de error reescrito sobre lo que existe según RDA-013 y precondición explicitada).
+- **Precondición real:** (1) la iteración **01-06 cerrada, incluida su parte D** (medición de siete días en producción, hacia el 2026-11-01), y (2) la **Épica 02 cerrada completa** (02-03, 02-04 y 02-05 terminadas, con las regresiones de la 02-04 fallando de forma reproducible). **No es negociable**: sin la observabilidad validada en producción no se sabe si la corrección introduce un fallo nuevo, y sin las pruebas no se puede verificar que se conservó el comportamiento correcto. Decisión del desarrollador del 2026-10-27. **Precondición vigente desde el 2026-11-04:** ver la nota de esa fecha en «Notas» (Épicas 01 y 02 completas y la 00-07 desplegada y validada).
+- **Última revisión:** 2026-11-04 (precondición vigente, R21 en la 03-04 y cierre de AUD-01-002 en la 03-03); anterior: 2026-10-27 (contrato de error reescrito sobre lo que existe según RDA-013 y precondición explicitada).
 
 ## Alcance
 
@@ -19,7 +19,7 @@
    - **Cómo se informa un error:** el usuario cuenta qué pantalla usaba y a qué hora; con eso, el desarrollador encuentra la traza en `server.log` filtrando por ruta y hora (`docs/operacion/`). Ningún mensaje muestra `str(e)`, rutas del servidor ni salidas de `mysql` o `mysqldump` (incluye respaldo y restauración, AUD-02-006).
    - **Peor caso a evitar:** que un formulario largo (pedido con muchos ítems) se pierda por un error del sistema. La iteración define cómo se conserva lo ingresado cuando sea posible.
 5. Validación y despliegue con vigilancia intensiva la primera semana, leyendo `server.log`.
-6. **Envío único (AUD-04-001, agregado el 2026-10-27):** token de envío único (idempotencia) en la creación de pedidos, cotizaciones y pagos, para que un envío repetido no cree un segundo registro; bloqueo del botón de envío en todos los formularios de escritura (la 00-07 solo cubre «Nuevo pedido»); regresión **R21** en la 02-04: dos POST idénticos crean un solo pedido.
+6. **Envío único (AUD-04-001, agregado el 2026-10-27):** token de envío único (idempotencia) en la creación de pedidos, cotizaciones y pagos, para que un envío repetido no cree un segundo registro; bloqueo del botón de envío en todos los formularios de escritura (la 00-07 solo cubre «Nuevo pedido»); regresión **R21** en la ~~02-04~~ 03-04: dos POST idénticos crean un solo pedido. **Nota 2026-11-04 (decisión del desarrollador):** «02-04» era un error; R21 se escribe en la 03-04.
 
 ## Para la redacción de 03-02
 

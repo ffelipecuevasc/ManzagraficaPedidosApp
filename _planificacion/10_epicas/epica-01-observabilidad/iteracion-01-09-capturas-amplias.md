@@ -5,7 +5,7 @@
 - **Subfase del plan:** ninguna propia. Es deuda detectada en la revisión de la 01-06 (2026-10-25) y adelanta parte de 3.2 (supresión silenciosa) y de 3.4 (contrato de error) **solo en lo que pide la regla 4**: registrar y no mostrar `str(e)`.
 - **Depende de:** 01-06 (detección de las capturas y opción A: el diagnóstico se lee en `server.log`).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-008 (inventario de eventos), RDA-013 (errores con `logging`).
-- **Hallazgos relacionados:** AUD-01-002 (`:270`, `:766`, `:810`), AUD-02-006 (`:1128`) y las dos entradas nuevas de la sección 3 de `registro-pendientes.md` (`:1168`, `:1191`). Según la opción elegida, la iteración **avanza** esos hallazgos sin cerrarlos: AUD-01-002 se cierra en 03-02 y AUD-02-006 en 04-01 y 03-04.
+- **Hallazgos relacionados:** AUD-01-002 (`:270`, `:766`, `:810`), AUD-02-006 (`:1128`) y las dos entradas nuevas de la sección 3 de `registro-pendientes.md` (`:1168`, `:1191`). Según la opción elegida, la iteración **avanza** esos hallazgos sin cerrarlos: AUD-01-002 se cierra en 03-02 y AUD-02-006 en 04-01 y 03-04. **Nota 2026-11-04 (decisión del desarrollador):** AUD-01-002 se cierra en la **03-03**, junto con R1, R2 y R4; la 03-02 queda como avance.
 - **Cambio de esquema:** Ninguno.
 - **Respaldo previo al despliegue:** Sí, por decisión del desarrollador (las vistas tocadas son las de respaldo y restauración). La iteración no toca esquema ni datos.
 - **Etiqueta:** `v1.2-capturas` (sobre `81005df`, el commit anterior al primero de la 00-07)
@@ -138,7 +138,7 @@ Revisado en `pedidos/utils.py:13-70` y `pedidos/views.py:1075-1111` y en la plan
 
 | Riesgo | Mitigación |
 | :----- | :--------- |
-| Que registrar en los ítems haga creer que la pérdida de datos está resuelta | El comentario remite a 03-02 y AUD-01-002 sigue abierto |
+| Que registrar en los ítems haga creer que la pérdida de datos está resuelta | El comentario remite a 03-02 y AUD-01-002 sigue abierto. **Nota 2026-11-04:** AUD-01-002 se cierra en la 03-03 (decisión del desarrollador) |
 | Que el administrador, sin `str(e)` en pantalla, no sepa por qué falló un respaldo | El mensaje dice dónde mirar; el detalle queda en `server.log` con su traza (opción A de la 01-06) |
 | Que una prueba ejecute `mysql` o `mysqldump` de verdad contra la réplica | Las pruebas simulan las dos funciones con `mock`, como las de 01-04 |
 | Que la opción B cambie un mensaje controlado por la página 500 | Probar los dos caminos: excepción conocida (mensaje) y desconocida (500 con traza) |
