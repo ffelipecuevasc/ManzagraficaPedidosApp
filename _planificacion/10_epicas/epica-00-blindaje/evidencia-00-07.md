@@ -6,7 +6,9 @@
 
 > Este archivo existe porque el agente no puede obtener estos datos por su cuenta. Responde solo lo que se pide.
 >
-> **Orden (domingo 2026-11-01, decisión 5):** parte D de la 01-06 → [evidencia-01-09](../epica-01-observabilidad/evidencia-01-09.md) (incluye crear `v1.2-capturas`, equivalente a B1–B3) → despliegue y validación de `v1.2-capturas` → **B4** → **parte C** → una semana después (2026-11-08), **parte D**. Si `v1.2-capturas` se retrocede, esta iteración se pospone y no se crea `v0.3-doble-envio`. (Corregido el 2026-10-27.)
+> **Orden (decisión 5; fecha prevista ~~domingo 2026-11-01~~, ver la nota de abajo):** parte D de la 01-06 → [evidencia-01-09](../epica-01-observabilidad/evidencia-01-09.md) (incluye crear `v1.2-capturas`, equivalente a B1–B3) → despliegue y validación de `v1.2-capturas` → **B4** → **parte C** → una semana después del despliegue de esta iteración (~~2026-11-08~~), **parte D**. Si `v1.2-capturas` se retrocede, esta iteración se pospone y no se crea `v0.3-doble-envio`. (Corregido el 2026-10-27.)
+>
+> **Nota (2026-11-04):** la parte D de la 01-06 se midió el 2026-11-03 y `v1.2-capturas` se desplegó y validó el 2026-11-04 (reinicio efectivo de uWSGI a las 00:11:49, hora de Chile; [evidencia-01-09](../epica-01-observabilidad/evidencia-01-09.md)), no el 2026-11-01 previsto. **La condición para esta iteración quedó cumplida**, y la Épica 01 está terminada. **B4 y la parte C esperan la indicación del desarrollador, sin fecha:** no se ejecutaron (la etiqueta `v0.3-doble-envio` no se crea hasta B4). La fecha de la parte D será una semana después de ese despliegue, no el 2026-11-08. Conviene avisar a Manza Gráfica de la ventana. B1 a B3 ya no se repiten: `v1.2-capturas` existe sobre `81005df`.
 >
 > ~~**Orden (domingo 2026-11-01, decisión 5):** parte D de la 01-06 → despliegue y validación de `v1.2-capturas` → **parte A** (si no se hizo antes) → **parte B** (etiquetas) → **parte C** (despliegue de `v0.3-doble-envio`) → una semana después, **parte D**.~~
 

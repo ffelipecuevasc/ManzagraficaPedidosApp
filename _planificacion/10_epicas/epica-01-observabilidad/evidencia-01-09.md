@@ -5,10 +5,11 @@
 - **Iteraciones que viajan:** 01-09 (capturas amplias), 01-08 (comentarios del registro) y 01-07 reabierta (emojis 🔴 🟡 🔵 🔴🔴 🟢), más las pruebas de la Épica 02 (no se ejecutan en el servidor).
 - **Etiqueta:** `v1.2-capturas` sobre `81005df`. **Partida y destino de retroceso:** `v1.1-observabilidad` (`d6768d0`).
 - **Criterios que dependen de esta evidencia:** respaldo previo verificado (decisión 6 de la 01-09); despliegue con etiqueta propia sin migraciones, `pip` ni `collectstatic`; validación posterior con un respaldo por el camino normal que se descarga (decisión 7); `server.log` sin errores nuevos y con los emojis de la 01-07.
+- **Actualización 2026-11-04:** las partes A a E se ejecutaron entre el 2026-11-03 (parte A, 22:34:09) y el 2026-11-04 (reinicio efectivo de uWSGI a las 00:11:49, hora de Chile), no el domingo 2026-11-01 previsto. Hubo un incidente en el servidor (parte D) y una diferencia entre la hora informada de la recarga y la del registro de uWSGI; ambos están documentados abajo. **Decisión del desarrollador (2026-11-04): la hora oficial de la recarga es 00:11:49** (hora de Chile, la de `Starting uWSGI`). Consolidación en [bitacora-01-09-despliegue](../../99_bitacora/epica-01-observabilidad/bitacora-01-09-despliegue.md).
 
 > Este archivo existe porque el agente no puede obtener estos datos por su cuenta. Responde solo lo que se pide.
 >
-> **Orden del domingo 2026-11-01 (decisión del desarrollador):** parte A (respaldo previo) → parte D de la 01-06 desde las 21:27 de Chile ([evidencia-01-06](evidencia-01-06.md)) → parte B (lista de comprobación) → parte C (etiqueta) → parte D (despliegue) → parte E (validación) → solo si quedó validada, la 00-07 ([evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md), partes B4 y C).
+> **Orden previsto para el ~~domingo 2026-11-01~~ (decisión del desarrollador; fecha real: 2026-11-03 y 2026-11-04, ver la actualización de arriba):** parte A (respaldo previo) → parte D de la 01-06 desde las 21:27 de Chile ([evidencia-01-06](evidencia-01-06.md)) → parte B (lista de comprobación) → parte C (etiqueta) → parte D (despliegue) → parte E (validación) → solo si quedó validada, la 00-07 ([evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md), partes B4 y C).
 
 ## Qué intentó el agente
 
@@ -69,14 +70,16 @@ python manage.py showmigrations pedidos
 
 | # | Comprobación | Esperado | Resultado |
 | :- | :----------- | :------- | :-------- |
-| 1 | Pruebas | `Ran 184 tests` y `OK (expected failures=19)` (`pruebas.md`: valor vigente 19) | |
-| 2 | `check --deploy` | Solo `W004`, `W008`, `W009`, `W012` y `W016`; ningún `ERRORS` | |
-| 3 | Migraciones sin crear | `No changes detected` | |
-| 4 | Migraciones nuevas | Ninguna: la última sigue siendo `0007_registroevento` | |
-| 5 | Respaldo verificado | Parte A | |
-| 6 | Estilos compilados | No aplica | |
-| 7 | Etiqueta | Parte C | |
-| 8 | Pasos propios | Partes D y E | |
+| 1 | Pruebas | `Ran 184 tests` y `OK (expected failures=19)` (`pruebas.md`: valor vigente 19) | Dos ejecuciones: `Ran 184 tests`, `OK (expected failures=19)` en ambas (174,975 s y 283,578 s) |
+| 2 | `check --deploy` | Solo `W004`, `W008`, `W009`, `W012` y `W016`; ningún `ERRORS` | Exactamente `W004`, `W008`, `W009`, `W012` y `W016` (5 issues); sin `ERRORS` |
+| 3 | Migraciones sin crear | `No changes detected` | `No changes detected` |
+| 4 | Migraciones nuevas | Ninguna: la última sigue siendo `0007_registroevento` | Ninguna: el `diff` de la parte C solo lista `pedido_form.html` y `migrate --plan` del servidor (D2) no planifica nada. `showmigrations` en la base local: `0007` sin aplicar |
+| 5 | Respaldo verificado | Parte A | Parte A: `respaldo_03-11-2026_22-34-09.sql`, 19 de 19, `VÁLIDO`, código 0 |
+| 6 | Estilos compilados | No aplica | No aplica |
+| 7 | Etiqueta | Parte C | Parte C: `v1.2-capturas` anotada sobre `81005df`, publicada |
+| 8 | Pasos propios | Partes D y E | Partes D y E: abajo |
+
+> **Observación (sin acción):** `showmigrations` marca la `0007` sin aplicar en la base **local** del PC. Esa base no es la réplica ni producción y no afecta al despliegue (en producción, `0007` se aplicó el 2026-10-25 con `v1.1-observabilidad`).
 
 ## Parte C · Etiqueta `v1.2-capturas` sobre `81005df` **[PC · PowerShell 7]**
 
@@ -104,11 +107,13 @@ git ls-remote --tags origin v1.2-capturas
 
 | Dato | Valor |
 | :--- | :---- |
-| `git status -sb` (primera línea) | |
-| Salida del `diff --stat` | |
-| `git tag -n v1.2-capturas` | |
-| `rev-parse` | |
-| `ls-remote` | |
+| `git status -sb` (primera línea) | No informado |
+| Salida del `diff --stat` | Solo `pedido_form.html`: 1 archivo, 41 inserciones, 3 eliminaciones |
+| `git tag -n v1.2-capturas` | Mensaje informado: «Iteraciones 01-09, 01-08 y 01-07 · desplegada el 2026-11-04». Etiqueta anotada, objeto `567db391d5d1bf818f63d7d33758be7898c8abcc`, publicada |
+| `rev-parse` | `git rev-parse --short "v1.2-capturas^{commit}"` = `81005df` |
+| `ls-remote` | Devuelve una línea |
+
+> **Nota (2026-11-04):** el desarrollador no informó la primera línea de `git status -sb` ni la salida literal de `git tag -n`; se registra solo lo que entregó. El objeto de la etiqueta (`567db39…`) es el de la etiqueta anotada; el commit al que apunta es `81005df`.
 
 ## Parte D · Despliegue
 
@@ -146,9 +151,23 @@ Pestaña **Web** → **Reload**. Anota la hora (Chile). La recarga deja unos 10 
 
 | Dato | Valor |
 | :--- | :---- |
-| D1 (`describe` y `status`) | |
-| D2 (`describe`, `migrate --plan` y los dos `diff`) | |
-| Hora de la recarga (Chile) | |
+| D1 (`describe` y `status`) | El resultado de D1 antes del incidente no se informó. Después de la restauración de las 00:09: `git describe` = `v1.1-observabilidad`, `rev-parse` = `d6768d0` y `git status --short` vacío, que es el estado que pedía D1. Ver el incidente abajo |
+| D2 (`describe`, `migrate --plan` y los dos `diff`) | Hacia las 00:10: `fetch origin --tags` trajo `bd07f21` y la etiqueta; `checkout v1.2-capturas` dejó HEAD en `81005df` (`describe` = `v1.2-capturas`); `migrate --plan` → «No planned migration operations.» (con la advertencia conocida `mysql.W002`); los dos `diff --stat` (`requirements.txt` y `pedidos/static`) salieron vacíos |
+| Hora de la recarga (Chile) | **Oficial: 00:11:49** (decisión del desarrollador, 2026-11-04): la de `Starting uWSGI` en el registro (mensaje interno `[Wed Nov  4 03:11:48 2026]` en UTC). La hora que el desarrollador había **informado**, **00:14:00**, queda anotada como «informada»: es 2 min 11 s posterior |
+
+#### Incidente del 2026-11-03: `git checkout main` en la consola del servidor
+
+- **Qué pasó:** hacia las 23:41 (02:41 UTC) se ejecutó por error `git checkout main` en la consola del **servidor**. Era un comando de la parte B, que va en el PC. El servidor quedó en la rama `main` **del servidor**, atrasada: `git describe` = `v0.0-inicial` y Git indicó 32 commits de atraso. **No se hizo `git pull`.** `git status` no mostró cambios en archivos versionados, solo líneas `??` de `media/` y `staticfiles/`.
+- **Cómo se restauró:** hacia las 00:09 (03:09 UTC), `git checkout v1.1-observabilidad`: `describe` = `v1.1-observabilidad`, `rev-parse` = `d6768d0` y `git status --short` vacío. El desfase fue de unos 28 minutos (horas informadas «hacia», aproximadas).
+- **Reinicios de uWSGI durante el incidente:** ninguno. La consulta se hizo con filtro por fecha sobre los archivos de registro, **incluidos los rotados**, desde `2026-11-03 23:30:00` (hora de Chile), y mostró **una sola** línea `Starting uWSGI`: la de `2026-11-04 00:11:49` (`2026-11-04 00:11:49 *** Starting uWSGI 2.0.28 (64bit) on [Wed Nov  4 03:11:48 2026] ***`). No hubo reinicios entre las 23:41 y las 00:09.
+- **Ventana del incidente (2026-11-03 23:41 a 2026-11-04 00:09): NO VERIFICADA** (decisión del desarrollador, 2026-11-04). No se comprobó si alguna petición leyó archivos del árbol atrasado ni si `server.log` tuvo líneas nuevas en ese tramo: la parte D de la 01-06 se midió a las 22:37:58, antes del incidente, y E3 empieza a las 00:11:49. Contexto que se conoce: sin cambios en archivos versionados (solo líneas `??` de `media/` y `staticfiles/`), sin `git pull`, restauración con `git checkout v1.1-observabilidad` (`describe` = `v1.1-observabilidad`, `rev-parse` = `d6768d0`) y las cuatro pantallas de E1 funcionaron. **Inferencia, no comprobada:** la web app tenía cargado en memoria el código de `v1.1-observabilidad`.
+- **Propuesta (no aplicada):** advertencia para `despliegue.md`, sección 3, y comando para detectar reinicios, en [bitacora-01-09-despliegue](../../99_bitacora/epica-01-observabilidad/bitacora-01-09-despliegue.md).
+
+#### La hora de la recarga: la oficial y la informada
+
+- El desarrollador informó la recarga a las **00:14:00**. Pero el respaldo de E2 se llama `respaldo_04-11-2026_00-12-37.sql` (00:12:37), anterior a esa hora, y la línea `Starting uWSGI` figura a las **00:11:49**.
+- **Decisión del desarrollador (2026-11-04):** la hora oficial de la recarga, en `despliegue.md` y en el registro, es **00:11:49** (hora de Chile; 03:11:49 UTC al convertir el prefijo del registro, mientras que el mensaje interno de uWSGI marca 03:11:48). La hora informada, **00:14:00**, queda anotada como «informada», 2 min 11 s posterior, y respaldada por ningún registro.
+- Para el filtro de E3 se usó la hora oficial (00:11:49).
 
 ## Parte E · Validación
 
@@ -185,11 +204,23 @@ Fila en `docs/operacion/despliegue.md`, sección 5: fecha y hora (Chile), `v1.2-
 
 | Revisión | Resultado |
 | :------- | :-------- |
-| E1 Acceso, panel, listado y detalle | |
-| E2 Respaldo por el camino normal (¿se descargó?) | |
-| E3 Conteo por `nivel=` desde la recarga | |
-| E3 Emojis nuevos en las líneas (si hubo) | |
-| E4 Fila en `despliegue.md` §5 | |
+| E1 Acceso, panel, listado y detalle | Sin problemas en las cuatro pantallas |
+| E2 Respaldo por el camino normal (¿se descargó?) | Sí. `respaldo_04-11-2026_00-12-37.sql` (hora del nombre: 2026-11-04 00:12:37), 1.481.788 bytes, línea de cierre presente, 19 `CREATE TABLE`, 19 de 19, faltantes: ninguna, SHA-256 `348f44c3eb91a333a5cc3f44a6900b6605822743916e180ef8811e6c40595937`, `VÁLIDO`, código 0. Descargado y guardado en la carpeta cifrada (ruta no registrada). Fila en `respaldo.md` §6 |
+| E3 Conteo por `nivel=` desde la recarga | **Ejecución definitiva**, con `DESDE_CL="2026-11-04 00:11:49"` (reinicio efectivo): `1 nivel=ERROR` y `1 nivel=INFO`. La primera ejecución, con `DESDE_CL="2026-11-04 00:14:00"` (hora informada), salió vacía porque el filtro empezaba después de los eventos: **no es la validación definitiva** |
+| E3 Emojis nuevos en las líneas (si hubo) | Sí. A las 00:12:39: línea `INFO` de `pedidos.utils` con 🔵 y línea `ERROR` de `root` con 🔴 (ver abajo). Son los emojis de `v1.2`; `v1.1-observabilidad` usaba ❕ y ❌ |
+| E4 Fila en `despliegue.md` §5 | Sí (2026-11-04) |
+
+#### E3 en detalle (últimas líneas con `nivel=`, recortadas a 120 caracteres)
+
+```text
+2026-11-04 00:12:39 🔵 nivel=INFO registrador=pedidos.utils metodo=- ruta=- usuario=- excepcion=- mensaje="Respaldo an
+2026-11-04 00:12:39 🔴 nivel=ERROR registrador=root metodo=- ruta=- usuario=- excepcion=- mensaje="OSError: write erro
+```
+
+- **El único `ERROR`** es `OSError: write error` con `registrador=root`, sin método, ruta, usuario ni excepción: el ruido conocido, de la misma familia que las 7 líneas `root` anteriores al despliegue (clasificadas como AUD-04-004, sin acción). No hay errores nuevos.
+- **Coincidencia horaria, sin concluir nada:** esa línea tiene la misma hora (00:12:39) que el `INFO` del respaldo de E2, igual que la pista del 2026-10-23 de la 00-05 (un `write error` 2 s después de generar un respaldo). El archivo de E2 se descargó y salió `VÁLIDO` (19 de 19), así que el `write error` no lo dañó. No es sistemática: en los nueve días de la medición solo hubo un `respaldo_generado` (22:34 del 2026-11-03) y a esa hora no hubo `OSError`. Hipótesis, no conclusión: la recarga de la página a los 2 segundos (AUD-03-002) corta la descarga. Sin acción (detalle en la bitácora).
+- **Respaldo posterior al reinicio:** el reinicio efectivo fue a las 00:11:49; el nombre del respaldo dice 00:12:37 y el `INFO`, 00:12:39. El respaldo es posterior al reinicio (48 s y 50 s) y, además, el `INFO` lleva el emoji de `v1.2`: se hizo bajo `v1.2-capturas`. Entre el nombre y el registro hay 2 s; en la parte A coincidían al segundo. No se explica y no cambia la conclusión.
+- **No ejecutado, a propósito:** ningún fallo de respaldo ni de restauración (decisión 7). No se probó el texto nuevo de `:1128`.
 
 ## Si algo sale mal
 
@@ -199,7 +230,14 @@ Fila en `docs/operacion/despliegue.md`, sección 5: fecha y hora (Chile), `v1.2-
 
 - La restauración real sigue «no verificada en real» (decisión 7 de la 01-09): no se prueba en producción.
 - El camino de error del respaldo en producción: no se provoca a propósito.
+- **Añadido el 2026-11-04:** si alguna petición leyó archivos del árbol atrasado entre las 23:41 y las 00:09, y el contenido de `server.log` en esa ventana (no se revisó; registrada como no verificada). La primera línea de `git status -sb` y la salida literal de `git tag -n` de la parte C (no informadas). Si la descarga de E2 fue directa o desde **Files** (no informado).
 
 ## Respuesta del desarrollador
 
-_(Pendiente.)_
+Partes B a E respondidas el 2026-11-04 y consolidadas en las tablas de arriba, con estos puntos propios del despliegue:
+
+- **Etiqueta y partida:** `v1.2-capturas`, anotada, sobre `81005df` (objeto `567db391d5d1bf818f63d7d33758be7898c8abcc`), publicada; partida y destino de retroceso `v1.1-observabilidad` (`d6768d0`). Sin migraciones, sin `pip`, sin `collectstatic`.
+- **Incidente:** `git checkout main` por error en la consola del servidor hacia las 23:41 del 2026-11-03; restaurado hacia las 00:09 con `git checkout v1.1-observabilidad`; sin `git pull` y sin reinicios de uWSGI en ese tramo (parte D).
+- **Hora de la recarga:** oficial 00:11:49 (decisión del desarrollador, 2026-11-04); la informada, 00:14:00, queda como «informada», 2 min 11 s posterior (parte D).
+- **E3:** primera ejecución vacía por un `DESDE_CL` posterior a los eventos; la definitiva usa 00:11:49: 1 `ERROR` (`OSError: write error`, `root`, ruido conocido) y 1 `INFO`, con 🔴 y 🔵.
+- **Sin retroceso.**

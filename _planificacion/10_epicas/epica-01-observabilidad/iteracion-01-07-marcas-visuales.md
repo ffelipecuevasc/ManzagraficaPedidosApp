@@ -1,7 +1,7 @@
 # Iteración 01-07 · Marcas visuales en el registro de errores
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión (reabierta el 2026-10-26 por decisión del desarrollador para cambiar los emojis, cambio estético; la versión original se desplegó en `v1.1-observabilidad` el 2026-10-25; los emojis nuevos viajan en el próximo despliegue, `v1.2`, junto con la 01-08 y la 01-09)
+- **Estado:** Terminada (2026-11-04). Reabierta el 2026-10-26 por decisión del desarrollador para cambiar los emojis (cambio estético); la versión original se desplegó en `v1.1-observabilidad` el 2026-10-25 y los emojis nuevos, en `v1.2-capturas` (reinicio efectivo de uWSGI el 2026-11-04 a las 00:11:49, hora de Chile). Historial de estados: Terminada (2026-10-25) → En revisión (2026-10-26, reabierta) → Terminada (2026-11-04). Cierre en [bitacora-01-09-despliegue](../../99_bitacora/epica-01-observabilidad/bitacora-01-09-despliegue.md).
 - **Subfase del plan:** 1.2 (amplía el formato de 01-02; iteración nueva, sin subfase propia en el plan)
 - **Depende de:** 01-02
 - **RDA relacionadas:** RDA-013
@@ -44,6 +44,8 @@ Un nivel personalizado va sin emoji. **Tabla vigente desde el 2026-10-26** (01-0
 - [x] Con un flujo `ascii`, el registro no rompe la petición; el comportamiento está documentado en la bitácora. Ojo: se pierde la línea completa, no solo el emoji (bitácora).
 - [x] La terminal de PyCharm y PowerShell 7 muestran bien los emojis (salida en la bitácora). PowerShell 7.6.8 verificado por el agente. El desarrollador cerró la iteración el 2026-10-25; la revisión de la terminal de PyCharm no se reportó por escrito. **Cubierto el 2026-10-26** con el reporte por escrito del desarrollador: los emojis nuevos se ven bien en PyCharm y en PythonAnywhere ([bitacora-01-07](../../99_bitacora/epica-01-observabilidad/bitacora-01-07.md), «Reapertura del 2026-10-26»).
 - [x] `python manage.py check` sin errores, `makemigrations --check` sin cambios y `python manage.py test pedidos` en verde. 79 pruebas, tres veces. Reapertura del 2026-10-26: suite completa en verde tras actualizar los valores esperados (bitácora).
+
+> **Nota (2026-11-04), primera comprobación de los emojis nuevos en producción:** tras el reinicio de `v1.2-capturas`, `server.log` mostró una línea `INFO` con 🔵 y una `ERROR` con 🔴, ambas a las 00:12:39, y `grep nivel=` las encontró (evidencia-01-09, parte E3). Se vieron 2 de los 5 niveles; `WARNING`, `CRITICAL` y `DEBUG` no aparecieron. La nota del 2026-10-26 sobre «PythonAnywhere» en el criterio de la terminal es anterior al despliegue de `v1.2`.
 
 ## Fuera de alcance
 

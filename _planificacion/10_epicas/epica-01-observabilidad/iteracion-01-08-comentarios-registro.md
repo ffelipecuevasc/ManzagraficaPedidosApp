@@ -1,7 +1,7 @@
 # Iteración 01-08 · Comentarios del registro alineados con la opción A
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión (ejecutada el 2026-10-26, antes de la parte D de la 01-06). Bitácora: [bitacora-01-08](../../99_bitacora/epica-01-observabilidad/bitacora-01-08.md).
+- **Estado:** Terminada (2026-11-04). Ejecutada el 2026-10-26, antes de la parte D de la 01-06, y desplegada dentro de `v1.2-capturas` (sin despliegue propio, como se decidió), con reinicio efectivo de uWSGI el 2026-11-04 a las 00:11:49 (hora de Chile). Solo comentarios: el despliegue no cambió el comportamiento y su validación fue la de la 01-09 (sin retroceso, sin `ERROR` nuevos). Bitácoras: [bitacora-01-08](../../99_bitacora/epica-01-observabilidad/bitacora-01-08.md) y [bitacora-01-09-despliegue](../../99_bitacora/epica-01-observabilidad/bitacora-01-09-despliegue.md).
 - **Subfase del plan:** 1.2 (ajuste de texto de 01-02 y 01-03; iteración nueva, sin subfase propia en el plan)
 - **Depende de:** 01-06 (hallazgo «dos destinos de registro» y decisión A del desarrollador, 2026-10-25)
 - **RDA relacionadas:** RDA-013 (con su actualización del 2026-10-25)

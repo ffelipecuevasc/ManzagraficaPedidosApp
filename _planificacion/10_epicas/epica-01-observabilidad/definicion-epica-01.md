@@ -1,10 +1,10 @@
 # Épica 01 · Observabilidad
 
-- **Estado:** En curso
+- **Estado:** Terminada (2026-11-04). Resumen de cierre al final de este archivo.
 - **Fase del plan:** 1 (`plan-de-trabajo.md`, «FASE 1»)
 - **Objetivo:** dejar de estar ciego, con dos herramientas para dos públicos distintos. **Para el desarrollador:** que todo error de producción quede en el registro del servidor de PythonAnywhere con su traza completa y el contexto de la petición, en un formato ordenado y sin ruido. **Para el negocio:** que las acciones críticas dejen constancia de quién hizo qué y cuándo, consultable en el admin de Django. **Corrección del 2026-10-26:** el diagnóstico se hace en `server.log`, no en `error.log` (opción A, medida en la 01-06; ver RDA-013).
 - **Precondición:** Épica 00 cerrada (2026-10-25). Puede avanzar en paralelo con la Épica 02; la iteración 01-02 necesita la infraestructura de pruebas de 02-01.
-- **Última revisión:** 2026-10-26, criterio de término con `server.log`, emojis nuevos de la 01-07 y estado de 01-08 y 01-09 (decisiones del desarrollador). Rediseño del 2026-10-25 en «Decisiones de la épica».
+- **Última revisión:** 2026-11-04, cierre de la épica tras desplegar y validar `v1.2-capturas`. Antes, 2026-10-26: criterio de término con `server.log`, emojis nuevos de la 01-07 y estado de 01-08 y 01-09 (decisiones del desarrollador). Rediseño del 2026-10-25 en «Decisiones de la épica».
 
 ## Alcance
 
@@ -26,10 +26,10 @@
 | 01-03 | Retiro del middleware y trazas completas (Terminada) | 1.3 |
 | 01-04 | Instrumentación de eventos de negocio (Terminada) | 1.4 |
 | 01-05 | Consulta de eventos en el admin (Terminada) | 1.5 |
-| 01-07 | Marcas visuales en el registro de errores (en revisión: desplegada en `v1.1-observabilidad`, reabierta el 2026-10-26 para cambiar los emojis; viaja en `v1.2`) | 1.2 (ampliación) |
+| 01-07 | Marcas visuales en el registro de errores (Terminada el 2026-11-04: desplegada en `v1.1-observabilidad`, reabierta el 2026-10-26 para cambiar los emojis; los emojis nuevos, en `v1.2-capturas`) | 1.2 (ampliación) |
 | 01-06 | Despliegue y validación de la observabilidad (Terminada el 2026-11-03: desplegada el 2026-10-25 como `v1.1-observabilidad`; parte D medida el 2026-11-03) | 1.6 |
-| 01-08 | Comentarios de registro alineados con la opción A, solo texto (en revisión, ejecutada el 2026-10-26) | 1.2 (ajuste) |
-| 01-09 | Capturas amplias que incumplen la regla 4 (en revisión, implementada en local el 2026-10-26; viaja en `v1.2`) | — (deuda detectada en 01-06) |
+| 01-08 | Comentarios de registro alineados con la opción A, solo texto (Terminada el 2026-11-04: ejecutada el 2026-10-26, desplegada en `v1.2-capturas`) | 1.2 (ajuste) |
+| 01-09 | Capturas amplias que incumplen la regla 4 (Terminada el 2026-11-04: implementada en local el 2026-10-26, desplegada como `v1.2-capturas`) | — (deuda detectada en 01-06) |
 
 ## Decisiones de la épica
 
@@ -80,3 +80,18 @@ Observaciones de otras iteraciones que la épica debe revisar. Son hipótesis, n
 - Un error real en producción se diagnostica en menos de cinco minutos desde `server.log`: tipo de excepción, traza completa, método, ruta, usuario y hora, medido en 01-06. (Decía «desde `error.log`»; cambiado el 2026-10-26 por decisión del desarrollador, opción A. Medido: unos 2 minutos, 01-06 C2.)
 - `error.log` no tiene líneas informativas de `fontTools` después del despliegue.
 - Una semana después del despliegue, el crecimiento real de la tabla de eventos está medido y dentro de la estimación de 01-01 (o el inventario se ajustó).
+
+## Cierre de la épica (2026-11-04)
+
+**Terminada el 2026-11-04**, con `v1.2-capturas` desplegada y validada. Las nueve iteraciones (01-01 a 01-09) están Terminadas. Detalle en [bitacora-01-09-despliegue](../../99_bitacora/epica-01-observabilidad/bitacora-01-09-despliegue.md) y [bitacora-01-06-medicion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-medicion.md).
+
+| Criterio de término | Evidencia | Cumplido |
+| :------------------ | :-------- | :------- |
+| Un error real se diagnostica en menos de cinco minutos desde `server.log` (tipo, traza, método, ruta, usuario y hora) | Medido en la 01-06 (C2, 2026-10-25): unos 2 minutos con el error controlado de eliminar un pago | Sí |
+| `error.log` sin líneas informativas de `fontTools` después del despliegue | 01-06 (C3 y parte D, 2026-11-03): 0 líneas de `fontTools` en `error.log` y en `server.log` | Sí |
+| Crecimiento real de la tabla de eventos medido y dentro de la estimación de la 01-01 | 01-06, parte D (2026-11-03): 172 filas en 9,0497 días, 19,0 por día, el 47,5 % de la estimación; ~570 al mes proyectadas contra ~1.200; sin ajuste del inventario | Sí |
+
+- **Etiquetas:** `v1.1-observabilidad` (`d6768d0`, 2026-10-25, migración 0007 de Clase 2) y `v1.2-capturas` (`81005df`, 2026-11-04, sin migraciones; lleva la 01-09, la 01-08 y la 01-07 reabierta, más las pruebas de la Épica 02).
+- **Hallazgos cerrados:** AUD-01-004 (cerrado el 2026-10-25 con la 01-03 y confirmado en producción en la 01-06) y AUD-01-005 (cerrado el 2026-11-03 con la 01-06). La 01-09 **avanza sin cerrar** AUD-01-002 (se cierra en 03-02) y AUD-02-006 (04-01 y 03-04).
+- **Respaldos:** previo a `v1.1-observabilidad` (`f3163addfce2`), previo a `v1.2-capturas` (`600993c55d75`, 2026-11-03) y de validación posterior (`348f44c3eb91`, 2026-11-04): los tres con su fila en `docs/operacion/respaldo.md`.
+- **Abierto, sin bloquear el cierre:** las líneas `root` con `OSError: write error` (AUD-04-004, vigilancia en la 13-03); el peso real por fila de la tabla de eventos (se repite la medición en la 13-03); la restauración real, «no verificada en real» (decisión 7 de la 01-09).

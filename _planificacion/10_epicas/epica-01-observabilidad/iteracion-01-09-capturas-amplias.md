@@ -1,7 +1,7 @@
 # Iteración 01-09 · Capturas amplias que incumplen la regla 4
 
 - **Épica:** 01 · Observabilidad
-- **Estado:** En revisión hasta el despliegue (`v1.2`, con la 01-08 y la 01-07 reabierta). Criterios marcados y revisión visual hecha por el desarrollador el 2026-10-26. Implementada en local el 2026-10-26 ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)) con las opciones decididas: **A** para los ítems y **C** para respaldo y restauración. Se despliega **después** de la parte D de la 01-06 (2026-11-01).
+- **Estado:** Terminada (2026-11-04). Desplegada como `v1.2-capturas` (con la 01-08 y la 01-07 reabierta): reinicio efectivo de uWSGI el 2026-11-04 a las 00:11:49 (hora de Chile). Implementada en local el 2026-10-26 ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)) con las opciones decididas: **A** para los ítems y **C** para respaldo y restauración; criterios de producción en [evidencia-01-09](evidencia-01-09.md) y [bitacora-01-09-despliegue](../../99_bitacora/epica-01-observabilidad/bitacora-01-09-despliegue.md). Historial de estados: En revisión (2026-10-26) → Terminada (2026-11-04). Se desplegó **después** de la parte D de la 01-06 (medida el 2026-11-03).
 - **Subfase del plan:** ninguna propia. Es deuda detectada en la revisión de la 01-06 (2026-10-25) y adelanta parte de 3.2 (supresión silenciosa) y de 3.4 (contrato de error) **solo en lo que pide la regla 4**: registrar y no mostrar `str(e)`.
 - **Depende de:** 01-06 (detección de las capturas y opción A: el diagnóstico se lee en `server.log`).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-008 (inventario de eventos), RDA-013 (errores con `logging`).
@@ -10,7 +10,7 @@
 - **Respaldo previo al despliegue:** Sí, por decisión del desarrollador (las vistas tocadas son las de respaldo y restauración). La iteración no toca esquema ni datos.
 - **Etiqueta:** `v1.2-capturas` (sobre `81005df`, el commit anterior al primero de la 00-07)
 - **Partida y destino de retroceso:** `v1.1-observabilidad`
-- **Ventana:** domingo 2026-11-01, después de la parte D de la 01-06
+- **Ventana:** ~~domingo 2026-11-01~~ real: 2026-11-04 (reinicio efectivo a las 00:11:49), después de la parte D de la 01-06 (2026-11-03)
 - **Evidencia:** [evidencia-01-09](evidencia-01-09.md)
 
 ## Objetivo
@@ -128,10 +128,10 @@ Revisado en `pedidos/utils.py:13-70` y `pedidos/views.py:1075-1111` y en la plan
 - [x] Ninguna de las capturas corregidas muestra `str(e)` ni texto técnico al usuario. Textos fijos aprobados ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
 - [x] Hay una prueba por captura corregida que falla antes de la corrección y pasa con ella. 7 pruebas nuevas ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
 - [x] `python manage.py test pedidos` en `OK`, `check` sin errores, `makemigrations --check`: `No changes detected`. 86 pruebas ([bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md)).
-- [ ] Respaldo previo descargado y verificado antes del despliegue: `19 de 19`, `VÁLIDO`, código 0, con fila en `respaldo.md` §6 (decisión 6; evidencia-01-09, parte A). Agregado el 2026-10-27.
-- [ ] Desplegada con la etiqueta `v1.2-capturas` sobre `81005df`, sin migraciones, `pip` ni `collectstatic` (evidencia-01-09, partes C y D). Agregado el 2026-10-27.
-- [ ] En producción, un respaldo generado por el camino normal se descarga, sin provocar fallos (decisión 7; evidencia-01-09, parte E2). Agregado el 2026-10-27.
-- [ ] `server.log` sin `nivel=ERROR` nuevos después de la recarga, y las líneas nuevas con los emojis de la 01-07 (evidencia-01-09, parte E3). Agregado el 2026-10-27.
+- [x] Respaldo previo descargado y verificado antes del despliegue: `19 de 19`, `VÁLIDO`, código 0, con fila en `respaldo.md` §6 (decisión 6; evidencia-01-09, parte A). Agregado el 2026-10-27. **Medido el 2026-11-03:** `respaldo_03-11-2026_22-34-09.sql`, 1.481.608 bytes, SHA-256 `600993c55d75…`, 19 de 19, `VÁLIDO`, código 0. (Cómo se descargó: no informado.)
+- [x] Desplegada con la etiqueta `v1.2-capturas` sobre `81005df`, sin migraciones, `pip` ni `collectstatic` (evidencia-01-09, partes C y D). Agregado el 2026-10-27. **Medido el 2026-11-04:** `rev-parse` de `v1.2-capturas^{commit}` = `81005df`; `ls-remote` con una línea; `migrate --plan` sin operaciones; los `diff` de `requirements.txt` y `pedidos/static` entre `v1.1-observabilidad` y `v1.2-capturas`, vacíos.
+- [x] En producción, un respaldo generado por el camino normal se descarga, sin provocar fallos (decisión 7; evidencia-01-09, parte E2). Agregado el 2026-10-27. **Medido el 2026-11-04:** `respaldo_04-11-2026_00-12-37.sql`, descargado, 1.481.788 bytes, 19 de 19, `VÁLIDO`; posterior al reinicio de uWSGI (00:11:49).
+- [x] `server.log` sin `nivel=ERROR` nuevos después de la recarga, y las líneas nuevas con los emojis de la 01-07 (evidencia-01-09, parte E3). Agregado el 2026-10-27. **Medido el 2026-11-04** desde 00:11:49: 1 `ERROR` y 1 `INFO`. El único `ERROR` es el ruido conocido (`root`, `OSError: write error`, AUD-04-004), no un error nuevo de la aplicación; las dos líneas llevan 🔴 y 🔵. El criterio se da por cumplido con esa salvedad, como pidió el desarrollador.
 - [x] El diff no toca transacciones, métodos HTTP, plantillas ni el inventario de eventos. Diff en [bitacora-01-09](../../99_bitacora/epica-01-observabilidad/bitacora-01-09.md). Revisión visual en escritorio y a 360 px hecha por el desarrollador el 2026-10-26.
 
 ## Riesgos
