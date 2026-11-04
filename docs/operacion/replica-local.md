@@ -59,6 +59,8 @@ Get-ChildItem "<ruta de Disk image location>" -Recurse -Filter *.vhdx | Select-O
 
 Debe aparecer `ext4.vhdx` (en versiones recientes de Docker Desktop puede llamarse `docker_data.vhdx`) con una ruta en D:.
 
+> **Nota 2026-11-04:** la comprobación (b) **hoy falla**: el disco de datos de Docker (`docker_data.vhdx`) está en C:, que no está cifrada, y no en D:. La comprobación (a) pasa (D: con BitLocker al 100 %). Causa probable, no verificada: una actualización de Docker Desktop. Ver AUD-05-002 en `_planificacion/00_producto/auditoria-tecnica.md`. Los pasos de esta sección no cambian.
+
 ## 3. Pasar del contenedor «mysql» al compose (una sola vez)
 
 El contenedor anterior se llama `mysql`, usa `mysql:8.0` (8.0.43) y guarda los datos en el volumen `mysql_data`. Quitarlo **no** borra el volumen.
@@ -219,3 +221,5 @@ Cuando los datos queden viejos (por ejemplo, antes de ensayar una migración o u
 | :----------------- | :------------------------------- | :------------------------- | :------ |
 | 2026-10-21 (primera restauración, 00-03) | 2026-10-20 13:09:17 | 4,17 | 7 de 8 coinciden; Python aceptado; `pip freeze` 21/21 |
 | 2026-10-25 (ensayo de retroceso de la 01-06, parte A3) | 2026-10-25 21:02:34 | 3,6 | No se repitió la comprobación completa de la sección 7. Se comprobaron 18 tablas, `[X] 0006` como última migración y 79 pruebas en `OK` con la réplica restaurada y migrada (A5) |
+
+> **Nota 2026-11-04:** el paso 2 (repetir la comprobación de cifrado) hoy no pasa, por el disco de Docker en C: (AUD-05-002). El traslado del disco a D: (o el cifrado de C:) y el refresco de la réplica con el respaldo del 2026-11-04 00:12:37 se hacen al cerrar la Épica 03, sin respaldo nuevo. Hasta entonces, la última fila de la tabla es la del 2026-10-25. Los pasos de esta sección no cambian.
