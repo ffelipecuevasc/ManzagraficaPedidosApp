@@ -286,6 +286,8 @@ Todas resueltas el 2026-11-04, con la opción A (la recomendada):
 
 Estado de la iteración: se usa «Pendiente (redactada)» mientras no se ejecuta (el README protegido no define «Redactada»).
 
+**Nota 2026-11-04 (medición de consultas):** la desviación del paso 0 (registrar el número de consultas, regla 12) se cerró con una medición antes y después del camino feliz de las vistas tocadas, decidida por el desarrollador. Resultado: 95 consultas en las nueve peticiones antes de la 03-03 y 116 después, con el mismo código HTTP en todas. Método, tabla y límites en [bitacora-03-03-medicion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-medicion.md).
+
 ## Datos requeridos del cliente
 
 - Ninguno nuevo para ejecutar esta iteración.
