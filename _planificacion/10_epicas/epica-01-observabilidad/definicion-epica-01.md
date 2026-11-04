@@ -27,7 +27,7 @@
 | 01-04 | Instrumentación de eventos de negocio (Terminada) | 1.4 |
 | 01-05 | Consulta de eventos en el admin (Terminada) | 1.5 |
 | 01-07 | Marcas visuales en el registro de errores (en revisión: desplegada en `v1.1-observabilidad`, reabierta el 2026-10-26 para cambiar los emojis; viaja en `v1.2`) | 1.2 (ampliación) |
-| 01-06 | Despliegue y validación de la observabilidad (desplegada el 2026-10-25 como `v1.1-observabilidad`; falta la parte D, hacia el 2026-11-01) | 1.6 |
+| 01-06 | Despliegue y validación de la observabilidad (Terminada el 2026-11-03: desplegada el 2026-10-25 como `v1.1-observabilidad`; parte D medida el 2026-11-03) | 1.6 |
 | 01-08 | Comentarios de registro alineados con la opción A, solo texto (en revisión, ejecutada el 2026-10-26) | 1.2 (ajuste) |
 | 01-09 | Capturas amplias que incumplen la regla 4 (en revisión, implementada en local el 2026-10-26; viaja en `v1.2`) | — (deuda detectada en 01-06) |
 

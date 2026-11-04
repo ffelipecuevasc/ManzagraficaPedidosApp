@@ -42,13 +42,15 @@ Procedimiento de `docs/operacion/respaldo.md`. **Este volcado cuenta también co
 
 | Dato | Valor |
 | :--- | :---- |
-| Hora del clic (Chile) | |
-| ¿Se descargó directo o desde **Files**? | |
-| Tamaño (bytes) | |
-| Tablas (`N de 19`) y resultado | |
-| SHA-256 (12 primeros) | |
-| Código de salida | |
-| Fila agregada en `respaldo.md` §6 | |
+| Hora del clic (Chile) | 2026-11-03 22:34:09. Coincide con la hora del nombre del archivo (`respaldo_03-11-2026_22-34-09.sql`) y con la línea `INFO` de `pedidos.utils` en `server.log` (22:34:09) |
+| ¿Se descargó directo o desde **Files**? | No informado |
+| Tamaño (bytes) | 1.481.608 (mínimo exigido: 500.000: OK); línea de cierre «-- Dump completed» presente |
+| Tablas (`N de 19`) y resultado | 19 de 19 (19 sentencias `CREATE TABLE`); faltantes: ninguna; adicionales: ninguna · `VÁLIDO` |
+| SHA-256 (12 primeros) | `600993c55d75` (completo en `respaldo.md` §6) |
+| Código de salida | `0` |
+| Fila agregada en `respaldo.md` §6 | Sí (2026-11-03) |
+
+> **Nota (2026-11-03):** la parte A se ejecutó el **2026-11-03**, no el domingo 2026-11-01 previsto, y se respetó el orden de la evidencia: respaldo a las 22:34:09 y, enseguida, la medición de la parte D de la 01-06 a las 22:37:58. El archivo se guardó en la carpeta cifrada de respaldos, fuera del repositorio (ruta no registrada). La coincidencia entre la hora del clic y la del nombre del archivo vale para el respaldo normal; no se generaliza al respaldo de emergencia de la restauración, que sigue sin comprobar. El evento `respaldo_generado` de este clic es el único de ese tipo en la medición de la parte D, y está incluido en sus 172 filas ([bitacora-01-06-medicion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-medicion.md)).
 
 ## Parte B · Lista de comprobación **[PC · PowerShell 7]**
 

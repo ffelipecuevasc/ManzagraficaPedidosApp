@@ -6,6 +6,7 @@
 - **Criterios que dependen de esta evidencia:** todos los de la 01-06.
 - **Estado (2026-10-25, noche; 2026-10-26 en UTC):** partes A, B y C completadas; el error controlado, la página 500, el PDF y los eventos se validaron en producción. Hallazgo: cada error queda en dos archivos con dos formatos (decisión pendiente). B8: pruebas del agente hechas, verificación en el PC pendiente. D pendiente (hacia el domingo 2026-11-01).
 - **Actualización 2026-10-26:** resueltos la decisión de los dos destinos (opción A: el diagnóstico se hace en `server.log`; RDA-013), la verificación B8 en el PC (respaldo de A2 con el script nuevo: 18 de 19, código 1), la comparación literal del SQL de la 0007 y el contraste del contenido de la etiqueta ([bitacora-01-06-produccion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-produccion.md)), y las filas de `respaldo.md` y `replica-local.md`. **Solo queda pendiente la parte D.**
+- **Actualización 2026-11-03:** la parte D se midió ese día (no el 2026-11-01 previsto): ver su tabla y [bitacora-01-06-medicion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-medicion.md). Ya no queda nada pendiente en esta evidencia.
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide, sin datos de clientes: conteos, horas, tipos de error y códigos.
 >
@@ -596,17 +597,19 @@ zcat -f $S* | awk -v d="$DESDE_CL" '/^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] / && su
 
 | Dato | Valor |
 | :--- | :---- |
-| Fecha y hora de la medición (Chile) | |
-| Filas totales | |
-| Filas por tipo | |
-| Filas por día | |
-| `information_schema` (filas, datos, índices) | |
-| Largo promedio del resumen | |
-| Líneas de `server.log` por nivel | |
-| Líneas por registrador | |
-| Líneas de `fontTools` (en `error.log` y en `server.log`) | |
-| Disco del panel | |
-| Respaldo semanal (tablas y código) | |
+| Fecha y hora de la medición (Chile) | 2026-11-03 22:37:58 (el servidor imprimió `2026-11-04 01:37:58`, que es UTC). Ventana: desde el reinicio del 2026-10-25 21:26:25 (Chile); producción seguía en `v1.1-observabilidad` |
+| Filas totales | 172 |
+| Filas por tipo | `acceso_exitoso` 3, `acceso_fallido` 1, `pago_registrado` 25, `pedido_creado` 35, `pedido_eliminado` 1, `pedido_estado_cambiado` 103, `pedido_modificado` 3, `respaldo_generado` 1 (suman 172) |
+| Filas por día (hora de Chile) | 2026-10-25: 2; 10-26: 18; 10-27: 22; 10-28: 9; 10-29: 16; 10-30: 10; 10-31: 64; 11-01: 2; 11-02: 7; 11-03: 22 (suman 172) |
+| `information_schema` (filas, datos, índices) | `table_rows` 103, `data_length` 16.384, `index_length` 49.152 (bytes). Referencial: puede tener hasta 24 horas de atraso |
+| Largo promedio del resumen | 35,8372 (caracteres) |
+| Líneas de `server.log` por nivel | `ERROR` 9 e `INFO` 1 (desde el reinicio) |
+| Líneas por registrador | `django.request` 1, `pedidos.decorators` 1, `pedidos.utils` 1, `root` 7 (suman 10) |
+| Líneas de `fontTools` (en `error.log` y en `server.log`) | 0 y 0 |
+| Disco del panel | 183,2 MB (36 %) de 512 MB; CPU 2,37 s de 100 s (2 %) (panel, 2026-11-03) |
+| Respaldo semanal (tablas y código) | 19 de 19, `VÁLIDO`, código 0: es el respaldo de la parte A de la [evidencia-01-09](evidencia-01-09.md) (`respaldo_03-11-2026_22-34-09.sql`), que cuenta también como el semanal de rutina |
+
+> **Nota (2026-11-03):** la parte D se ejecutó el **2026-11-03**, no el 2026-11-01 previsto, 9 días 1 h 11 min 33 s después del reinicio (9,0497 días, no 7). El respaldo previo de la parte A de la 01-09 se generó antes, a las 22:34:09, así que su evento `respaldo_generado` está incluido en los 172. Las 10 líneas de `server.log` (9 `ERROR` y 1 `INFO`) se clasifican en [bitacora-01-06-medicion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-medicion.md); el contraste con la estimación de la 01-01, también.
 
 **Contraste (lo hace el agente en `bitacora-01-06-produccion.md`):** estimación de 01-01 = ~1.200 filas al mes (~40 por día, ~280 en 7 días) y ~0,6 MB al mes. Si el real supera la estimación, el agente propone ajustar el inventario antes de cerrar.
 
@@ -634,4 +637,4 @@ Observación: la variable `DESDE` de B6 se definió la primera vez con el texto 
 - El servicio de eventos escribe en producción: tras cerrar sesión, un acceso fallido con el nombre del usuario #1 y una contraseña inventada, y un acceso correcto, el admin mostró 2 eventos con hora de Chile. La tabla había quedado vacía después de B7 porque se usó una sesión ya abierta (confirmado por el desarrollador).
 - **Hallazgo:** cada error queda escrito en dos archivos con dos formatos (`error.log`: el de PythonAnywhere; `server.log`: el nuestro con emoji y contexto). La suposición «nuestras líneas caen en `error.log`» era incorrecta. Claude Code investigó la causa y el desarrollador decidió la **opción A** (2026-10-25): el diagnóstico se hace en `server.log`; `error.log` queda como lo escribe PythonAnywhere; sin cambios de código ni v1.2. El manejador de PythonAnywhere sigue siendo una deducción no confirmada. No es motivo de retroceso: no se perdió ninguna línea y la traza completa está en ambos archivos.
 
-_(Parte D: pendiente, hacia el domingo 2026-11-01. Decisión sobre los dos destinos de registro: resuelta, opción A.)_
+**Parte D (2026-11-03, 22:37:58 hora de Chile; prevista para el domingo 2026-11-01):** medida en producción, todavía en `v1.1-observabilidad`, con los datos de la tabla de la parte D. 172 eventos en 9,0497 días; `fontTools` en 0; 9 líneas `ERROR` y 1 `INFO` en `server.log` desde el reinicio. Respaldo semanal: el de la parte A de la 01-09, 19 de 19, código 0. El contraste con la estimación y la clasificación de las líneas están en [bitacora-01-06-medicion](../../99_bitacora/epica-01-observabilidad/bitacora-01-06-medicion.md). Decisión sobre los dos destinos de registro: resuelta, opción A.
