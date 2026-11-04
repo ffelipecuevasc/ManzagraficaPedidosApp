@@ -318,7 +318,7 @@ Cada defecto detectado en la auditoría obtiene una prueba que **falla ahora** y
 
 **Objetivo.** Corregir el defecto más grave del proyecto: la ausencia total de atomicidad en operaciones de escritura compuesta, combinada con supresión silenciosa de excepciones.
 
-**Precondición.** Fases 1 y 2 completas. **Esta precondición no es negociable.**
+**Precondición.** Fases 1 y 2 completas. **Esta precondición no es negociable.** **Nota 2026-11-04 (decisión del desarrollador):** la precondición vigente de la Fase 3 incluye además la 00-07 desplegada y validada (`v0.3-doble-envio`, 2026-11-04), según la nota del 2026-11-04 de `definicion-epica-03.md`.
 
 **Naturaleza del problema.** Existe un decorador denominado "transacción segura" que no abre ninguna transacción: es un bloque de captura de excepciones con un nombre que promete algo que no entrega. La documentación del proyecto afirma que el sistema usa transacciones atómicas. El módulo correspondiente de Django está importado pero nunca utilizado. El resultado es que una operación que guarda un pedido y luego sus ítems puede completar la primera mitad y fallar la segunda, dejando datos parciales sin ninguna traza.
 
@@ -673,7 +673,7 @@ Agregado sin reescribir el plan, por decisión del desarrollador durante la Fase
 
 | Fase del plan | Qué cambia | Épica |
 |---|---|---|
-| 3 | Sin cambio de alcance. El contrato de error se apoya en el registro del servidor, sin identificador de correlación ni tabla de errores (RDA-013). La precondición se precisa: validación de siete días de la observabilidad en producción y Fase 2 completa. | 03 |
+| 3 | Sin cambio de alcance. El contrato de error se apoya en el registro del servidor, sin identificador de correlación ni tabla de errores (RDA-013). La precondición se precisa: validación de siete días de la observabilidad en producción y Fase 2 completa. **Nota 2026-11-04 (decisión del desarrollador):** la precondición vigente incluye además la 00-07 desplegada y validada (`v0.3-doble-envio`, 2026-11-04), según `definicion-epica-03.md`. | 03 |
 | 4 | Se amplía con sanitización del HTML enriquecido (XSS), protección del acceso contra fuerza bruta, límites de subida y política de seguridad de contenido en modo observación. Se ejecuta después de la Fase 3. Una protección contra DoS o DDoS dentro de la aplicación queda descartada: con un solo proceso no es efectiva. | 04 |
 | 5 | Se limita al servidor (arranque en frío, consultas por fila, índices) y la medición se divide en inicial y final. La compilación de estilos (5.4), los recursos externos (5.5) y las métricas del navegador pasan a la Épica 08. | 05 |
 | 6 | Se separa en dos. Las subfases 6.1 a 6.3 (métricas, orden diaria, disco) forman la Épica 06, que suma el respaldo automático los días 1 y 15 y el rediseño del módulo de base de datos. Las subfases 6.4 a 6.6 (vistas, servicios, deuda menor) forman la Épica 07, que suma selectores y modelos por dominio (RDA-015). | 06 y 07 |

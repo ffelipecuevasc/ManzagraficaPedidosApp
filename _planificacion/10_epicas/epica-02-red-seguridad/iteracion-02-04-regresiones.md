@@ -32,8 +32,8 @@ El mecanismo de fallos esperados está decidido en 02-01 y documentado en `docs/
 
 | # | Hallazgo | Comportamiento correcto que afirma la prueba | Qué pasa hoy | Lo corrige |
 | :- | :------- | :------------------------------------------- | :----------- | :--------- |
-| R1 | AUD-01-002 | Si falla un ítem al **editar un pedido**, los ítems anteriores siguen en la base | Se borran todos los ítems y se recrean hasta el fallo | 03-02 / 03-03 |
-| R2 | AUD-01-002 | Lo mismo al **editar una cotización** | Igual que R1 | 03-02 / 03-03 |
+| R1 | AUD-01-002 | Si falla un ítem al **editar un pedido**, los ítems anteriores siguen en la base | Se borran todos los ítems y se recrean hasta el fallo | 03-02 / 03-03. **Nota 2026-11-04 (decisión del desarrollador):** pasa a verde en la 03-03 |
+| R2 | AUD-01-002 | Lo mismo al **editar una cotización** | Igual que R1 | 03-02 / 03-03. **Nota 2026-11-04 (decisión del desarrollador):** pasa a verde en la 03-03 |
 | R3 | AUD-02-008 | Si falla un ítem al **crear un pedido**, no queda un pedido a medias | `transaction.atomic` existe, pero el `try/except` interno lo anula y el pedido queda con ítems parciales | 03-03 |
 | R4 | AUD-01-002 | Lo mismo al **crear una cotización** | Cotización con ítems parciales | 03-03 |
 | R5 | AUD-01-006 | Llamar dos veces `registrar_metricas_diarias()` el mismo día deja **una** fila de `HistorialBD` | Deja dos; la comprobación de duplicados no funciona (producción: 187 filas en 121 días). **No confirmada, sin prueba (2026-10-27):** a mediodía deja una fila (`unexpected success`). Por decisión del desarrollador queda cubierta por R8; R5 sigue sin asignar | 06-01 |
