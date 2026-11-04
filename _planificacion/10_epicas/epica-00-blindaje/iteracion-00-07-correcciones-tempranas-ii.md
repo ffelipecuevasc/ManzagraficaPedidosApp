@@ -1,7 +1,7 @@
 # Iteración 00-07 · Correcciones tempranas II
 
 - **Épica:** 00 · Blindaje y punto de retorno (reabierta el 2026-10-27 solo para esta iteración)
-- **Estado:** En revisión (implementada y verificada en local el 2026-10-27, [bitacora-00-07-revision](../../99_bitacora/epica-00-blindaje/bitacora-00-07-revision.md); quedan los criterios de producción; despliegue **sin fecha**, cuando el desarrollador lo indique, ~~domingo 2026-11-01~~)
+- **Estado:** En revisión (desplegada el 2026-11-04 como `v0.3-doble-envio`; falta la medición del 2026-11-11). Implementada y verificada en local el 2026-10-27 ([bitacora-00-07-revision](../../99_bitacora/epica-00-blindaje/bitacora-00-07-revision.md)); despliegue y validación en [bitacora-00-07-despliegue](../../99_bitacora/epica-00-blindaje/bitacora-00-07-despliegue.md). ~~Despliegue sin fecha, domingo 2026-11-01~~
 - **Subfase del plan:** 0.6 (continuación; nueva, por hallazgos de producción del 2026-10-27)
 - **Depende de:** 00-05 (protocolo de despliegue). En producción, va después de validar `v1.2-capturas` (decisión 5).
 - **RDA relacionadas:** RDA-007
@@ -10,7 +10,7 @@
 - **Respaldo previo al despliegue:** No (no toca datos ni esquema), pero sí etiqueta y despliegue propios
 - **Etiqueta:** `v0.3-doble-envio`
 - **Partida y destino de retroceso:** `v1.2-capturas`
-- **Ventana:** sin fecha (cuando el desarrollador lo indique), después de validar `v1.2-capturas`, que quedó validada el 2026-11-04; ~~domingo 2026-11-01~~
+- **Ventana:** real: 2026-11-04, con reinicio efectivo a las 01:32:51 (hora de Chile), después de validar `v1.2-capturas` (2026-11-04); ~~domingo 2026-11-01~~
 - **Evidencia:** [evidencia-00-07](evidencia-00-07.md)
 
 ## Objetivo
@@ -48,9 +48,9 @@ El 2026-10-27 a las 14:36:20, dos `POST /pedidos/nuevo/` en el mismo segundo cre
 - [x] «Nueva cotización» se comporta igual que antes.
 - [x] `python manage.py test pedidos` sin cambios en el recuento (`Ran 184 tests`, `OK (expected failures=19)`), `check` sin errores y `makemigrations --check --dry-run` sin cambios. **2026-10-27:** `check` sin problemas y `makemigrations` sin cambios; las pruebas no corrieron porque el contenedor MySQL estaba apagado (bitácora). **Revisión del 2026-10-27:** `Ran 184 tests`, `OK (expected failures=19)`, antes y después del cambio de texto ([bitacora-00-07-revision](../../99_bitacora/epica-00-blindaje/bitacora-00-07-revision.md)).
 - [x] El botón dice «Editar Pedido» al editar y «Crear Pedido» al crear (decisión 7; observado por el desarrollador en la revisión del 2026-10-27).
-- [ ] Desplegada con su propia etiqueta, `v0.3-doble-envio`, distinta de `v1.2-capturas`.
-- [ ] `v1.2-capturas` apunta al último commit anterior a la 00-07, y `git diff --stat <ese commit>..v0.3-doble-envio` muestra solo `pedido_form.html` y documentos (evidencia, parte B).
-- [ ] Una semana después del despliegue, `access.log` no muestra dos `POST /pedidos/nuevo/` en el mismo segundo (evidencia, parte D).
+- [x] Desplegada con su propia etiqueta, `v0.3-doble-envio`, distinta de `v1.2-capturas`. **Medido el 2026-11-04:** etiqueta anotada (objeto `e68f87212245679d68ba8340db46cd9c3218419d`) sobre `5dc82a8`, publicada (`ls-remote`, una línea); en el servidor, `describe` = `v0.3-doble-envio`; reinicio efectivo a las 01:32:51; sin migraciones, `pip` ni `collectstatic`; sin retroceso ([evidencia-00-07](evidencia-00-07.md), partes B y C).
+- [x] `v1.2-capturas` apunta al último commit anterior a la 00-07, y `git diff --stat <ese commit>..v0.3-doble-envio` muestra solo `pedido_form.html` y documentos (evidencia, parte B). **Medido el 2026-11-04:** `v1.2-capturas` → `81005df`; el `diff` sin `_planificacion` ni `docs` lista solo `pedido_form.html` (1 archivo, 41 inserciones, 3 eliminaciones).
+- [ ] Una semana después del despliegue, `access.log` no muestra dos `POST /pedidos/nuevo/` en el mismo segundo (evidencia, parte D). **Sin marcar:** medición el **2026-11-11, hacia las 01:32** (hora de Chile).
 
 ## Fuera de alcance
 
@@ -73,7 +73,7 @@ El 2026-10-27 a las 14:36:20, dos `POST /pedidos/nuevo/` en el mismo segundo cre
 2. **Ubicación del código:** un script propio en `pedido_form.html`, dentro de `{% block scripts %}`, que `base.html` carga después de `index.js` (`base.html:317` y `:319`). No se toca `index.js`: su manejador del id `pedidoForm` alcanza también a `cotizacion_form.html`, y no tocar estáticos evita `collectstatic`.
 3. **Indicador:** texto de procesando e ícono que gira, igual que la 00-06 en `login.html` (`disabled`, `aria-busy`, los cuatro elementos `data-*`, cancelar el segundo `submit` y restaurar en `pageshow`). La posible contradicción con `DESIGN.md` (sección 8) queda como pendiente en el registro.
 4. **Etiqueta:** `v0.3-doble-envio`. **Destino de retroceso:** `v1.2-capturas`.
-5. **Orden en producción (~~domingo 2026-11-01~~, sin fecha desde el 2026-11-04):** parte D de la 01-06 → `v1.2-capturas` → validación de `v1.2` → `v0.3-doble-envio` → validación. Si `v1.2` se retrocede, la 00-07 se pospone.
+5. **Orden en producción (~~domingo 2026-11-01~~; real: 2026-11-04, reinicio efectivo a las 01:32:51):** parte D de la 01-06 → `v1.2-capturas` → validación de `v1.2` → `v0.3-doble-envio` → validación. Si `v1.2` se retrocede, la 00-07 se pospone.
 6. **Commits y etiquetas:** el desarrollador hace el commit de la 00-07 en `main` esta semana. El domingo, `v1.2-capturas` se crea sobre el último commit anterior a la 00-07 (`git tag -a v1.2-capturas <hash>`) y `v0.3-doble-envio` sobre la punta de `main`.
 
 7. **Texto del botón al editar (2026-10-27, durante la revisión):** «Editar Pedido» en modo edición y «Crear Pedido» al crear, con la condición `{% if form.instance.pk %}` que ya usa el título. Se eligió sobre «Guardar cambios» porque remite al cliente a lo que está haciendo. Requiere un commit nuevo antes del despliegue.
@@ -83,3 +83,4 @@ El 2026-10-27 a las 14:36:20, dos `POST /pedidos/nuevo/` en el mismo segundo cre
 - **2026-10-27 (decisión del desarrollador):** se crea esta iteración y se reabre la Épica 00 solo para ella, en lugar de reabrir la 00-06 (terminada y desplegada como `v0.2-correcciones`). Origen: P4 de la Auditoría 04.
 - **2026-10-27 (decisiones 1 a 6):** se ajustan objetivo, tareas, criterios, cabecera y fuera de alcance; el texto anterior queda tachado ([bitacora-00-07](../../99_bitacora/epica-00-blindaje/bitacora-00-07.md)).
 - **2026-11-04 (decisión del desarrollador):** las fechas «domingo 2026-11-01» del estado, de la ventana y de la decisión 5 eran fechas de plan y se tacharon. Esta iteración sigue pendiente de despliegue y queda **sin fecha** (no se pone 2026-11-04: ese día se desplegó `v1.2-capturas`, no esta iteración). `v1.2-capturas` quedó validada el 2026-11-04 ([evidencia-01-09](../epica-01-observabilidad/evidencia-01-09.md)), así que la condición de la decisión 5 está cumplida. Conviene avisar a Manza Gráfica de la ventana.
+- **2026-11-04 (despliegue):** `v0.3-doble-envio` se desplegó esa noche (reinicio efectivo a las 01:32:51, hora de Chile; orden de Reload a las 01:32:45) y quedó validada sin retroceso: acceso, panel, listado, detalle, «Nuevo pedido» y «Editar pedido» abren y muestran el cambio, sin enviar formularios, y 0 líneas con `nivel=` desde el reinicio. Pruebas y `check --deploy` no se repitieron: el código es idéntico al de `bd07f21`, donde corrieron el mismo día. Sin respaldo nuevo (no toca datos ni esquema). Quedan sin marcar la medición de `access.log` del 2026-11-11 y el cierre de la iteración, que se hace con esa medición. La nota anterior («sin fecha») queda superada ([bitacora-00-07-despliegue](../../99_bitacora/epica-00-blindaje/bitacora-00-07-despliegue.md)).

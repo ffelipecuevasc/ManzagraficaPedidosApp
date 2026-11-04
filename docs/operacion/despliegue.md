@@ -164,6 +164,13 @@ git describe --tags
 - Si responde `error: Your local changes ... would be overwritten`, detente: hay cambios locales (paso 3.1). No uses `--force`.
 - Si `fetch` falla por red, vuelve a intentarlo una vez; GitHub está en la lista blanca de PythonAnywhere.
 
+> **Advertencia (incidente del 2026-11-03).** En la consola del servidor solo se ejecutan `git fetch origin --tags` y `git checkout <etiqueta>`. **Nunca** el checkout de una rama (`main` u otra), `git pull`, `merge`, `rebase` ni `reset`. Los comandos de la lista de comprobación (`git checkout main`, pruebas, `check --deploy`) son del PC.
+>
+> - **El prompt de la consola debe decir `(HEAD detached at <etiqueta>)`** antes de cada comando de Git. Si dice `main` u otra rama, detente.
+> - **La rama `main` local del servidor está atrasada** (con ella, `git describe` da `v0.0-inicial`; el 2026-11-03 Git indicó 32 commits de atraso). Un `git checkout main` ahí deja en disco código viejo. Es probable que la web app siga sirviendo el que ya tiene cargado hasta el siguiente reinicio, pero eso es una inferencia, no está comprobado.
+> - Si te equivocas, no hagas `git pull`: vuelve con `git checkout <etiqueta anterior>`, comprueba `git describe --tags`, `git rev-parse --short HEAD` y que `git status --short` quede vacío, y revisa en el registro de uWSGI que no hubo reinicios entre el error y la restauración (comando de 3.6).
+> - Opcional: `git branch --show-current` no imprime nada con `HEAD` suelto (si la versión de Git del servidor lo admite). En el servidor solo debería haber `HEAD` suelto sobre una etiqueta; si responde el nombre de una rama, es una alarma.
+
 ### 3.3 Dependencias (solo si cambió `requirements.txt`)
 
 **[PA · Bash]**
@@ -209,6 +216,23 @@ Si muestra cambios: `python manage.py collectstatic --noinput`. Debe terminar co
 **[PA · Panel]** Pestaña **Web** → botón verde **Reload manzagrafica.pythonanywhere.com**. Espera a que el botón vuelva a su estado normal.
 
 Anota la hora de la recarga (hora de Chile): sirve para filtrar el registro de errores.
+
+**Qué hora se anota (regla vigente desde el 2026-11-04).** La hora oficial de una recarga es la del **reinicio efectivo**: la línea `Starting uWSGI` de `server.log`, cuyo prefijo está en hora de Chile. No es la del reloj del desarrollador ni la de la consola de PythonAnywhere (que marca UTC: Chile + 3 h en horario de verano y + 4 h en invierno). La línea `received message 0 from emperor` marca el clic de **Reload** (orden recibida) y va unos segundos antes del reinicio: en la 00-07, 01:32:45 y 01:32:51. Con la hora del clic no se filtra el registro; se usa la del reinicio.
+
+**Detectar reinicios de uWSGI (solo lectura, con filtro por fecha).** **[PA · Bash]**
+
+```bash
+S=/var/log/manzagrafica.pythonanywhere.com.server.log
+DESDE_CL="2026-11-03 23:30:00"
+echo "$DESDE_CL" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$' && echo "DESDE_CL válido"
+for f in "$S" "$S".*; do [ -f "$f" ] && zcat -f "$f"; done \
+  | awk -v d="$DESDE_CL" '/^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9:]+ \*\*\* Starting uWSGI/ && substr($0,1,19) >= d { print substr($0,1,19), "Starting uWSGI" }' \
+  | sort
+```
+
+- `DESDE_CL` va en hora de Chile, sin `<` ni `>`. Cada línea impresa es un reinicio efectivo; sin líneas, no hubo reinicios desde esa hora. Solo imprime la fecha y una etiqueta fija, nunca la línea del registro.
+- **No uses `zcat -f $S*` sin filtro de fecha:** el glob recorre también los archivos rotados y devuelve líneas antiguas. El filtro exige que la línea empiece con fecha, sea de arranque y sea posterior a `DESDE_CL`.
+- **Probado el 2026-11-04** (consulta de solo lectura, sin modificar el servidor): con `DESDE_CL="2026-11-03 23:30:00"` imprimió solo la línea de las 00:11:49.
 
 ### 3.7 Verificar después
 
@@ -260,3 +284,4 @@ El paso a paso exacto, con las salidas que hay que anotar, está en `_planificac
 | 2026-10-23 18:35 | `v0.2-correcciones` | `7944943` | 00-06 (partida `v0.1-higiene`, `64655f8`) | No aplica (sin cambios de datos ni de esquema; evidencia-00-06) | Correcto, sin retroceso: una sola línea nueva en el registro, `Not Found: /favicon.ico` (hallazgo menor registrado) |
 | 2026-10-25 21:26 | `v1.1-observabilidad` | `d6768d0` | 01-01 a 01-05, 01-07 y el bloque de pruebas de 02-01 (partida `v0.2-correcciones`); migración 0007, Clase 2, en 2,659 s | `f3163addfce2` | Correcto, sin retroceso: acceso, panel, listado y detalle; error controlado diagnosticado en unos 2 minutos en `server.log`. Hallazgo: cada error queda en `server.log` y en `error.log` (opción A). Parte D pendiente (2026-11-01) |
 | 2026-11-04 00:11 (recarga a las 00:11:49, hora oficial: la de `Starting uWSGI` en el registro; el desarrollador la había informado a las 00:14:00, 2 min 11 s posterior) | `v1.2-capturas` | `81005df` | 01-09, 01-08 y 01-07 reabierta (partida `v1.1-observabilidad`, `d6768d0`); sin migraciones, `pip` ni `collectstatic` | `600993c55d75…` (`respaldo_03-11-2026_22-34-09.sql`, 19 de 19) | Correcto, sin retroceso. E1: acceso, panel, listado y detalle sin problemas. E2: respaldo por el camino normal a las 00:12:37 (nombre; `INFO` en `server.log` a las 00:12:39, posterior al reinicio), 19 de 19, `VÁLIDO`, descargado. E3 desde 00:11:49: 1 `ERROR` (`root`, `OSError: write error`, ruido conocido, AUD-04-004) y 1 `INFO`, con los emojis 🔴 y 🔵 de `v1.2`. Incidente previo, a las 23:41 del 2026-11-03: `git checkout main` por error en el servidor, restaurado hacia las 00:09 sin `git pull` ni reinicios de uWSGI (evidencia-01-09, parte D) |
+| 2026-11-04 01:32 (reinicio efectivo a las 01:32:51; orden de Reload recibida a las 01:32:45) | `v0.3-doble-envio` | `5dc82a8` | 00-07 (partida `v1.2-capturas`); sin migraciones, `pip` ni `collectstatic` | No aplica: no toca datos ni esquema; el último verificado es `respaldo_04-11-2026_00-12-37.sql` (`348f44c3eb91…`, 19 de 19) | Correcto, sin retroceso. Acceso, panel, listado, detalle, «Nuevo pedido» y «Editar pedido» abren y muestran el cambio (sin enviar formularios); 0 líneas con `nivel=` desde el reinicio. Pruebas y `check --deploy` no se repitieron: el código es idéntico al de `bd07f21`, donde corrieron el mismo día. Falta la medición de `access.log` del 2026-11-11 (evidencia-00-07, parte D) |
