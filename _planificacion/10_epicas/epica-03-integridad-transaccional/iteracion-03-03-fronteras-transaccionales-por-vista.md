@@ -1,7 +1,7 @@
 # Iteración 03-03 · Fronteras transaccionales por vista
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** En revisión (2026-11-04). Ejecutada en local con las ocho decisiones del desarrollador del 2026-11-04 (todas la opción A) ([bitacora-03-03](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03.md)); falta su revisión manual. Sin despliegue propio: viaja con la 03-05. Historial de estados: Pendiente (redactada el 2026-11-04, [bitacora-03-03-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-redaccion.md)) → En revisión (2026-11-04).
+- **Estado:** Terminada (2026-11-04). Ejecutada en local con las ocho decisiones del desarrollador del 2026-11-04 (todas la opción A) ([bitacora-03-03](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03.md)); revisión manual hecha por el desarrollador el mismo día ([bitacora-03-03-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-cierre.md)) y medición de consultas en [bitacora-03-03-medicion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-medicion.md). Sin despliegue propio: viaja con la 03-05. Historial de estados: Pendiente (redactada el 2026-11-04, [bitacora-03-03-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-redaccion.md)) → En revisión (2026-11-04) → Terminada (2026-11-04).
 - **Subfase del plan:** 3.3 «Revisión de fronteras transaccionales» (`plan-de-trabajo.md:344`)
 - **Depende de:** 03-02 (Terminada el 2026-11-04)
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging` en `server.log`, sin identificador de correlación), RDA-015 (las transacciones pasarán a los servicios en la 07-02), RDA-019 (atomicidad con `transaction.atomic` explícito y la captura **fuera** del bloque).
@@ -212,7 +212,7 @@ Con las decisiones tomadas (3-A y 5-A) pasan a verde ocho regresiones y los fall
 - [x] Un pago que cambia de pedido deja ambos pedidos con el `estado_pago` que da el oráculo (R12).
 - [x] `pruebas.md` y la bitácora dicen `expected failures=9`; `python manage.py test pedidos` → 220 pruebas, `OK (expected failures=9)` en tres ejecuciones; `check` limpio; `makemigrations --check --dry-run`: `No changes detected` (detalle en la bitácora).
 - [x] AUD-01-001, AUD-01-002, AUD-02-004 y AUD-02-005 anotados como resueltos en la 03-03 (código, con despliegue en la 03-05), con la evidencia de las pruebas. Por decisión del desarrollador, también AUD-02-008, y AUD-02-027 por la decisión 3-A.
-- [ ] Revisión manual hecha (más abajo).
+- [x] Revisión manual hecha (más abajo): P1 a P8 hechas por el desarrollador el 2026-11-04, con `DEBUG=False`, en escritorio y a 360 px ([bitacora-03-03-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-cierre.md)). Reserva: en el rechazo del abono y de la fecha vacía de la conversión no hay captura ni se confirmó el texto exacto del mensaje.
 - [x] Los `PENDIENTE_CLIENTE` de AUD-02-014 y del valor $0/sobrepago siguen abiertos y sin cambios de comportamiento (`test_valor_venta_es_el_valor_total_sin_iva` y `test_con_total_cero_cualquier_abono_se_acepta`).
 
 ## Revisión manual (la hace el desarrollador, contra la réplica local)
@@ -227,6 +227,8 @@ Con `DEBUG=False` y `runserver --insecure`, en escritorio y a 360 px:
 6. Los pedidos y cotizaciones de prueba quedan en la réplica y se limpian al refrescarla al cierre de la Épica 03 (AUD-05-002).
 
 Instrucciones de lo que no puede hacer el agente (consultas a la réplica) se entregarán con la ejecución, no antes. No hay evidencia que pedir a producción.
+
+**Nota 2026-11-04 (revisión hecha):** el desarrollador hizo los pasos 1 a 6 y los resultados están en [bitacora-03-03-cierre](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-03-cierre.md). En el paso 1, la pantalla toma el valor de venta del total de los ítems (dicho por el desarrollador), así que para comprobar el cambio se modificó el precio unitario.
 
 ## Resultado de la ejecución (2026-11-04)
 
