@@ -28,12 +28,13 @@
     <div class="flex justify-center">
         <div class="w-full max-w-4xl">
 
-            <form method="post" id="pedidoForm">
+            <form method="post" id="pedidoForm" data-bloquear-envio>
                 {% csrf_token %}
+                {% if token_envio %}<input type="hidden" name="token_envio" value="{{ token_envio }}">{% endif %}
 
                 {% if form.errors %}
-                    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3 animate-pulse">
-                        <span class="material-icons-round text-red-500 text-xl mt-0.5">error_outline</span>
+                    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+                        <span class="material-icons-round text-red-600 dark:text-red-400 text-xl mt-0.5">error_outline</span>
                         <div>
                             <h3 class="text-red-800 dark:text-red-400 font-bold text-sm">Hay errores en el
                                 formulario</h3>
@@ -63,7 +64,7 @@
                                 {% render_field form.cliente class="form-select select2" data-placeholder="Busque un cliente..." %}
 
                                 {% if form.cliente.errors %}
-                                    <p class="text-red-500 text-xs mt-1 font-bold flex items-center">
+                                    <p id="error-cliente" role="alert" class="text-red-600 dark:text-red-400 text-xs mt-1 font-bold flex items-center">
                                         <span class="material-icons-round text-sm mr-1">warning</span> {{ form.cliente.errors.0 }}
                                     </p>
                                 {% endif %}
@@ -111,7 +112,7 @@
                                 </button>
                             </div>
                             <div id="cliente-api-error"
-                                 class="hidden mt-3 text-xs text-red-500 font-bold text-right"></div>
+                                 class="hidden mt-3 text-xs text-red-600 dark:text-red-400 font-bold text-right"></div>
                         </div>
                     </div>
                 </div>
@@ -281,7 +282,7 @@
                                        for="{{ form.resumen.id_for_label }}">{{ form.resumen.label }}</label>
                                 {% render_field form.resumen class="form-control bg-white dark:bg-neutral-900" placeholder="Ej: 1000 Volantes Corporativos" %}
                                 {% if form.resumen.errors %}
-                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ form.resumen.errors.0 }}</p>
+                                    <p id="error-resumen" role="alert" class="text-red-600 dark:text-red-400 text-xs mt-1 font-bold">{{ form.resumen.errors.0 }}</p>
                                 {% endif %}
                             </div>
 
@@ -290,7 +291,7 @@
                                        for="{{ form.detalles.id_for_label }}">{{ form.detalles.label }}</label>
                                 {% render_field form.detalles class="form-control summernote-editor" rows="4" %}
                                 {% if form.detalles.errors %}
-                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ form.detalles.errors.0 }}</p>
+                                    <p id="error-detalles" role="alert" class="text-red-600 dark:text-red-400 text-xs mt-1 font-bold">{{ form.detalles.errors.0 }}</p>
                                 {% endif %}
                             </div>
 
@@ -305,7 +306,7 @@
                                     </div>
                                     <p class="text-[10px] text-slate-400 mt-1 text-right">Calculado automáticamente</p>
                                     {% if form.valor_total.errors %}
-                                        <p class="text-red-500 text-xs mt-1 font-bold">{{ form.valor_total.errors.0 }}</p>
+                                        <p id="error-valor_total" role="alert" class="text-red-600 dark:text-red-400 text-xs mt-1 font-bold">{{ form.valor_total.errors.0 }}</p>
                                     {% endif %}
                                 </div>
 

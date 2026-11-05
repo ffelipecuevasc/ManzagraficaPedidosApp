@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // B. Inicializar Plugins
     initPlugins();
 
+    // B2. Bloqueo del botón al enviar (03-04): evita el doble envío en los formularios de escritura
+    initBloqueoEnvio();
+
     // C. Formulario Pedidos / Cotizaciones
     // (Usamos el mismo ID 'pedidoForm' para ambos casos para reutilizar lógica)
     if (document.getElementById('pedidoForm')) {
@@ -799,4 +802,69 @@ function initConversionLogic() {
 
     // Ejecutar al inicio
     toggleMetodo();
+}
+
+/* =========================================
+   12. BLOQUEO DEL BOTÓN AL ENVIAR (03-04, AUD-04-001, DESIGN.md 5.1)
+   =========================================
+   Un formulario con el atributo `data-bloquear-envio` deshabilita sus botones de envío en el primer
+   envío y muestra «Guardando…» (o el texto que lleve el atributo). El segundo envío se descarta.
+   Al volver con «atrás» el navegador puede recuperar la página desde su caché: `pageshow` los reactiva.
+   `pedido_form.html` conserva su propio script de la 00-07 y no usa este atributo (decisión 8-C). */
+function bloquearBoton(boton, texto) {
+    if (boton.dataset.original === undefined) {
+        boton.dataset.original = boton.innerHTML;
+    }
+    boton.disabled = true;
+    boton.setAttribute('aria-busy', 'true');
+    boton.style.cursor = 'wait';
+    boton.style.opacity = '0.75';
+    boton.innerHTML = '<span class="material-icons-round mr-2 text-xl animate-spin" aria-hidden="true">autorenew</span>';
+    const etiqueta = document.createElement('span');
+    etiqueta.textContent = texto || 'Guardando…';
+    boton.appendChild(etiqueta);
+}
+
+function desbloquearBoton(boton) {
+    if (boton.dataset.original !== undefined) {
+        boton.innerHTML = boton.dataset.original;
+        delete boton.dataset.original;
+    }
+    boton.disabled = false;
+    boton.setAttribute('aria-busy', 'false');
+    boton.style.cursor = '';
+    boton.style.opacity = '';
+}
+
+function initBloqueoEnvio() {
+    document.querySelectorAll('form[data-bloquear-envio]').forEach(function (form) {
+        const texto = form.getAttribute('data-bloquear-envio') || 'Guardando…';
+        const botones = function () {
+            return form.querySelectorAll('button[type="submit"]');
+        };
+        let enviando = false;
+
+        form.addEventListener('submit', function (evento) {
+            if (enviando) {
+                evento.preventDefault();
+                return;
+            }
+            enviando = true;
+            botones().forEach(function (boton) {
+                bloquearBoton(boton, texto);
+            });
+            // Si otro controlador cancela el envío, los botones vuelven a estar disponibles.
+            setTimeout(function () {
+                if (evento.defaultPrevented) {
+                    enviando = false;
+                    botones().forEach(desbloquearBoton);
+                }
+            }, 0);
+        });
+
+        window.addEventListener('pageshow', function () {
+            enviando = false;
+            botones().forEach(desbloquearBoton);
+        });
+    });
 }

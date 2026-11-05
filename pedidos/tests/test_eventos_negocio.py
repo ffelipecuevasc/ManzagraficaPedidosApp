@@ -13,7 +13,7 @@ from django.test import TestCase
 from pedidos import views
 from pedidos.models import Pago, Pedido, RegistroEvento
 
-from . import factorias
+from . import ayudas, factorias
 
 
 class EventosNegocioBase(TestCase):
@@ -22,8 +22,12 @@ class EventosNegocioBase(TestCase):
         self.client.force_login(self.usuario)  # sin ejecutar on_commit: no deja evento
 
     def ejecutar(self, metodo, ruta, datos=None, **extra):
+        datos = datos or {}
+        if metodo == 'post':
+            # Los formularios de creación traen su token de envío único (03-04).
+            datos = ayudas.con_token(self.client, ruta, datos)
         with self.captureOnCommitCallbacks(execute=True):
-            return getattr(self.client, metodo)(ruta, datos or {}, **extra)
+            return getattr(self.client, metodo)(ruta, datos, **extra)
 
     def assertUnEvento(self, tipo, entidad, entidad_id, usuario='actual'):
         eventos = list(RegistroEvento.objects.all())

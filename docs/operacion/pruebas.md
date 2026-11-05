@@ -62,6 +62,9 @@ Paquete `pedidos/tests/`, un archivo por dominio:
 | `ayudas.py` | Ayudas de los flujos: `items_json`, `cambiar_estado` y `duplicar` (método HTTP actual) y `congelar_hora` (02-03) |
 | `test_pedidos.py` | Flujos de pedidos y pagos: crear, editar, cambiar estado, duplicar, clasificación, detalle, ingresar y editar pago (02-03) |
 | `test_cotizaciones.py` | Flujos de cotizaciones: crear, editar y convertir en pedido (02-03) |
+| `test_contrato_error.py` | Contrato de error hacia el usuario (03-04): mensajes de error visibles, avisos que no se acumulan, formulario con lo escrito y errores accesibles |
+| `test_envio_unico.py` | Token de envío único en la sesión (03-04): envío repetido, token ausente o vencido, token que no se gasta |
+| `test_bloqueo_envio.py` | Bloqueo del botón al enviar (03-04): cada formulario de escritura lo declara |
 
 Las iteraciones siguientes agregan los archivos que necesiten (por ejemplo `test_regresiones.py`, `test_acceso.py`). No se crean archivos vacíos.
 
@@ -113,6 +116,7 @@ En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=9`**
 - **R20 (AUD-02-029): retirada en la 03-01 (2026-11-04).** Al retirar `@transaccion_segura` (RDA-019), las 12 rutas con `pk` inexistente responden 404. `test_r20_pk_inexistente_responde_404` sigue en `test_regresiones.py` como prueba normal, sin `@expectedFailure` ni `@tag('regresion')`.
 - **R3 (AUD-02-008): retirada en la 03-02 (2026-11-04, alcance B).** En `crear_pedido` la excepción de un ítem ya sale del `transaction.atomic` que la vista tenía: se revierte el pedido, los ítems y el pago, y Django responde 500. `test_r3_crear_pedido_con_item_fallido_no_deja_rastro` sigue en `test_regresiones.py` como prueba normal, sin `@expectedFailure` ni `@tag('regresion')`, y con `raise_request_exception = False` (sin eso, el cliente de pruebas relanza la excepción y la prueba no mide los datos que quedan). R1, R2 y R4 se retiraron en la 03-03 (ver más abajo).
 - **R1, R2 y R4 (AUD-01-002): retiradas en la 03-03 (2026-11-04).** `editar_pedido`, `crear_cotizacion` y `editar_cotizacion` escriben dentro de un `transaction.atomic()` y la excepción de un ítem sale del bloque: no queda cotización a medias ni se pierden los ítems ni el valor anteriores. Las tres siguen en `test_regresiones.py` como pruebas normales, sin `@expectedFailure` ni `@tag('regresion')`; el cliente de pruebas ya no relanza la excepción (`raise_request_exception = False`) y `absorber_errores` incluye `django.request`. Pruebas nuevas por vista en `test_fronteras_transaccionales.py`.
+- **R21 (AUD-04-001): escrita y retirada en la 03-04 (2026-11-04).** Se escribió como fallo esperado (`expected failures=10`): dos `POST /pedidos/nuevo/` con el mismo token creaban dos pedidos. El token de envío único en la sesión la dejó en verde, sin `@expectedFailure` ni `@tag('regresion')`, y el valor vigente volvió a 9. Vive en `test_regresiones.py` (`EnvioUnicoTests`); las pruebas del mecanismo están en `test_envio_unico.py`.
 - **R10, R11 y R12 (AUD-02-004): retiradas en la 03-03.** `crear_pedido` (con abono), `editar_pedido` y `editar_pago` (el pedido anterior y el nuevo) recalculan `estado_pago` con `actualizar_estado_pago_pedido` dentro de la misma transacción. No repara las filas históricas (decisión del 2026-11-04) ni cambia el abono inicial que la edición descarta.
 - **R13 (AUD-02-005): retirada en la 03-03.** Una cotización `ACEPTADA` vuelve a su detalle sin crear nada, por GET y por POST; la conversión es atómica y bloquea la fila de la cotización.
 - **R18 (AUD-02-027): retirada en la 03-03 (nota del 2026-11-04).** La decisión 3-A del desarrollador del 2026-11-04 **reemplaza** la del 2026-10-27 que dejaba R18 en la 03-04: la conversión valida la fecha y el abono con un formulario de Django (`ConversionCotizacionForm`) y, ante un dato inválido, devuelve la página con el error y sin crear nada (200). La 03-04 ya no la corrige.
@@ -171,6 +175,14 @@ Pruebas de caracterización de la iteración 02-03, en `test_pedidos.py` y `test
 Ninguna prueba escribe en el `media/` real ni ejecuta `mysql` o `mysqldump`.
 
 **Regla de negocio confirmada: el precio de cada ítem lo fija el vendedor** (decisión del desarrollador, 2026-10-27). `CrearPedidoTests.test_el_precio_lo_envia_el_navegador` fija que el servidor guarda el precio unitario que llega en `items_json` sin compararlo con el catálogo. No es un defecto: el vendedor (hoy, el dueño, único usuario y superusuario) ajusta a mano el precio de cada ítem para dar trato diferenciado a distintos clientes. Por eso no hay hallazgo ni regresión. **Advertencia:** ningún cambio de las Épicas 03 a 06 debe validar el precio del ítem contra el catálogo, ni recalcularlo en el servidor, sin consultar antes al desarrollador.
+
+### 9.1 Contrato de error y envío único (03-04)
+
+- **Los POST de creación llevan token.** `ayudas.con_token(client, ruta, datos)` hace el GET del formulario y agrega `token_envio`, como lo haría el navegador; los `ejecutar` de los módulos de flujos lo usan para `/pedidos/nuevo/`, `/cotizaciones/nueva/` y `/pagos/ingresar/`. Las pruebas de `test_envio_unico.py` arman el envío a mano.
+- **Se prueba lo que el usuario ve, no la cola.** Las pruebas de mensajes siguen la redirección (`follow=True`) y afirman el HTML; `get_messages` solo mide lo que la vista encoló.
+- **Textos aprobados literales** (`ayudas.TEXTO_ITEM_FALLIDO`, `TEXTO_FORMULARIO_VENCIDO`, `TEXTO_IMAGEN`, `TEXTO_PAGINA_500`): si cambia el texto de la aplicación, las pruebas lo notan.
+- **Ítem fallido:** las cuatro vistas devuelven el formulario (200) con los ítems del usuario y una sola línea `ERROR` de `pedidos.views`; los fallos del sistema que no son de ítem siguen respondiendo 500.
+- **No se prueba en el navegador** el bloqueo del botón ni «Guardando…»; eso va en la revisión manual de la iteración.
 
 ## 10. Control de acceso fijado
 

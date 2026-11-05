@@ -49,9 +49,10 @@
                 </div>
             {% endif %}
 
-            <form method="post"
+            <form method="post" data-bloquear-envio
                   class="bg-white dark:bg-card-dark shadow-sm rounded-xl border border-slate-200 dark:border-neutral-800 overflow-hidden">
                 {% csrf_token %}
+                {% if token_envio %}<input type="hidden" name="token_envio" value="{{ token_envio }}">{% endif %}
 
                 <div class="px-8 py-6 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/30">
                     <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center">
@@ -78,7 +79,7 @@
                         {% else %}
                             {% render_field form.pedido class="form-select select2" %}
                             {% if form.pedido.errors %}
-                                <p class="text-red-500 text-xs mt-1 font-bold">{{ form.pedido.errors.0 }}</p>
+                                <p id="error-pedido" role="alert" class="text-red-600 dark:text-red-400 text-xs mt-1 font-bold">{{ form.pedido.errors.0 }}</p>
                             {% endif %}
                         {% endif %}
                     </div>
@@ -93,14 +94,14 @@
                                 {% render_field form.monto class="form-control !pl-12 text-lg font-bold text-emerald-700 dark:text-emerald-400" placeholder="0" %}
                             </div>
                             {% if form.monto.errors %}
-                                <p class="text-red-500 text-xs mt-1 font-bold">{{ form.monto.errors.0 }}</p>
+                                <p id="error-monto" role="alert" class="text-red-600 dark:text-red-400 text-xs mt-1 font-bold">{{ form.monto.errors.0 }}</p>
                             {% endif %}
                         </div>
 
                         <div>
                             <label class="custom-label" for="{{ form.metodo.id_for_label }}">Método de Pago</label>
                             {% render_field form.metodo class="form-select h-[46px] w-full rounded-lg border-slate-300" %} {% if form.metodo.errors %}
-                            <p class="text-red-500 text-xs mt-1 font-bold">{{ form.metodo.errors.0 }}</p>
+                            <p id="error-metodo" role="alert" class="text-red-600 dark:text-red-400 text-xs mt-1 font-bold">{{ form.metodo.errors.0 }}</p>
                         {% endif %}
                         </div>
                     </div>

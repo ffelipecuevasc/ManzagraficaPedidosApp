@@ -9,6 +9,7 @@
 - `estado_pago_esperado`: oráculo de `estado_pago` para las regresiones R10 a R12 (02-04).
 """
 import json
+import re
 from unittest import mock
 
 from django.core.signals import request_finished
@@ -73,3 +74,33 @@ def cerrar_respuesta(respuesta):
         respuesta.close()
     finally:
         request_finished.connect(close_old_connections)
+
+
+# Textos aprobados por el desarrollador el 2026-11-04 (03-04). Se escriben literales a propósito:
+# si el texto de la aplicación cambia, las pruebas lo notan.
+TEXTO_ITEM_FALLIDO = ('No pudimos guardar el detalle de productos. Lo que escribiste sigue en pantalla: '
+                      'revísalo y vuelve a guardar. Si el problema sigue, avisa en qué pantalla estabas y a qué hora.')
+TEXTO_FORMULARIO_VENCIDO = 'Este formulario venció y no se guardó. Revisa los datos y vuelve a guardar.'
+TEXTO_IMAGEN = 'Vuelve a elegir la imagen de referencia: el navegador no la conserva.'
+TEXTO_PAGINA_500 = 'Si el problema sigue, avísale al administrador y cuéntale en qué pantalla estabas y a qué hora.'
+
+
+def token_de(respuesta):
+    """Token de envío único de un formulario (03-04): el campo oculto `token_envio`, o '' si no hay."""
+    coincidencia = re.search(r'name="token_envio" value="([^"]+)"', respuesta.content.decode())
+    return coincidencia.group(1) if coincidencia else ''
+
+
+# Rutas de creación que exigen el token de envío único (03-04, decisión 7-A).
+RUTAS_CON_TOKEN = ('/pedidos/nuevo/', '/cotizaciones/nueva/', '/pagos/ingresar/')
+
+
+def con_token(client, ruta, datos):
+    """Devuelve `datos` con el token que el navegador recibiría al abrir el formulario.
+
+    Solo para las rutas de creación; si `datos` ya trae `token_envio`, no lo toca. Las pruebas del
+    contrato del token no lo usan: arman el envío a mano.
+    """
+    if not ruta.startswith(RUTAS_CON_TOKEN) or 'token_envio' in datos:
+        return datos
+    return {**datos, 'token_envio': token_de(client.get(ruta))}

@@ -33,8 +33,12 @@ class FlujoBase(TestCase):
         self.client.force_login(self.usuario)
 
     def ejecutar(self, metodo, ruta, datos=None, **extra):
+        datos = datos or {}
+        if metodo == 'post':
+            # Los formularios de creación traen su token de envío único (03-04).
+            datos = ayudas.con_token(self.client, ruta, datos)
         with self.captureOnCommitCallbacks(execute=True):
-            return getattr(self.client, metodo)(ruta, datos or {}, **extra)
+            return getattr(self.client, metodo)(ruta, datos, **extra)
 
     def tipos_de_evento(self):
         return list(RegistroEvento.objects.values_list('tipo', flat=True))
@@ -171,8 +175,8 @@ class CrearPedidoTests(FlujoBase):
 class CrearPedidoItemFallidoTests(FlujoBase):
     """El error de un ítem sale del `atomic` de `crear_pedido`: se revierte todo.
 
-    La respuesta es la página 500 de la 01-03 y el aviso al usuario queda para la 03-04.
-    El cliente de pruebas no relanza la excepción, para ver lo que recibe el usuario.
+    Desde la 03-04 (decisión 3-B) la vista captura esas excepciones concretas fuera del bloque,
+    las registra y devuelve el formulario con los ítems y un aviso fijo (200).
     """
 
     def setUp(self):
@@ -200,14 +204,18 @@ class CrearPedidoItemFallidoTests(FlujoBase):
             ('precio no numérico', json.dumps([valido, self.item(precio_unitario='abc')])),
         ]
 
-    def test_item_fallido_no_deja_rastro_y_responde_500(self):
+    def test_item_fallido_no_deja_rastro_y_devuelve_el_formulario(self):
         for descripcion, items_json in self.casos():
             with self.subTest(descripcion):
-                with self.assertLogs('django.request', 'ERROR'):
+                with self.assertLogs(level='ERROR'):
                     respuesta = self.ejecutar('post', '/pedidos/nuevo/', self.datos(items_json))
 
-                self.assertEqual(respuesta.status_code, 500)
-                self.assertTemplateUsed(respuesta, 'pedidos/errors/500.html')
+                self.assertEqual(respuesta.status_code, 200)
+                self.assertTemplateUsed(respuesta, 'pedidos/pedido_form.html')
+                self.assertContains(respuesta, ayudas.TEXTO_ITEM_FALLIDO)
+                self.assertEqual(respuesta.context['items_json'], items_json)
+                # Sigue siendo el formulario de creación, aunque el guardado llegó a asignar un pk.
+                self.assertContains(respuesta, 'Crear Pedido')
                 self.assertEqual((Pedido.objects.count(), ItemPedido.objects.count(),
                                   Pago.objects.count(), RegistroEvento.objects.count()), (0, 0, 0, 0))
 
@@ -217,10 +225,10 @@ class CrearPedidoItemFallidoTests(FlujoBase):
         with self.assertLogs(level='ERROR') as capturado:
             self.ejecutar('post', '/pedidos/nuevo/', self.datos(items_json))
 
-        self.assertEqual([r.name for r in capturado.records], ['django.request'])
+        self.assertEqual([r.name for r in capturado.records], ['pedidos.views'])
         linea = formatear_como_error_log(capturado.records[0])
         self.assertIn('metodo=POST ruta=/pedidos/nuevo/ usuario=', linea)
-        self.assertIn('excepcion=DoesNotExist', linea)
+        self.assertIn('DoesNotExist', linea)
         self.assertIn('Traceback (most recent call last):', linea)
         self.assertNotIn('Con ítem fallido', linea)  # nunca el contenido del formulario
 

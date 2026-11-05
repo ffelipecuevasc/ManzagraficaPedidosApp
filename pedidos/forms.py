@@ -1,7 +1,24 @@
 from django import forms
 from .models import Pedido, Cliente, Cotizacion, Producto, Pago
 
-class ClienteForm(forms.ModelForm):
+
+class ErroresAccesiblesMixin:
+    """Enlaza cada campo con error a su mensaje (03-04, AGENTS.md 8.17).
+
+    La plantilla escribe el mensaje con `id="error-<campo>"` y `role="alert"`; aquí el campo recibe
+    `aria-invalid` y `aria-describedby` para que un lector de pantalla los una. Se aplica al validar,
+    en la copia de campos de cada formulario.
+    """
+
+    def full_clean(self):
+        super().full_clean()
+        for nombre in self.errors:
+            campo = self.fields.get(nombre)
+            if campo is not None:
+                campo.widget.attrs.update({'aria-invalid': 'true', 'aria-describedby': f'error-{nombre}'})
+
+
+class ClienteForm(ErroresAccesiblesMixin, forms.ModelForm):
     class Meta:
         model = Cliente
         fields = '__all__'
@@ -10,7 +27,7 @@ class ClienteForm(forms.ModelForm):
             'email': forms.TextInput(attrs={'placeholder': 'Ej: correo@ejemplo.com o "No registrado"'}),
         }
 
-class CotizacionForm(forms.ModelForm):
+class CotizacionForm(ErroresAccesiblesMixin, forms.ModelForm):
     class Meta:
         model = Cotizacion
         fields = ['cliente', 'resumen', 'detalles', 'valor_total', 'validez', 'fecha_emision']
@@ -19,7 +36,7 @@ class CotizacionForm(forms.ModelForm):
             'fecha_emision': forms.DateInput(attrs={'type': 'date'}),
         }
 
-class PedidoForm(forms.ModelForm):
+class PedidoForm(ErroresAccesiblesMixin, forms.ModelForm):
     # CAMPO VIRTUAL: No existe en el modelo Pedido, sirve para crear el Pago automáticamente
     abono_inicial = forms.IntegerField(
         required=False,
@@ -55,7 +72,7 @@ class PedidoForm(forms.ModelForm):
             raise forms.ValidationError("El abono inicial no puede ser mayor al valor total del pedido.")
         return abono
 
-class PagoForm(forms.ModelForm):
+class PagoForm(ErroresAccesiblesMixin, forms.ModelForm):
     class Meta:
         model = Pago
         fields = ['pedido', 'monto', 'metodo', 'nota']
@@ -106,7 +123,7 @@ class ConversionCotizacionForm(forms.Form):
         return abono
 
 
-class ProductoForm(forms.ModelForm):
+class ProductoForm(ErroresAccesiblesMixin, forms.ModelForm):
     class Meta:
         model = Producto
         fields = ['nombre', 'unidad', 'valor_neto', 'descripcion']

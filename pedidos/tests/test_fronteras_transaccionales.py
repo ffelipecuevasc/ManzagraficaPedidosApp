@@ -2,13 +2,15 @@
 
 Cada vista que escribe más de una fila relacionada lo hace dentro de un único
 `transaction.atomic()` y la excepción sale del bloque: si algo falla, no queda nada a medias
-en la base. El aviso al usuario y la conservación del formulario son de la 03-04: mientras
-tanto, un fallo del sistema responde la página 500 de la 01-03 (decisión 1 del 2026-11-04).
+en la base. Desde la 03-04 (decisión 3-B), un ítem que no se puede guardar devuelve el
+formulario con los ítems y un mensaje fijo (200); cualquier otro fallo del sistema sigue
+respondiendo la página 500 de la 01-03.
 
 El cliente de pruebas no relanza la excepción (`raise_request_exception = False`), para ver lo
 que recibe el usuario. TestCase no confirma la transacción: los eventos (`on_commit`) se
 ejecutan con `captureOnCommitCallbacks(execute=True)`.
 """
+import html
 import inspect
 import json
 from decimal import Decimal
@@ -32,8 +34,12 @@ class FronteraBase(TestCase):
         self.client.force_login(self.usuario)
 
     def ejecutar(self, metodo, ruta, datos=None):
+        datos = datos or {}
+        if metodo == 'post':
+            # Los formularios de creación traen su token de envío único (03-04).
+            datos = ayudas.con_token(self.client, ruta, datos)
         with self.captureOnCommitCallbacks(execute=True):
-            return getattr(self.client, metodo)(ruta, datos or {})
+            return getattr(self.client, metodo)(ruta, datos)
 
     def eventos(self):
         return RegistroEvento.objects.count()
@@ -70,6 +76,20 @@ class CasosDeItemFallido:
             ('precio no numérico', json.dumps([valido, self.item(precio_unitario='abc')])),
         ]
 
+    def assertFormularioDevuelto(self, respuesta, plantilla, items_json):
+        """Decisiones 3-B y 4-A: 200, el aviso fijo y los ítems que el usuario envió."""
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, plantilla)
+        self.assertContains(respuesta, ayudas.TEXTO_ITEM_FALLIDO)
+        self.assertContains(respuesta, html.escape(items_json))
+
+    def assertUnaLineaConTraza(self, capturado, ruta):
+        self.assertEqual([r.name for r in capturado.records], ['pedidos.views'])
+        linea = formatear_como_error_log(capturado.records[0])
+        self.assertIn(f'metodo=POST ruta={ruta} usuario=', linea)
+        self.assertIn('Traceback (most recent call last):', linea)
+        self.assertNotIn('Editado', linea)  # nunca el contenido del formulario
+
 
 @override_settings(DEBUG=False)
 class EditarPedidoItemFallidoTests(CasosDeItemFallido, FronteraBase):
@@ -89,15 +109,14 @@ class EditarPedidoItemFallidoTests(CasosDeItemFallido, FronteraBase):
     def items_actuales(self):
         return list(self.pedido.items.values_list('producto_id', 'cantidad', 'precio_unitario'))
 
-    def test_item_fallido_conserva_el_pedido_y_responde_500(self):
+    def test_item_fallido_conserva_el_pedido_y_devuelve_el_formulario(self):
         resumen = self.pedido.resumen_pedido
         for descripcion, items_json in self.casos():
             with self.subTest(descripcion):
-                with self.assertLogs('django.request', 'ERROR'):
+                with self.assertLogs(level='ERROR'):
                     respuesta = self.ejecutar('post', self.ruta, self.datos(items_json))
 
-                self.assertEqual(respuesta.status_code, 500)
-                self.assertTemplateUsed(respuesta, 'pedidos/errors/500.html')
+                self.assertFormularioDevuelto(respuesta, 'pedidos/pedido_form.html', items_json)
                 self.pedido.refresh_from_db()
                 self.assertEqual((self.pedido.resumen_pedido, self.pedido.valor_venta), (resumen, 10_000))
                 self.assertEqual(self.items_actuales(), [(self.viejo.pk, Decimal('2.00'), 5_000)])
@@ -120,13 +139,18 @@ class EditarPedidoItemFallidoTests(CasosDeItemFallido, FronteraBase):
         with self.assertLogs(level='ERROR') as capturado:
             self.ejecutar('post', self.ruta, self.datos(items_json))
 
-        self.assertEqual([r.name for r in capturado.records], ['django.request'])
-        linea = formatear_como_error_log(capturado.records[0])
-        self.assertIn(f'metodo=POST ruta={self.ruta} usuario=', linea)
-        self.assertIn('Traceback (most recent call last):', linea)
-        self.assertNotIn('Editado', linea)  # nunca el contenido del formulario
+        self.assertUnaLineaConTraza(capturado, self.ruta)
 
-    def test_la_vista_no_captura_y_abre_su_transaccion(self):
+    def test_el_formulario_devuelto_trae_los_items_del_usuario_y_no_los_de_la_base(self):
+        items_json = json.dumps([self.item(), self.item(producto_id='999999')])
+
+        with self.assertLogs(level='ERROR'):
+            respuesta = self.ejecutar('post', self.ruta, self.datos(items_json))
+
+        self.assertEqual(respuesta.context['items_json'], items_json)
+        self.assertContains(respuesta, 'Editar Pedido')
+
+    def test_la_vista_no_captura_amplio_y_abre_su_transaccion(self):
         fuente = inspect.getsource(views.editar_pedido)
         self.assertNotIn('except Exception', fuente)
         self.assertIn('transaction.atomic()', fuente)
@@ -145,14 +169,15 @@ class CrearCotizacionItemFallidoTests(CasosDeItemFallido, FronteraBase):
                 'valor_total': 13_000, 'validez': 15, 'fecha_emision': '2026-10-15',
                 'items_json': items_json}
 
-    def test_item_fallido_no_deja_cotizacion_ni_items_y_responde_500(self):
+    def test_item_fallido_no_deja_cotizacion_ni_items_y_devuelve_el_formulario(self):
         for descripcion, items_json in self.casos():
             with self.subTest(descripcion):
-                with self.assertLogs('django.request', 'ERROR'):
+                with self.assertLogs(level='ERROR'):
                     respuesta = self.ejecutar('post', '/cotizaciones/nueva/', self.datos(items_json))
 
-                self.assertEqual(respuesta.status_code, 500)
-                self.assertTemplateUsed(respuesta, 'pedidos/errors/500.html')
+                self.assertFormularioDevuelto(respuesta, 'pedidos/cotizacion_form.html', items_json)
+                # Sigue siendo el formulario de creación, aunque el guardado llegó a asignar un pk.
+                self.assertContains(respuesta, 'Crear Cotización')
                 self.assertEqual((Cotizacion.objects.count(), ItemCotizacion.objects.count(),
                                   self.eventos()), (0, 0, 0))
 
@@ -162,12 +187,9 @@ class CrearCotizacionItemFallidoTests(CasosDeItemFallido, FronteraBase):
         with self.assertLogs(level='ERROR') as capturado:
             self.ejecutar('post', '/cotizaciones/nueva/', self.datos(items_json))
 
-        self.assertEqual([r.name for r in capturado.records], ['django.request'])
-        linea = formatear_como_error_log(capturado.records[0])
-        self.assertIn('metodo=POST ruta=/cotizaciones/nueva/ usuario=', linea)
-        self.assertIn('Traceback (most recent call last):', linea)
+        self.assertUnaLineaConTraza(capturado, '/cotizaciones/nueva/')
 
-    def test_la_vista_no_captura_y_abre_su_transaccion(self):
+    def test_la_vista_no_captura_amplio_y_abre_su_transaccion(self):
         fuente = inspect.getsource(views.crear_cotizacion)
         self.assertNotIn('except Exception', fuente)
         self.assertIn('transaction.atomic()', fuente)
@@ -189,15 +211,14 @@ class EditarCotizacionItemFallidoTests(CasosDeItemFallido, FronteraBase):
                 'valor_total': 15_000, 'validez': 15, 'fecha_emision': '2026-10-15',
                 'items_json': items_json}
 
-    def test_item_fallido_conserva_la_cotizacion_y_responde_500(self):
+    def test_item_fallido_conserva_la_cotizacion_y_devuelve_el_formulario(self):
         resumen = self.cotizacion.resumen
         for descripcion, items_json in self.casos():
             with self.subTest(descripcion):
-                with self.assertLogs('django.request', 'ERROR'):
+                with self.assertLogs(level='ERROR'):
                     respuesta = self.ejecutar('post', self.ruta, self.datos(items_json))
 
-                self.assertEqual(respuesta.status_code, 500)
-                self.assertTemplateUsed(respuesta, 'pedidos/errors/500.html')
+                self.assertFormularioDevuelto(respuesta, 'pedidos/cotizacion_form.html', items_json)
                 self.cotizacion.refresh_from_db()
                 self.assertEqual((self.cotizacion.resumen, self.cotizacion.valor_total), (resumen, 10_000))
                 self.assertEqual(
@@ -210,9 +231,9 @@ class EditarCotizacionItemFallidoTests(CasosDeItemFallido, FronteraBase):
         with self.assertLogs(level='ERROR') as capturado:
             self.ejecutar('post', self.ruta, self.datos(items_json))
 
-        self.assertEqual([r.name for r in capturado.records], ['django.request'])
+        self.assertUnaLineaConTraza(capturado, self.ruta)
 
-    def test_la_vista_no_captura_y_abre_su_transaccion(self):
+    def test_la_vista_no_captura_amplio_y_abre_su_transaccion(self):
         fuente = inspect.getsource(views.editar_cotizacion)
         self.assertNotIn('except Exception', fuente)
         self.assertIn('transaction.atomic()', fuente)

@@ -80,8 +80,12 @@ class RegresionBase(TestCase):
         self.client.force_login(self.usuario)
 
     def ejecutar(self, metodo, ruta, datos=None):
+        datos = datos or {}
+        if metodo == 'post':
+            # Los formularios de creación traen su token de envío único (03-04).
+            datos = ayudas.con_token(self.client, ruta, datos)
         with self.captureOnCommitCallbacks(execute=True):
-            return getattr(self.client, metodo)(ruta, datos or {})
+            return getattr(self.client, metodo)(ruta, datos)
 
 
 # ---------------------------------------------------------------------------
@@ -407,6 +411,24 @@ class DuplicarPedidoTests(RegresionBase):
 
         duplicado = Pedido.objects.exclude(pk=original.pk).get()
         self.assertEqual(duplicado.creado_por, self.usuario)
+
+
+# ---------------------------------------------------------------------------
+# R21 · Pedidos duplicados por doble envío (AUD-04-001, 03-04)
+# ---------------------------------------------------------------------------
+class EnvioUnicoTests(RegresionBase):
+    # Ya no es regresión: la 03-04 corrigió AUD-04-001 con el token de envío único y se quitaron sus marcas.
+    # Escrita antes de corregir como fallo esperado (dos pedidos en vez de uno).
+    def test_r21_dos_post_identicos_crean_un_solo_pedido(self):
+        cliente = crear_cliente()
+        token = ayudas.token_de(self.client.get('/pedidos/nuevo/'))
+        datos = {'cliente': cliente.pk, 'resumen_pedido': 'Doble envío', 'valor_venta': 10_000,
+                 'token_envio': token}
+
+        self.ejecutar('post', '/pedidos/nuevo/', datos)
+        self.ejecutar('post', '/pedidos/nuevo/', datos)
+
+        self.assertEqual(Pedido.objects.count(), 1)
 
 
 # ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 # Iteración 03-04 · Contrato de error hacia el usuario
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** Pendiente (redactada el 2026-11-04, [bitacora-03-04-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-04-redaccion.md)). No se ejecutó nada: las diez decisiones siguen abiertas (`PENDIENTE_DESARROLLADOR`).
+- **Estado:** En revisión (2026-11-04). Ejecutada en local con las diez decisiones del desarrollador del 2026-11-04 (la recomendada en todas; en la 3, la B con respuesta 200; en la 8, la C) ([bitacora-03-04](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-04.md)); falta la revisión manual del desarrollador. Sin despliegue propio: viaja con la 03-05. Historial de estados: Pendiente (redactada el 2026-11-04, [bitacora-03-04-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-04-redaccion.md)) → En revisión (2026-11-04).
 - **Subfase del plan:** 3.4 «Contrato de error hacia el usuario» (`plan-de-trabajo.md:358-362`)
 - **Depende de:** 03-03 (Terminada el 2026-11-04)
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging` en `server.log`, sin identificador de correlación ni tabla de errores), RDA-019 (los errores de vista los maneja Django; la captura, si existe, va **fuera** del `atomic`).
@@ -19,7 +19,7 @@ Que un error llegue al usuario de una forma única y predecible: si el dato est�
 
 - **Documentado:** está escrito en el repositorio o en la planificación; se cita archivo y línea (leídos el 2026-11-04).
 - **Inferido:** sale de leer el código, no de ejecutarlo ni de verlo en pantalla. Se marca «(inferido)». Lo que la iteración puede confirmar con una prueba automática o en la revisión manual lo dice.
-- Los textos de mensajes de este documento son **propuestas de redacción** a aprobar; ninguno es texto aprobado.
+- Los textos de la sección «Textos aprobados» los aprobó el desarrollador el 2026-11-04, literales.
 
 ## Alcance contra la definición de la épica
 
@@ -131,7 +131,7 @@ Los campos del formulario de Django se conservan (formulario ligado). Lo que no 
 
 ## Decisiones
 
-Todas `PENDIENTE_DESARROLLADOR`. Cada una con opciones, ventajas y riesgos; la primera es la recomendada, y ninguna está decidida. Dependencias entre ellas: la 1 condiciona la 2, la 6 (opción B) y la 7; la 3 y la 4 se resuelven juntas; la 5 condiciona la 6 y la 7.
+**Resueltas el 2026-11-04** (sección «Decisiones del desarrollador»): la opción recomendada en las diez; en la 3, la B con respuesta 200, y en la 8, la C. Las opciones se conservan como constancia de lo evaluado. Dependencias entre ellas: la 1 condiciona la 2, la 6 (opción B) y la 7; la 3 y la 4 se resuelven juntas; la 5 condiciona la 6 y la 7.
 
 ### Decisión 1 · Dónde se muestran los mensajes de Django
 
@@ -225,9 +225,9 @@ Inventario en la sección «Envío único y bloqueo del botón». Quedan fuera p
 | **A. Una sola, con pasos ordenados (recomendada)** | Esta iteración, con un bloque de verificación por paso | La definición de la épica la trata como una pieza (alcance 4 y 6). Mismo criterio que la 03-03 (decisión 7-A). Sin despliegue propio | Es grande: base de plantillas, cuatro vistas de formulario, tres de token y diez plantillas de bloqueo. Mezcla dos propósitos (contrato de error y envío único) que `AGENTS.md`, sección 10, pide no mezclar entre fases, aunque aquí son de la misma fase |
 | **B. Dividir: 03-04 (contrato de error) y una nueva con el envío único** | Dos iteraciones | Revisiones más chicas | Obliga a un número nuevo (03-06, porque 03-05 es el despliegue) y a reordenar la tabla de la épica. Ambas viajan juntas con la 03-05 |
 
-## Textos propuestos (a aprobar; ninguno está aprobado)
+## Textos aprobados (2026-11-04, literales)
 
-Voz de `DESIGN.md`, sección 10: español de Chile, trato de tú, sin términos técnicos.
+Voz de `DESIGN.md`, sección 10: español de Chile, trato de tú, sin términos técnicos. Están en `views.py` (`TEXTO_ITEM_FALLIDO`, `TEXTO_IMAGEN`, `TEXTO_FORMULARIO_VENCIDO`), en `errors/500.html` y, literales, en `pedidos/tests/ayudas.py`.
 
 | Uso | Propuesta |
 | :-- | :-------- |
@@ -263,40 +263,82 @@ Quedan las nueve de la 04-01, 04-06, 06-01 y 07-02 (R6a, R6b, R6c, R7, R8, R9, R
 
 ## Criterios de aceptación
 
-- [ ] Las decisiones 1 a 10 están registradas antes de implementar.
-- [ ] Las pruebas se escribieron antes de la corrección y fallaban por la razón correcta (R21 por `2 != 1`, o su equivalente; el aviso invisible por la ausencia del texto en el HTML).
-- [ ] Los mensajes de error de respaldo y restauración **se ven** en su pantalla de destino (prueba que renderiza); ninguna respuesta contiene `str(e)`, rutas del servidor ni salidas de `mysql` o `mysqldump`.
-- [ ] Los mensajes de pagos y conversión no se acumulan ni aparecen en `restaurar_bd` (según la decisión 2).
-- [ ] Un error de validación en la creación o edición de un pedido y de una cotización devuelve el formulario con los datos ingresados, incluidos los ítems y el método de pago (prueba automatizada; criterio de término de la épica).
-- [ ] Un ítem fallido se comporta como decida la decisión 3, con una sola línea `ERROR` con traza, método, ruta y usuario, y sin dejar nada escrito.
-- [ ] Dos POST con el mismo token crean un solo pedido, una sola cotización y un solo pago; el usuario ve lo que dice la decisión 6.
-- [ ] R21 en verde y sin marcas; `python manage.py test pedidos` → `OK (expected failures=9)` en tres ejecuciones.
-- [ ] Los formularios del inventario bloquean el botón al primer envío (decisión 8) y se recuperan al volver con «atrás».
-- [ ] La página 500 y los mensajes fijos piden pantalla y hora, sin identificador (RDA-013); `docs/operacion/` explica cómo buscar la traza.
-- [ ] Sin `print`, sin `except Exception` nuevo en vistas de formulario, y toda captura nueva con excepción concreta fuera del `atomic` y `logger.exception(…, extra={'request': request})`.
-- [ ] Consultas antes y después registradas en la bitácora (regla 12); si aumentan, consultado con el desarrollador.
-- [ ] `check` limpio y `makemigrations --check --dry-run` sin cambios (con la decisión 5-A).
-- [ ] Revisión manual hecha (más abajo), en escritorio y a 360 px.
-- [ ] Los `PENDIENTE_CLIENTE` (AUD-02-014, valor $0 y sobrepago) siguen abiertos y sin cambios de comportamiento.
+- [x] Las decisiones 1 a 10 están registradas antes de implementar (2026-11-04; sección «Decisiones del desarrollador»).
+- [x] Las pruebas se escribieron antes de la corrección, con **dos desviaciones declaradas** (ver el resultado de la ejecución): las de `test_envio_unico.py` se escribieron junto con la implementación y se verificaron a posteriori apagando el token (18 de 19 fallan), y la prueba de la línea `INFO` del rechazo se agregó junto con su código. Las demás fallaban por la razón correcta: mensajes sin el texto en el HTML y tarjeta de restauración con mensajes acumulados (`2 != 0`), ítems no devueltos (`'[]' != …`), texto de la 500, bloqueo sin atributo, errores sin `id` ni `aria-*`. R21 se escribió como fallo esperado (`expected failures=10`).
+- [x] Los mensajes de error de respaldo y restauración **se ven** en su pantalla de destino (`MensajesDeErrorSeVenTests`, renderizan); ninguna respuesta contiene `str(e)`, rutas del servidor ni salidas de `mysql` o `mysqldump`.
+- [x] Los mensajes de pagos y conversión no se acumulan ni aparecen en `restaurar_bd` (decisión 2-A; `AvisosQueNoSonDeErrorTests`).
+- [x] Un error de validación en la creación o edición de un pedido y de una cotización devuelve el formulario con los datos ingresados, incluidos los ítems y el método de pago (`FormulariosConservanLoEscritoTests`; criterio de término de la épica).
+- [x] Un ítem fallido (cinco causas) devuelve el formulario con los ítems y el aviso fijo (200, decisión 3-B), con una sola línea `ERROR` de `pedidos.views` con traza, método, ruta y usuario, y sin dejar nada escrito, en las cuatro vistas.
+- [x] Dos POST con el mismo token crean un solo pedido, una sola cotización y un solo pago, y el segundo termina donde terminó el primero, sin mensaje (decisión 6-A; `EnvioRepetidoTests`).
+- [x] R21 en verde y sin marcas; `python manage.py test pedidos` → `OK (expected failures=9)` en tres ejecuciones (ver la bitácora).
+- [x] Los formularios del inventario declaran el bloqueo del botón (`data-bloquear-envio`, decisión 8-C) y `pedido_form.html` conserva su script de la 00-07 (`test_bloqueo_envio.py`). El comportamiento en el navegador (bloqueo, «Guardando…» y recuperación con «atrás») se comprueba en la revisión manual.
+- [x] La página 500 y los avisos piden pantalla y hora, sin identificador (RDA-013); `docs/operacion/despliegue.md`, sección 3.9, explica cómo buscar la traza.
+- [x] Sin `print`, sin `except Exception` nuevo en vistas de formulario, y toda captura nueva con excepciones concretas (`ERRORES_DE_ITEM`) fuera del `atomic` y `logger.exception(…, extra={'request': request})`.
+- [x] Consultas antes y después registradas en la bitácora (regla 12). Aumentan en +3 por GET y POST de crear pedido, cotización y pago; el desarrollador lo aceptó el 2026-11-04 (decisión 1 de la ejecución).
+- [x] `check` limpio y `makemigrations --check --dry-run` sin cambios (con la decisión 5-A), ver la bitácora.
+- [ ] Revisión manual hecha (más abajo), en escritorio y a 360 px. **Pendiente: la hace el desarrollador.**
+- [x] Los `PENDIENTE_CLIENTE` (AUD-02-014, valor $0 y sobrepago) siguen abiertos y sin cambios de comportamiento (no se tocó el precio del ítem ni el valor de venta).
 
 ## Revisión manual (la hace el desarrollador, contra la réplica local)
 
-Con `DEBUG=False` y `runserver --insecure`, en escritorio y a 360 px. Para el doble envío, `runserver --nothreading` (como el servidor real, de un solo worker).
+Con `DEBUG=False` y `runserver --insecure --nothreading` (un solo hilo, como el worker real), en escritorio y a 360 px (F12, modo dispositivo, ancho 360). Cada prueba en modo claro y, al menos una vez, en oscuro. Los pedidos, cotizaciones y pagos de prueba quedan en la réplica y se limpian al refrescarla al cierre de la Épica 03 (AUD-05-002).
 
-1. **Aviso visible:** provocar el error de la restauración sin archivo (quitando `required` en el navegador; no ejecuta ninguna restauración): el aviso aparece en la pantalla, con foco y contraste legibles, en claro y oscuro.
-2. **Acarreo de mensajes:** registrar un pago y abrir `restaurar_bd` con el superusuario: no aparece la tarjeta «Base de Datos Restaurada Exitosamente».
-3. **Validación al crear un pedido:** dejar un campo inválido con 2 ítems y un abono con método «Transferencia»: vuelve con el error junto al campo, los ítems y el método conservados.
-4. **Validación al editar un pedido:** cambiar ítems y dejar un campo inválido: vuelve con **tus** cambios, no con los de la base.
-5. **Lo mismo en cotizaciones** (crear y editar).
-6. **Ítem fallido** (alterar `items_json` como en la revisión de la 03-03): se comporta como decida la decisión 3 y deja la línea `ERROR` en la terminal.
-7. **Doble envío:** en crear pedido, crear cotización y registrar pago, (a) doble clic rápido, (b) «atrás» y reenviar, (c) recargar la página tras guardar y aceptar el reenvío. Un solo registro; ves lo que dice la decisión 6.
-8. **Formulario vencido:** vaciar el campo del token en el navegador y enviar: se comporta como dice la decisión 7, sin perder lo escrito.
-9. **Botón bloqueado** en cada formulario del inventario: queda deshabilitado con «Guardando…» y se recupera al volver con «atrás».
-10. **Página 500** (forzada): el texto pide pantalla y hora, sin detalles técnicos, a 360 px.
-11. **`server.log` o terminal:** cada fallo provocado deja una línea `ERROR` con método, ruta y usuario, y el filtro de `despliegue.md` la encuentra por ruta y hora.
-12. Los pedidos, cotizaciones y pagos de prueba quedan en la réplica y se limpian al refrescarla al cierre de la Épica 03 (AUD-05-002).
+**Preparación (PowerShell 7):**
 
-Instrucciones de lo que no puede hacer el agente (consultas a la réplica) se entregarán con la ejecución, no antes. No hay evidencia que pedir a producción: la medición de `access.log` sin pedidos duplicados es de la 03-05.
+```powershell
+cd "D:\Trabajo\Proyectos PYTHON\Proyectos Personales\Pedidos Manzagrafica\PedidosApp"
+.\.venv\Scripts\Activate.ps1
+docker compose up -d                      # solo si el contenedor MySQL no está encendido
+$env:DB_NAME = 'manzagrafica_replica'
+$env:DEBUG = 'False'
+python manage.py runserver --insecure --nothreading
+```
+
+Abre `http://127.0.0.1:8000/` con tu usuario superusuario. Las líneas de error y de información de la aplicación salen en esta terminal (es el equivalente local de `server.log`). Al terminar, `Ctrl+C` y no dejes el servidor corriendo.
+
+Los fragmentos `js` se pegan en la consola del navegador (F12, pestaña Consola; si el navegador pide escribir `allow pasting`, hazlo).
+
+1. **Aviso de error visible.** Abre `/base_datos/restaurar_bd/`. En la consola:
+   ```js
+   document.querySelectorAll('[required]').forEach(e => e.removeAttribute('required'));
+   document.getElementById('form-restaurar').requestSubmit();
+   ```
+   No hay archivo, así que la vista responde antes de tocar la base: no se restaura nada. Debe aparecer arriba un aviso rojo «No se seleccionó ningún archivo.», legible, con el ícono, sin tapar el contenido.
+2. **Mensajes que no se acumulan.** Registra un pago cualquiera (`/pagos/ingresar/`) y después abre `/base_datos/restaurar_bd/`: **no** debe aparecer la tarjeta verde «Base de Datos Restaurada Exitosamente». Tampoco debe verse ningún aviso de «Pago registrado» en la lista de pagos.
+3. **Error de validación al crear un pedido.** En `/pedidos/nuevo/`: elige un cliente, agrega 2 productos, escribe un abono y elige el método **Transferencia**. En la consola: `document.querySelectorAll('[required]').forEach(e => e.removeAttribute('required'));`. Deja el resumen vacío y pulsa «Crear Pedido». Debe volver el formulario con el error junto al campo del resumen, los 2 ítems en la tabla, el abono y el método **Transferencia** elegido. Con una imagen de referencia elegida, además debe salir «Vuelve a elegir la imagen de referencia: el navegador no la conserva.»
+4. **Error de validación al editar un pedido.** En un pedido de prueba: cambia el precio de un ítem, agrega otro, vacía el resumen (misma línea de consola) y guarda. Deben volver **tus** cambios (no los de la base). Sal sin guardar y confirma en el detalle que el pedido sigue igual.
+5. **Lo mismo en cotizaciones:** `/cotizaciones/nueva/` y editar una cotización (con el resumen vacío).
+6. **Ítem que no se puede guardar.** En `/pedidos/nuevo/`, con cliente y resumen válidos, en la consola:
+   ```js
+   document.getElementById('input-items-json').value = '[{"producto_id":"999999","cantidad":"1","precio_unitario":1000}]';
+   document.getElementById('pedidoForm').requestSubmit();
+   ```
+   Debe volver el formulario (no la página 500) con «No pudimos guardar el detalle de productos. Lo que escribiste sigue en pantalla: revísalo y vuelve a guardar. Si el problema sigue, avisa en qué pantalla estabas y a qué hora.», sin pedido nuevo en la lista, y en la terminal **una** línea `ERROR` de `pedidos.views` con la traza, el método, la ruta y el usuario. Repite en editar pedido, crear cotización y editar cotización (el ítem de la base debe quedar igual).
+7. **Envío repetido contra el servidor.** El navegador bloquea el doble clic, así que el servidor se prueba saltándose el navegador. En `/pedidos/nuevo/`, con un pedido completo, en la consola:
+   ```js
+   const f = document.getElementById('pedidoForm');
+   const envio = () => fetch(location.href, {method: 'POST', body: new FormData(f), credentials: 'same-origin'});
+   const r = await Promise.all([envio(), envio()]);
+   console.log(r.map(x => x.status + ' ' + x.url));
+   ```
+   Las dos respuestas deben terminar en la **misma** página de detalle y en `/pedidos/lista/` debe haber **un solo** pedido nuevo. Repite en `/cotizaciones/nueva/` (`f` es el mismo `pedidoForm`) y en `/pagos/ingresar/` (cambia `getElementById('pedidoForm')` por `document.querySelector('form[data-bloquear-envio]')`): una cotización y un pago.
+8. **Envío repetido por «atrás».** Guarda un pedido, vuelve con «atrás» a la página del formulario y pulsa guardar otra vez: debe llevarte al pedido ya creado, **sin** crear otro y sin mensaje.
+9. **Formulario vencido.** En `/pedidos/nuevo/`, con un pedido completo, en la consola: `document.querySelector('[name=token_envio]').value = '';` y guarda. Debe volver el formulario con lo que escribiste y «Este formulario venció y no se guardó. Revisa los datos y vuelve a guardar.»; sin pedido nuevo. Guarda de nuevo: ahora sí se crea uno solo. En la terminal, una línea `INFO` «Envío sin token válido; no se guardó nada» (si tu configuración local muestra ese nivel).
+10. **Botón bloqueado.** En DevTools, pestaña Red, elige «Slow 3G» para ver el estado. Pulsa dos veces seguidas el botón de: cliente nuevo, producto nuevo, cotización nueva, registrar pago, convertir cotización (en una cotización de prueba) y los cuatro «Eliminar» (con registros de prueba). El botón debe quedar deshabilitado con «Guardando…» («Convirtiendo…» y «Eliminando…» en esos dos) y salir **un** solo envío. Vuelve con «atrás»: el botón debe estar activo otra vez. En `/base_datos/restaurar_bd/` solo comprueba que «Cancelar» en la advertencia **no** deja el botón bloqueado; **no confirmes la restauración**. Vuelve la red a «Sin límite».
+11. **Página 500.** Abre `/pagos/eliminar/<n.º de un pago>/` sin confirmar (la plantilla de confirmación no existe, AUD-02-002, y responde 500): debe verse «Si el problema sigue, avísale al administrador y cuéntale en qué pantalla estabas y a qué hora.», sin detalles técnicos, a 360 px también. En la terminal, una línea `django.request` con la ruta.
+12. **Aviso y errores junto al campo.** En las pantallas de los pasos 3 a 5, revisa en claro y oscuro y a 360 px: el aviso rojo de arriba y los mensajes bajo cada campo se leen bien, no pulsan ni se animan, y con la tecla Tab el foco es visible. Si dispones de un lector de pantalla, al enfocar un campo con error debe leer su mensaje.
+
+Instrucciones de lo que no puede hacer el agente (consultas a la réplica) no hacen falta: todo se comprueba en pantalla y en la terminal. No hay evidencia que pedir a producción: la medición de `access.log` sin pedidos duplicados es de la 03-05.
+
+## Resultado de la ejecución (2026-11-04 y 2026-11-05)
+
+Detalle, mediciones y desviaciones en [bitacora-03-04](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-04.md).
+
+- **Pasos 0 a 10** ejecutados en orden. Línea de partida: 220 pruebas, `OK (expected failures=9)`. **Final: 263 pruebas, `OK (expected failures=9)` en tres ejecuciones**; `check`: sin problemas; `makemigrations --check --dry-run`: `No changes detected`. R21 pasó por `expected failures=10` y volvió a 9.
+- **Qué cambió en el código:** `views.py` (captura de `ERRORES_DE_ITEM` fuera del `atomic` en cuatro vistas, ítems y método de pago devueltos, token en tres vistas), `envio_unico.py` (nuevo), `forms.py` (`ErroresAccesiblesMixin`), `base.html` (bloque de mensajes de error), `index.js` (`bloquearBoton`, `desbloquearBoton`, `initBloqueoEnvio`), nueve plantillas con `data-bloquear-envio`, cinco con errores accesibles, `500.html` y `restaurar_bd.html`.
+- **Pruebas:** archivos nuevos `test_contrato_error.py`, `test_envio_unico.py` y `test_bloqueo_envio.py`; R21 en `test_regresiones.py`; las pruebas de ítem fallido de `test_fronteras_transaccionales.py` y `test_pedidos.py` pasan de «500» a «formulario devuelto (200)»; los `ejecutar` de cinco módulos traen el token (`ayudas.con_token`).
+- **Sin** migraciones, **sin** dependencias nuevas, **sin** tocar el precio del ítem, `DESIGN.md` ni el README.
+- **Desviaciones:** (1) las pruebas de `test_envio_unico.py` y la de la línea `INFO` del rechazo se escribieron junto con el código, no antes (regla 15); la primera se verificó a posteriori apagando el token (18 de 19 fallan por la razón correcta, y se endurecieron seis que pasaban de forma trivial); (2) el aumento de consultas obligó a detenerse en el paso 4 (sección 11 de `AGENTS.md`); el desarrollador lo aceptó.
 
 ## Fuera de alcance
 
@@ -336,7 +378,37 @@ Instrucciones de lo que no puede hacer el agente (consultas a la réplica) se en
 
 ## Decisiones del desarrollador
 
-Ninguna tomada. Cuando se resuelvan, se registran aquí con fecha, igual que en la 03-03, y las opciones de arriba quedan como constancia de lo evaluado.
+Todas resueltas el 2026-11-04, con la opción recomendada (en la 3, la B con respuesta 200; en la 8, la C):
+
+1. **Mensajes de Django:** bloque común en `base.html`.
+2. **Avisos que no son de error:** se muestran solo los de error; los demás se recorren y se descartan.
+3. **Ítem que no se puede guardar:** capturar `ERRORES_DE_ITEM` fuera del `atomic`, registrar y devolver el formulario con los ítems, **con respuesta 200**.
+4. **Qué se conserva:** `items_json` y `metodo_pago` del envío, y el aviso de la imagen.
+5. **Token de envío único:** en la sesión, sin tabla ni migración.
+6. **Envío repetido:** redirigir al registro ya creado, sin mensaje.
+7. **POST sin token válido:** rechazar y devolver el formulario con los datos y un token nuevo.
+8. **Bloqueo del botón:** función común en `index.js`; `pedido_form.html` conserva el script de la 00-07.
+9. **Texto de la restauración fallida:** sin la mención de `backups/`.
+10. **Una sola iteración.**
+
+**Paso 7 aprobado:** `text-red-600`, `role="alert"`, `aria-invalid`, `aria-describedby` y sin `animate-pulse`, solo en las plantillas que la iteración ya toca.
+
+**Textos aprobados** (ver la sección «Textos aprobados»).
+
+**Costo de consultas aceptado (2026-11-04), al detenerse en el paso 4 por la sección 11 de `AGENTS.md`.** La 5-A sigue tal como está: el token en la sesión suma **+3 consultas por cada GET y cada POST exitoso** de crear pedido, crear cotización e ingresar pago (+1 real, sin `BEGIN` y `COMMIT`: el guardado de la sesión es `BEGIN`, `UPDATE`, `COMMIT`). El **tope de 20 tokens** queda confirmado. Medición (mismo método que [bitacora-03-03-medicion]({B}bitacora-03-03-medicion.md); detalle en [bitacora-03-04]({B}bitacora-03-04.md)):
+
+| Petición | Antes | Después | Sin `BEGIN` y `COMMIT` antes → después |
+| :------- | ----: | ------: | :------------------------------------- |
+| GET `crear_pedido` | 4 | 7 (+3) | 4 → 5 |
+| POST `crear_pedido` | 16 | 19 (+3) | 14 → 15 |
+| GET `crear_cotizacion` | 4 | 7 (+3) | 4 → 5 |
+| POST `crear_cotizacion` | 11 | 14 (+3) | 9 → 10 |
+| GET `ingresar_pago` | 6 | 9 (+3) | 6 → 7 |
+| POST `ingresar_pago` | 13 | 16 (+3) | 11 → 12 |
+| GET `lista_pagos` (con el bloque de mensajes) | 4 | 4 | — |
+| GET `editar_pedido` | 6 | 6 | — |
+
+**Verificación a posteriori de `test_envio_unico.py` (2026-11-04), desviación de la regla 15 corregida:** las pruebas del token se escribieron junto con la implementación. Se desactivó temporalmente el token en las tres vistas, se corrieron y se restauró el código (idéntico byte a byte y por `git diff`). Resultado en la bitácora.
 
 Estado de la iteración: se usa «Pendiente (redactada)» mientras no se ejecuta (el README protegido no define «Redactada»).
 

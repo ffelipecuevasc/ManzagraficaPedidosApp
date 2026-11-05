@@ -79,7 +79,7 @@ class CapturasRespaldoTests(CapturasBase):
         self.assertEqual(self.mensajes(respuesta), [
             'La restauración falló. La base puede haber quedado restaurada en parte: revisa el registro '
             'del servidor antes de seguir. El respaldo de seguridad previo es '
-            'respaldo_01-01-2026_00-00-00.sql. Está en la carpeta backups/ del servidor.'])
+            'respaldo_01-01-2026_00-00-00.sql.'])
 
     def test_restauracion_fallida_antes_del_respaldo_previo_no_nombra_archivo(self):
         with tempfile.TemporaryDirectory() as carpeta, \

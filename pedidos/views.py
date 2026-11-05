@@ -13,6 +13,7 @@ from django.db import transaction
 from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion, HistorialBD, Pago
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm, ConversionCotizacionForm
 from .eventos import registrar_evento
+from . import envio_unico
 from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
 from datetime import timedelta, datetime
 from PedidosApp import settings
@@ -21,6 +22,29 @@ import logging
 import os
 
 logger = logging.getLogger(__name__)
+
+# Fallos de un ítem que el servidor devuelve al formulario en vez de la página 500 (03-04, decisión 3-B).
+# Son las cinco causas medidas en las pruebas: producto inexistente, JSON inválido, clave ausente y
+# cantidad o precio no numéricos. Cualquier otra excepción sigue yendo a la página 500 (RDA-019).
+ERRORES_DE_ITEM = (json.JSONDecodeError, KeyError, TypeError, ValueError, Producto.DoesNotExist)
+
+# Textos aprobados por el desarrollador el 2026-11-04.
+TEXTO_ITEM_FALLIDO = ('No pudimos guardar el detalle de productos. Lo que escribiste sigue en pantalla: '
+                      'revísalo y vuelve a guardar. Si el problema sigue, avisa en qué pantalla estabas y a qué hora.')
+TEXTO_IMAGEN = 'Vuelve a elegir la imagen de referencia: el navegador no la conserva.'
+TEXTO_FORMULARIO_VENCIDO = 'Este formulario venció y no se guardó. Revisa los datos y vuelve a guardar.'
+
+
+def _avisar_formulario_vencido(request):
+    """Un envío sin token válido no crea nada: se deja una línea INFO (sin el contenido) y se avisa al usuario."""
+    logger.info('Envío sin token válido; no se guardó nada', extra={'request': request})
+    messages.error(request, TEXTO_FORMULARIO_VENCIDO)
+
+
+def _avisar_si_se_pierde_la_imagen(request):
+    """El navegador no vuelve a rellenar un campo de archivo: si traía una imagen, se avisa."""
+    if 'imagen_referencia' in request.FILES:
+        messages.error(request, TEXTO_IMAGEN)
 
 
 # ==========================================
@@ -162,76 +186,94 @@ def crear_pedido(request):
     cliente_form = ClienteForm()
     productos_disponibles = Producto.objects.all().order_by('nombre')
     clientes = Cliente.objects.all()
+    estado_envio, token = None, None
 
     if request.method == 'POST':
+        # Envío único (03-04, AUD-04-001): un envío repetido termina en el pedido ya creado.
+        estado_envio, token, ya_creado = envio_unico.estado(request, 'pedido')
+        if estado_envio == envio_unico.USADO:
+            return redirect('detalle_pedido', pk=ya_creado)
+
         form = PedidoForm(request.POST, request.FILES)
 
-        if form.is_valid():
-            with transaction.atomic():
-                # 1. Guardar el Pedido (Padre) - REGLA DE ORO: Legacy en 0
-                pedido = form.save(commit=False)
-                pedido.creado_por = request.user
+        if estado_envio == envio_unico.INVALIDO:
+            _avisar_formulario_vencido(request)
+        elif form.is_valid():
+            try:
+                with transaction.atomic():
+                    # 1. Guardar el Pedido (Padre) - REGLA DE ORO: Legacy en 0
+                    pedido = form.save(commit=False)
+                    pedido.creado_por = request.user
 
-                # Calculamos el estado de pago inicial (PENDIENTE por defecto)
-                # Como el abono va a la tabla Pago, el pedido nace "debiendo el 100%" técnicamente
-                # hasta que consultemos la tabla Pago, pero por ahora lo dejamos limpio.
-                pedido.estado_pago = 'PENDIENTE'
+                    # Calculamos el estado de pago inicial (PENDIENTE por defecto)
+                    # Como el abono va a la tabla Pago, el pedido nace "debiendo el 100%" técnicamente
+                    # hasta que consultemos la tabla Pago, pero por ahora lo dejamos limpio.
+                    pedido.estado_pago = 'PENDIENTE'
 
-                pedido.save()
+                    pedido.save()
 
-                # 2. Procesar los Ítems (Hijos)
-                # Si un ítem falla, la excepción sale del bloque atomic: se revierte todo (pedido, ítems
-                # y pago) y Django responde 500 con la traza en server.log (03-02, RDA-019).
-                # El aviso al usuario y la conservación del formulario son de la 03-04.
-                items_json = request.POST.get('items_json')
-                if items_json:
-                    data_items = json.loads(items_json)
-                    for item in data_items:
-                        producto_obj = Producto.objects.get(pk=item['producto_id'])
-                        ItemPedido.objects.create(
+                    # 2. Procesar los Ítems (Hijos)
+                    # Si un ítem falla, la excepción sale del bloque atomic: se revierte todo (pedido, ítems
+                    # y pago) (03-02, RDA-019). Las causas conocidas las atiende el except de más abajo
+                    # (03-04); cualquier otra excepción responde 500 con la traza en server.log.
+                    items_json = request.POST.get('items_json')
+                    if items_json:
+                        data_items = json.loads(items_json)
+                        for item in data_items:
+                            producto_obj = Producto.objects.get(pk=item['producto_id'])
+                            ItemPedido.objects.create(
+                                pedido=pedido,
+                                producto=producto_obj,
+                                cantidad=float(item['cantidad']),
+                                precio_unitario=int(item['precio_unitario'])
+                            )
+
+                    # 3. Lógica de Pago (CORREGIDA: Variable segura y flujo directo)
+                    # Extraemos el valor del formulario de manera segura
+                    abono_inicial = form.cleaned_data.get('abono_inicial')
+
+                    # Si el usuario ingresó un monto, creamos el registro en la tabla Pago
+                    if abono_inicial and abono_inicial > 0:
+                        # Capturar el metodo desde el HTML
+                        metodo_seleccionado = request.POST.get('metodo_pago', 'EFECTIVO')
+
+                        # Crear el registro de Pago (Aquí vive el dato real)
+                        Pago.objects.create(
                             pedido=pedido,
-                            producto=producto_obj,
-                            cantidad=float(item['cantidad']),
-                            precio_unitario=int(item['precio_unitario'])
+                            monto=abono_inicial,
+                            metodo=metodo_seleccionado,
+                            fecha=timezone.now(),
+                            registrado_por=request.user,
+                            nota='Abono inicial al crear pedido'
                         )
 
-                # 3. Lógica de Pago (CORREGIDA: Variable segura y flujo directo)
-                # Extraemos el valor del formulario de manera segura
-                abono_inicial = form.cleaned_data.get('abono_inicial')
+                        # El estado financiero sigue al pago, dentro de la misma transacción (03-03, R10).
+                        actualizar_estado_pago_pedido(pedido)
 
-                # Si el usuario ingresó un monto, creamos el registro en la tabla Pago
-                if abono_inicial and abono_inicial > 0:
-                    # Capturar el metodo desde el HTML
-                    metodo_seleccionado = request.POST.get('metodo_pago', 'EFECTIVO')
+                        # OJO: NO actualizamos pedido.valor_abonado.
+                        # Se mantiene en 0 como solicitaste.
 
-                    # Crear el registro de Pago (Aquí vive el dato real)
-                    Pago.objects.create(
-                        pedido=pedido,
-                        monto=abono_inicial,
-                        metodo=metodo_seleccionado,
-                        fecha=timezone.now(),
-                        registrado_por=request.user,
-                        nota='Abono inicial al crear pedido'
-                    )
+                    # Evento de auditoría (01-04): se escribe cuando la transacción se confirma.
+                    con_abono = ' con abono inicial' if abono_inicial and abono_inicial > 0 else ''
+                    registrar_evento('pedido_creado', request.user, 'pedido', pedido.pk,
+                                     f'Pedido #{pedido.pk} creado{con_abono}')
 
-                    # El estado financiero sigue al pago, dentro de la misma transacción (03-03, R10).
-                    actualizar_estado_pago_pedido(pedido)
-
-                    # OJO: NO actualizamos pedido.valor_abonado.
-                    # Se mantiene en 0 como solicitaste.
-
-                # Evento de auditoría (01-04): se escribe cuando la transacción se confirma.
-                con_abono = ' con abono inicial' if abono_inicial and abono_inicial > 0 else ''
-                registrar_evento('pedido_creado', request.user, 'pedido', pedido.pk,
-                                 f'Pedido #{pedido.pk} creado{con_abono}')
-
-            return redirect('detalle_pedido', pk=pedido.pk)
+                envio_unico.consumir(request, token, pedido.pk)
+                return redirect('detalle_pedido', pk=pedido.pk)
+            except ERRORES_DE_ITEM:
+                # Un ítem no se pudo guardar: el atomic ya revirtió todo. Se registra con la traza y se
+                # devuelve el formulario con lo que escribió el usuario (03-04, decisiones 3-B y 4-A).
+                logger.exception('Un ítem del pedido no se pudo guardar', extra={'request': request})
+                messages.error(request, TEXTO_ITEM_FALLIDO)
+                # El guardado llegó a asignar un pk al objeto en memoria: se vuelve a armar el formulario.
+                form = PedidoForm(request.POST)
 
         else:
             # Solo los nombres de los campos: los mensajes pueden repetir lo que escribió el usuario.
             logger.info('Formulario de pedido inválido; campos con error: %s',
                         ', '.join(sorted(form.errors)), extra={'request': request})
 
+        _avisar_si_se_pierde_la_imagen(request)
     else:
         form = PedidoForm()
 
@@ -241,6 +283,11 @@ def crear_pedido(request):
         'productos_disponibles': productos_disponibles,
         'clientes': clientes,
         'productos': productos_disponibles,
+        # Lo que el usuario ya armó (03-04, decisión 4-A): los ítems y el método del abono.
+        'items_json': request.POST.get('items_json', ''),
+        'metodo_pago': request.POST.get('metodo_pago', ''),
+        # El token que ya trajo el envío sigue valiendo mientras no se guarde; si no, uno nuevo.
+        'token_envio': token if estado_envio == envio_unico.NUEVO else envio_unico.emitir(request, 'pedido'),
     }
 
     return render(request, 'pedidos/pedido_form.html', context)
@@ -255,30 +302,37 @@ def editar_pedido(request, pk):
         if form.is_valid():
             # El pedido, el borrado y la recreación de ítems y el estado financiero son una sola
             # unidad (03-03, RDA-019). Si algo falla, la excepción sale del bloque atomic: quedan los
-            # ítems y el valor anteriores, no se escribe el evento y Django responde 500 con la traza.
-            # El aviso al usuario y la conservación del formulario son de la 03-04.
-            with transaction.atomic():
-                pedido = form.save()
+            # ítems y el valor anteriores y no se escribe el evento. Las causas conocidas de un ítem
+            # fallido las atiende el except (03-04); cualquier otra responde 500 con la traza.
+            try:
+                with transaction.atomic():
+                    pedido = form.save()
 
-                items_json = request.POST.get('items_json')
-                if items_json:
-                    pedido.items.all().delete()  # Borrón
-                    data_items = json.loads(items_json)
-                    for item in data_items:
-                        producto_obj = Producto.objects.get(pk=item['producto_id'])
-                        ItemPedido.objects.create(
-                            pedido=pedido,
-                            producto=producto_obj,
-                            cantidad=float(item['cantidad']),
-                            precio_unitario=int(item['precio_unitario'])
-                        )
+                    items_json = request.POST.get('items_json')
+                    if items_json:
+                        pedido.items.all().delete()  # Borrón
+                        data_items = json.loads(items_json)
+                        for item in data_items:
+                            producto_obj = Producto.objects.get(pk=item['producto_id'])
+                            ItemPedido.objects.create(
+                                pedido=pedido,
+                                producto=producto_obj,
+                                cantidad=float(item['cantidad']),
+                                precio_unitario=int(item['precio_unitario'])
+                            )
 
-                # El valor de venta pudo cambiar (R11).
-                actualizar_estado_pago_pedido(pedido)
-                registrar_evento('pedido_modificado', request.user, 'pedido', pedido.pk,
-                                 f'Pedido #{pedido.pk} modificado')
-            # Redirigir al detalle del pedido editado
-            return redirect('detalle_pedido', pk=pedido.pk)
+                    # El valor de venta pudo cambiar (R11).
+                    actualizar_estado_pago_pedido(pedido)
+                    registrar_evento('pedido_modificado', request.user, 'pedido', pedido.pk,
+                                     f'Pedido #{pedido.pk} modificado')
+                # Redirigir al detalle del pedido editado
+                return redirect('detalle_pedido', pk=pedido.pk)
+            except ERRORES_DE_ITEM:
+                # Un ítem no se pudo guardar: el atomic ya revirtió todo y la base conserva los ítems y el
+                # valor anteriores. Se devuelve el formulario con lo que escribió el usuario (03-04, 3-B y 4-A).
+                logger.exception('Un ítem del pedido no se pudo guardar al editar', extra={'request': request})
+                messages.error(request, TEXTO_ITEM_FALLIDO)
+        _avisar_si_se_pierde_la_imagen(request)
     else:
         form = PedidoForm(instance=pedido)
 
@@ -295,10 +349,14 @@ def editar_pedido(request, pk):
         })
     # --------------------------------------------------
 
+    # Si el formulario vuelve con un error, van los ítems que el usuario envió y no los de la base
+    # (03-04, decisión 4-A). Sin ítems en el envío, quedan los de la base.
+    items_json = request.POST.get('items_json') or json.dumps(items_list)
+
     return render(request, 'pedidos/pedido_form.html', {
         'form': form,
         'productos_disponibles': productos_disponibles,
-        'items_json': json.dumps(items_list)  # ¡Aquí enviamos los datos al HTML!
+        'items_json': items_json  # ¡Aquí enviamos los datos al HTML!
     })
 
 @login_required
@@ -743,33 +801,50 @@ def crear_cotizacion(request):
     # NECESARIO: Cargar productos para que el Select2 funcione en el template
     productos_disponibles = Producto.objects.all().order_by('nombre')
 
+    estado_envio, token = None, None
+
     if request.method == 'POST':
+        # Envío único (03-04, AUD-04-001): un envío repetido termina en la cotización ya creada.
+        estado_envio, token, ya_creada = envio_unico.estado(request, 'cotizacion')
+        if estado_envio == envio_unico.USADO:
+            return redirect('detalle_cotizacion', pk=ya_creada)
+
         form = CotizacionForm(request.POST)
-        if form.is_valid():
+        if estado_envio == envio_unico.INVALIDO:
+            _avisar_formulario_vencido(request)
+        elif form.is_valid():
             # La cotización y sus ítems son una sola unidad (03-03, RDA-019). Si un ítem falla, la
-            # excepción sale del bloque atomic: se revierte todo y Django responde 500 con la traza
-            # en server.log. El aviso al usuario y la conservación del formulario son de la 03-04.
-            with transaction.atomic():
-                cotizacion = form.save()
+            # excepción sale del bloque atomic y se revierte todo. Las causas conocidas las atiende el
+            # except (03-04); cualquier otra responde 500 con la traza en server.log.
+            try:
+                with transaction.atomic():
+                    cotizacion = form.save()
 
-                # --- Guardar Ítems (Espejo de crear_pedido) ---
-                items_json = request.POST.get('items_json')
-                if items_json:
-                    data_items = json.loads(items_json)
-                    for item in data_items:
-                        # item es: {'producto_id': '5', 'cantidad': 2, 'precio_unitario': 15000, ...}
-                        producto_obj = Producto.objects.get(pk=item['producto_id'])
+                    # --- Guardar Ítems (Espejo de crear_pedido) ---
+                    items_json = request.POST.get('items_json')
+                    if items_json:
+                        data_items = json.loads(items_json)
+                        for item in data_items:
+                            # item es: {'producto_id': '5', 'cantidad': 2, 'precio_unitario': 15000, ...}
+                            producto_obj = Producto.objects.get(pk=item['producto_id'])
 
-                        ItemCotizacion.objects.create(
-                            cotizacion=cotizacion,
-                            producto=producto_obj,
-                            cantidad=float(item['cantidad']),
-                            precio_unitario=int(item['precio_unitario'])
-                        )
-                # -----------------------------------------------
+                            ItemCotizacion.objects.create(
+                                cotizacion=cotizacion,
+                                producto=producto_obj,
+                                cantidad=float(item['cantidad']),
+                                precio_unitario=int(item['precio_unitario'])
+                            )
+                    # -----------------------------------------------
 
-            # Redirigimos al detalle para revisar antes de "enviar"
-            return redirect('detalle_cotizacion', pk=cotizacion.pk)
+                # Redirigimos al detalle para revisar antes de "enviar"
+                envio_unico.consumir(request, token, cotizacion.pk)
+                return redirect('detalle_cotizacion', pk=cotizacion.pk)
+            except ERRORES_DE_ITEM:
+                # Un ítem no se pudo guardar: el atomic ya revirtió todo (03-04, decisiones 3-B y 4-A).
+                logger.exception('Un ítem de la cotización no se pudo guardar', extra={'request': request})
+                messages.error(request, TEXTO_ITEM_FALLIDO)
+                # El guardado llegó a asignar un pk al objeto en memoria: se vuelve a armar el formulario.
+                form = CotizacionForm(request.POST)
     else:
         form = CotizacionForm(initial={'fecha_emision': timezone.now().date()})
 
@@ -777,7 +852,10 @@ def crear_cotizacion(request):
         'form': form,
         'cliente_form': cliente_form,
         'productos_disponibles': productos_disponibles,
-        'fecha_hoy': timezone.now().strftime('%Y-%m-%d')
+        'fecha_hoy': timezone.now().strftime('%Y-%m-%d'),
+        # Lo que el usuario ya armó, si el formulario vuelve con un error (03-04, decisión 4-A).
+        'items_json': request.POST.get('items_json', ''),
+        'token_envio': token if estado_envio == envio_unico.NUEVO else envio_unico.emitir(request, 'cotizacion'),
     })
 
 @login_required
@@ -793,22 +871,29 @@ def editar_cotizacion(request, pk):
         if form.is_valid():
             # Borrar y recrear los ítems va junto con el guardado de la cotización (03-03, RDA-019):
             # si algo falla, la excepción sale del bloque y quedan los ítems y el valor anteriores.
-            with transaction.atomic():
-                cotizacion = form.save()
+            try:
+                with transaction.atomic():
+                    cotizacion = form.save()
 
-                items_json = request.POST.get('items_json')
-                if items_json:
-                    cotizacion.items.all().delete()
-                    data_items = json.loads(items_json)
-                    for item in data_items:
-                        producto_obj = Producto.objects.get(pk=item['producto_id'])
-                        ItemCotizacion.objects.create(
-                            cotizacion=cotizacion,
-                            producto=producto_obj,
-                            cantidad=float(item['cantidad']),
-                            precio_unitario=int(item['precio_unitario'])
-                        )
-            return redirect('detalle_cotizacion', pk=pk)
+                    items_json = request.POST.get('items_json')
+                    if items_json:
+                        cotizacion.items.all().delete()
+                        data_items = json.loads(items_json)
+                        for item in data_items:
+                            producto_obj = Producto.objects.get(pk=item['producto_id'])
+                            ItemCotizacion.objects.create(
+                                cotizacion=cotizacion,
+                                producto=producto_obj,
+                                cantidad=float(item['cantidad']),
+                                precio_unitario=int(item['precio_unitario'])
+                            )
+                return redirect('detalle_cotizacion', pk=pk)
+            except ERRORES_DE_ITEM:
+                # Un ítem no se pudo guardar: el atomic ya revirtió todo y la base conserva los ítems y el
+                # valor anteriores. Se devuelve el formulario con lo que escribió el usuario (03-04, 3-B y 4-A).
+                logger.exception('Un ítem de la cotización no se pudo guardar al editar',
+                                 extra={'request': request})
+                messages.error(request, TEXTO_ITEM_FALLIDO)
     else:
         form = CotizacionForm(instance=cotizacion)
 
@@ -825,11 +910,15 @@ def editar_cotizacion(request, pk):
         })
     # ---------------------------------
 
+    # Si el formulario vuelve con un error, van los ítems que el usuario envió y no los de la base
+    # (03-04, decisión 4-A). Sin ítems en el envío, quedan los de la base.
+    items_json = request.POST.get('items_json') or json.dumps(items_list)
+
     return render(request, 'pedidos/cotizacion_form.html', {
         'form': form,
         'productos_disponibles': productos_disponibles,
         'fecha_hoy': timezone.now().strftime('%Y-%m-%d'),
-        'items_json': json.dumps(items_list)  # ¡Enviamos los datos!
+        'items_json': items_json  # ¡Enviamos los datos!
     })
 
 @login_required
@@ -1201,8 +1290,8 @@ def restaurar_bd(request):
             mensaje = ('La restauración falló. La base puede haber quedado restaurada en parte: '
                        'revisa el registro del servidor antes de seguir.')
             if respaldo_previo:
-                mensaje += (f' El respaldo de seguridad previo es {respaldo_previo}. '
-                            'Está en la carpeta backups/ del servidor.')
+                # Solo el nombre del archivo: la carpeta del servidor no se menciona (03-04, decisión 9-A).
+                mensaje += f' El respaldo de seguridad previo es {respaldo_previo}.'
             messages.error(request, mensaje)
 
         return redirect('restaurar_bd')
@@ -1389,9 +1478,18 @@ def ingresar_pago(request, pedido_id=None):
             'monto': pedido_obj.saldo_pendiente  # Sugerimos pagar el total restante
         }
 
+    estado_envio, token = None, None
+
     if request.method == 'POST':
+        # Envío único (03-04, AUD-04-001): un envío repetido termina donde terminó el primero.
+        estado_envio, token, _ = envio_unico.estado(request, 'pago')
+        if estado_envio == envio_unico.USADO:
+            return redirect('lista_pagos')
+
         form = PagoForm(request.POST)
-        if form.is_valid():
+        if estado_envio == envio_unico.INVALIDO:
+            _avisar_formulario_vencido(request)
+        elif form.is_valid():
             # El pago, el estado financiero del pedido y el evento van juntos (03-03, AUD-02-004).
             with transaction.atomic():
                 pago = form.save(commit=False)
@@ -1404,13 +1502,15 @@ def ingresar_pago(request, pedido_id=None):
                                  f'Pago #{pago.pk} registrado en el pedido #{pedido_relacionado.pk}')
 
             messages.success(request, f"Pago de ${pago.monto} registrado correctamente.")
+            envio_unico.consumir(request, token, pago.pk)
             return redirect('lista_pagos')
     else:
         form = PagoForm(initial=initial_data)
 
     return render(request, 'pedidos/pago_form.html', {
         'form': form,
-        'pedido_obj': pedido_obj
+        'pedido_obj': pedido_obj,
+        'token_envio': token if estado_envio == envio_unico.NUEVO else envio_unico.emitir(request, 'pago'),
     })
 
 @login_required

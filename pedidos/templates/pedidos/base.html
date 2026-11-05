@@ -260,6 +260,18 @@
 </aside>
 
 <main class="ml-64 flex-1 h-full overflow-y-auto bg-background-light dark:bg-background-dark p-8 transition-colors duration-300">
+    {# Mensajes de Django (03-04, decisiones 1 y 2): se pintan solo los de error; el resto se recorre y se descarta. #}
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.level_tag == 'error' %}
+                <div role="alert" class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+                    <span class="material-icons-round text-red-600 dark:text-red-400 text-xl mt-0.5" aria-hidden="true">error_outline</span>
+                    <p class="text-red-800 dark:text-red-300 text-sm font-medium">{{ message }}</p>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     {% block content %}
     {% endblock %}
 

@@ -271,6 +271,33 @@ grep "nivel=" $L | tail -n 20 | cut -c1-200
 - Anota en la evidencia de la iteración: etiqueta desplegada, commit, lista de comprobación, resultado de las pantallas y del registro.
 - Vuelve a la terminal de tu PC y deja el `.venv` y Docker como estaban.
 
+### 3.9 Cuando un usuario reporta un error (desde la 03-04)
+
+No hay código de error ni identificador (RDA-013). La página 500 y los avisos le piden al usuario **en qué pantalla estaba y a qué hora**. Con eso se busca la traza en `server.log`, que escribe la hora de **Chile**.
+
+| Qué ve el usuario | Qué queda en `server.log` |
+| :---------------- | :------------------------ |
+| Página «Algo salió mal» (500) | Una línea `django.request` con método, ruta, usuario y traza |
+| Aviso «No pudimos guardar el detalle de productos…» (pedido o cotización, devuelve el formulario) | Una línea `nivel=ERROR` de `pedidos.views` con la traza («Un ítem del pedido…» o «Un ítem de la cotización… no se pudo guardar»). La respuesta es 200: **no aparece como 500 en `access.log`** |
+| Aviso «Este formulario venció y no se guardó…» | Una línea `nivel=INFO` «Envío sin token válido…» con método, ruta y usuario. No es un error del sistema: el formulario venció, se abrió en otra sesión o ya había más de 20 formularios abiertos |
+| Aviso de respaldo o restauración | Una línea `nivel=ERROR` de `pedidos.views` con la traza |
+
+**[PA · Bash]** Buscar por día, hora y pantalla (reemplaza la fecha, la hora y la ruta por lo que informó el usuario):
+
+```bash
+L=/var/log/manzagrafica.pythonanywhere.com.server.log
+# Errores de esa hora (hora de Chile)
+grep "^2026-11-05 15:" $L | grep "nivel=ERROR" | cut -c1-200
+# Solo una pantalla
+grep "nivel=ERROR" $L | grep "ruta=/pedidos/nuevo/" | cut -c1-200
+# Traza completa de la línea elegida
+grep "^2026-11-05 15:" $L | grep "ruta=/pedidos/nuevo/" | sed 's/#012/\n/g'
+```
+
+- Rutas más frecuentes: crear pedido `/pedidos/nuevo/`, editar pedido `/pedido/editar/<n.º>/`, crear cotización `/cotizaciones/nueva/`, editar cotización `/cotizaciones/editar/<n.º>/`, convertir `/cotizaciones/convertir/<n.º>/`, registrar pago `/pagos/ingresar/`.
+- Si la pantalla era un formulario con un aviso de ítem, el usuario **no perdió lo escrito**: sigue en pantalla y puede guardar de nuevo.
+- Nunca copies a la evidencia el texto completo de una línea: puede traer datos de clientes. Anota el tipo de error y la hora.
+
 ## 4. Primer uso: despliegue de la 00-04 (`v0.1-higiene`)
 
 El paso a paso exacto, con las salidas que hay que anotar, está en `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-05.md`, parte B. Resume lo propio de este despliegue (punto 8 de la lista):

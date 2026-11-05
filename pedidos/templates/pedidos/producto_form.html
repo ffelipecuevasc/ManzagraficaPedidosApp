@@ -32,7 +32,7 @@
                         </h2>
                     </div>
 
-                    <form method="post">
+                    <form method="post" data-bloquear-envio>
                         {% csrf_token %}
 
                         <div class="space-y-6">
@@ -43,7 +43,7 @@
                                 </label>
                                 {% render_field form.nombre class="form-control" placeholder="Ej: Tarjetas de Visita 1000unid" %}
                                 {% if form.nombre.errors %}
-                                    <div class="mt-1 text-sm text-red-500 font-medium">{{ form.nombre.errors.0 }}</div>
+                                    <div id="error-nombre" role="alert" class="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{{ form.nombre.errors.0 }}</div>
                                 {% endif %}
                             </div>
 
@@ -53,7 +53,7 @@
                                 </label>
                                 {% render_field form.unidad class="form-select select2" %}
                                 {% if form.unidad.errors %}
-                                    <div class="mt-1 text-sm text-red-500 font-medium">{{ form.unidad.errors.0 }}</div>
+                                    <div id="error-unidad" role="alert" class="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{{ form.unidad.errors.0 }}</div>
                                 {% endif %}
                             </div>
 
@@ -70,7 +70,7 @@
                                         {% render_field form.valor_neto id="input-neto" class="form-control !pl-12 font-bold text-blue-600 dark:text-blue-400" placeholder="0" %}
                                     </div>
                                     {% if form.valor_neto.errors %}
-                                        <div class="mt-1 text-sm text-red-500 font-medium">{{ form.valor_neto.errors.0 }}</div>
+                                        <div id="error-valor_neto" role="alert" class="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{{ form.valor_neto.errors.0 }}</div>
                                     {% endif %}
                                 </div>
 
@@ -101,7 +101,7 @@
                                 </div>
 
                                 {% if form.descripcion.errors %}
-                                    <div class="mt-1 text-sm text-red-500 font-medium">{{ form.descripcion.errors.0 }}</div>
+                                    <div id="error-descripcion" role="alert" class="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{{ form.descripcion.errors.0 }}</div>
                                 {% endif %}
                             </div>
 

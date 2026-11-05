@@ -77,9 +77,15 @@
                                     }
                                 }).then((result) => {
                                     if (result.isConfirmed) {
+                                        // El envío con submit() no dispara el evento: se bloquea el botón a mano (03-04).
+                                        bloquearBoton(document.getElementById('btn-alerta-restaurar'), 'Restaurando…');
                                         document.getElementById('form-restaurar').submit();
                                     }
                                 })
+                            });
+                            // Al volver con «atrás» el navegador puede recuperar la página desde su caché.
+                            window.addEventListener('pageshow', function () {
+                                desbloquearBoton(document.getElementById('btn-alerta-restaurar'));
                             });
                         </script>
                     </form>

@@ -9,6 +9,7 @@ from unittest import mock
 from django.conf import settings
 from django.test import TestCase, override_settings
 
+from . import ayudas
 from .factorias import crear_cliente, crear_pago, crear_usuario
 from .test_registro import formatear_como_error_log
 
@@ -99,6 +100,9 @@ class ErroresSinMiddlewareTests(TestCase):
         html = respuesta.content.decode()
         self.assertEqual(respuesta.status_code, 500)
         self.assertIn('Algo salió mal', html)
+        # Cómo se informa un error (03-04, RDA-013): pantalla y hora, sin identificador.
+        self.assertIn(ayudas.TEXTO_PAGINA_500, html)
+        self.assertNotIn('qué estabas haciendo', html)
         self.assertNotIn('detalle-secreto-de-la-excepcion', html)
         self.assertNotIn('Traceback', html)
         self.assertNotIn('RuntimeError', html)
@@ -120,7 +124,8 @@ class PrintsDiagnosticoTests(TestCase):
     def test_creacion_de_pedido_invalida_registra_solo_nombres_de_campos(self):
         self.client.force_login(crear_usuario())
         with self.assertLogs('pedidos.views', 'INFO') as capturado:
-            self.client.post('/pedidos/nuevo/', {'resumen_pedido': 'texto-del-usuario-123'})
+            self.client.post('/pedidos/nuevo/', ayudas.con_token(
+                self.client, '/pedidos/nuevo/', {'resumen_pedido': 'texto-del-usuario-123'}))
         salida = '\n'.join(capturado.output)
         self.assertIn('Formulario de pedido inválido', salida)
         self.assertNotIn('texto-del-usuario-123', salida)

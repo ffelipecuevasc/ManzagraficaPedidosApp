@@ -23,8 +23,12 @@ class CotizacionBase(TestCase):
         self.otro = crear_producto(valor_neto=4_000)
 
     def ejecutar(self, metodo, ruta, datos=None):
+        datos = datos or {}
+        if metodo == 'post':
+            # Los formularios de creación traen su token de envío único (03-04).
+            datos = ayudas.con_token(self.client, ruta, datos)
         with self.captureOnCommitCallbacks(execute=True):
-            return getattr(self.client, metodo)(ruta, datos or {})
+            return getattr(self.client, metodo)(ruta, datos)
 
     def datos(self, **campos):
         datos = {
