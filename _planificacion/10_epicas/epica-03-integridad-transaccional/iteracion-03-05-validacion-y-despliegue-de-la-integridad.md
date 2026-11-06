@@ -1,15 +1,15 @@
 # Iteración 03-05 · Validación y despliegue de la integridad
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** Pendiente (redactada, 2026-11-06). Sin ejecutar: ni pruebas, ni respaldo, ni etiqueta, ni despliegue ([bitacora-03-05-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-redaccion.md)). Las ocho decisiones están abiertas (`PENDIENTE_DESARROLLADOR`).
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-06 ([bitacora-03-05-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-redaccion.md)); las ocho decisiones las resolvió el desarrollador el mismo día ([bitacora-03-05-decisiones](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-decisiones.md); detalle en «Decisiones del desarrollador»). Sin ejecutar: ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Pasos listos en [evidencia-03-05](evidencia-03-05.md). Siguen `PENDIENTE_DESARROLLADOR`: la aprobación literal del texto del aviso (decisión 4), el día exacto del despliegue y los umbrales de la vigilancia y del retroceso.
 - **Subfase del plan:** 3.5 «Validación y despliegue» (`plan-de-trabajo.md:364-371`)
 - **Depende de:** 03-04 (Terminada el 2026-11-06) y de la medición de la 00-07 (parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md), 2026-11-11, hacia las 01:32 hora de Chile)
 - **RDA relacionadas:** RDA-007 (rama única y etiqueta anotada antes de cada despliegue; un despliegue lleva un solo propósito), RDA-013 (diagnóstico en `server.log`, sin identificador ni tabla de errores), RDA-019 (los errores de vista los maneja Django).
 - **Hallazgos que cierra:** AUD-04-001 en la medición de producción que le faltaba (la parte de servidor ya está «Resuelto en 03-04» en código); confirma en producción los que hoy dicen «se despliega con la 03-05»: AUD-01-001, AUD-01-002, AUD-02-004 (el código; las filas históricas no se reparan), AUD-02-005, AUD-02-008, AUD-02-027 y AUD-02-029.
 - **Hallazgos relacionados:** AUD-02-006 (avance de la 03-04; sigue abierto por el GET, 04-01), AUD-02-021 (13 errores de plantilla sin causa conocida: la semana de `server.log` puede aportar evidencia, no se asume), AUD-02-023 (imágenes de `media/` sin copia: no se tocan), AUD-04-002 (cada recarga deja unos 10 s de 502), AUD-04-004 (líneas `OSError: write error`, ya clasificadas), AUD-05-002 (disco de Docker de la réplica en C:).
 - **Cambio de esquema:** Ninguno (verificado el 2026-11-06 con `git diff`, ver «Qué viaja»).
-- **Respaldo previo al despliegue:** decisión 2.
-- **Etiqueta y ventana:** decisión 3. Etiqueta sugerida por la convención de `despliegue.md`, sección 1: `v3.1-integridad`.
+- **Respaldo previo al despliegue:** nuevo el día del despliegue, verificado antes de recargar (decisión 2, opción A, resuelta el 2026-11-06).
+- **Etiqueta y ventana:** `v3.1-integridad` (convención de `despliegue.md`, sección 1), entre las 20:00 y las 23:00 (hora de Chile) de un día entre el 2026-11-11 (después de anotar la medición de la 00-07) y el 2026-11-13 (decisión 3, resuelta el 2026-11-06; reemplaza «de madrugada»). El día exacto lo elige el desarrollador.
 
 ## Objetivo
 
@@ -79,7 +79,7 @@ Medido hoy: `git diff --stat 5dc82a8..HEAD -- . ":(exclude)_planificacion" ":(ex
 
 ## Decisiones
 
-Todas `PENDIENTE_DESARROLLADOR` salvo donde se marca `PENDIENTE_CLIENTE`. La recomendada va primero en cada tabla. Dependencias: la 3 condiciona la 4 y la 5; la 2 condiciona la 7; la 1 y la 8 fijan lo que se prueba y se etiqueta.
+**Resueltas el 2026-11-06** (ver «Decisiones del desarrollador», al final): las tablas quedan como estaban al redactar, como registro de las opciones. Al redactar eran `PENDIENTE_DESARROLLADOR` (y una `PENDIENTE_CLIENTE`, la hora de uso, que la decisión 3 reemplazó). La recomendada iba primero en cada tabla. Dependencias: la 3 condiciona la 4 y la 5; la 2 condiciona la 7; la 1 y la 8 fijan lo que se prueba y se etiqueta.
 
 ### Decisión 1 · Qué viaja
 
@@ -116,6 +116,7 @@ Precondición: **no desplegar antes de la medición de la 00-07 del 2026-11-11 (
 - **Etiqueta (sugerida):** `v3.1-integridad`. Formato `v<fase>.<correlativo>-<propósito>` de `despliegue.md`, sección 1: fase 3, correlativo 1 (cada fase parte en 1; los documentos no registran ninguna etiqueta de la fase 2). Mensaje: `Iteraciones 03-01 a 03-04 · desplegada el AAAA-MM-DD` con la fecha de Chile del día. Anotada, publicada con `git push origin`, y comprobada con `git ls-remote --tags origin v3.1-integridad`.
 - **Destino de retroceso:** `v0.3-doble-envio` (la última desplegada; `despliegue.md`, sección 1: «el destino es la etiqueta desplegada antes»).
 - **No se crea ninguna etiqueta en esta redacción** (`AGENTS.md`, sección 6).
+- **Resuelta el 2026-11-06:** etiqueta `v3.1-integridad`, de 20:00 a 23:00 (hora de Chile) de un día entre el 2026-11-11 y el 2026-11-13. Con esa hora, desde las 21:00 la fecha UTC ya es la del día siguiente, y con el día 7 a la misma hora `R` el 11-13 deja la última lectura el 11-20 por la noche (el día del vencimiento de la web app y del informe C2); el 11-11 o el 11-12 dejan margen (sugerencia, sin decidir).
 
 ### Decisión 4 · Aviso al cliente
 
@@ -181,40 +182,40 @@ Documentado: `pruebas.md`, sección 7.1, **valor vigente `expected failures=9`**
 | :----- | :------- | :------- | :------ |
 | **A. Una ejecución el día del despliegue, sobre el commit que se etiqueta, con `OK (expected failures=9)` y 267 pruebas (recomendada)** | `python manage.py test pedidos` con el árbol limpio, más `check --deploy` (con `DEBUG=False`; solo las advertencias conocidas W004, W008, W009, W012 y W016) y `makemigrations --check --dry-run` (`No changes detected`). Si el recuento no es exacto, se detiene | Es lo que pide `despliegue.md`. No hay cambios de código desde las tres ejecuciones iguales del 2026-11-06 (`git diff` sin salida desde `7e14398`) | Una ejecución sola no detectaría una prueba intermitente. Duran entre 4 y 6 minutos (240 a 350 s) |
 | **B. Tres ejecuciones seguidas** | El estándar de las iteraciones 03-01 a 03-04 | Más confianza | Unos 15 minutos de reloj extra; el código no cambió |
-| **C. Desplegar con `OK` limpio, retirando las marcas de las 9** | — | — | **No.** Son defectos reales declarados (pendientes en la 04-01, 04-06, 06-01 y 06-05); quitar la marca los ocultaría y haría fallar el conjunto |
+| **C. Desplegar con `OK` limpio, retirando las marcas de las 9** | — | — | **No.** Son defectos reales declarados (pendientes en la 04-01, 04-06, 06-01 y 07-02, antes 06-05); quitar la marca los ocultaría y haría fallar el conjunto |
 
-- **Estas 9 no viajan corregidas:** R6a, R6b, R6c, R7 y R19 (04-01), R14 (04-06), R8 y R9 (06-01), R15 (06-05, según `pruebas.md`; ver «Avisos»).
+- **Estas 9 no viajan corregidas:** R6a, R6b, R6c, R7 y R19 (04-01), R14 (04-06), R8 y R9 (06-01), R15 (07-02, antes 06-05; ver «Avisos»).
 
 ## Tareas (en este orden, una vez tomadas las decisiones)
 
 Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywhere, crea etiquetas ni hace `push`.
 
 0. **Precondiciones:** 00-07 medida (parte D, 2026-11-11, hacia las 01:32) y su resultado anotado; web app renovada (2026-11-10); `git status --short` vacío y `main` igual a `origin/main`.
-1. **Pedir la evidencia** (agente, al empezar la ejecución): crear `10_epicas/epica-03-integridad-transaccional/evidencia-03-05.md` con la plantilla 6.3 de `_planificacion/README.md` y los comandos listos. No se crea en esta redacción porque depende de las decisiones 2, 3 y 5.
+1. **Evidencia lista** (agente): [evidencia-03-05](evidencia-03-05.md), creada el 2026-11-06 al resolverse las decisiones, con comandos exactos y casillas (A, PC; B, servidor; C, día 0; D, día 7 y cierre; E, retroceso; F, limpieza de la réplica). La rellena el desarrollador al ejecutar.
 2. **Lista de comprobación previa** (`despliegue.md`, sección 2) en el PC: pruebas (decisión 8), `check --deploy`, `makemigrations --check --dry-run`, `showmigrations pedidos` (ninguna migración nueva), respaldo (decisión 2), «Estilos compilados: no aplica», etiqueta.
 3. **Etiqueta** (decisiones 1 y 3): `git diff --stat <hash>..main -- . ":(exclude)_planificacion" ":(exclude)docs"` vacío, `git tag -a`, `git push origin`, `git ls-remote --tags origin`.
-4. **Aviso al cliente** (decisión 4), con la hora acordada.
+4. **Aviso al cliente** (decisión 4), con la hora acordada (entre las 20:00 y las 23:00) y el texto aprobado.
 5. **Despliegue** (`despliegue.md`, 3.1 a 3.6): ubicarse, `git fetch origin --tags`, `git checkout <etiqueta>`, **sin dependencias** (3.3: `requirements.txt` no cambió), **sin migraciones** (3.4: `No planned migration operations.`), **`collectstatic --noinput`** (3.5: cambió `index.js`), **Reload** y anotar la hora del reinicio efectivo `R`.
 6. **Verificación inmediata, solo lectura** (3.7): ventana privada, acceso, panel, listado y detalle de pedidos; además, sin crear nada: que `/pedidos/nuevo/`, `/cotizaciones/nueva/` y `/pagos/ingresar/` carguen y que el código fuente de cada una traiga el campo `token_envio`. Registro de errores desde `R`.
-7. **Verificar la línea `INFO`** (decisión 5b) y **vigilar** (decisión 5a): lecturas de los días 0, 1, 3 y 7.
+7. **Verificar la línea `INFO`** (decisión 5b; parte C de la evidencia) y **vigilar** (decisión 5): lecturas **solo los días 0 y 7** (partes C y D de la evidencia). Una lectura extra a demanda queda como sugerencia, sin decidir (ver «Riesgos»).
 8. **Si aparece un `ERROR` nuevo:** clasificar (3.9) y aplicar la regla de la decisión 6.
 9. **Cierre documental** (agente, con la evidencia que responda el desarrollador): `bitacora-03-05-produccion.md`; fila en `despliegue.md`, sección 5 (registro de despliegues); notas fechadas en AUD-04-001 y en los hallazgos que dicen «se despliega con la 03-05» (sin borrar lo anterior); el texto de `despliegue.md`, 3.9, según el resultado de 5b; `registro-pendientes.md`; estado de la 03-05 y de la Épica 03 (nota fechada en `definicion-epica-03.md`).
-10. **Operación** (decisión 7): traslado del disco de Docker, refresco de la réplica, conteo de pedidos sin ítems y comprobación de cifrado, según la opción elegida.
+10. **Operación** (decisión 7, opción A) como último paso, después de cerrar la vigilancia: traslado del disco de Docker, refresco de la réplica, conteo de pedidos sin ítems y comprobación de cifrado (parte F de la evidencia).
 
 ## Criterios de aceptación
 
-- [ ] Las decisiones 1 a 8 están registradas antes de ejecutar.
+- [x] Las decisiones 1 a 8 están registradas antes de ejecutar (2026-11-06; ver «Decisiones del desarrollador»).
 - [ ] Pruebas, `check --deploy` y `makemigrations --check --dry-run` del día del despliegue anotados, con `OK (expected failures=9)`, 267 pruebas y `No changes detected` (o la desviación explicada).
 - [ ] Respaldo previo según la decisión 2, verificado (código 0) y anotado en `respaldo.md`, sección 6.
 - [ ] Etiqueta anotada publicada y comprobada con `ls-remote`; destino de retroceso anotado.
 - [ ] Despliegue hecho por los pasos de `despliegue.md`, con `collectstatic`, sin migraciones; hora `R` anotada.
 - [ ] Verificación inmediata sin errores desde `R`; los tres formularios traen `token_envio`.
 - [ ] La línea `INFO` verificada, o su estado explicado (decisión 5b).
-- [ ] Siete días desde `R` con el criterio de cierre de la decisión 5a cumplido, o cada excepción explicada.
+- [ ] Siete días desde `R` con el criterio de cierre (parte D5 de la evidencia) cumplido, o cada excepción explicada. Lecturas: días 0 y 7.
 - [ ] `access.log` y el conteo de pedidos sin duplicados por envío repetido (AUD-04-001, criterio de término).
 - [ ] Fila en el registro de despliegues de `despliegue.md`; notas fechadas en los hallazgos; bitácora de producción.
 - [ ] AUD-05-002 y la limpieza de la réplica resueltas o reprogramadas por escrito (decisión 7).
-- [ ] Los `PENDIENTE_CLIENTE` abiertos siguen sin cambios de comportamiento: AUD-02-014, pedido de $0 como pagado y sobrepago, y la hora de poco uso.
+- [ ] Los `PENDIENTE_CLIENTE` abiertos siguen sin cambios de comportamiento: AUD-02-014, pedido de $0 como pagado y sobrepago.
 
 ## Fechas de operación
 
@@ -223,8 +224,8 @@ Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywher
 | 2026-11-10 | Renovar la web app de PythonAnywhere (vence el 2026-11-20) | `registro-pendientes.md` (cabecera y sección 3, AUD-01-019) | Documentado. No verificado si ya se hizo ni cuánto extiende la renovación |
 | 2026-11-10 u 11 | Próximo respaldo semanal | `registro-pendientes.md` (cabecera) | Documentado. Puede ser el de la decisión 2 si cae el mismo día |
 | 2026-11-11, hacia las 01:32 (hora de Chile; 04:32 UTC) | Medición de `access.log` de la 00-07 (parte D) y, con ella, cierre de la 00-07 | [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md), `registro-pendientes.md` | Documentado en tres lugares; coinciden con lo dicho por el desarrollador. No medible desde aquí |
-| Desde el 2026-11-11, tras la medición | Primer momento posible para el despliegue de la 03-05 | Esta redacción (decisión 3) | Propuesta |
-| Hasta el 2026-11-13 | Último reinicio `R` con el que la semana de vigilancia termina el 2026-11-20 | Cálculo de esta redacción | Propuesta |
+| 2026-11-11 a 2026-11-13, de 20:00 a 23:00 (hora de Chile) | Ventana del despliegue de la 03-05; el día lo elige el desarrollador, después de anotar la medición de la 00-07 | Decisión 3 del desarrollador, 2026-11-06 | Decidido; día por elegir |
+| Hasta el 2026-11-13 | Último día para `R` con el que la semana de vigilancia termina el 2026-11-20; con la ventana nocturna y el día 7 a la misma hora, `R` el 11-13 deja la lectura final el 11-20 por la noche, el mismo día del vencimiento | Cálculo de la redacción, ajustado a la ventana de la decisión 3 | Documentado; ver la decisión 3 |
 | 2026-11-20 | Vence la web app si no se renueva | `registro-pendientes.md` (cabecera) y [bitacora-00-02](../../99_bitacora/epica-00-blindaje/bitacora-00-02.md) | Documentado |
 | 2026-11-20 | Informe de desconexiones a 28 días (parte C2 de [evidencia-00-06](../epica-00-blindaje/evidencia-00-06.md)) | `registro-pendientes.md`, sección 3 | Documentado. La recarga del despliegue de la 03-05 figurará en los conteos de reinicios: anótala para poder separarla (inferido) |
 
@@ -249,33 +250,35 @@ Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywher
 | Riesgo | Mitigación |
 | :----- | :--------- |
 | Desplegar antes de la medición de la 00-07 la contamina | Decisión 3-A; precedente de la 01-09 |
-| La recarga deja unos 10 s de 502 y un POST en ese lapso se pierde (AUD-04-002) | Ventana de madrugada o de fin de semana (decisión 3) y aviso (decisión 4) |
+| La recarga deja unos 10 s de 502 y un POST en ese lapso se pierde (AUD-04-002) | Ventana nocturna de 20:00 a 23:00, de menor uso según el desarrollador (decisión 3), y aviso (decisión 4) |
 | Cuatro iteraciones juntas: si falla, se retrocede todo | Retroceso del caso 1 (sin migraciones), regla de la decisión 6, lista de comprobación completa |
 | Un `ERROR` esperado (ítem fallido) se confunde con uno nuevo | Tabla de `despliegue.md`, 3.9, y decisión 6 |
 | Con la 03-05 desplegada, `access.log` ya no distingue un duplicado rechazado de uno guardado | Decisión 5a: comparar con el conteo de pedidos nuevos |
 | El token suma entradas a la sesión (hasta 20 por sesión) y suma consultas | Costo aceptado el 2026-11-04. No se encontró ninguna purga de sesiones en el repositorio (búsqueda de `clearsessions`, sin resultados): la sesión dura 14 días y el disco es escaso (inferido: el tamaño es pequeño; no medido) |
 | El navegador conserva el `index.js` anterior | Aviso con Ctrl+F5 (decisión 4); no hay nombre con hash en los estáticos |
-| La 03-05 se atrasa y la semana de vigilancia cae sobre el 2026-11-20 | Decisión 3: `R` hasta el 2026-11-13 para terminar a tiempo; renovar la web app el 2026-11-10 |
+| La 03-05 se atrasa y la semana de vigilancia cae sobre el 2026-11-20 | Decisión 3: `R` hasta el 2026-11-13 para terminar a tiempo (con `R` el 11-13 la lectura final cae el 11-20 por la noche); renovar la web app el 2026-11-10 |
 | Retroceder deja sin token ni bloqueo de botón en las pantallas nuevas | Regla de la decisión 6: retroceder solo ante 5xx repetido o datos incorrectos |
 | La limpieza de la réplica borra el lugar donde reproducir errores | Decisión 7-A: después de la vigilancia |
+| **Con lecturas solo los días 0 y 7, un problema de los días 1 a 6 solo se vería si el cliente lo reporta**, y la lectura del día 0 ocurre de noche, antes del primer uso real | Riesgo aceptado por el desarrollador (decisión 5, 2026-11-06). Sugerencia, sin decidir: una lectura extra a demanda (la primera mañana tras `R` o ante un reporte de «no se guardó»), con los comandos de C5 y C6 de la evidencia |
+| Los archivos rotados de `server.log` y `access.log` podrían no cubrir los siete días al leer solo el día 7 (no verificado) | Las lecturas incluyen los archivos rotados (`despliegue.md`, 3.6); si falta alguno, se anota en la evidencia |
 
 ## Avisos (contradicciones o tensiones con RDA, decisiones o documentos; sin corregir)
 
-1. **Criterio de término contra `access.log`.** La definición pide que «`access.log` no muestre pedidos duplicados por envío repetido». Con el token, el segundo POST responde 302 igual que el primero y `access.log` no registra el destino (inferido del formato, que lleva el código de estado pero no la redirección). El guion de la 00-07 queda como señal, no como prueba. Se propone medir con el conteo de pedidos (decisión 5a).
-2. **Plan 3.5 contra RDA-013.** El plan pide vigilar «mediante las tablas de registro de la Fase 1»; RDA-013 descartó la tabla de errores y el diagnóstico va en `server.log`. La definición de la épica ya lo dice así. `plan-de-trabajo.md` no se edita.
-3. **«Un despliegue, un propósito» (RDA-007) contra cuatro iteraciones.** `despliegue.md` lo permite para «una fase cerrada»; aun así, la 03-04 ya mezcló el contrato de error y el envío único (decisión 10 de la 03-04) y esta etiqueta suma la 03-01 a la 03-03. Se recomienda la etiqueta única; la opción B de la decisión 1 es la salida si no te parece.
-4. **Respaldo: las iteraciones dicen «lo decide el desarrollador en la 03-05»; los procedimientos ya lo piden.** `respaldo.md`, sección 5, y `despliegue.md`, punto 5 de la lista, piden respaldo antes del primer despliegue de una fase. La decisión 2 lo recomienda por eso.
-5. **AUD-05-002: «sin respaldo nuevo».** La decisión del 2026-11-04 evitaba generar un respaldo solo para refrescar la réplica. Si la decisión 2 es A, ese respaldo existirá y podría ser la fuente: cambia el texto de esa decisión.
-6. **La 03-02 describe un comportamiento que la 03-04 cambió.** [iteracion-03-02](iteracion-03-02-erradicacion-supresion-silenciosa.md), «Despliegue», dice que un ítem fallido al crear un pedido deja una línea de `django.request` y muestra la página 500; desde la decisión 3-B de la 03-04 devuelve el formulario (200) con una línea `ERROR` de `pedidos.views`. Vale lo de la 03-04 y `despliegue.md`, 3.9. `despliegue.md`, sección 0, también dice que «un error en cualquier vista deja una sola línea `django.request`»: sigue valiendo para excepciones no previstas.
-7. **`R15`.** [iteracion-03-04](iteracion-03-04-contrato-de-error-hacia-el-usuario.md) dice que la corrigen «la 04-01, 04-06, 06-01 y 07-02»; `pruebas.md`, sección 7.1, dice 06-05. Aquí se sigue `pruebas.md`.
+1. **Criterio de término contra `access.log`.** La definición pide que «`access.log` no muestre pedidos duplicados por envío repetido». Con el token, el segundo POST responde 302 igual que el primero y `access.log` no registra el destino (inferido del formato, que lleva el código de estado pero no la redirección). El guion de la 00-07 queda como señal, no como prueba. Se propone medir con el conteo de pedidos (decisión 5a). **Resuelto el 2026-11-06 (decisión 5):** el desarrollador aceptó comparar los `POST` 302 contra los pedidos nuevos de la base (partes C6 y D4 de la evidencia); `access.log` solo no decide el punto.
+2. **Plan 3.5 contra RDA-013.** El plan pide vigilar «mediante las tablas de registro de la Fase 1»; RDA-013 descartó la tabla de errores y el diagnóstico va en `server.log`. La definición de la épica ya lo dice así. `plan-de-trabajo.md` no se edita. **Resuelto el 2026-11-06:** la vigilancia usa `server.log` (RDA-013, aceptada); la definición de la épica ya lo dice así y el plan no se toca. Donde el plan 3.5 dice «tablas de registro de la Fase 1», léase `server.log`.
+3. **«Un despliegue, un propósito» (RDA-007) contra cuatro iteraciones.** `despliegue.md` lo permite para «una fase cerrada»; aun así, la 03-04 ya mezcló el contrato de error y el envío único (decisión 10 de la 03-04) y esta etiqueta suma la 03-01 a la 03-03. Se recomienda la etiqueta única; la opción B de la decisión 1 es la salida si no te parece. **Resuelto el 2026-11-06 (decisión 1):** una sola etiqueta, sin migraciones. **Aviso de RDA-007, anotado:** la etiqueta publica una fase cerrada con cuatro iteraciones y dos propósitos (contrato de error y envío único); `despliegue.md` lo permite («una fase cerrada») y un retroceso, si hace falta, vuelve todo junto (caso 1).
+4. **Respaldo: las iteraciones dicen «lo decide el desarrollador en la 03-05»; los procedimientos ya lo piden.** `respaldo.md`, sección 5, y `despliegue.md`, punto 5 de la lista, piden respaldo antes del primer despliegue de una fase. La decisión 2 lo recomienda por eso. **Resuelto el 2026-11-06 (decisión 2):** respaldo nuevo el día del despliegue.
+5. **AUD-05-002: «sin respaldo nuevo».** La decisión del 2026-11-04 evitaba generar un respaldo solo para refrescar la réplica. Si la decisión 2 es A, ese respaldo existirá y podría ser la fuente: cambia el texto de esa decisión. **Propuesta de ajuste, sin decidir (2026-11-06):** como la decisión 7 deja el refresco para después de la vigilancia, la fuente se elige entonces (parte F1 de la evidencia): el respaldo del despliegue, el semanal verificado más reciente o el del 2026-11-04. Cuando el desarrollador elija, hay que ajustar el texto de AUD-05-002 y el de la fila de Operación del registro («sin respaldo nuevo»); el agente solo dejó una nota fechada en ambos y no cambió su texto.
+6. **La 03-02 describe un comportamiento que la 03-04 cambió.** [iteracion-03-02](iteracion-03-02-erradicacion-supresion-silenciosa.md), «Despliegue», dice que un ítem fallido al crear un pedido deja una línea de `django.request` y muestra la página 500; desde la decisión 3-B de la 03-04 devuelve el formulario (200) con una línea `ERROR` de `pedidos.views`. Vale lo de la 03-04 y `despliegue.md`, 3.9. `despliegue.md`, sección 0, también dice que «un error en cualquier vista deja una sola línea `django.request`»: sigue valiendo para excepciones no previstas. **Resuelto el 2026-11-06:** nota fechada en la sección «Despliegue» de la [iteración 03-02](iteracion-03-02-erradicacion-supresion-silenciosa.md); el texto original no se tocó.
+7. **`R15`.** [iteracion-03-04](iteracion-03-04-contrato-de-error-hacia-el-usuario.md) dice que la corrigen «la 04-01, 04-06, 06-01 y 07-02»; `pruebas.md`, sección 7.1, dice 06-05. **Resuelto el 2026-11-06:** no hay contradicción, es la misma iteración con dos numeraciones: la tabla de equivalencias de RDA-014 (`decisiones.md`) hace la antigua 06-05 la **07-02**, y el registro (sección 3) lo repite. `pruebas.md` y el comentario de `test_regresiones.py` conservan «06-05» (el primero con «numeración anterior a RDA-014») por la regla de [bitacora-02-cierre-epica](../../99_bitacora/epica-02-red-seguridad/bitacora-02-cierre-epica.md): lo escrito antes de RDA-014 no se reescribe. Esta iteración usa «07-02 (antes 06-05)». El comentario del código no se tocó.
 8. **Épica 03 sigue «Pendiente».** Cuatro de sus cinco iteraciones están Terminadas y el estado de la épica no cambia hasta cerrar la 03-05 (precedente de las notas de `definicion-epica-03.md`).
-9. **El aviso de la decisión 4 es texto nuevo** para el usuario: no está entre los «Textos aprobados» de la 03-04 y necesita aprobación.
+9. **El aviso de la decisión 4 es texto nuevo** para el usuario: no está entre los «Textos aprobados» de la 03-04 y necesita aprobación. **Sigue pendiente (2026-11-06):** el desarrollador debe leer y aprobar el texto literal (`PENDIENTE_DESARROLLADOR`); la decisión 4 quedó resuelta con la opción A, sujeta a esa lectura.
 
 ## No pude ver ni verificar
 
 - **Producción:** qué etiqueta corre hoy, el contenido de `server.log` y `access.log`, la hora de uso del cliente, si la renovación del 2026-11-10 se hizo y cuánto extiende. Todo lo anterior viene de documentos.
 - **Etiquetas:** `git tag` y `git tag -n` están fuera de lo que puedo ejecutar (`AGENTS.md`, sección 6). Las etiquetas existentes salen de `despliegue.md` y las evidencias: `v0.0-inicial`, `v0.1-higiene`, `v0.2-correcciones`, `v1.1-observabilidad`, `v1.2-capturas` y `v0.3-doble-envio`. No comprobé que `v3.1-integridad` esté libre.
-- **Hora de poco uso** (`PENDIENTE_CLIENTE`) y canal para avisar.
+- **Hora de poco uso:** sigue sin medirse; la ventana de 20:00 a 23:00 es decisión del desarrollador (2026-11-06) y ya no es `PENDIENTE_CLIENTE`. El canal para avisar tampoco consta.
 - **Caché de `index.js`** en el navegador del cliente (inferido por la ausencia de nombre con hash).
 - **Línea `INFO` en producción** (decisión 5b) y **retroceso con sesiones que traen `tokens_envio`** (inferido, no ensayado).
 - **Costo de las +3 consultas en producción:** medido solo en la réplica.
@@ -283,9 +286,18 @@ Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywher
 
 ## Decisiones del desarrollador
 
-Ninguna tomada. Las ocho figuran como `PENDIENTE_DESARROLLADOR` en `registro-pendientes.md`, sección 3.
+Resueltas el 2026-11-06 (dichas por el desarrollador; no verificadas por el agente). Detalle en [bitacora-03-05-decisiones](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-decisiones.md).
+
+1. **Qué viaja: A.** 03-01 a 03-04 en una sola etiqueta, sin migraciones. Se anota el aviso de RDA-007 (una fase cerrada con cuatro iteraciones y dos propósitos; ver «Avisos», 3).
+2. **Respaldo: A.** Nuevo el día del despliegue, verificado antes de recargar.
+3. **Ventana y etiqueta: A, con otra hora.** Etiqueta `v3.1-integridad`, entre las 20:00 y las 23:00 (hora de Chile; el desarrollador dice que es el horario de menor uso), un día entre el 2026-11-11 (después de la medición de la 00-07) y el 2026-11-13. Reemplaza «de madrugada» de la opción A. Se quita el `PENDIENTE_CLIENTE` de las horas de uso. El día exacto lo elige el desarrollador.
+4. **Aviso: A.** Aviso breve antes y Ctrl+F5 después, con el texto propuesto arriba. **Aprobación literal pendiente de su lectura.** Dato de la lectura del código: solo los formularios que usan `data-bloquear-envio` dependen del `index.js` nuevo; «Nuevo pedido» conserva su propio script de la 00-07.
+5. **Vigilancia: lecturas solo los días 0 y 7** (no la recomendada, que eran el día 0, el 1, el 3 y el 7). Siguen la verificación deliberada de la línea `INFO` el día 0 (5b-A) y la medición de duplicados con los `POST` 302 contra los pedidos nuevos de la base. **Riesgo anotado:** un problema de los días 1 a 6 solo se vería si el cliente lo reporta. **Sugerencia, sin decidir:** una lectura extra a demanda. Sigue `PENDIENTE_DESARROLLADOR` el umbral de «sin salir de la banda» de los tiempos de respuesta.
+6. **Retroceso: A, con esta regla.** Datos incorrectos o perdidos: sí (detener y evaluar el caso 3). 5xx repetido o formulario que no guarda: sí (caso 1). Un `ERROR` aislado de ítem fallido: no. Las líneas `INFO`: sin acción. Siguen sin número «repetido» y «aislado» (`PENDIENTE_DESARROLLADOR`; propuesta en la evidencia, E1) y no queda dicho qué pasa con varios `ERROR` de ítem fallido.
+7. **Limpieza de la réplica y AUD-05-002: A.** Último paso de la iteración, después de la vigilancia. La fuente del respaldo se elige entonces (propuesta de ajuste en «Avisos», 5).
+8. **Regresiones: A, con una ejecución.** Una ejecución de pruebas el día del despliegue, con `OK (expected failures=9)` y 267 pruebas, más `check --deploy` y `makemigrations --check --dry-run`.
 
 ## Datos requeridos del cliente
 
-- **`PENDIENTE_CLIENTE`:** en qué horas de entre semana la aplicación se usa menos, para elegir la ventana del despliegue (decisión 3). Solo consta que el negocio cierra el sábado en la tarde y no hay uso hasta el lunes; no hay medición de horas.
+- ~~**`PENDIENTE_CLIENTE`:** en qué horas de entre semana la aplicación se usa menos, para elegir la ventana del despliegue (decisión 3). Solo consta que el negocio cierra el sábado en la tarde y no hay uso hasta el lunes; no hay medición de horas.~~ **Resuelto el 2026-11-06:** el desarrollador fija la ventana de 20:00 a 23:00 (hora de Chile) como la de menor uso, y el `PENDIENTE_CLIENTE` se quita. No hay medición de horas de uso: la ventana es dicha por el desarrollador.
 - **Siguen abiertos, sin cambiar de comportamiento aquí:** valor de una cotización neto o con IVA (AUD-02-014), pedido de $0 como pagado y sobrepago (`registro-pendientes.md`, sección 2).

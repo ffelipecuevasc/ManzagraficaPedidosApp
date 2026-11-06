@@ -210,6 +210,7 @@ Cómo se lee: si «sin ítems desde el primero con ítems» es 0, la réplica no
 - Cambia código, así que necesita despliegue con etiqueta (RDA-007). **Viaja con la 03-05** (decisión 2 del 2026-11-04), igual que la 03-01. Sin migraciones ni cambios de datos. Respaldo previo: lo decide el desarrollador al planificar el despliegue de la 03-05.
 - Hasta ese despliegue, producción sigue con las capturas registradas de `v1.2-capturas`.
 - Cuando se despliegue: un ítem fallido al crear un pedido deja una línea de `django.request` (no de `pedidos.views`) y el usuario ve la página 500.
+- **Nota del 2026-11-06 (redacción de la 03-05):** la línea anterior describe el estado al cerrar la 03-02. Desde la decisión 3-B de la 03-04, un ítem fallido al crear un pedido ya no muestra la página 500: devuelve el formulario con lo escrito (respuesta 200) y el aviso fijo, y deja una línea `nivel=ERROR` de `pedidos.views` con la traza, no una de `django.request`. Vale lo de la 03-04 y `despliegue.md`, 3.9. El texto original no se cambió.
 
 ## Riesgos
 
