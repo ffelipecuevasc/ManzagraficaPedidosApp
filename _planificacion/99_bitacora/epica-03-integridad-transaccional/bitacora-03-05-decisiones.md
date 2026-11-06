@@ -6,7 +6,7 @@
 
 ## Resumen
 
-El desarrollador resolvió el 2026-11-06 las ocho decisiones de la 03-05 (dichas por él; el agente no las verificó). Se registraron en la iteración con su fecha y se creó [evidencia-03-05](../../10_epicas/epica-03-integridad-transaccional/evidencia-03-05.md) con las partes A a F, comandos exactos y casillas. Se corrigió AUD-05-005 (el campo que parte en 0 es el **precio**, no la cantidad) y se anotó su cercanía con la propuesta del candado de precio. Se resolvieron o anotaron los avisos de la redacción. Siguen abiertos, como `PENDIENTE_DESARROLLADOR`, la aprobación literal del texto del aviso, el día exacto del despliegue y unos umbrales (ver «Pendientes y riesgos»).
+El desarrollador resolvió el 2026-11-06 las ocho decisiones de la 03-05 (dichas por él; el agente no las verificó). Se registraron en la iteración con su fecha y se creó [evidencia-03-05](../../10_epicas/epica-03-integridad-transaccional/evidencia-03-05.md) con las partes A a F, comandos exactos y casillas. Se corrigió AUD-05-005 (el campo que parte en 0 es el **precio**, no la cantidad) y se anotó su cercanía con la propuesta del candado de precio. Se resolvieron o anotaron los avisos de la redacción. Esa primera ronda dejó abiertos la aprobación literal del texto del aviso, el día del despliegue y unos umbrales. **La ronda final del mismo día los cerró** (ver «Ronda final»): solo falta elegir la fuente del respaldo para refrescar la réplica (parte F1 de la evidencia).
 
 ## Archivos creados o modificados
 
@@ -43,6 +43,7 @@ Solo lectura y pruebas de los guiones nuevos en el scratchpad. No se ejecutaron 
 - [x] Avisos resueltos: el 2 (vigilancia en `server.log`, plan sin tocar), el de AUD-05-002 (ajuste propuesto, sin decidir), el de la 03-02 (nota) y el de R15 (alineado).
 - [x] `registro-pendientes.md` actualizado y esta bitácora creada.
 - [x] Sin nombres de personas; `README.md` y `DESIGN.md` intactos; sin commit, sin push y sin ejecutar la 03-05.
+- [x] Ronda final registrada (aviso, día, tiempos y retroceso) en la iteración, la evidencia, el registro y esta bitácora, sin contradicciones entre ellos (ver «Ronda final» y el informe de la tarea).
 
 ## Decisiones tomadas
 
@@ -50,14 +51,39 @@ Las ocho del desarrollador (2026-11-06), tal como constan en la iteración:
 
 1. **Qué viaja: A.** 03-01 a 03-04 en una sola etiqueta, sin migraciones. Aviso de RDA-007 anotado.
 2. **Respaldo: A.** Nuevo el día del despliegue.
-3. **Ventana y etiqueta:** `v3.1-integridad`, de **20:00 a 23:00** (hora de Chile; menor uso, dicho por el desarrollador; reemplaza «de madrugada»), un día entre el 2026-11-11 (después de anotar la medición de la 00-07) y el 2026-11-13. Se quitó la `PENDIENTE_CLIENTE`.
-4. **Aviso: A.** Breve antes y Ctrl+F5 después, con el texto de la iteración; aprobación literal pendiente de su lectura.
-5. **Vigilancia: lecturas solo los días 0 y 7** (no la recomendada). Riesgo anotado y lectura extra a demanda sugerida, sin decidir.
-6. **Retroceso:** datos incorrectos o 5xx repetido, sí; un `ERROR` aislado de ítem fallido, no.
+3. **Ventana y etiqueta:** `v3.1-integridad`, de **20:00 a 23:00** (hora de Chile; menor uso, dicho por el desarrollador; reemplaza «de madrugada»), un día entre el 2026-11-11 (después de anotar la medición de la 00-07) y el 2026-11-13. Se quitó la `PENDIENTE_CLIENTE`. **El día se fijó en la ronda final: jueves 2026-11-12.**
+4. **Aviso: A.** Breve antes y Ctrl+F5 después, con el texto de la iteración; **aprobado en la ronda final**, con una frase más.
+5. **Vigilancia: lecturas solo los días 0 y 7** (no la recomendada). Riesgo anotado y lectura extra a demanda sugerida, sin decidir. **El umbral de tiempos se fijó en la ronda final.**
+6. **Retroceso:** datos incorrectos o 5xx repetido, sí; un `ERROR` aislado de ítem fallido, no. **Los números se fijaron en la ronda final.**
 7. **Limpieza de la réplica y AUD-05-002:** último paso, después de la vigilancia.
 8. **Regresiones:** una ejecución con `OK (expected failures=9)` y 267 pruebas, más `check --deploy` y `makemigrations`.
 
 **Decisiones del agente (propuestas, no del desarrollador):** la prueba del botón (C2) se hace con un `preventDefault` en la consola, sin enviar nada; el envío sin token (C4) se hace en `/pagos/ingresar/` con el formulario vacío y `noValidate`, no en `/pedidos/nuevo/`; el criterio provisorio de «duplicado» (`grupos_repetidos`) y la fuente «pedidos nuevos» (eventos y `fecha_solicitud`). Las razones están en la evidencia.
+
+## Ronda final (2026-11-06, más tarde ese día)
+
+Cuatro decisiones del desarrollador (dichas por él; el agente solo las registró). Se actualizaron la iteración, la evidencia, el registro y esta bitácora; no hay archivos nuevos.
+
+| # | Decisión | Dónde quedó |
+| :- | :------- | :---------- |
+| R1 | **Aviso aprobado:** el texto propuesto más la frase «Si habías elegido una imagen de referencia, vuelve a elegirla: el navegador no la conserva.» (el texto decía que no se pierde nada, y la imagen sí se pierde). Se quita el `PENDIENTE_DESARROLLADOR` de la aprobación | Iteración (decisión 4 y «Decisiones del desarrollador»); evidencia A4 con el texto final listo para copiar |
+| R2 | **Día:** jueves 2026-11-12, de 20:00 a 23:00 (hora de Chile). Día 7: 2026-11-19 por la noche | Iteración (cabecera, decisión 3, fechas, riesgos); evidencia (calendario, A0, D); registro |
+| R3 | **Tiempos:** ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga. Si `access.log` no trae `response-time=`, se anota y el criterio queda en los 5xx | Iteración (criterio de cierre 5a); evidencia D3 y D5 (iv) |
+| R4 | **Retroceso:** 5xx repetido = 2 o más en 24 h en la misma ruta, sin contar la recarga de unos 10 s ni las líneas ya clasificadas (`OSError`); un 5xx suelto es aislado: se investiga y no se retrocede. `ERROR` de ítem fallido: 3 o más en 24 h sin causa explicada, se reproduce en la réplica antes de decidir; los de causa explicada no cuentan | Iteración (decisión 6); evidencia E1 y D5 |
+
+**`response-time=`, comprobado:** consta como nombre de campo en `definicion-epica-13.md` (la guía de lectura de `access.log`, por escribir) y como medición en AUD-04-005 (0,03 a 1,13 s; 5,6 a 9 s tras una recarga), pero **no hay formato ni línea de ejemplo documentados**. La evidencia lo trata como «se anota si falta»: el comando imprime `con_response_time` y `sin_response_time`.
+
+**Lectura del agente, a confirmar por el desarrollador:**
+
+1. «Sin contar la recarga» se opera como los primeros 60 s después de `R` o de otro reinicio (D2 los lista). El número es del agente; la decisión no lo fija.
+2. La regla de 5xx se aplica a las rutas de las vistas modificadas (como decía la regla del mismo día), no a cualquier ruta.
+3. Con lecturas solo los días 0 y 7, las ventanas de 24 h se evalúan al leer: un 5xx repetido del día 3 se vería el día 7. Es una consecuencia de la decisión 5, no una contradicción.
+4. El cierre (ii) pedía «ningún 5xx»; con R4, un 5xx suelto se investiga y, si queda explicado, es una excepción explicada (el criterio ya admitía «o cada excepción explicada»).
+5. Un `OSError` no aparece como 5xx en `access.log` (se vio como 499 o `SIGPIPE`), así que queda fuera de la regla sin hacer nada.
+6. El `POST` de crear pedido con imagen podría pasar de 2 s sin ser un defecto; no hay medición previa. Anotado como riesgo.
+7. «3 o más `ERROR` de ítem fallido sin causa explicada» no es un retroceso automático: se reproduce en la réplica «antes de decidir».
+
+**Comandos probados con líneas sintéticas (GNU awk 5.0):** el filtro de respuestas de más de 2 s (con y sin `response-time=`), el listado de 5xx con hora y ruta y el listado de `ERROR` de ítem fallido con hora y ruta. El primer intento falló porque la variable `sin` choca con la función `sin` de awk; se renombró. Todos filtran por **instante** (UTC en `access.log`, hora de Chile en `server.log`): desde las 21:00 de Chile la fecha UTC cambia, y con `R` el 11-12 entre las 20:00 y las 23:00 el día 7 cae entre las 23:00 UTC del 11-19 y las 02:00 UTC del 11-20.
 
 ## Avisos de la redacción: cómo quedaron
 
@@ -73,7 +99,7 @@ La numeración de tu encargo (2, 4, 5 y 6) corresponde a los avisos **2, 5, 6 y 
 | 6. La 03-02 describe la página 500 | Nota fechada en la 03-02, «Despliegue». |
 | 7. R15, 07-02 contra 06-05 | **Verificado: no hay contradicción.** La tabla de equivalencias de RDA-014 (`decisiones.md`) hace la antigua 06-05 la 07-02, y el registro (sección 3) lo dice. `pruebas.md` y el comentario de `test_regresiones.py` conservan «06-05» por la regla de [bitacora-02-cierre-epica](../epica-02-red-seguridad/bitacora-02-cierre-epica.md) (lo escrito antes de RDA-014 no se reescribe). La 03-05 usa «07-02 (antes 06-05)». No se tocó el comentario del código. |
 | 8. La Épica 03 sigue «Pendiente» | Sin cambio. |
-| 9. Texto nuevo del aviso | Sigue pendiente su aprobación literal. |
+| 9. Texto nuevo del aviso | Aprobado en la ronda final, con una frase más sobre la imagen de referencia. |
 
 ## Hallazgos de la lectura que importan
 
@@ -87,8 +113,8 @@ La numeración de tu encargo (2, 4, 5 y 6) corresponde a los avisos **2, 5, 6 y 
 
 ## Pendientes y riesgos
 
-- **`PENDIENTE_DESARROLLADOR`:** (a) aprobar el texto literal del aviso; (b) elegir el día del despliegue; (c) el umbral de «sin salir de la banda» de los tiempos de respuesta; (d) el número de «repetido» y «aislado» del retroceso, y qué pasa con varios `ERROR` de ítem fallido; (e) la fuente del respaldo del refresco de la réplica; (f) si se hace una lectura extra a demanda; (g) si el desarrollador quiere que AUD-05-005 y el candado de precio se vean juntos.
-- **No iniciar la 03-05 sin** la medición de la 00-07 anotada (2026-11-11, hacia las 01:32) y la renovación de la web app (2026-11-10).
+- **`PENDIENTE_DESARROLLADOR`:** solo la fuente del respaldo para refrescar la réplica (parte F1 de la evidencia). Quedaron resueltos en la ronda final: el texto del aviso, el día, el umbral de tiempos y los números del retroceso. Sigue como sugerencia, sin decidir, la lectura extra a demanda, y la propuesta de ver juntos AUD-05-005 y el candado de precio es de la Épica 08.
+- **La 03-05 sigue bloqueada hasta el 2026-11-11:** no iniciarla sin la medición de la 00-07 anotada (hacia las 01:32) y la renovación de la web app (2026-11-10). Ejecución: jueves 2026-11-12, de 20:00 a 23:00.
 - **Los guiones de las partes C y D** deben probarse en la primera lectura real; el agente ajusta el filtro si el formato difiere.
 - **El texto del aviso** y las horas de uso siguen sin dato del cliente (la ventana es dicha por el desarrollador).
 
@@ -98,8 +124,9 @@ La numeración de tu encargo (2, 4, 5 y 6) corresponde a los avisos **2, 5, 6 y 
 - **Etiquetas:** `git tag` es del desarrollador; no comprobé que `v3.1-integridad` esté libre ni que `v0.3-doble-envio` exista en GitHub (A3 lo comprueba).
 - **Pruebas, `check` y `makemigrations`:** no se ejecutaron; el 267 y el `expected failures=9` salen de [bitacora-03-04-correccion-abono](bitacora-03-04-correccion-abono.md).
 - **El script de Python de C6 y D4** contra una base, y las rutas del disco de Docker de la parte F.
+- **`response-time=`:** formato y unidad (se supone segundos) no documentados; el comando y el umbral de 2 s no se probaron contra el archivo real.
 - **Las decisiones:** son dichas por el desarrollador; el agente solo las registró.
 
 ## Commit sugerido
 
-`Épica 3 - Iteración 03-05: registra las ocho decisiones, crea la evidencia de despliegue y corrige AUD-05-005 (precio); solo documentos`
+`Épica 3 - Iteración 03-05: fija el aviso final, el jueves 2026-11-12 y los umbrales de tiempos y retroceso; actualiza la evidencia; solo documentos`

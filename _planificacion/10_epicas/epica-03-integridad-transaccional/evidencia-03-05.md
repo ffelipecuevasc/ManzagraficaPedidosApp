@@ -4,7 +4,7 @@
 - **Pedido por:** Claude Code (Sonnet 5.5)
 - **Iteración:** [03-05](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md). Etiqueta `v3.1-integridad`; partida y destino de retroceso `v0.3-doble-envio`. Decisiones del desarrollador del 2026-11-06 registradas en la iteración.
 - **Criterios que dependen de esta evidencia:** todos los de la 03-05 salvo «Las decisiones 1 a 8 están registradas antes de ejecutar».
-- **Estado (2026-11-06):** **Pendiente. No se ejecutó nada.** Ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Este archivo solo deja los pasos listos. Nada se ejecuta antes de la medición de la 00-07 (2026-11-11, hacia las 01:32).
+- **Estado (2026-11-06):** **Pendiente. No se ejecutó nada.** Ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Este archivo solo deja los pasos listos. Nada se ejecuta antes de la medición de la 00-07 (2026-11-11, hacia las 01:32). **Bloqueada hasta anotarla.** Decisiones finales del 2026-11-06 aplicadas (aviso aprobado, jueves 2026-11-12, tiempos y números del retroceso); solo falta elegir la fuente del respaldo para la réplica (F1).
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide, sin datos de clientes: conteos, horas, tipos de error y códigos. Nunca pegues el texto completo de una línea del registro (`despliegue.md`, 3.9).
 >
@@ -20,12 +20,28 @@
 | :--- | :------- | :-------------- |
 | Qué viaja | 03-01 a 03-04 en una sola etiqueta, sin migraciones | A3, B3 |
 | Respaldo | Nuevo el día del despliegue, verificado antes de recargar | A2 |
-| Ventana | `v3.1-integridad`, entre las 20:00 y las 23:00 (hora de Chile), un día entre el 2026-11-11 (después de anotar la medición de la 00-07) y el 2026-11-13 | A0, B |
-| Aviso | Breve antes y Ctrl+F5 después (texto de la iteración; **aprobación literal pendiente de tu lectura**) | A4, C3 |
-| Vigilancia | Lecturas solo los días 0 y 7 | C, D |
-| Retroceso | Datos incorrectos o 5xx repetido: sí. Un `ERROR` aislado de ítem fallido: no | E |
+| Ventana | `v3.1-integridad`, **jueves 2026-11-12**, entre las 20:00 y las 23:00 (hora de Chile); día 7: jueves 2026-11-19 por la noche | A0, B, D |
+| Aviso | Breve antes y Ctrl+F5 después, con el texto **aprobado** el 2026-11-06 (el propuesto más una frase sobre la imagen de referencia) | A4, C3 |
+| Vigilancia | Lecturas solo los días 0 (jueves 2026-11-12) y 7 (jueves 2026-11-19). Tiempos: ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga; si `access.log` no trae `response-time=`, se anota y el criterio queda en los `5xx` | C, D |
+| Retroceso | Datos incorrectos: sí. `5xx` repetido (2 o más en 24 h en la misma ruta, sin contar la recarga ni lo ya clasificado): sí. `5xx` suelto: no, se investiga. `ERROR` de ítem fallido: 3 o más en 24 h sin causa explicada se reproducen en la réplica antes de decidir; los de causa explicada no cuentan | E |
 | Réplica y AUD-05-002 | Último paso, después de la vigilancia | F |
 | Pruebas | Una ejecución con `OK (expected failures=9)` y 267 pruebas, más `check --deploy` y `makemigrations` | A1 |
+
+## Calendario del 2026-11-10 al 2026-11-19
+
+Horas de Chile (UTC-3). Los pasos A a F son los de esta evidencia. Las horas de la tarde del jueves 12 son una **sugerencia** de orden (la decisión fija solo la ventana de 20:00 a 23:00 y el día). Las consolas de la noche del 12 comparten los 100 s diarios de CPU con el respaldo del mismo día (inferido; no medido): conviene no repetir comandos pesados sin necesidad.
+
+| Día | Qué | Parte |
+| :-- | :-- | :---- |
+| Martes 2026-11-10 | Renovar la web app (vence el 2026-11-20). Respaldo semanal de rutina (el 10 u 11; es distinto del respaldo del despliegue) | A0 |
+| Miércoles 2026-11-11, hacia las 01:32 (04:32 UTC) | Medición de la 00-07 (parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md)); anotar el resultado y cerrar la 00-07. **Hasta anotarla, la 03-05 sigue bloqueada.** El resto del día, sin pasos de la 03-05 | A0 |
+| Jueves 2026-11-12, por la tarde | Pruebas, `check --deploy` y `makemigrations` (decisión: el día del despliegue); etiqueta `v3.1-integridad`; aviso al cliente con la hora real (sugerido: antes de las 20:00) | A1, A3, A4 |
+| Jueves 2026-11-12, poco antes de las 20:00 | Respaldo nuevo, verificado (lo más cerca posible de `R`) | A2 |
+| Jueves 2026-11-12, de 20:00 a 23:00 | Despliegue y anotar `R` (en UTC, entre las 23:00 del 11-12 y las 02:00 del 11-13); lectura del día 0 | B, C |
+| Viernes 2026-11-13 al miércoles 2026-11-18 | Sin lecturas programadas. Lectura a demanda solo como sugerencia (primera mañana, viernes 11-13, o ante un reporte del cliente) | C7 |
+| Jueves 2026-11-19, por la noche (de `R` + 7 días en adelante, de 20:00 a 23:00; de 23:00 UTC del 11-19 a 02:00 UTC del 11-20) | Lectura del día 7 y criterio de cierre | D |
+| Jueves 2026-11-19 por la noche o viernes 2026-11-20 | Respuesta del desarrollador en esta evidencia; el agente deja la bitácora de producción, la fila de `despliegue.md`, sección 5, y las notas fechadas. El 11-20 vencen la web app (renovada el 11-10) y el informe C2 de la 00-06: anota la hora de `R` para separar ese reinicio de sus conteos | D |
+| Después del cierre | Parte F (réplica y AUD-05-002) | F |
 
 ## Particularidades ya conocidas (aplicadas en los comandos)
 
@@ -44,14 +60,14 @@
 
 - [ ] La medición de la 00-07 está hecha y su resultado anotado en la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) (2026-11-11, hacia las 01:32).
 - [ ] La web app está renovada (2026-11-10, vence el 2026-11-20).
-- [ ] Elegiste el día del despliegue: entre el 2026-11-11 y el 2026-11-13, de 20:00 a 23:00 (hora de Chile).
+- [ ] Día del despliegue fijado: **jueves 2026-11-12**, de 20:00 a 23:00 (hora de Chile) (decisión del 2026-11-06). Si algo lo atrasa un día, `R` el 11-13 deja la lectura final el 11-20 (el día del vencimiento); más tarde pasa de esa fecha.
 - [ ] `git status --short` vacío y `main` igual a `origin/main` (A1).
 
-**Cuenta de días.** Con `R` a las 20:00–23:00, el día 7 es la misma hora siete días después: `R` el 11-11 → día 7 el 11-18; el 11-12 → el 11-19; el 11-13 → el **11-20, el día del vencimiento de la web app y del informe C2** (2026-11-20). Si la renovación del 11-10 se hizo y extiende el plazo, no hay problema; si no se pudo verificar, conviene `R` el 11-11 o el 11-12 (sugerencia, tú decides).
+**Cuenta de días.** `R` el jueves 2026-11-12 entre las 20:00 y las 23:00 → día 7 el jueves 2026-11-19, a la misma hora o más tarde (un día antes del vencimiento de la web app y del informe C2, 2026-11-20). La lectura del día 7 exige que hayan pasado siete días completos desde `R` (D1 lo comprueba).
 
 | Dato | Valor |
 | :--- | :---- |
-| Día y hora planeados para `R` (hora de Chile) | … |
+| Hora planeada para `R` el jueves 2026-11-12 (hora de Chile) | … |
 | Renovación de la web app (hecha / fecha de vencimiento nueva) | … |
 | Resultado de la 00-07 (`segundos_repetidos`) | … |
 
@@ -98,7 +114,7 @@ git diff --stat 5dc82a8..main -- pedidos/static
 
 ### A2. Respaldo previo **[Navegador]** y **[PC · PowerShell 7]**
 
-El día del despliegue y lo más cerca posible de `R`: en un retroceso del caso 3, se pierde todo lo registrado después del respaldo (`retroceso.md`, sección 4). Si cae en el mismo día del semanal (2026-11-10 u 11), cuenta como el semanal.
+El día del despliegue y lo más cerca posible de `R`: en un retroceso del caso 3, se pierde todo lo registrado después del respaldo (`retroceso.md`, sección 4). El semanal es el del 2026-11-10 u 11, distinto de este (se hace el 2026-11-12): no los confundas en `respaldo.md`, sección 6.
 
 1. En producción, como superusuario: «Respaldar BD» → **un solo clic** en «Generar Nuevo Respaldo BD». Guarda la descarga directo en la carpeta cifrada.
 2. Verifica:
@@ -156,12 +172,18 @@ git ls-remote --tags origin v3.1-integridad
 
 ### A4. Aviso al cliente
 
-- [ ] Leíste el texto propuesto en [la iteración, decisión 4](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md) y lo **aprobaste tal cual o con tus cambios** (anótalos abajo). Es texto nuevo para el usuario: no estaba entre los «Textos aprobados» de la 03-04.
-- [ ] Lo mandaste antes de `R`, con la hora real en lugar de `HH:MM`.
+Texto **aprobado por el desarrollador el 2026-11-06** (el propuesto en [la iteración, decisión 4](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md) más una frase sobre la imagen de referencia). Cópialo tal cual y reemplaza `HH:MM` por la hora real (sugerido: envíalo el jueves 2026-11-12 antes de las 20:00):
+
+```text
+Hoy a las HH:MM vamos a actualizar el sistema. Puede dejar de responder unos segundos mientras se reinicia. Si tenías un pedido, una cotización o un pago abierto antes de eso, la primera vez que lo guardes va a salir el aviso «Este formulario venció y no se guardó»: no perdiste lo que escribiste, revisa los datos y vuelve a guardar. Si habías elegido una imagen de referencia, vuelve a elegirla: el navegador no la conserva. Después de la actualización, cierra la pestaña y abre la aplicación de nuevo (o pulsa Ctrl+F5). Notarás que los botones de guardar dicen «Guardando…» y se bloquean un momento: es para que un doble clic no cree el pedido dos veces. Si algo no funciona, cuéntanos en qué pantalla estabas y a qué hora.
+```
+
+- [ ] Reemplazaste `HH:MM` por la hora real y lo mandaste antes de `R`.
+- [ ] Si lo cambiaste, anota abajo el texto final.
 
 | Dato | Valor |
 | :--- | :---- |
-| Texto aprobado (tal cual / con cambios) | … |
+| Texto enviado (el aprobado / con cambios) | … |
 | Canal y hora del envío (hora de Chile) | … |
 
 ---
@@ -453,13 +475,13 @@ Solo imprime conteos: ninguna IP, nombre ni monto. Es de **solo lectura** (`filt
 - [ ] Botón y caché de `index.js` probados (C2).
 - [ ] Sin pedidos duplicados en la línea base (C6).
 
-**Riesgo anotado (decisión 5 del 2026-11-06).** Con lecturas solo los días 0 y 7, **un problema de los días 1 a 6 solo se vería si el cliente lo reporta**. Además, la lectura del día 0 ocurre de noche, antes del primer uso real del negocio (inferido: es la hora de menor uso). **Sugerencia, sin decidir:** una lectura extra **a demanda** (con los mismos comandos de C5 y C6), por ejemplo la primera mañana tras `R` o apenas el cliente avise de un «no se guardó» o de un botón que no responde. Cada lectura es corta, pero consume parte de los 100 s diarios de CPU de la consola.
+**Riesgo anotado (decisión 5 del 2026-11-06).** Con lecturas solo los días 0 y 7, **un problema de los días 1 a 6 solo se vería si el cliente lo reporta**. Además, la lectura del día 0 ocurre de noche, antes del primer uso real del negocio (inferido: es la hora de menor uso). **Sugerencia, sin decidir:** una lectura extra **a demanda** (con los mismos comandos de C5 y C6), por ejemplo la primera mañana tras `R` (viernes 2026-11-13) o apenas el cliente avise de un «no se guardó» o de un botón que no responde. Cada lectura es corta, pero consume parte de los 100 s diarios de CPU de la consola.
 
 ---
 
 ## Parte D · Día 7 y criterio de cierre **[PA · Bash]**
 
-Se hace siete días después de `R`, a la misma hora (cae entre las 20:00 y las 23:00 de Chile). **Es la única lectura de la semana además de la del día 0.** Cubre toda la semana: de `R` a ahora.
+Se hace el **jueves 2026-11-19 por la noche**, siete días después de `R` o más tarde (de 20:00 a 23:00 de Chile; de 23:00 UTC del 11-19 a 02:00 UTC del 11-20). **Es la única lectura de la semana además de la del día 0.** Cubre toda la semana: de `R` a ahora.
 
 ### D1. Preparación
 
@@ -479,10 +501,11 @@ desde $S "$DESDE_CL" | grep -o 'nivel=[A-Z]*' | sort | uniq -c
 desde $S "$DESDE_CL" | grep 'nivel=ERROR' | grep -oE 'registrador=[^ ]+( metodo=[A-Z]+ ruta=[^ ]+)?' | sort | uniq -c
 desde $S "$DESDE_CL" | grep 'nivel=ERROR' | grep -oE '^[0-9-]+ [0-9:]+' | sort | uniq -c
 desde $S "$DESDE_CL" | grep 'nivel=INFO' | grep -c 'Envío sin token válido'
+desde $S "$DESDE_CL" | grep 'nivel=ERROR' | grep -E 'Un ítem (del pedido|de la cotización)' | grep -oE '^[0-9-]+ [0-9:]+|ruta=[^ ]+' | paste -d' ' - -
 for f in "$S" "$S".*; do [ -f "$f" ] && zcat -f "$f"; done | awk -v d="$DESDE_CL" '/^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9:]+ \*\*\* Starting uWSGI/ && substr($0,1,19) >= d { print substr($0,1,19), "Starting uWSGI" }' | sort
 ```
 
-**Esperado:** ningún `ERROR` nuevo de `django.request` ni de `pedidos.views` en las rutas modificadas, descontando lo ya clasificado (`registrador=root` con `OSError: write error`, AUD-04-004) y los `ERROR` de ítem fallido que se expliquen (aviso en pantalla, respuesta 200; ver E). El tercer comando da la **hora** de cada `ERROR` para cruzarla con lo que reporte el cliente. El último lista los reinicios de la semana: debe estar el de `R` y ningún otro inesperado (anótalos aparte; el informe C2 de la 00-06 del 2026-11-20 los contará).
+**Esperado:** ningún `ERROR` nuevo de `django.request` ni de `pedidos.views` en las rutas modificadas, descontando lo ya clasificado (`registrador=root` con `OSError: write error`, AUD-04-004) y los `ERROR` de ítem fallido que se expliquen (aviso en pantalla, respuesta 200; ver E). El tercer comando da la **hora** de cada `ERROR` para cruzarla con lo que reporte el cliente. El último lista los reinicios de la semana: debe estar el de `R` y ningún otro inesperado (anótalos aparte; el informe C2 de la 00-06 del 2026-11-20 los contará; cada reinicio extra también deja fuera de la regla de tiempos y de 5xx sus primeros 60 s). El comando nuevo lista la **hora (Chile) y la ruta** de cada `ERROR` de ítem fallido: los de causa explicada no cuentan; **3 o más en 24 h sin causa explicada** se reproducen en la réplica antes de decidir (E1).
 
 Para cada `ERROR` nuevo, clasifica con la tabla de `despliegue.md`, 3.9, y **anota solo el tipo y la hora**: nunca el texto de la traza. Si hace falta la traza: `grep "^AAAA-MM-DD HH:" $S | grep "ruta=/la/ruta/" | sed 's/#012/\n/g'` en la consola, sin copiarla.
 
@@ -494,26 +517,31 @@ Para cada `ERROR` nuevo, clasifica con la tabla de `despliegue.md`, 3.9, y **ano
 | `INFO` «Envío sin token válido» (cuántas) | … |
 | Reinicios de uWSGI desde `R` | … |
 | Clasificación de cada `ERROR` (tipo y hora) | … |
+| `ERROR` de ítem fallido: hora y ruta, y cuáles tienen causa explicada | … |
 
 ### D3. `access.log` de la semana
 
 ```bash
 ventana "$A" "$B" | grep -E '"(GET|POST) /(pedidos/nuevo|pedido/editar|cotizaciones/nueva|cotizaciones/editar|cotizaciones/convertir|pagos/ingresar)/' | sed -E 's/.*"(GET|POST) ([^ ?]*)[^"]*" ([0-9]{3}) .*/\1 \2 \3/; s#/[0-9]+/#/N/#' | sort | uniq -c
 ventana "$A" "$B" | grep -oE '" 5[0-9]{2} ' | sort | uniq -c
-ventana "$A" "$B" | grep -E '"GET /(pedidos/nuevo|cotizaciones/nueva|pagos/ingresar)/ ' | grep -oE 'response-time=[0-9.]+' | cut -d= -f2 | sort -n | awk '{v[NR]=$1} END{if(NR) printf "n=%d min=%s mediana=%s max=%s\n", NR, v[1], v[int((NR+1)/2)], v[NR]; else print "sin datos de response-time"}'
+ventana "$A" "$B" | grep -E '"(GET|POST) /(pedidos/nuevo|cotizaciones/nueva|pagos/ingresar(/[0-9]+)?)/[ ?]' | awk '{ if (match($0,/response-time=[0-9.]+/)) { rt=substr($0,RSTART+14,RLENGTH-14)+0; n++; if (rt>max) max=rt; if (rt>2) { match($0,/\[[^ ]+/); t=substr($0,RSTART+1,RLENGTH-1); match($0,/"(GET|POST) [^ ?]*/); q=substr($0,RSTART+1,RLENGTH-1); match($0,/" [0-9][0-9][0-9] /); c=substr($0,RSTART+2,3); printf "mayor_de_2s %s %s %s %s\n", t, q, c, rt } } else faltan++ } END { printf "con_response_time=%d sin_response_time=%d max=%s\n", n+0, faltan+0, max+0 }'
+ventana "$A" "$B" | grep -E '" 5[0-9]{2} ' | sed -E 's/.*\[([0-9]+\/[A-Za-z]+\/[0-9]+:[0-9:]+) [^]]*\] "(GET|POST) ([^ ?]*)[^"]*" ([0-9]{3}) .*/\1 \2 \3 \4/; s#/[0-9]+/#/N/#' | sort -k3,3 -k1,1
 ```
 
 **Esperado:**
 
 - El primer bloque: método, ruta (con `N` en lugar del número) y código, con su conteo. **Ningún `500`** en las rutas de creación y edición.
 - El segundo: todos los `5xx` de la semana, por código. En la recarga de `R` pueden salir `502` (unos 10 s, AUD-04-002); anótalos aparte.
-- El tercero: tiempo de respuesta de los tres formularios (con las +3 consultas aceptadas). La banda medida en producción es de 0,03 a 1,13 s fuera de las recargas (Auditoría 04); la primera respuesta tras `R` puede tardar de 5,6 a 9 s (AUD-04-005): si el máximo sale de la banda, mira si fue esa. **El umbral de «sin salir de la banda» es `PENDIENTE_DESARROLLADOR`.** Los nombres `response-time=` y su formato **no se probaron contra el archivo real** (solo constan en `definicion-epica-13.md`): si sale «sin datos», pega `tail -n 1` del `access.log` con la IP recortada.
+- El tercero (**criterio de tiempos, decisión del 2026-11-06**): lista las respuestas de `GET` y `POST` de crear pedido, crear cotización e ingresar pago que **pasaron de 2 s**, con su hora **UTC** (`dd/Mon/aaaa:hh:mm:ss`), método, ruta (con `N` por el número), código y segundos; la última línea da cuántas respuestas traían `response-time=`, cuántas no, y el máximo. **No cuentan** las de la recarga: las de los primeros 60 s después de `R` o de otro reinicio de D2 (el arranque en frío midió de 5,6 a 9 s, AUD-04-005; la regla de 60 s es la lectura del agente). Se supone el campo en segundos: si **todas** salen mayores de 2, no lo está; anótalo. Un `POST` de crear pedido con imagen puede tardar más sin ser un defecto: mira su causa antes de concluir.
+- **Si `con_response_time=0`** (el campo no está en `access.log`): se anota, y el criterio (iv) queda en los `5xx` (decisión del 2026-11-06). El campo `response-time=` consta solo como nombre en `definicion-epica-13.md` y por las mediciones de AUD-04-005; su formato **no está documentado ni se probó contra el archivo real**: si falta o sale raro, pega `tail -n 1` del `access.log` con la IP recortada.
+- El cuarto: cada `5xx` de la semana con su hora UTC, método, ruta y código, ordenado por ruta y hora, para ver si hay dos o más de la misma ruta en menos de 24 h (E1). Convierte la hora a Chile restando 3 horas.
 
 | Dato | Valor |
 | :--- | :---- |
 | Rutas de creación y edición por método y código | … |
 | `5xx` de la semana por código (y cuántos son de la recarga) | … |
-| Tiempos de los tres formularios (`n`, mínimo, mediana, máximo) | … |
+| Respuestas de las tres rutas de más de 2 s (hora, ruta, código y segundos), sin contar la recarga; `con_response_time`, `sin_response_time` y máximo | … |
+| `5xx` con hora y ruta (para la regla de 24 h) | … |
 
 ### D4. Duplicados de la semana (302 contra pedidos nuevos)
 
@@ -554,10 +582,10 @@ Es el mismo guion de C6, ahora con la semana completa (se lee igual). El último
 
 La iteración se cierra cuando **todas** estas casillas están marcadas, o cada excepción queda explicada por escrito. Cada una remite a la lectura que la prueba.
 
-- [ ] **(i)** Siete días desde `R` sin `ERROR` nuevo de `django.request` ni de `pedidos.views` en las rutas modificadas, descontando lo ya clasificado y los ítems fallidos explicados (D2).
-- [ ] **(ii)** Ningún `5xx` en las rutas de creación y edición (D3).
+- [ ] **(i)** Siete días desde `R` sin `ERROR` nuevo de `django.request` ni de `pedidos.views` en las rutas modificadas, descontando lo ya clasificado y los `ERROR` de ítem fallido de causa explicada; **3 o más en 24 h sin causa explicada** no se cierran hasta reproducirlos en la réplica (D2).
+- [ ] **(ii)** Ningún `5xx` en las rutas de creación y edición (D3). Un `5xx` suelto es aislado: se investiga y, si queda explicado, cuenta como excepción explicada (no obliga a retroceder).
 - [ ] **(iii)** Ningún pedido, cotización ni pago duplicado en la ventana: `grupos_repetidos=0` y las cuentas de D4 cuadran (D4). `access.log` solo **no** decide este punto.
-- [ ] **(iv)** Tiempos de los tres formularios sin salir de la banda medida (D3). Umbral `PENDIENTE_DESARROLLADOR`.
+- [ ] **(iv)** **Ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga** (D3; umbral del desarrollador, 2026-11-06). Si `access.log` no trae `response-time=`, se anota y este criterio queda en los `5xx` de (ii).
 - [ ] **(v)** La línea `INFO` verificada (C4 y C5) o su estado explicado.
 - [ ] Nadie reportó un doble envío, un «no se guardó» ni un botón que no responde durante la semana (dicho por el desarrollador).
 
@@ -576,16 +604,26 @@ Con esto se cierra la parte de servidor de AUD-04-001 (`auditoria-tecnica.md`) y
 
 ## Parte E · Retroceso (solo si se cumple la regla)
 
-### E1. Regla (decisión 6, 2026-11-06)
+### E1. Regla (decisión 6 y ronda final, 2026-11-06)
 
 | Qué aparece | ¿Retroceder? | Qué hacer |
 | :---------- | :----------- | :-------- |
 | **Datos incorrectos o perdidos** (montos, pedidos, pagos) | **Sí**: detén, avisa y evalúa el caso 3 (restaurar) | Parte E3 |
-| **5xx repetido**, o un formulario que no guarda, en una vista modificada | **Sí**: caso 1 | Parte E2 |
-| **Un `ERROR` aislado** de ítem fallido, con el aviso en pantalla y respuesta 200 | **No** | Saca la traza (`despliegue.md`, 3.9), reprodúcelo en la réplica y anota solo el tipo y la hora |
+| **5xx repetido**: 2 o más en 24 h en la misma ruta (de una vista modificada), sin contar la recarga de unos 10 s ni las líneas ya clasificadas (`OSError`). También un formulario que no guarda | **Sí**: caso 1 | Parte E2 |
+| **Un 5xx suelto** (uno solo en 24 h en esa ruta) | **No**: es aislado | Se investiga: hora y ruta con el listado de D3; traza en `server.log` (`despliegue.md`, 3.9); se anota el tipo y la hora |
+| **`ERROR` de ítem fallido**, con el aviso en pantalla y respuesta 200: menos de 3 en 24 h, o de causa explicada | **No** (los de causa explicada no cuentan) | Saca la traza (`despliegue.md`, 3.9) y anota solo el tipo y la hora |
+| **3 o más `ERROR` de ítem fallido en 24 h sin causa explicada** | **Se reproduce en la réplica antes de decidir** (no es retroceso automático) | Reprodúcelo; si es un defecto real que guarda mal los datos, es el caso «datos incorrectos» de la primera fila |
 | Líneas `INFO` de rechazo («Envío sin token válido») | No: sin acción | — |
 
-Todo `ERROR` nuevo se clasifica con la tabla de `despliegue.md`, 3.9, **antes** de decidir. Los umbrales de «repetido» y «aislado» no tienen número: **`PENDIENTE_DESARROLLADOR`**. Propuesta, sin decidir: «repetido» = dos o más `5xx` en la misma ruta de creación o edición dentro de la ventana medida; «aislado» = un solo `ERROR` de ítem fallido sin otro igual. Tampoco queda dicho qué pasa con **varios** `ERROR` de ítem fallido: se decide al verlos.
+Todo `ERROR` nuevo se clasifica con la tabla de `despliegue.md`, 3.9, **antes** de decidir. Los números son decisión del desarrollador del 2026-11-06 (ya no hay `PENDIENTE_DESARROLLADOR`). **Cómo se cuenta:** las ventanas de 24 h se miran con el listado de `5xx` de D3 (hora UTC; resta 3 horas para Chile) y con el de `ERROR` de ítem fallido de D2 (hora de Chile). Con lecturas solo los días 0 y 7, la regla se evalúa **al leer**: un problema del día 3 se resolvería el día 7 o cuando el cliente lo reporte (riesgo aceptado, decisión 5); en cualquier lectura a demanda se aplica igual. La recarga de `R` no cuenta (los `502` de unos 10 s; los primeros 60 s). Dos consecuencias a confirmar por el desarrollador: la regla se aplica a las rutas de las vistas modificadas, y un `OSError` no aparece como `5xx` en `access.log` (se vio como 499 o `SIGPIPE`), así que ya queda fuera.
+
+**Para contar en cualquier momento** **[PA · Bash]** (usa la preparación de C0, con `S`, `D`, `desde`, `ventana`, `DESDE_CL` y `DESDE`):
+
+```bash
+HASTA=$(date -u "+%F %T"); A=$(echo "$DESDE" | tr -d ' :-'); B=$(echo "$HASTA" | tr -d ' :-')
+ventana "$A" "$B" | grep -E '" 5[0-9]{2} ' | sed -E 's/.*\[([0-9]+\/[A-Za-z]+\/[0-9]+:[0-9:]+) [^]]*\] "(GET|POST) ([^ ?]*)[^"]*" ([0-9]{3}) .*/\1 \2 \3 \4/; s#/[0-9]+/#/N/#' | sort -k3,3 -k1,1
+desde $S "$DESDE_CL" | grep 'nivel=ERROR' | grep -E 'Un ítem (del pedido|de la cotización)' | grep -oE '^[0-9-]+ [0-9:]+|ruta=[^ ]+' | paste -d' ' - -
+```
 
 ### E2. Caso 1 · Volver el código **[PA · Bash]** y **[PA · Panel]**
 
@@ -638,7 +676,7 @@ Agrega la fila en `docs/operacion/retroceso.md`, sección 6, y deja la etiqueta 
 
 ### F1. Qué respaldo usar
 
-`PENDIENTE_DESARROLLADOR`, sin decidir: el texto de AUD-05-002 y del registro dice «con el respaldo del 2026-11-04 00:12:37, sin respaldo nuevo». Con la decisión 2 habrá uno del día del despliegue, y al llegar aquí habrá además un semanal más reciente. Opciones: (a) el del despliegue; (b) el semanal verificado más reciente (más cercano al estado real de producción); (c) el del 2026-11-04, como dice hoy el texto. Anota cuál usas y por qué.
+**Es la única decisión que falta** (`PENDIENTE_DESARROLLADOR`, sin decidir): el texto de AUD-05-002 y del registro dice «con el respaldo del 2026-11-04 00:12:37, sin respaldo nuevo». Con la decisión 2 habrá uno del día del despliegue, y al llegar aquí habrá además un semanal más reciente. Opciones: (a) el del despliegue; (b) el semanal verificado más reciente (más cercano al estado real de producción); (c) el del 2026-11-04, como dice hoy el texto. Anota cuál usas y por qué.
 
 | Dato | Valor |
 | :--- | :---- |
@@ -698,8 +736,8 @@ Repite las consultas 1 a 3 de la «Evidencia P3» de la [iteración 03-02](itera
 
 ## Lo que no se pudo verificar
 
-- **Producción:** qué etiqueta corre hoy, el contenido de `server.log` y `access.log`, el nombre real de `response-time=` y el formato exacto de las líneas de `access.log`. Nada de esta evidencia se ejecutó.
-- **Los guiones de las partes C y D:** `ventana` se probó solo con líneas sintéticas (GNU awk); el `sed` de rutas y el cálculo del tiempo de respuesta, también solo con líneas sintéticas; el script de Python se revisó solo en sintaxis (Python 3.13) y no se ejecutó contra ninguna base. Sus nombres de campo (`fecha_solicitud`, `momento`, `tipo`, `cliente_id`, `resumen_pedido`, `valor_venta`) salen de `models.py`.
+- **Producción:** qué etiqueta corre hoy, el contenido de `server.log` y `access.log` y el formato exacto de las líneas de `access.log`. **`response-time=`:** consta solo como nombre de campo en `definicion-epica-13.md` y por las mediciones de AUD-04-005; no hay formato ni línea de ejemplo documentados. Nada de esta evidencia se ejecutó.
+- **Los guiones de las partes C y D:** `ventana` se probó solo con líneas sintéticas (GNU awk); el `sed` de rutas, el listado de `5xx`, el listado de `ERROR` de ítem fallido y el filtro de tiempos de más de 2 s, también solo con líneas sintéticas (con GNU awk 5.0; en el primer intento una variable llamada `sin` chocaba con la función `sin` de awk y se renombró); el script de Python se revisó solo en sintaxis (Python 3.13) y no se ejecutó contra ninguna base. Sus nombres de campo (`fecha_solicitud`, `momento`, `tipo`, `cliente_id`, `resumen_pedido`, `valor_venta`) salen de `models.py`.
 - **El filtro de zona horaria:** la conversión Chile → UTC es una suma de 3 horas (UTC-3 en noviembre), no una consulta a la base de zonas horarias.
 - **La prueba del botón (C2) y la línea `INFO` (C4):** el orden de los controladores de `submit` y de la revisión del token sale de leer `index.js` y `views.py`, no de verlos en producción.
 - **El criterio de «duplicado»** (`grupos_repetidos`) es provisorio; la consulta histórica y su criterio exacto son de la 06-04.
