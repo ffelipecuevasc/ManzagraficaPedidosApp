@@ -6,6 +6,7 @@ no lo que el usuario ve. Estas **renderizan** la pantalla de destino y comprueba
 import html
 import json
 import os
+import re
 import tempfile
 from unittest import mock
 
@@ -134,6 +135,71 @@ class FormulariosConservanLoEscritoTests(TestCase):
         self.assertContains(respuesta, '<option value="TRANSFERENCIA" selected>Transferencia</option>', html=True)
         self.assertContains(respuesta, 'Crear Pedido')
         self.assertNotContains(respuesta, ayudas.TEXTO_IMAGEN)
+
+    def assertConservaElAbono(self, respuesta, abono='5000', metodo='TRANSFERENCIA'):
+        """El abono vuelve escrito en su campo y el método de pago vuelve habilitado y marcado.
+
+        Un `<select>` deshabilitado no se envía: sin abono reescrito, el método se perdía y el pedido
+        podía guardarse sin su pago inicial (hallazgo 1 de la revisión de servidor de la 03-04).
+        """
+        contenido = respuesta.content.decode()
+        campo_abono = re.search(r'<input[^>]*name="abono_inicial"[^>]*>', contenido, re.S)
+        select_metodo = re.search(r'<select[^>]*name="metodo_pago"[^>]*>', contenido, re.S)
+        self.assertIsNotNone(campo_abono, 'no está el campo del abono')
+        self.assertIsNotNone(select_metodo, 'no está el método de pago')
+        self.assertRegex(campo_abono.group(0), rf'value="{abono}"')
+        self.assertNotRegex(select_metodo.group(0), r'\bdisabled\b')
+        self.assertContains(respuesta, f'<option value="{metodo}" selected>', html=False)
+        self.assertNotRegex(contenido, r'id="container-metodo"[^>]*opacity-50')
+
+    def test_crear_pedido_invalido_devuelve_el_abono_y_deja_habilitado_el_metodo_de_pago(self):
+        with self.assertLogs('pedidos.views', 'INFO'):
+            respuesta = self.client.post('/pedidos/nuevo/', ayudas.con_token(self.client, '/pedidos/nuevo/', {
+                'cliente': self.cliente.pk, 'resumen_pedido': '', 'valor_venta': 12_000,
+                'abono_inicial': 5_000, 'metodo_pago': 'TRANSFERENCIA', 'items_json': ITEMS_DEL_USUARIO}))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertConservaElAbono(respuesta)
+
+    def test_crear_pedido_con_item_fallido_devuelve_el_abono_y_deja_habilitado_el_metodo_de_pago(self):
+        item_inexistente = '[{"producto_id":"999999","cantidad":"1","precio_unitario":1000}]'
+
+        with self.assertLogs('pedidos.views', 'ERROR'):
+            respuesta = self.client.post('/pedidos/nuevo/', ayudas.con_token(self.client, '/pedidos/nuevo/', {
+                'cliente': self.cliente.pk, 'resumen_pedido': 'Con ítem fallido', 'valor_venta': 12_000,
+                'abono_inicial': 5_000, 'metodo_pago': 'TRANSFERENCIA', 'items_json': item_inexistente}))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, ayudas.TEXTO_ITEM_FALLIDO)
+        self.assertConservaElAbono(respuesta)
+
+    def test_crear_pedido_vencido_devuelve_el_abono_y_deja_habilitado_el_metodo_de_pago(self):
+        with self.assertLogs('pedidos.views', 'INFO'):
+            respuesta = self.client.post('/pedidos/nuevo/', {
+                'cliente': self.cliente.pk, 'resumen_pedido': 'Vencido', 'valor_venta': 12_000,
+                'abono_inicial': 5_000, 'metodo_pago': 'TRANSFERENCIA', 'items_json': ITEMS_DEL_USUARIO,
+                'token_envio': ''})
+
+        self.assertContains(respuesta, ayudas.TEXTO_FORMULARIO_VENCIDO)
+        self.assertConservaElAbono(respuesta)
+
+    def test_crear_pedido_sin_abono_deja_deshabilitado_el_metodo_de_pago(self):
+        """Sin abono mayor que 0 el método sigue deshabilitado, como antes: no cambia el formulario nuevo."""
+        for etiqueta, respuesta in (
+                ('GET', self.client.get('/pedidos/nuevo/')),
+                ('error sin abono', self.client.post('/pedidos/nuevo/', ayudas.con_token(
+                    self.client, '/pedidos/nuevo/', {
+                        'cliente': self.cliente.pk, 'resumen_pedido': '', 'valor_venta': 1, 'abono_inicial': ''}))),
+                ('error con abono 0', self.client.post('/pedidos/nuevo/', ayudas.con_token(
+                    self.client, '/pedidos/nuevo/', {
+                        'cliente': self.cliente.pk, 'resumen_pedido': '', 'valor_venta': 1, 'abono_inicial': '0'}))),
+        ):
+            with self.subTest(etiqueta):
+                contenido = respuesta.content.decode()
+                self.assertRegex(re.search(r'<select[^>]*name="metodo_pago"[^>]*>', contenido, re.S).group(0),
+                                 r'\bdisabled\b')
+                self.assertNotRegex(re.search(r'<input[^>]*name="abono_inicial"[^>]*>', contenido, re.S).group(0),
+                                    r'value=')
 
     def test_crear_pedido_sin_pasar_por_el_formulario_no_marca_ningun_metodo(self):
         respuesta = self.client.get('/pedidos/nuevo/')

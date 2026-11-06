@@ -340,6 +340,10 @@ Detalle, mediciones y desviaciones en [bitacora-03-04](../../99_bitacora/epica-0
 - **Sin** migraciones, **sin** dependencias nuevas, **sin** tocar el precio del ítem, `DESIGN.md` ni el README.
 - **Desviaciones:** (1) las pruebas de `test_envio_unico.py` y la de la línea `INFO` del rechazo se escribieron junto con el código, no antes (regla 15); la primera se verificó a posteriori apagando el token (18 de 19 fallan por la razón correcta, y se endurecieron seis que pasaban de forma trivial); (2) el aumento de consultas obligó a detenerse en el paso 4 (sección 11 de `AGENTS.md`); el desarrollador lo aceptó.
 
+### Nota del 2026-11-06 · Corrección del abono (revisión de servidor)
+
+La revisión de servidor ([bitacora-03-04-revision-servidor](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-04-revision-servidor.md)) encontró que, al devolver el formulario de crear pedido con error, el abono volvía vacío y el método de pago volvía marcado pero deshabilitado (no se enviaba). Corregido en `pedido_form.html` y `views.py` (`_abono_devuelto`), con cuatro pruebas nuevas en `FormulariosConservanLoEscritoTests`: **267 pruebas, `OK (expected failures=9)`**. Detalle en [bitacora-03-04-correccion-abono](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-04-correccion-abono.md). El estado de la iteración sigue «En revisión»: faltan los pasos [Visual] y la revisión manual del desarrollador. El segundo hallazgo de esa revisión (confirmación pendiente en `restaurar_bd`) quedó registrado como AUD-05-004, sin corregir.
+
 ## Fuera de alcance
 
 - Validación y despliegue con vigilancia intensiva, y la lectura de `access.log` para duplicados: 03-05.

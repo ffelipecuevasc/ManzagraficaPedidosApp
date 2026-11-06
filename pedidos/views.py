@@ -19,6 +19,7 @@ from datetime import timedelta, datetime
 from PedidosApp import settings
 import json
 import logging
+from decimal import Decimal, InvalidOperation
 import os
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,20 @@ def _avisar_formulario_vencido(request):
     """Un envío sin token válido no crea nada: se deja una línea INFO (sin el contenido) y se avisa al usuario."""
     logger.info('Envío sin token válido; no se guardó nada', extra={'request': request})
     messages.error(request, TEXTO_FORMULARIO_VENCIDO)
+
+
+def _abono_devuelto(request):
+    """El abono que escribió el usuario, para devolverlo al formulario de creación (03-04).
+
+    Solo si es un número mayor que 0, la misma condición con que `index.js` habilita el método de pago:
+    un `<select>` deshabilitado no se envía y el pedido se guardaría sin su pago inicial.
+    """
+    crudo = request.POST.get('abono_inicial', '').strip()
+    try:
+        abono = Decimal(crudo)
+    except InvalidOperation:
+        return ''
+    return crudo if abono.is_finite() and abono > 0 else ''
 
 
 def _avisar_si_se_pierde_la_imagen(request):
@@ -286,6 +301,7 @@ def crear_pedido(request):
         # Lo que el usuario ya armó (03-04, decisión 4-A): los ítems y el método del abono.
         'items_json': request.POST.get('items_json', ''),
         'metodo_pago': request.POST.get('metodo_pago', ''),
+        'abono_devuelto': _abono_devuelto(request),
         # El token que ya trajo el envío sigue valiendo mientras no se guarde; si no, uno nuevo.
         'token_envio': token if estado_envio == envio_unico.NUEVO else envio_unico.emitir(request, 'pedido'),
     }

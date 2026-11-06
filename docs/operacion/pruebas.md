@@ -62,7 +62,7 @@ Paquete `pedidos/tests/`, un archivo por dominio:
 | `ayudas.py` | Ayudas de los flujos: `items_json`, `cambiar_estado` y `duplicar` (método HTTP actual) y `congelar_hora` (02-03) |
 | `test_pedidos.py` | Flujos de pedidos y pagos: crear, editar, cambiar estado, duplicar, clasificación, detalle, ingresar y editar pago (02-03) |
 | `test_cotizaciones.py` | Flujos de cotizaciones: crear, editar y convertir en pedido (02-03) |
-| `test_contrato_error.py` | Contrato de error hacia el usuario (03-04): mensajes de error visibles, avisos que no se acumulan, formulario con lo escrito y errores accesibles |
+| `test_contrato_error.py` | Contrato de error hacia el usuario (03-04): mensajes de error visibles, avisos que no se acumulan, formulario con lo escrito (ítems, método de pago y abono) y errores accesibles |
 | `test_envio_unico.py` | Token de envío único en la sesión (03-04): envío repetido, token ausente o vencido, token que no se gasta |
 | `test_bloqueo_envio.py` | Bloqueo del botón al enviar (03-04): cada formulario de escritura lo declara |
 

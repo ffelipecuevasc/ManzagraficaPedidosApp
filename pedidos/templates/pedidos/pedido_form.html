@@ -389,6 +389,7 @@
                                                        id="id_valor_abonado"
                                                        class="form-control pl-8 border-yellow-300 focus:border-primary focus:ring-primary dark:border-yellow-900/50 dark:focus:border-primary font-bold text-lg"
                                                        placeholder="0"
+                                                       {% if abono_devuelto %}value="{{ abono_devuelto }}"{% endif %}
                                                        min="0">
                                             </div>
                                             {% if form.abono_inicial.errors %}
@@ -396,11 +397,12 @@
                                             {% endif %}
                                         </div>
 
-                                        <div id="container-metodo" class="opacity-50 transition-opacity">
+                                        <div id="container-metodo" class="{% if not abono_devuelto %}opacity-50 {% endif %}transition-opacity">
                                             <label class="custom-label" for="metodo_pago">Método de Pago</label>
                                             <div class="relative">
-                                                <select name="metodo_pago" id="metodo_pago" disabled
-                                                        class="form-select w-full h-[46px] rounded-lg border-slate-300 dark:border-neutral-600 bg-slate-100 cursor-not-allowed">
+                                                {# Con abono devuelto por el servidor el método vuelve habilitado: un select deshabilitado no se envía. #}
+                                                <select name="metodo_pago" id="metodo_pago"{% if not abono_devuelto %} disabled{% endif %}
+                                                        class="form-select w-full h-[46px] rounded-lg border-slate-300 dark:border-neutral-600 {% if abono_devuelto %}bg-white dark:bg-neutral-800{% else %}bg-slate-100 cursor-not-allowed{% endif %}">
                                                     <option value="EFECTIVO" {% if metodo_pago == 'EFECTIVO' %}selected{% endif %}>Efectivo</option>
                                                     <option value="TRANSFERENCIA" {% if metodo_pago == 'TRANSFERENCIA' %}selected{% endif %}>Transferencia</option>
                                                     <option value="DEBITO" {% if metodo_pago == 'DEBITO' %}selected{% endif %}>Tarjeta Débito</option>
