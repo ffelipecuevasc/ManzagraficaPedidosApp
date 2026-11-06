@@ -279,7 +279,7 @@ No hay código de error ni identificador (RDA-013). La página 500 y los avisos 
 | :---------------- | :------------------------ |
 | Página «Algo salió mal» (500) | Una línea `django.request` con método, ruta, usuario y traza |
 | Aviso «No pudimos guardar el detalle de productos…» (pedido o cotización, devuelve el formulario) | Una línea `nivel=ERROR` de `pedidos.views` con la traza («Un ítem del pedido…» o «Un ítem de la cotización… no se pudo guardar»). La respuesta es 200: **no aparece como 500 en `access.log`** |
-| Aviso «Este formulario venció y no se guardó…» | Una línea `nivel=INFO` «Envío sin token válido…» con método, ruta y usuario. No es un error del sistema: el formulario venció, se abrió en otra sesión o ya había más de 20 formularios abiertos |
+| Aviso «Este formulario venció y no se guardó…» | **Por verificar en producción (03-05):** se espera una línea `nivel=INFO` «Envío sin token válido…» con método, ruta y usuario; en la réplica local sí sale, en producción aún no se ha comprobado. No es un error del sistema: el formulario venció, se abrió en otra sesión o ya había más de 20 formularios abiertos |
 | Aviso de respaldo o restauración | Una línea `nivel=ERROR` de `pedidos.views` con la traza |
 
 **[PA · Bash]** Buscar por día, hora y pantalla (reemplaza la fecha, la hora y la ruta por lo que informó el usuario):

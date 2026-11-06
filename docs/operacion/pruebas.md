@@ -183,6 +183,8 @@ Ninguna prueba escribe en el `media/` real ni ejecuta `mysql` o `mysqldump`.
 - **Textos aprobados literales** (`ayudas.TEXTO_ITEM_FALLIDO`, `TEXTO_FORMULARIO_VENCIDO`, `TEXTO_IMAGEN`, `TEXTO_PAGINA_500`): si cambia el texto de la aplicación, las pruebas lo notan.
 - **Ítem fallido:** las cuatro vistas devuelven el formulario (200) con los ítems del usuario y una sola línea `ERROR` de `pedidos.views`; los fallos del sistema que no son de ítem siguen respondiendo 500.
 - **No se prueba en el navegador** el bloqueo del botón ni «Guardando…»; eso va en la revisión manual de la iteración.
+- **Verificación a posteriori del token (2026-11-06).** Con `envio_unico.estado` devolviendo siempre «nuevo», R21 falla (`2 != 1`) y también la prueba de la línea `INFO` del rechazo (`no logs of level INFO or higher triggered on pedidos.views`); con el código restaurado, en verde. Detalle en `_planificacion/99_bitacora/epica-03-integridad-transaccional/bitacora-03-04-cierre.md`.
+- **Aviso de ítem fallido y presentación.** `ayudas.TEXTO_ITEM_FALLIDO` se afirma con `assertContains` sobre el texto completo en `test_fronteras_transaccionales.py`, `test_pedidos.py` y `test_contrato_error.py`. Si la Épica 08 le da estructura (AUD-05-007) y el texto queda repartido en varios elementos, esas afirmaciones se ajustan en la misma iteración.
 
 ## 10. Control de acceso fijado
 
