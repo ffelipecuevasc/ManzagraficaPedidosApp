@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-11-17 (registra el despliegue del 2026-11-16)
 - **Agente:** Claude Code (Sonnet 5.5)
-- **Estado final:** la iteración 03-05 queda **En vigilancia (día 0 hecho)**. Esta bitácora queda En revisión. La Épica 03 **no** se marca Terminada: faltan la lectura del día 7 y la limpieza de la réplica. Ningún hallazgo pasa a «Resuelto». Solo documentos: sin cambios de código, sin commit, sin etiqueta y sin tocar PythonAnywhere.
+- **Estado final:** la iteración 03-05 queda **En curso (subestado: en vigilancia, día 0 hecho)** (nota del 2026-11-17: «En vigilancia» es un subestado de «En curso»). Esta bitácora queda En revisión. La Épica 03 **no** se marca Terminada: faltan la lectura del día 7 y la limpieza de la réplica. Ningún hallazgo pasa a «Resuelto». Solo documentos: sin cambios de código, sin commit, sin etiqueta y sin tocar PythonAnywhere.
 
 ## Resumen
 
@@ -49,9 +49,9 @@ El desarrollador desplegó `v3.1-integridad` la noche del **lunes 2026-11-16**, 
 
 - `_planificacion/99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-produccion.md` (nuevo, esta bitácora).
 - `_planificacion/10_epicas/epica-03-integridad-transaccional/evidencia-03-05.md`: partes A, B y C rellenadas, desviaciones, calendario vigente (el anterior queda como registro), parte D con la hora corregida, «Respuesta del desarrollador».
-- `_planificacion/10_epicas/epica-03-integridad-transaccional/iteracion-03-05-validacion-y-despliegue-de-la-integridad.md`: estado «En vigilancia (día 0 hecho)», sección «Ejecución del día 0», criterios, fechas de operación, riesgos y notas.
+- `_planificacion/10_epicas/epica-03-integridad-transaccional/iteracion-03-05-validacion-y-despliegue-de-la-integridad.md`: estado «En curso (subestado: en vigilancia, día 0 hecho)», sección «Ejecución del día 0», criterios, fechas de operación, riesgos y notas.
 - `_planificacion/10_epicas/epica-03-integridad-transaccional/definicion-epica-03.md`: nota fechada (la épica no está Terminada).
-- `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-07.md` e `iteracion-00-07-correcciones-tempranas-ii.md`: resultado de la medición (sin cerrar la iteración).
+- `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-07.md` e `iteracion-00-07-correcciones-tempranas-ii.md`: resultado de la medición (sin cerrar la iteración; el cierre vino el 2026-11-17, ver la nota fechada).
 - `_planificacion/00_producto/registro-pendientes.md`: cabecera, filas 00-07 y 03-05, informe C2, Épica 08, por confirmar e historial.
 - `_planificacion/00_producto/auditoria-tecnica.md`: AUD-05-009 y su nota de origen.
 - `docs/operacion/despliegue.md`: fila en la sección 5 y línea `INFO` verificada en 3.9.
@@ -80,20 +80,30 @@ Solo lectura y comprobaciones de texto; no ejecuté nada de la 03-05, ni pruebas
 - [x] Fila en `despliegue.md` (sección 5) y en `respaldo.md` (sección 6); línea `INFO` confirmada en `despliegue.md`, 3.9.
 - [x] AUD-05-009 registrado como Baja, Épica 08.
 - [x] Calendario corregido: día 7 desde el lunes 2026-11-23 a las 23:48:12 (o el martes 2026-11-24) e informe C2 del 2026-11-20 con la recarga de `R`.
-- [x] La 03-05 queda «En vigilancia (día 0 hecho)»; la Épica 03 no se marca Terminada; ningún hallazgo pasa a «Resuelto».
+- [x] La 03-05 queda «En curso (subestado: en vigilancia, día 0 hecho)»; la Épica 03 no se marca Terminada; ningún hallazgo pasa a «Resuelto».
 - [x] Registro de pendientes actualizado; sin nombres de personas; sin tocar `README.md` ni `DESIGN.md`.
 
 ## Decisiones tomadas
 
 - **Del desarrollador (dichas por él):** desplegar el 2026-11-16; `R` fuera de las 20:00 a 23:00; día 7 desde el lunes 2026-11-23 a las 23:48 o el martes 2026-11-24; AUD-05-009 como Baja, Épica 08; estado de la 03-05 y de la Épica 03.
-- **Mías, a confirmar:** (1) la 00-07 queda En revisión con su medición anotada y el cierre lo decide el desarrollador (`_planificacion/README.md`, regla 8); (2) el estado «En vigilancia» no figura en la lista de estados de `_planificacion/README.md` (`Pendiente`, `En curso`, `Bloqueada`, `En revisión`, `Terminada`, `Descartada`); lo escribí como pediste y, si se quiere mantener, el README (protegido) necesitaría una propuesta; (3) no marqué el respaldo como semanal.
+- **Mías, a confirmar:** (1) (superado el 2026-11-17: la 00-07 pasó a Terminada) la 00-07 queda En revisión con su medición anotada y el cierre lo decide el desarrollador (`_planificacion/README.md`, regla 8); (2) (resuelto el 2026-11-17: subestado de «En curso») el estado «En vigilancia» no figura en la lista de estados de `_planificacion/README.md` (`Pendiente`, `En curso`, `Bloqueada`, `En revisión`, `Terminada`, `Descartada`); lo escribí como pediste y, si se quiere mantener, el README (protegido) necesitaría una propuesta; (3) no marqué el respaldo como semanal.
+
+## Nota del 2026-11-17 (decisiones del desarrollador)
+
+Tres decisiones del desarrollador del 2026-11-17 (dichas por él; no verificadas en servidor) ajustan lo anterior. Esta bitácora ya estaba entregada: lo de arriba se conserva como registro y vale esta nota.
+
+1. **00-07 Terminada.** La medición del 2026-11-16 cumple: 12 de 13 días con registro y `segundos_repetidos=0` en todos. Salvedad: el 2026-11-08 (domingo) salió con `lineas=0` y no se sabe si fue falta de uso o de registro. Reemplaza «la 00-07 queda En revisión» y «cerrar o no la 00-07».
+2. **«En vigilancia» es un subestado de «En curso».** El estado de la 03-05 es **En curso (subestado: en vigilancia, día 0 hecho)**; no se agrega a la lista de estados de `_planificacion/README.md` (protegido). Donde arriba dice «En vigilancia» como estado, léase así.
+3. **La cabecera «Estado: Pendiente» de `definicion-epica-03.md` no se corrige ahora**; se corrige en el cierre de la Épica 03 (pendiente en `registro-pendientes.md`, sección 3).
+
+**Verificado en documentos (2026-11-17):** la lista de estados de `_planificacion/README.md` (línea 72) no incluye «En vigilancia»; la cabecera de `definicion-epica-03.md` dice «Estado: Pendiente»; la de `definicion-epica-00.md` dice «Reabierta el 2026-10-27 solo para la 00-07». **Dicho por el desarrollador:** las tres decisiones y la medición.
 
 ## Pendientes y riesgos
 
-- **`PENDIENTE_DESARROLLADOR`:** cerrar o no la 00-07; salidas no informadas (desviación 6); canal, día y hora del aviso; si el semanal de hacia el 2026-11-10 u 11 se hizo; fecha de la renovación de la web app y de la próxima; fuente del respaldo para la réplica (F1); cuántos días conserva la rotación de `access.log` (D0) y por qué el 2026-11-08 salió con `lineas=0`.
+- **`PENDIENTE_DESARROLLADOR`:** ~~cerrar o no la 00-07~~ (resuelto el 2026-11-17: Terminada); salidas no informadas (desviación 6); canal, día y hora del aviso; si el semanal de hacia el 2026-11-10 u 11 se hizo; fecha de la renovación de la web app y de la próxima; fuente del respaldo para la réplica (F1); cuántos días conserva la rotación de `access.log` (D0) y por qué el 2026-11-08 salió con `lineas=0`.
 - **Riesgo:** el día 0 fue de noche y sin tráfico en `/pedidos/nuevo/`; el criterio de duplicados (iii) solo se pone a prueba con el uso real (día 7 y, si se hace, una lectura a demanda tras el primer uso del martes 2026-11-17).
 - **Riesgo:** hasta el Ctrl+F5 del cliente su navegador puede tener el `index.js` anterior (inferido; el caché no se probó).
-- **Riesgo:** la medición de la 00-07 cubre 12 de 13 días; el 2026-11-08 queda sin medir.
+- **Riesgo:** la medición de la 00-07 cubre 12 de 13 días; el 2026-11-08 queda sin medir (domingo; `lineas=0`: no se sabe si fue falta de uso o de registro).
 
 ## Lo que no pude ver ni verificar
 

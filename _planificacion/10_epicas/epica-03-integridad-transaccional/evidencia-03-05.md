@@ -537,7 +537,7 @@ Solo imprime conteos: ninguna IP, nombre ni monto. Es de **solo lectura** (`filt
 - [ ] Caché de `index.js` probado: **sin probar** (ventana privada); queda para el Ctrl+F5 del cliente del 2026-11-17.
 - [x] Sin pedidos duplicados en la línea base (C6): 0, pero sin tráfico en `/pedidos/nuevo/` (ver el límite en C6).
 
-**Día 0 cerrado el 2026-11-16 (dicho por el desarrollador).** La iteración queda **«En vigilancia (día 0 hecho)»**: faltan la lectura del día 7 (parte D) y la limpieza de la réplica (parte F). La Épica 03 no se marca Terminada y ningún hallazgo pasa a «Resuelto» antes del día 7.
+**Día 0 cerrado el 2026-11-16 (dicho por el desarrollador).** La iteración queda **«En curso» (subestado: en vigilancia, día 0 hecho)** (decisión del desarrollador del 2026-11-17: subestado de «En curso», no un estado nuevo): faltan la lectura del día 7 (parte D) y la limpieza de la réplica (parte F). La Épica 03 no se marca Terminada y ningún hallazgo pasa a «Resuelto» antes del día 7.
 
 **Riesgo anotado (decisión 5 del 2026-11-06).** Con lecturas solo los días 0 y 7, **un problema de los días 1 a 6 solo se vería si el cliente lo reporta**. Además, la lectura del día 0 ocurre de noche, antes del primer uso real del negocio (inferido: es la hora de menor uso). **Sugerencia, sin decidir:** una lectura extra **a demanda** (con los mismos comandos de C5 y C6), por ejemplo el primer día de uso real tras `R` (~~viernes 2026-11-13~~ ~~miércoles 2026-11-18~~ martes 2026-11-17, después del Ctrl+F5 del cliente) o apenas el cliente avise de un «no se guardó» o de un botón que no responde. Cada lectura es corta, pero consume parte de los 100 s diarios de CPU de la consola.
 
