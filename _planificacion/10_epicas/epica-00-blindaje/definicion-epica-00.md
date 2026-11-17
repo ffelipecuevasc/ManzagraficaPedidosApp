@@ -1,6 +1,6 @@
 # Épica 00 · Blindaje y punto de retorno
 
-- **Estado:** Reabierta el 2026-10-27 solo para la 00-07 (cerrada el 2026-10-25 con 00-01 a 00-06)
+- **Estado:** **Terminada (2026-11-17, decisión del desarrollador, dicha por él).** Historia: «Reabierta el 2026-10-27 solo para la 00-07 (cerrada el 2026-10-25 con 00-01 a 00-06)»; vuelve a cerrarse el 2026-11-17 (ver la nota de esa fecha en «Notas»)
 - **Fase del plan:** 0 (`plan-de-trabajo.md`, «FASE 0»)
 - **Objetivo:** construir la infraestructura que hace reversible todo lo demás. Al terminar, el desarrollador puede afirmar sin dudar: «si el próximo despliegue sale mal, vuelvo al estado anterior en menos de quince minutos, sin perder datos».
 - **Precondición:** ninguna.
@@ -31,7 +31,7 @@ El agente no accede a producción (`AGENTS.md`, sección 6). En esta épica eso 
 | 00-04 | Higiene del repositorio (Terminada) | 0.4 |
 | 00-05 | Protocolo de versionado, despliegue y retroceso (Terminada) | 0.5 |
 | 00-06 | Correcciones tempranas de riesgo nulo (Terminada) | 0.6 |
-| 00-07 | Correcciones tempranas II (Pendiente; creada el 2026-10-27; crear y editar pedido, `v0.3-doble-envio`) | 0.6 (continuación) |
+| 00-07 | Correcciones tempranas II (~~Pendiente~~ Terminada el 2026-11-17; creada el 2026-10-27; crear y editar pedido, `v0.3-doble-envio`, desplegada el 2026-11-04) | 0.6 (continuación) |
 
 ## Decisiones de la épica
 
@@ -69,3 +69,4 @@ La épica se cerró por decisión del desarrollador con la evidencia C1 de la 00
 
 - **2026-10-27 · Reapertura para la 00-07 (decisión del desarrollador).** Los registros de producción del 2026-10-27 verificaron un pedido duplicado por doble clic (AUD-04-001, Auditoría 04). Se crea la 00-07 con una sola corrección del lado del cliente y despliegue propio, y la épica se reabre solo para ella. La 00-06 y su bitácora no cambian. Los criterios de término de arriba siguen cumplidos; la épica se vuelve a cerrar cuando la 00-07 termine.
 - **2026-10-27 · Decisiones del desarrollador sobre la 00-07:** alcance crear y editar pedido; script propio en `pedido_form.html`; etiqueta `v0.3-doble-envio` con retroceso a `v1.2-capturas`; despliegue el domingo 2026-11-01 después de validar `v1.2-capturas` ([iteracion-00-07](iteracion-00-07-correcciones-tempranas-ii.md)).
+- **2026-11-17 · Cierre de la épica (decisión del desarrollador, dicha por él; no verificada en servidor).** La épica pasa a **Terminada**. **Verificado en documentos:** los seis criterios de término están marcados desde el 2026-10-25 y esta nota de reapertura (2026-10-27) decía que la épica se cerraba de nuevo al terminar la 00-07; la [iteración 00-07](iteracion-00-07-correcciones-tempranas-ii.md) está Terminada el 2026-11-17 y no deja criterios sin marcar. **Dicho por el desarrollador:** la decisión de cerrar y la medición de la 00-07 (2026-11-16, 12 de 13 días con registro y `segundos_repetidos=0` en todos; el 2026-11-08, domingo, salió con `lineas=0` y no se sabe si fue falta de uso o de registro); el agente no vio la salida. **No consta o no se da por cumplido:** (1) el informe C2 de la 00-06 (2026-11-20, desconexiones a 28 días) no se ha hecho; según el criterio de término no bloquea, y sigue abierto como seguimiento; (2) los demás «Seguimientos abiertos» de arriba no se revisaron hoy (`AGENTS.md`, sección 5: no verifiqué si la propuesta del comando del contenedor se resolvió); (3) AUD-04-001 no se cierra con esta épica: la 00-07 solo cubre el lado del cliente, y la parte de servidor depende de la 03-05 (lectura del día 7), que sigue En curso. El resumen de cierre del 2026-10-25 no se reescribe.
