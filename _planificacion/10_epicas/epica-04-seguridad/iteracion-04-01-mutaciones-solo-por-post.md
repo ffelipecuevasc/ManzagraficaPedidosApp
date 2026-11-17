@@ -1,7 +1,7 @@
 # Iteración 04-01 · Mutaciones solo por POST
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-01-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-01-redaccion.md)) con las decisiones (a) y (b) del desarrollador del 2026-11-17. P1 y P2 **resueltos el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-01-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-01-cierre.md)): P1, se crea `pago_confirm_delete.html` y R7 queda como está; P2, el panel queda en la 06-01. Sin decisiones abiertas salvo etiqueta y fecha del despliegue.
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-01-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-01-redaccion.md)) con las decisiones (a) y (b) del desarrollador del 2026-11-17. P1 y P2 **resueltos el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-01-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-01-cierre.md)): P1, se crea `pago_confirm_delete.html` y R7 queda como está; P2, el panel queda en la 06-01. Etiqueta `v4.1-mutaciones-post` fijada el 2026-11-17; la fecha se fija al cerrar la vigilancia de la 03-05.
 - **Subfase del plan:** 4.1 «Mutaciones solo por POST» (`plan-de-trabajo.md`, FASE 4).
 - **Depende de:** Épica 02 (Terminada). Se desarrolla en local en paralelo a la vigilancia de la 03-05; **no se despliega hasta cerrar esa vigilancia** (desde el lunes 2026-11-23 a las 23:48:12, nota del 2026-11-17 en `definicion-epica-04.md`).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging`), RDA-019 (errores de vista los maneja Django; la captura va fuera del `atomic`).
@@ -9,7 +9,7 @@
 - **Regresiones que pasan a verde:** R6a, R6b, R6c, R7 y R19.
 - **Cambio de esquema:** ninguno. No hay migración.
 - **Respaldo previo al despliegue:** no lo exige por sí misma (sin migraciones). Se sigue el protocolo normal de `docs/operacion/despliegue.md`.
-- **Etiqueta y ventana:** despliegue propio, después de cerrar la vigilancia de la 03-05. Etiqueta y fecha: `PENDIENTE_DESARROLLADOR`.
+- **Etiqueta y ventana:** despliegue propio, el primero de la Épica 04 (orden 04-01, 04-02, 04-03). **Etiqueta `v4.1-mutaciones-post`** (decisión del desarrollador, 2026-11-17). La fecha se fija al cerrar la vigilancia de la 03-05: no antes del lunes 2026-11-23 a las 23:48:12.
 
 ## Objetivo
 
