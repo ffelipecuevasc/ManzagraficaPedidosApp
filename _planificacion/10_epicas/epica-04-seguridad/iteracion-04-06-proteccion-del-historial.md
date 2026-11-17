@@ -3,7 +3,7 @@
 - **Épica:** 04 · Seguridad y endurecimiento
 - **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-06-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-06-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-06-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-06-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 02); `definicion-epica-04.md`, alcance 6.
-- **Depende de:** 04-01 (puede tocar `eliminar_cliente` al exigir POST; la 04-06 parte de lo que deje). Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-02 → 04-03 → 04-04 → 04-05 → **04-06**.
+- **Depende de:** 04-01 (puede tocar `eliminar_cliente` al exigir POST; la 04-06 parte de lo que deje). Se redactó en paralelo a la vigilancia de la 03-05; **su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → 04-05 → **04-06**.
 - **RDA relacionadas:** RDA-007; RDA-017 (borrado físico con doble confirmación, **para usuarios**, Épica 09; ver «Contradicciones»).
 - **Hallazgos que cierra:** AUD-02-001 (R14).
 - **Clase de cambio esperada:** **Clase 1** (comportamiento de borrado gestionado por Django). **La iteración se detiene si `sqlmigrate` muestra cualquier `ALTER`** (decisión de la épica; `AGENTS.md`, regla 8.1).

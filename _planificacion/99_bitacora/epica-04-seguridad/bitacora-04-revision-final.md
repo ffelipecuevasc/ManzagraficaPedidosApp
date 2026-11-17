@@ -4,6 +4,7 @@
 - **Agente:** Claude Code (Sonnet 5.5)
 - **Alcance:** revisión de las diez iteraciones (04-01 a 04-10), la definición, el registro, la auditoría, `decisiones.md`, `AGENTS.md` y las bitácoras de la épica. **Solo documentos:** sin código, pruebas, `manage.py`, consultas a la base ni acceso a producción.
 - **Estado de la épica tras esta revisión:** **Pendiente (redactada completa, sin ejecutar)**. Ninguna iteración se ha ejecutado ni desplegado.
+- **Actualizada el 2026-11-17** con las decisiones posteriores del desarrollador (orden con la 04-10 tras la 04-01; W005 y W021 aceptadas; excepción a la sección 11; ejecución local en espera): ver [bitacora-04-cierre-redaccion](bitacora-04-cierre-redaccion.md).
 
 ## Cómo se lee esta bitácora
 
@@ -18,7 +19,7 @@ Fechas de despliegue: **no hay ninguna** [D]. Nada se despliega antes de cerrar 
 
 ## 1. Las diez iteraciones
 
-Todas están «Pendiente (redactada, decisiones resueltas)», con el estado de sus decisiones en [bitacora-04-01-cierre](bitacora-04-01-cierre.md) y las siguientes. Las etiquetas distintas de la 04-01 **no están fijadas** (`PENDIENTE_DESARROLLADOR`).
+Todas están «Pendiente (redactada, decisiones resueltas)», con el estado de sus decisiones en [bitacora-04-01-cierre](bitacora-04-01-cierre.md) y las siguientes. Las etiquetas distintas de la 04-01 **no están fijadas** (`PENDIENTE_DESARROLLADOR`); la sección 2 trae **propuestas**.
 
 | It. | Qué cambia | Tipo de cambio | Migración | Etiqueta | Regresiones a verde | Consultas previas (`AGENTS.md`, sección 6) | Respaldo previo |
 | :-- | :--------- | :------------- | :-------- | :------- | :------------------ | :------------------------------------------ | :-------------- |
@@ -31,7 +32,7 @@ Todas están «Pendiente (redactada, decisiones resueltas)», con el estado de s
 | **04-07** | Lista blanca con `nh3` al guardar y al mostrar; guardia de SQL con `ast` | Código y **dependencia** (`requirements.txt`) | No | Por fijar | Ninguna | `nh3` (**respondida**) y `mysql` para la consulta de revisión | Rutina |
 | **04-08** | Límite de intentos por usuario y por dirección (admin y `accounts/login/`); evento `acceso_bloqueado`; imagen de 5 MB; chequeo temprano de `CONTENT_LENGTH`; redirección con sesión | Código, configuración (`settings.py`, `urls.py`, `.env.example`) y **migración** | **`0009`** (Clase 1, después de la `0008`) | Por fijar | Ninguna | `settings.py`, `urls.py`, `.env.example`, `makemigrations`/`migrate` y `mysql` | **Sí** |
 | **04-09** | Cabecera `Content-Security-Policy-Report-Only` (solo observación) | Configuración (`settings.py`, `.env.example`) | No | Por fijar | Ninguna | `settings.py` y `.env.example` | No |
-| **04-10** | Aviso con cantidad y monto de pagos, `ELIMINAR` exigido si hay pagos, evento `pedido_eliminado` con la cantidad | Código (`views.py`, `pedido_confirm_delete.html`) | **No** (la `0010` quedó descartada) | Por fijar | Ninguna (la cascada no cambia) | Ninguna de archivos; **+1 consulta** por pantalla (`AGENTS.md`, sección 11; ver sección 7) | Rutina |
+| **04-10** | Aviso con cantidad y monto de pagos, `ELIMINAR` exigido si hay pagos, evento `pedido_eliminado` con la cantidad | Código (`views.py`, `pedido_confirm_delete.html`) | **No** (la `0010` quedó descartada) | Por fijar | Ninguna (la cascada no cambia) | Ninguna de archivos; **+1 consulta** por pantalla: excepción a la sección 11 **aceptada el 2026-11-17** | Rutina |
 
 [V] Cada fila sale del encabezado y los alcances de su iteración. Las etiquetas distintas de la 04-01 y las fechas no existen en ningún documento.
 
@@ -39,28 +40,40 @@ Todas están «Pendiente (redactada, decisiones resueltas)», con el estado de s
 
 Cada despliegue es un propósito, con etiqueta anotada antes (RDA-007) [V]. **Nada antes de cerrar la vigilancia de la 03-05** [D].
 
-| Orden | Despliegue | Depende de (duro) | Antes del Reload |
-| :---- | :--------- | :---------------- | :--------------- |
-| 1 | 04-01 | Épica 02 (terminada) | Respaldo de rutina |
-| 2 | 04-02, escalón 1 (HSTS 3600) | — | **`.env` primero** (`SEGURIDAD_PRODUCCION`, `CSRF_TRUSTED_ORIGINS`) |
-| 3 | 04-02, escalón 2 (HSTS 604800), tras **3 días** de observación sin 403 de CSRF ni bucles | escalón 1 | — |
-| 4 | 04-03 | 04-02 (su variable y su regla de arranque) | Respaldo previo; ensayo de respaldo y restauración en la réplica |
-| 5 | 04-04 | 04-03 y 04-01 | Respaldo previo |
-| 6 | 04-05 | 04-02 y 04-04 (mismos archivos) | Respaldo de rutina |
-| 7 | 04-06 | 04-01 y 04-05 | Respaldo previo; `migrate` (`0008`) |
-| 8 | 04-07 | — (comparte `pedido_detail.html` con la 04-01 y `forms.py` con la 04-08) | **Instalar `nh3` en la consola antes** |
-| 9 | 04-08 | 04-04 (chequeo temprano en `restaurar_bd`), 04-06 (numeración), 04-02 y 04-05 (`settings.py`) | Respaldo previo; `migrate` (`0009`); variables opcionales |
-| 10 | 04-09 | 04-02 | — |
-| 11 | 04-10 | 04-01 | Respaldo de rutina |
+| Orden | Despliegue | Etiqueta (propuesta, salvo la 04-01) | Depende de (duro) | Antes del Reload |
+| :---- | :--------- | :----------------------------------- | :---------------- | :--------------- |
+| 1 | 04-01 | **`v4.1-mutaciones-post`** [D, fijada] | Épica 02 (terminada) | Respaldo de rutina |
+| 2 | **04-10** (decisión del 2026-11-17: justo después de la 04-01) | `v4.2-confirmar-eliminar-pedido` | 04-01 | Respaldo de rutina |
+| 3 | 04-02, escalón 1 (HSTS 3600) | `v4.3-configuracion-produccion` | — | **`.env` primero** (`SEGURIDAD_PRODUCCION`, `CSRF_TRUSTED_ORIGINS`) |
+| 4 | 04-02, escalón 2 (HSTS 604800), tras **3 días** de observación sin 403 de CSRF ni bucles | `v4.4-hsts-semana` | escalón 1 | — |
+| 5 | 04-03 | `v4.5-credenciales` | 04-02 (su variable y su regla de arranque) | Respaldo previo; ensayo de respaldo y restauración en la réplica |
+| 6 | 04-04 | `v4.6-restauracion` | 04-03 y 04-01 | Respaldo previo |
+| 7 | 04-05 | `v4.7-correcciones-config` | 04-02 y 04-04 (mismos archivos) | Respaldo de rutina |
+| 8 | 04-06 | `v4.8-historial-clientes` | 04-01 y 04-05 | Respaldo previo; `migrate` (`0008`) |
+| 9 | 04-07 | `v4.9-sanitizacion-html` | — (comparte `pedido_detail.html` con la 04-01 y `forms.py` con la 04-08) | **Instalar `nh3` en la consola antes** |
+| 10 | 04-08 | `v4.10-acceso-limites` | 04-04 (chequeo temprano en `restaurar_bd`), 04-06 (numeración), 04-02 y 04-05 (`settings.py`) | Respaldo previo; `migrate` (`0009`); variables opcionales |
+| 11 | 04-09 | `v4.11-csp-observacion` | 04-02 | — |
 
-- **Orden de la épica** = orden de la tabla [V]. Cada despliegue necesita `git checkout <etiqueta>` en el servidor (no `git pull`) [V, `despliegue.md`, 00-05].
+- **Orden decidido por el desarrollador el 2026-11-17 [D]:** la 04-10 va justo después de la 04-01. Antes iba al final; solo depende de la 04-01 y su riesgo (perder pagos al borrar un pedido) existe cada día. No cambia el diseño de ninguna iteración. Siguen valiendo el paso a paso de la épica y la regla «un despliegue, un propósito» (RDA-007) [V]; cada despliegue necesita `git checkout <etiqueta>` en el servidor (no `git pull`) [V, `despliegue.md`, 00-05].
+- **Etiquetas: son una propuesta [I].** Siguen el patrón de las anteriores (`v0.1`, `v0.2` y `v0.3` en la Épica 00; `v1.1` y `v1.2`; `v3.1`) [V]: el número es el orden de despliegue dentro de la épica, sin tildes y con guiones. Solo `v4.1-mutaciones-post` está fijada. Confirmarlas o cambiarlas, y las fechas, es `PENDIENTE_DESARROLLADOR`; si el orden cambia, se renumeran.
 - **Una sola rama (`main`):** para poder etiquetar el commit de cada iteración, **cada iteración va en su propio commit, en el orden de despliegue** (precedente: `v3.1-integridad` sobre `7e14398`, que reunió la 03-01 a la 03-04) [V].
-- **Alternativa (decisión del desarrollador, no tomada):** la 04-10 solo depende de la 04-01 y su riesgo (perder pagos al borrar un pedido) existe cada día; podría desplegarse justo después de la 04-01 y no al final. Es recomendable considerarlo; los documentos dicen «después de la 04-09» y no se cambiaron.
 - **Lo que exigen la Épica 08 y la 09:** la 08 pide la 04-09 desplegada; la 09 pide la 04-07 y la 04-08 [V].
 
-### Qué se puede hacer en local mientras tanto [D]
+### Dependencias y archivos compartidos con el nuevo orden (revisión del 2026-11-17)
 
-Se redacta y se desarrolla en local; **no se despliega nada**. Para no pisarse (sección 4): ejecutar **en el orden de despliegue**, una iteración por commit, con `test pedidos` en verde y el MySQL de Docker encendido (lo enciende el desarrollador). Se puede ejecutar ya, sin consulta previa de archivos, la **04-01** y la **04-10** (sin configuración ni migraciones). Las demás piden consultas previas (sección 6). Las revisiones de datos con consulta (04-06, 04-07, 04-08, 04-10) valen **a la fecha del último refresco de la réplica**: conviene hacerlas **después del refresco de la parte F de la 03-05**, que está pendiente [V, registro] (decisión por tomar). El ensayo local de respaldo se ve limitado porque `mysqldump` no estaba instalado en la réplica (01-09, citado en la 04-03) [V].
+**Nada se pisa**; cinco avisos para quien ejecute:
+
+1. **Dependencias:** la 04-10 depende solo de la 04-01; ninguna de las otras depende de que la 04-10 vaya al final.
+2. **`pedidos/views.py`:** la 04-01 cambia `cambiar_estado_pedido`, `duplicar_pedido`, `generar_respaldo_bd` y `eliminar_pago`; la 04-10, `eliminar_pedido`. Son funciones distintas, en commits separados y consecutivos. Los números de línea citados se desplazan: buscar por nombre.
+3. **Plantillas:** la 04-01 crea `pago_confirm_delete.html` **copiando** `pedido_confirm_delete.html` y la 04-10 cambia esta después; la de pagos queda sin el campo de palabra (no se cambia el diseño). `pedido_detail.html` (04-01 y 04-07) no se cruza con la de confirmación.
+4. **Criterio de comparación de `RESTAURAR` y `ELIMINAR`:** la 04-10 se despliega antes que la 04-04. El criterio está fijado en ambas (exacta, sensible a mayúsculas, con `strip()`); la 04-04 reutiliza la función si la 04-10 la crea.
+5. **Importaciones de `views.py` y pruebas:** la 04-10 puede agregar importaciones (`Count`, `Sum`) que la 04-05 revisa después; las pruebas de la 04-10 (`test_eventos_negocio.py`, `test_bloqueo_envio.py:38`) no chocan con la caché que la 04-08 vacía más tarde. Línea base de la 04-10: **4 fallos esperados** (R8, R9, R14 y R15). Migraciones sin cambio: `0008` y `0009`.
+
+### Qué se puede hacer mientras tanto [D]
+
+**Hoy no se ejecuta nada en local.** Decisión del desarrollador del 2026-11-17: la ejecución de la 04-01 en local **espera el cierre de la vigilancia de la 03-05** (lectura del día 7 desde el lunes 2026-11-23 a las 23:48). **Próximo hito:** (a) viernes 2026-11-20, informe C2 de desconexiones de la 00-06; (b) desde el lunes 2026-11-23 a las 23:48, lectura del día 7, cierre de la 03-05 y limpieza de la réplica (parte F); (c) después, decidir el inicio de la 04-01. Lo que se hace ahora son solo documentos.
+
+Cuando empiece, para no pisarse (sección 4): ejecutar **en el orden de despliegue**, una iteración por commit, con `test pedidos` en verde y el MySQL de Docker encendido (lo enciende el desarrollador). La **04-01** y la **04-10** no piden consultas previas de archivos (sin configuración ni migraciones); las demás sí (sección 6). Las revisiones de datos con consulta (04-06, 04-07, 04-08, 04-10) valen **a la fecha del último refresco de la réplica**: se hacen **después del refresco de la parte F de la 03-05** (`PENDIENTE_DESARROLLADOR`). El ensayo local de respaldo se ve limitado porque `mysqldump` no estaba instalado en la réplica (01-09, citado en la 04-03) [V].
 
 ## 3. Variables de entorno nuevas
 
@@ -134,7 +147,7 @@ Se redacta y se desarrolla en local; **no se despliega nada**. Para no pisarse (
 | `makemigrations` y `migrate` en local, y editar `pedidos/migrations/` | 04-06 (`0008`), 04-08 (`0009`) |
 | Dependencia **`nh3`** (`requirements.txt` e instalación) | 04-07: **la consulta está respondida** [D]; falta comprobar la instalación en PythonAnywhere (paso 0 de la 04-07; peso y arranque en frío sin medir) **[NV]** |
 | `mysql`/`dbshell`, incluso en local (consultas de solo lectura) | 04-06 (`SHOW CREATE TABLE`), 04-07 (conteos), 04-08 (fallos por ventana), 04-10 (conteos) |
-| **Aumento de consultas por página** (`AGENTS.md`, sección 11) | 04-10: +1 en la pantalla de confirmación; se mide y se avisa (decisión por tomar, sección 7) |
+| **Aumento de consultas por página** (`AGENTS.md`, sección 11) | 04-10: +1 en la pantalla de confirmación: **excepción aceptada el 2026-11-17** [D], solo esa pantalla y solo +1; se mide antes y después |
 
 Ninguna iteración crea ramas ni elimina o mueve archivos [V, búsqueda en sus pasos].
 
@@ -144,7 +157,7 @@ Ninguna iteración crea ramas ni elimina o mueve archivos [V, búsqueda en sus p
 
 | # | Contradicción | Corrección |
 | :- | :------------ | :--------- |
-| 1 | La 04-02 y la definición piden `check --deploy` **sin advertencias** y la 04-02 D1 fija HSTS **sin `includeSubDomains` ni `preload`**. Django emite `security.W005` y `security.W021` cuando `SECURE_HSTS_SECONDS` es mayor que cero y esas opciones no son `True` [V, `django/core/checks/security/base.py:177-195`]. La 04-02 esperaba «solo W009» en local y «ninguna» en producción | Se corrigen el paso 5, la verificación 1 y el criterio de término de la 04-02 y el criterio de la definición: **quedan W005 y W021 por D1**. Qué hacer con ellas es **decisión** (7.2, punto 1) |
+| 1 | La 04-02 y la definición piden `check --deploy` **sin advertencias** y la 04-02 D1 fija HSTS **sin `includeSubDomains` ni `preload`**. Django emite `security.W005` y `security.W021` cuando `SECURE_HSTS_SECONDS` es mayor que cero y esas opciones no son `True` [V, `django/core/checks/security/base.py:177-195`]. La 04-02 esperaba «solo W009» en local y «ninguna» en producción | Se corrigen el paso 5, la verificación 1 y el criterio de término de la 04-02 y el criterio de la definición: **quedan W005 y W021 por D1**, **aceptadas y documentadas como esperadas** (decisión del 2026-11-17, sin silenciar; ver la nota de la 04-02: el dominio es de PythonAnywhere) |
 | 2 | La 04-10 decía que alinearía `ELIMINAR` con la 04-04, pero la 04-04 no fijaba el criterio de comparación de `RESTAURAR` | La 04-04 sí rechaza `restaurar` en minúsculas (fila 3 de sus pruebas) [V]: **coincidencia exacta y sensible a mayúsculas**; en ambas se ignoran los espacios del inicio y del final (`strip()`). Se agrega a la fila de pruebas de la 04-04 y a la 04-10 |
 | 3 | La 04-10 se había redactado con la opción de un tipo de evento nuevo y la migración `0010`; el desarrollador la descartó (D1) | Retirada de la 04-10 y del registro: **la 04-10 no crea migración**. Los textos históricos (bitácora de redacción, notas fechadas) conservan la mención como registro |
 | 4 | La definición llama «límite de tamaño» a `FILE_UPLOAD_MAX_MEMORY_SIZE`, que en Django es un umbral entre memoria y disco [V, `uploadhandler.py:208`] | Aclaración en el alcance 8 de la definición (la 04-08 ya lo trataba) |
@@ -154,11 +167,11 @@ Ninguna iteración crea ramas ni elimina o mueve archivos [V, búsqueda en sus p
 
 ### 7.2 Que son decisión del desarrollador (no se corrigieron)
 
-1. **W005 y W021** (7.1, punto 1): aceptarlas, documentadas (recomendado: el sitio no tiene subdominios propios y no se enviará a la lista de precarga), o silenciarlas con `SILENCED_SYSTEM_CHECKS` y justificación. `PENDIENTE_DESARROLLADOR`.
+1. **W005 y W021** (7.1, punto 1): **resuelta el 2026-11-17 [D]:** se aceptan y quedan documentadas como esperadas; **no se silencian**. Razón (nota de la 04-02): `preload` exige el dominio registrable, que es de la plataforma, y `includeSubDomains` protegería subdominios que no existen [I].
 2. **`AGENTS.md`, regla 8.5 (GET nunca escribe):** al terminar la épica queda **una** escritura con GET, el panel (`registrar_metricas_diarias`, AUD-01-006). Es la excepción P2 de la 04-01 (decisión del desarrollador, 2026-11-17): la corrige la 06-01 [V].
 3. **Regla 8.10 (un worker, nada lento en la petición):** la restauración (04-04) corre dentro de la petición; está anotada como riesgo y propuesta (registro, sección 4: restaurar desde consola, 06-03 o Épica 14) [V]. Además, la 04-08 agrega el chequeo temprano de `CONTENT_LENGTH` a esas vistas (barato) y la 04-10 borra dentro de la petición (corto).
 4. **Regla 8.17 (sin recursos nuevos desde CDN):** las diez iteraciones **no agregan ninguno** [V]. Los cinco servidores externos que ya existen (Tailwind, jQuery, Select2, Summernote, SweetAlert2, Google Fonts) los resuelve la Épica 08 (08-05 a 08-08); la 04-09 solo los observa. `login.html` repite su propio `<head>` y no extiende la base.
-5. **Regla 8.12 / sección 11 (consultas por página):** la 04-10 suma una consulta en su pantalla: se acepta o se rechaza al ejecutar.
+5. **Regla 8.12 / sección 11 (consultas por página):** la 04-10 suma una consulta en su pantalla. **Excepción aceptada el 2026-11-17 [D]**, solo para esa pantalla y para +1; consta en la 04-10, la definición y el registro.
 6. **`DESIGN.md` (modal de confirmación) frente a las confirmaciones como página** (04-01 P1 y 04-10): se mantiene el patrón vigente; lo cambia la Épica 08.
 7. **Reglas que se cumplen** (no son contradicción): 8.9 (`nh3` se importa dentro de la función, 04-07), 8.11 (la 04-08 no crea tablas; el evento nuevo usa la tabla existente, con retención de 365 días), 8.3 y 8.4 (las operaciones de varias filas van en `atomic` y sin supresión silenciosa), 8.7 (variables de entorno, sin secretos).
 
@@ -172,21 +185,23 @@ Ninguna iteración crea ramas ni elimina o mueve archivos [V, búsqueda en sus p
 
 ### 8.2 `PENDIENTE_DESARROLLADOR` de la épica
 
-1. **Etiquetas** de la 04-02 a la 04-10 (incluida la del segundo escalón de la 04-02) y **fechas** de todos los despliegues; la 04-01 ya tiene etiqueta y su fecha se fija al cerrar la vigilancia.
-2. **W005 y W021:** aceptarlas o silenciarlas (7.2, punto 1).
-3. **Cuándo se ejecuta cada iteración en local**, empezando por la 04-01 (próximo hito).
-4. **Escribir la RDA-020** al ejecutar la 04-07.
-5. **Notas operativas «documentado»** en `docs/operacion/` (los destinos ya están decididos): AUD-04-003 (riesgo aceptado), AUD-02-030, AUD-02-023 y «eliminar cotización sin evento».
-6. **04-08:** la consulta de fallos por ventana en la réplica y el archivo más grande de `media/referencias/` (evidencia previa, con regla de detención); el **número de usuarios de producción**; y la **medición de la dirección real** tras el proxy (no se puede calibrar el límite por dirección con datos).
-7. **04-10:** aceptar la consulta adicional; la 04-01 deja abierta la **página 405 propia** (otra iteración).
-8. **Orden:** si se adelanta la 04-10 (sección 2) y **cuándo hacer las revisiones de datos en la réplica** (después del refresco de la parte F de la 03-05).
-9. **Propuesta ya registrada:** restauración fuera de la petición (06-03 o Épica 14).
+1. **Etiquetas** de la 04-02 a la 04-10 (hay una propuesta en la sección 2; incluye la del segundo escalón de la 04-02) y **fechas** de todos los despliegues; la 04-01 ya tiene etiqueta y su fecha se fija al cerrar la vigilancia.
+2. **Cuándo empieza la 04-01 en local:** no antes de cerrar la vigilancia de la 03-05; después, decidirlo (próximo hito, sección 2).
+3. **Escribir la RDA-020 y las notas operativas «documentado»** en `docs/operacion/` (AUD-04-003, AUD-02-030, AUD-02-023 y «eliminar cotización sin evento»): **al ejecutar la 04-07** (decisión del 2026-11-17).
+4. **Revisiones de datos en la réplica** (04-06, 04-07, 04-08, 04-10): después del refresco de la parte F de la 03-05.
+5. **04-08:** la consulta de fallos por ventana y el archivo más grande de `media/referencias/` (evidencia previa, con regla de detención); el **número de usuarios de producción**; y la **medición de la dirección real** tras el proxy (no se puede calibrar el límite por dirección con datos).
+6. **04-01:** deja abierta la **página 405 propia** (otra iteración).
+7. **Propuesta ya registrada:** restauración fuera de la petición (06-03 o Épica 14).
+
+### 8.3 Resuelto el 2026-11-17 (decisiones posteriores del desarrollador)
+
+W005 y W021 aceptadas y documentadas; la 04-10 se despliega justo después de la 04-01; excepción a la sección 11 de `AGENTS.md` por la consulta adicional de la 04-10; la ejecución local de la 04-01 espera el cierre de la vigilancia de la 03-05. Detalle en [bitacora-04-cierre-redaccion](bitacora-04-cierre-redaccion.md).
 
 ## 9. Criterio de término frente a lo que cubren las diez iteraciones
 
 | Criterio de la definición | Lo cubre | Cómo se verifica |
 | :------------------------ | :------- | :--------------- |
-| `check --deploy` en producción sin advertencias | 04-02 (W004, W008, W012, W016), 04-03 (W009) | **Producción [NV].** **Con la salvedad de W005 y W021** (7.1, punto 1) |
+| `check --deploy` en producción sin advertencias | 04-02 (W004, W008, W012, W016), 04-03 (W009) | **Producción [NV].** **Salvo W005 y W021, documentadas como esperadas** (decisión del 2026-11-17) |
 | R6a-c, R7, R19 y R14 pasan a verde | 04-01 y 04-06 | Pruebas automatizadas |
 | Ningún proceso muestra la contraseña de la base | 04-03 | Producción [NV] |
 | Un respaldo desde la web se descarga en el equipo | 04-01 | Producción [NV], después del despliegue de la 04-01 |
@@ -197,7 +212,7 @@ Ninguna iteración crea ramas ni elimina o mueve archivos [V, búsqueda en sus p
 | **Agregados en esta revisión:** la restauración rechaza archivos inválidos, exige `RESTAURAR` y deja constancia | 04-04 | Pruebas automatizadas y producción |
 | **Agregado:** la imagen de referencia de más de 5 MB se rechaza | 04-08 | Prueba automatizada |
 | **Agregado:** las correcciones de configuración no cambian el comportamiento | 04-05 | Suite en verde y revisión manual |
-| Las decisiones «riesgo aceptado» y «solo documentado» están escritas en `docs/operacion/` | Revisión final | Revisión de documentos |
+| Las decisiones «riesgo aceptado» y «solo documentado» están escritas en `docs/operacion/` | Se escriben al ejecutar la 04-07 (decisión del 2026-11-17) | Revisión de documentos |
 
 **Cobertura:** las diez iteraciones cubren los once puntos de alcance de la definición (con el 12 agregado por la 04-10); AUD-04-003 y AUD-02-030 se resuelven por decisión documentada, sin iteración; la página de error de CSRF va a la Épica 08 y AUD-02-023 a la Épica 14. **Hallazgos que se cierran al cumplirse la épica** (cada uno al verificarse en producción): AUD-01-009, -012, -013, -016, -018, -025; AUD-02-001, -002, -006 (parte GET), -016, -024, -028; AUD-03-001, -002, -004; AUD-05-008 (parte 2); AUD-02-010 y AUD-04-003 por riesgo aceptado.
 

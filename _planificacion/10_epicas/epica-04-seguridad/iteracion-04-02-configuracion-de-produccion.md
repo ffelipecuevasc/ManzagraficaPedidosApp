@@ -3,7 +3,7 @@
 - **Épica:** 04 · Seguridad y endurecimiento
 - **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md)); D1 a D6 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md)). Queda abierta solo la etiqueta y la fecha del despliegue.
 - **Subfase del plan:** 4.2 «Configuración de producción» (`plan-de-trabajo.md:400-408`).
-- **Depende de:** Épica 02 (Terminada). Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia de la 03-05 (desde el lunes 2026-11-23 a las 23:48:12)** ni en el mismo despliegue que la 04-01 (RDA-007). Orden: 04-01, 04-02, 04-03.
+- **Depende de:** Épica 02 (Terminada). Se redactó en paralelo a la vigilancia de la 03-05; **su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia de la 03-05 (desde el lunes 2026-11-23 a las 23:48:12)** ni en el mismo despliegue que la 04-01 (RDA-007). Orden (decisión del 2026-11-17): 04-01, **04-10**, 04-02 (dos escalones), 04-03 y siguientes.
 - **RDA relacionadas:** RDA-004 (PythonAnywhere, plan gratuito), RDA-007 (un despliegue, un propósito; la etiqueta marca lo que está en producción).
 - **Hallazgos que cierra:** AUD-01-012 (configuración de producción sin endurecer), al verificarse en producción.
 - **Hallazgos relacionados:** AUD-02-022 (`ALLOWED_HOSTS`, **ya resuelto en la 00-04**: no se repite), AUD-02-010 y la advertencia `W009` (clave secreta: 04-03, que usa `SEGURIDAD_PRODUCCION`).
@@ -58,6 +58,8 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 | D5 | Arranque que falla | `ImproperlyConfigured` si `ALLOWED_HOSTS` contiene `manzagrafica.pythonanywhere.com` y `SEGURIDAD_PRODUCCION` no está activa. Compensa el riesgo de olvidar la variable (D3). |
 | D6 | Observación de 3 días | Tres días sin 403 de CSRF, sin bucles ni reportes del cliente antes de subir HSTS a `604800`. Sustituye los 7 días propuestos en la redacción. |
 
+**Nota: W005 y W021 (decisión del desarrollador, 2026-11-17).** Con HSTS activo y sin `includeSubDomains` ni `preload`, `check --deploy` seguirá mostrando `security.W005` y `security.W021` (verificado en `django/core/checks/security/base.py:177-195`). **Se aceptan y quedan documentadas como esperadas; no se silencian.** Por qué: el dominio es de PythonAnywhere, no propio. `preload` exige el dominio registrable (`pythonanywhere.com`), que pertenece a la plataforma, así que el sitio no puede enviarse a esa lista. `includeSubDomains` protegería subdominios de `manzagrafica.pythonanywhere.com`, que no existen (inferido), y activarlo sin necesidad agrega un riesgo: si algún día se usara un subdominio sin HTTPS, los navegadores lo bloquearían durante el `max-age`. Dejarlas visibles evita esconder que HSTS está en modo prudente. Se anotan como esperadas en `despliegue.md` (alcance 7).
+
 **Riesgo de D3 (olvidar la variable):** si el `.env` del servidor no la trae, Django arrancaría sin cookies seguras ni HSTS ni redirección, en silencio. D5 lo convierte en un fallo ruidoso: la web app no arranca y el despliegue se nota en la verificación. Riesgo residual: un error al escribir el dominio en `ALLOWED_HOSTS` desactivaría D5; la verificación de producción (pasos 1 y 3) lo detecta. El orden de edición en el servidor importa: **primero `.env`, luego código, luego Reload** (si se recarga código nuevo sin la variable, D5 tumba el sitio hasta corregir `.env`).
 
 ## Alcance
@@ -68,7 +70,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 4. **HSTS escalonado (D1)** (W004).
 5. **Orígenes CSRF de confianza (D4).**
 6. **Arranque que falla (D5).**
-7. **Documentación:** lista de advertencias esperadas de `despliegue.md:114` (queda W009 en local hasta la 04-03); paso nuevo en el despliegue (editar `.env` antes del Reload) y en `retroceso.md` (qué hacer con la variable al volver atrás).
+7. **Documentación:** lista de advertencias esperadas de `despliegue.md:114` (queda W009 en local hasta la 04-03; **W005 y W021 se agregan como esperadas**, con la nota de abajo); paso nuevo en el despliegue (editar `.env` antes del Reload) y en `retroceso.md` (qué hacer con la variable al volver atrás).
 8. **Fuera:** `ALLOWED_HOSTS` (00-04), `SECRET_KEY` obligatoria y W009 (04-03), política de contenido (04-09), límites de subida (04-08), limpieza de `settings.py` (04-05).
 
 ## Pasos
@@ -78,7 +80,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 2. Pruebas primero (sección siguiente).
 3. Bloque de seguridad en `settings.py` según D1 a D5, con comentarios en español.
 4. `.env.example` con `SEGURIDAD_PRODUCCION` y `CSRF_TRUSTED_ORIGINS`, sin valores reales.
-5. `check --deploy` local con `DEBUG=False` y la variable activa: esperado **W009** (la resuelve la 04-03) y **W005 y W021**, que quedan **por D1** (HSTS sin `includeSubDomains` ni `preload`; Django las emite cuando `SECURE_HSTS_SECONDS` es mayor que cero y esas opciones no son `True`, verificado en `django/core/checks/security/base.py:177-195`). Aceptarlas documentadas o silenciarlas con justificación es `PENDIENTE_DESARROLLADOR` (revisión final de la Épica 04). Con la variable apagada, `runserver` sigue entrando por `http://127.0.0.1:8000` sin redirección.
+5. `check --deploy` local con `DEBUG=False` y la variable activa: esperado **W009** (la resuelve la 04-03) y **W005 y W021**, que quedan **por D1** (HSTS sin `includeSubDomains` ni `preload`; Django las emite cuando `SECURE_HSTS_SECONDS` es mayor que cero y esas opciones no son `True`, verificado en `django/core/checks/security/base.py:177-195`). **Decisión del desarrollador (2026-11-17): se aceptan y quedan documentadas como esperadas; no se silencian** (ver «Nota: W005 y W021»). Con la variable apagada, `runserver` sigue entrando por `http://127.0.0.1:8000` sin redirección.
 6. Ensayo en la réplica de D2 (sección «Pruebas»).
 7. `despliegue.md` y `retroceso.md`.
 8. Bitácora, registro, estado «En revisión», con los pasos de producción para el desarrollador.
@@ -93,7 +95,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 
 ## Verificación en producción (la hace el desarrollador; todo **no verificado** hasta entonces)
 
-1. **[PA]** `check --deploy` en el servidor, con el filtro de códigos de `evidencia-03-05.md:273`, **antes** y **después**: antes, W004 W008 W012 W016 (dicho por el desarrollador); después, **solo W005 y W021** (por D1; el filtro de códigos las debe incluir para esta lectura), salvo que el desarrollador decida silenciarlas.
+1. **[PA]** `check --deploy` en el servidor, con el filtro de códigos de `evidencia-03-05.md:273`, **antes** y **después**: antes, W004 W008 W012 W016 (dicho por el desarrollador); después, **solo W005 y W021** (esperadas y documentadas; el filtro de códigos las debe incluir para esta lectura).
 2. **[PA · Panel]** «Force HTTPS» sigue activado.
 3. **[PC]** `curl -sI http://manzagrafica.pythonanywhere.com/accounts/login/` redirige a `https://`; `curl -sIL https://manzagrafica.pythonanywhere.com/accounts/login/` termina en 200 **sin bucle** (`curl` corta tras demasiadas redirecciones) y trae `Strict-Transport-Security: max-age=3600` y `Set-Cookie: csrftoken=…; Secure`.
 4. **[Navegador, ventana privada]** iniciar sesión, crear un pedido y un pago de prueba según el protocolo vigente, generar un respaldo (descarga): ningún 403 de CSRF. Las pantallas de `despliegue.md`, sección 3.7.
@@ -108,7 +110,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 
 ## Criterio de término
 
-- `check --deploy` en producción sin advertencias, **salvo W005 y W021 por D1** (aceptadas y documentadas, o silenciadas si el desarrollador lo decide; no verificado hasta el despliegue).
+- `check --deploy` en producción sin advertencias, **salvo W005 y W021, documentadas como esperadas** (D1; decisión del 2026-11-17: no se silencian; no verificado hasta el despliegue).
 - Redirección a HTTPS sin bucle, cookies `Secure` y HSTS vistos en producción con el escalón vigente (3600, luego 604800).
 - Arranque con el dominio de producción y la variable apagada falla con un mensaje claro (prueba automatizada).
 - Suite en verde con los mismos fallos esperados que deje la 04-01.
