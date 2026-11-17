@@ -1,7 +1,7 @@
 # Iteración 04-09 · Política de seguridad de contenido en observación
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones abiertas). Redactada el 2026-11-17 ([bitacora-04-09-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-09-redaccion.md)). Cuatro decisiones `PENDIENTE_DESARROLLADOR` (sección «Decisiones»), cada una con opción recomendada.
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-09-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-09-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-09-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-09-cierre.md)).
 - **Subfase del plan:** nueva (reorganización del 2026-10-27, RDA-014); `definicion-epica-04.md`, alcance 9 y decisión de la épica sobre la 04-09.
 - **Depende de:** la 04-02 (comparte `settings.py` y no repite ninguna de sus cabeceras) y, por orden de despliegue, de todas las anteriores. Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → … → 04-08 → **04-09**, la última de la Épica 04.
 - **Es requisito de:** la Épica 08 (precondición: «04-09 desplegada») y la 08-08, que reemplaza este modo por la política estricta (registro, fila 08-08).
@@ -197,27 +197,16 @@ Un nonce exigiría, además, agregar el procesador `csp` a `TEMPLATES` y un atri
 6. Página breve en `docs/operacion/` con cómo leer el reporte y cómo apagarlo.
 7. **Fuera:** lo de la sección «Fuera de alcance».
 
-## Decisiones (`PENDIENTE_DESARROLLADOR`)
+## Decisiones (resueltas por el desarrollador, 2026-11-17)
 
-**D1 · Qué política se observa.**
-- **A (recomendada): la política final** (solo `'self'`, sin servidores externos), como en la sección «Política mínima». El navegador anota cada recurso externo y cada pieza en línea: es el inventario completo.
-- **B:** la política actual, con los cinco servidores permitidos. Solo anotaría lo en línea; los recursos externos no aparecerían.
-- **C:** dos cabeceras de observación a la vez (final y actual). No es posible con una sola cabecera de este tipo; implicaría una vista o un decorador por pantalla. No se recomienda.
+| # | Decisión | Resuelta como |
+| :- | :------- | :------------ |
+| D1 | Qué política se observa | **La política final**, solo `'self'` y sin servidores externos (opción A), como en la sección «Política mínima». El navegador anota cada recurso externo y cada pieza en línea. |
+| D2 | Nonces y código en línea | **Sin nonces** ni cambios en plantillas en esta iteración (opción A). La Épica 08 mueve los scripts y estilos a archivos y aplica nonces solo a lo que quede (08-08). |
+| D3 | Interruptor de apagado | **Variable `CSP_OBSERVACION`**, activa por defecto (también en local, donde se lee el reporte) e **independiente de `SEGURIDAD_PRODUCCION`** de la 04-02. Con `False`, `SECURE_CSP_REPORT_ONLY` queda vacío y no se envía cabecera (comportamiento verificado del middleware). |
+| D4 | Dónde se lee el reporte | **Consola del navegador en la réplica** (opción A), sin punto de recepción. |
 
-**D2 · Nonces y código en línea.**
-- **A (recomendada): sin nonces ni cambios en plantillas en esta iteración.** Se observa, se anota y la Épica 08 mueve los scripts y estilos a archivos y aplica nonces solo a lo que quede (08-08).
-- **B:** agregar el procesador `csp` y un nonce en los siete scripts y los dos estilos ahora. Edita ocho plantillas que otras iteraciones tocan y oculta del reporte lo que se quiere listar.
-- **C:** hashes `sha256` de cada bloque. Se rompe al editar una sola letra; no se recomienda.
-
-**D3 · Interruptor de apagado.**
-- **A (recomendada): variable `CSP_OBSERVACION`**, activa por defecto (también en local, donde se lee el reporte); con `False`, `SECURE_CSP_REPORT_ONLY` queda vacío y no se envía cabecera (comportamiento verificado del middleware). **No** depende de `SEGURIDAD_PRODUCCION` (04-02): la réplica no la activa y no vería nada. El nombre es una propuesta.
-- **B:** sin variable; el retroceso es volver a la etiqueta anterior. Menos configuración, retroceso más lento.
-- **C:** depender de `SEGURIDAD_PRODUCCION`. La réplica no la vería; no se recomienda.
-
-**D4 · Dónde se lee el reporte.**
-- **A (recomendada, ya propuesta en la definición): la consola del navegador en la réplica**, sin punto de recepción.
-- **B:** una vista propia que reciba los reportes y los cuente. Tabla nueva con retención y purga (regla 8.11), trabajo en el único worker (regla 8.10); sin ganancia sobre A para una aplicación de pocos usuarios.
-- **C:** un servicio de reportes de terceros. **Descartada:** reglas 8.10 y la lista de salida de PythonAnywhere.
+**Qué se descartó (para no volver a discutirlo):** observar la política actual con los cinco servidores permitidos (no anotaría los recursos externos), dos cabeceras de observación a la vez, nonces y hashes ahora, depender de `SEGURIDAD_PRODUCCION` (la réplica no vería nada), una vista propia que reciba reportes (tabla con retención y trabajo en el único worker) y un servicio de terceros (regla 8.10 y lista de salida de PythonAnywhere).
 
 ## Pasos
 

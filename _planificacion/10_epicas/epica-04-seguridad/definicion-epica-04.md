@@ -4,7 +4,7 @@
 - **Fase del plan:** 4 (`plan-de-trabajo.md`, «FASE 4»), ampliada el 2026-10-27 (anexo del plan, RDA-014)
 - **Objetivo:** cerrar las vulnerabilidades identificadas, defender las entradas de la aplicación (HTML enriquecido, acceso y archivos) y aplicar el estándar de configuración de producción de Django.
 - **Precondición:** Épica 02 completa. **Orden de ejecución:** después de la Épica 03 (decisión del desarrollador del 2026-10-27), incluida la 04-06.
-- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 con D1 a D6 resueltas; 04-05 con D1 a D4 resueltas; 04-06 con D1 a D4 resueltas; 04-07 con D1 a D4 resueltas; 04-08 con D1 a D5 resueltas; 04-09 redactada (con ella, las nueve iteraciones están redactadas); avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
+- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 con D1 a D6 resueltas; 04-05 con D1 a D4 resueltas; 04-06 con D1 a D4 resueltas; 04-07 con D1 a D4 resueltas; 04-08 con D1 a D5 resueltas; 04-09 con D1 a D4 resueltas; 04-10 redactada; hallazgos sin iteración con destino decidido; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
 
 ## Alcance
 
@@ -17,8 +17,9 @@
 7. **Defensa contra inyección** (nuevo, AUD-03-001): el HTML que guarda Summernote en `pedido.detalles_pedido`, `cotizacion.detalles` y `producto.descripcion` se imprime con `|safe` sin limpiar (XSS almacenado). Se sanitiza con una lista blanca de etiquetas y atributos. Hoy solo escribe un usuario de confianza, pero la Épica 09 agrega operadores y un operador no debe poder ejecutar código en la sesión de un superusuario: **esta iteración es requisito de la 09**. Se documenta además la revisión de inyección SQL: la única consulta directa (`pedidos/utils.py`, `connection.cursor()`) usa parámetros y el resto pasa por el ORM; la iteración deja una prueba o una regla que impida introducir SQL armado con texto.
 8. **Protección del acceso y límites de entrada** (nuevo, AUD-03-004): límite de intentos fallidos de acceso por usuario y por dirección (fuerza bruta), con evento registrado, en las dos entradas que existen hoy: `accounts/login/` y el acceso del admin de Django; límites de tamaño para las subidas (`DATA_UPLOAD_MAX_MEMORY_SIZE`, `FILE_UPLOAD_MAX_MEMORY_SIZE` y validación del tamaño de las imágenes de referencia).
 9. **Política de seguridad de contenido en observación** (nuevo): `ContentSecurityPolicyMiddleware` de Django 6.0 en modo `SECURE_CSP_REPORT_ONLY`, para conocer qué recursos carga la aplicación sin bloquear nada mientras existan los CDN. El modo estricto (`SECURE_CSP`) se activa en la Épica 08, cuando ya no haya recursos externos.
-10. **Datos personales en los registros de la plataforma** (AUD-04-003, agregado el 2026-10-27): decidir entre búsqueda por POST o riesgo aceptado documentado (`PENDIENTE_DESARROLLADOR`).
+10. **Datos personales en los registros de la plataforma** (AUD-04-003, agregado el 2026-10-27): decidir entre búsqueda por POST o riesgo aceptado documentado. **Resuelto el 2026-11-17 (decisión del desarrollador, dicha por él): riesgo aceptado y documentado, sin iteración.**
 11. **Credenciales del panel de PythonAnywhere** (AUD-04-002, agregado el 2026-10-27): en la 04-03, quién tiene acceso al panel; el procedimiento operativo va en la Épica 13.
+12. **Confirmación reforzada al eliminar un pedido con pagos** (nuevo, 04-10, decisión del desarrollador del 2026-11-17): antes de borrar, la pantalla informa cuántos pagos y qué monto se borrarán junto con el pedido, el servidor exige una confirmación explícita y queda un evento con la cantidad de pagos. No cambia la cascada. **El cliente no ha respondido si el borrado es intencional** (`PENDIENTE_CLIENTE`, registro, sección 2); la iteración no espera esa respuesta.
 
 ## Iteraciones
 
@@ -32,7 +33,8 @@
 | 04-06 | [Protección del historial ante borrados en cascada](iteracion-04-06-proteccion-del-historial.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | Nueva (Auditoría 02) |
 | 04-07 | [Sanitización del HTML enriquecido y revisión de inyección SQL](iteracion-04-07-sanitizacion-html-e-inyeccion-sql.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | Nueva (Auditoría 03) |
 | 04-08 | [Protección del acceso y límites de entrada](iteracion-04-08-proteccion-del-acceso-y-limites-de-entrada.md) (Pendiente, redactada, decisiones resueltas D1 a D5, 2026-11-17) | Nueva (Auditoría 03) |
-| 04-09 | [Política de seguridad de contenido en observación](iteracion-04-09-politica-de-contenido-en-observacion.md) (Pendiente, redactada, decisiones abiertas D1 a D4, 2026-11-17) | Nueva (reorganización 2026-10-27) |
+| 04-09 | [Política de seguridad de contenido en observación](iteracion-04-09-politica-de-contenido-en-observacion.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | Nueva (reorganización 2026-10-27) |
+| 04-10 | [Confirmación reforzada al eliminar un pedido con pagos](iteracion-04-10-confirmacion-reforzada-al-eliminar-un-pedido-con-pagos.md) (Pendiente, redactada, decisiones abiertas D1 a D4, 2026-11-17) | Nueva (decisión del desarrollador, 2026-11-17) |
 
 ## Para la redacción de 04-01
 
@@ -45,7 +47,7 @@
 
 ## Para la iteración que se defina · datos personales en los registros (AUD-04-003)
 
-- La cadena de consulta `?busqueda=` (teléfonos y nombres de clientes) queda en `access.log` y en las líneas de petición de uWSGI en `server.log`. El registro propio de la aplicación ya la excluye (`request.path`). Opciones: búsqueda por POST o riesgo aceptado documentado. `PENDIENTE_DESARROLLADOR`.
+- La cadena de consulta `?busqueda=` (teléfonos y nombres de clientes) queda en `access.log` y en las líneas de petición de uWSGI en `server.log`. El registro propio de la aplicación ya la excluye (`request.path`). Opciones: búsqueda por POST o riesgo aceptado documentado. **Resuelto el 2026-11-17: riesgo aceptado y documentado** (ver «Hallazgos sin iteración»).
 
 ## Decisiones de la épica
 
@@ -53,22 +55,27 @@
 - Cada iteración es un despliegue con su propio propósito; 04-02 se despliega con una ventana de observación porque HSTS no se puede deshacer en los navegadores que ya lo recibieron.
 - 04-07 · Cómo se sanitiza: al guardar, al mostrar o en ambos momentos, y con qué herramienta (`nh3` es la opción recomendada: dependencia nueva, requiere consulta y RDA). **Resuelta el 2026-11-17** (D1 a D4 de la 04-07): al guardar y al mostrar; `nh3`, con consulta previa respondida y RDA-020 propuesta (se escribe al ejecutar); lista blanca exacta de la barra, sin atributos; datos ya guardados sin limpiar. El HTML ya guardado en producción se revisa en la réplica antes de decidir si hace falta limpiarlo (operación sobre datos, con respaldo previo).
 - 04-08 · Mecanismo contra fuerza bruta: contador propio en la caché local (válida porque hay un solo proceso) o una librería como `django-axes` (dependencia nueva y tabla nueva de Clase 2). **Resuelta el 2026-11-17** (D1 a D5 de la 04-08): contador propio en la caché local; 5 fallos por usuario y 20 por dirección en 15 minutos, con bloqueo de 15 (medir antes); dirección real por `ACCESO_PROXIES_CONFIABLES`, medida en producción; evento nuevo `acceso_bloqueado` con migración de Clase 1 (`0009`); imagen de 5 MB y chequeo temprano de `CONTENT_LENGTH`.
-- 04-09 · Dónde se leen los reportes de la política en modo observación (la consola del navegador en la réplica es suficiente; no se agrega un punto de recepción de reportes). Se confirma en la iteración. **Detallada en la 04-09 como D1 a D4 (2026-11-17, abiertas):** la recomendada observa la política final (solo `'self'`), sin nonces ni cambios en plantillas, con un interruptor por variable y lectura en la consola.
+- 04-09 · Dónde se leen los reportes de la política en modo observación (la consola del navegador en la réplica es suficiente; no se agrega un punto de recepción de reportes). Se confirma en la iteración. **Resuelta el 2026-11-17 (D1 a D4 de la 04-09):** política final solo con `'self'`; sin nonces; variable `CSP_OBSERVACION`, activa por defecto e independiente de `SEGURIDAD_PRODUCCION`; reporte en la consola del navegador en la réplica.
+- 04-10 · Confirmación reforzada al eliminar un pedido con pagos (decisión del desarrollador, 2026-11-17, dicha por él): informa cantidad y monto, exige confirmación explícita y deja un evento con la cantidad de pagos, **sin cambiar la cascada**. El cliente no ha respondido si el borrado es intencional (aviso). Detallada en la 04-10 como D1 a D4 (abiertas): tipo de evento, forma de la confirmación, cuándo se exige y qué pasa si cambian los pagos.
 
 ## Fuera de alcance
 
 - **Protección contra DoS o DDoS dentro de Django.** Con un solo proceso uWSGI, cuando una petición maliciosa llega a un middleware ya ocupó al único trabajador: un limitador en la aplicación no frena una inundación y da una falsa sensación de seguridad. Ese ataque se contiene en la red, que en el plan gratuito es responsabilidad de PythonAnywhere. Lo que sí está al alcance de la aplicación es la fuerza bruta en el acceso y el tamaño de las subidas (04-08).
+- **Decididos el 2026-11-17 (dicho por el desarrollador):** AUD-02-030 (recuperación de contraseña y acceso del admin) queda **solo documentado**; eliminar una cotización **sin evento** es una decisión explícita documentada; la página de error de CSRF va a la **Épica 08**; la copia de `media/` (AUD-02-023) queda **documentada y va a la Épica 14**. Ver «Hallazgos sin iteración».
+- **Pagos en cascada con el pedido:** la 04-10 solo informa, pide confirmación y deja un evento. **No** cambia la cascada, **no** anula en vez de borrar y **no** pone `PROTECT` en `Pago.pedido`.
 - Corregir el respaldo de emergencia en el mismo disco (AUD-02-024) más allá de lo que decida la 04-04; el respaldo externo es la Épica 14.
 
 ## Criterio de término
 
 - `python manage.py check --deploy` sin advertencias en producción.
-- Las pruebas de regresión de escritura por GET, eliminación de pagos y borrado en cascada pasan de fallo esperado a verde.
+- Las pruebas de regresión de escritura por GET, eliminación de pagos y borrado en cascada pasan de fallo esperado a verde (R7 por la 04-01; R14, del cliente, por la 04-06). **La 04-10 no retira ningún `expectedFailure`:** no cambia la cascada de pagos; sus pruebas son nuevas (no son regresión de un defecto confirmado).
 - Ningún proceso del servidor muestra la contraseña de la base en sus argumentos.
 - Un respaldo generado desde la web se descarga en el equipo del usuario (verificado en producción después del despliegue de la 04-01).
 - Un `<script>` guardado en cualquiera de los tres campos enriquecidos no se ejecuta al mostrar el detalle (prueba automatizada).
 - Después de N intentos fallidos el acceso queda bloqueado por un tiempo definido y queda un evento (prueba automatizada).
 - La política de seguridad de contenido está activa en modo observación en producción.
+- Un pedido con pagos solo se elimina con confirmación explícita, la pantalla informa cuántos pagos y qué monto se borran, y queda un evento con la cantidad de pagos (prueba automatizada, 04-10).
+- Las decisiones «riesgo aceptado» y «solo documentado» (AUD-04-003, AUD-02-030, eliminar cotización sin evento, AUD-02-023) están escritas en `docs/operacion/` (revisión final de la Épica 04); hoy constan en esta definición, el registro y la auditoría.
 
 ## Notas
 
@@ -97,40 +104,33 @@
 - **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-08, D1 a D5 resueltas:** contador propio en la caché local; 5 por usuario y 20 por dirección en 15 minutos, bloqueo de 15, midiendo antes; `ACCESO_PROXIES_CONFIABLES`; tipo `acceso_bloqueado` con migración de Clase 1, que será la `0009` (la `0008` es de la 04-06; verificado: hoy la última es la `0007`); imagen de 5 MB y chequeo temprano de `CONTENT_LENGTH`. La redacción agrega la variable `ACCESO_FALLOS_POR_DIRECCION` (medición e interruptor de emergencia) para confirmar. [bitacora-04-08-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-08-cierre.md).
 - **2026-11-17 · 04-09 redactada** con cuatro decisiones abiertas. Nombres verificados en Django 6.0.1: `django.middleware.csp.ContentSecurityPolicyMiddleware` y `SECURE_CSP_REPORT_ONLY`. Inventario con archivo y línea: cinco servidores externos, siete scripts en línea (ninguno con variables de plantilla), dos bloques `<style>`, ocho atributos `style` y siete manejadores en línea. Orden de despliegue: 04-01 → … → 04-08 → 04-09. [bitacora-04-09-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-09-redaccion.md). **Siguiente: revisión final de la Épica 04** (con los hallazgos sin iteración de la sección siguiente).
 
-## Hallazgos sin iteración (para la revisión final · 2026-11-17)
+- **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-09, D1 a D4 resueltas:** política final solo con `'self'`; sin nonces; variable `CSP_OBSERVACION`, activa por defecto e independiente de `SEGURIDAD_PRODUCCION`; reporte en la consola del navegador en la réplica. En la 04-08 se confirmó `ACCESO_FALLOS_POR_DIRECCION` y los dos valores explícitos de 2,5 MB. [bitacora-04-09-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-09-cierre.md).
+- **2026-11-17 (decisiones del desarrollador, dichas por él) · destino de los hallazgos sin iteración:** AUD-04-003, riesgo aceptado y documentado; AUD-02-030, solo documentado; eliminar cotización sin evento, decisión explícita documentada; página de error de CSRF, a la Épica 08; AUD-02-023, documentado y a la Épica 14; pagos borrados en cascada, iteración nueva 04-10 (confirmación reforzada con evento). Gravedades sin cambio. [bitacora-04-09-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-09-cierre.md).
+- **2026-11-17 · 04-10 redactada** con cuatro decisiones abiertas. **El evento `pedido_eliminado` ya existe** (`models.py:254`, `views.py:383`): no hace falta un tipo nuevo para registrar la cantidad de pagos (D1-A, sin migración; D1-B, con `0010` de Clase 1). El cliente no ha respondido si el borrado es intencional. Orden de despliegue: 04-01 → … → 04-09 → 04-10. [bitacora-04-10-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-10-redaccion.md). **Siguiente: revisión final de la Épica 04.**
 
-Hallazgos y preguntas que pertenecen a la Épica 04 o la tocan y **hoy no tienen iteración**. Las opciones son para decidir en la revisión final; **ninguna está decidida**.
+## Hallazgos sin iteración · destinos decididos (2026-11-17)
 
-**1. AUD-04-003 · datos personales en los registros de la plataforma** (Media; `PENDIENTE_DESARROLLADOR`). La búsqueda viaja por GET con `?busqueda=` en cuatro listados (`views.py:454`, `:639`, `:792`, `:1075`; cuatro plantillas) y la cadena queda en `access.log` y en `server.log`.
-- **A.** Búsqueda por POST. Cambia cuatro vistas y cuatro plantillas; al volver con «atrás» el navegador pide confirmar el reenvío (se vio con el acceso en la evidencia de la 00-06) y se pierden los enlaces compartibles.
-- **B.** POST y redirección a una URL sin texto, guardando la búsqueda en la sesión. URL limpia y sin aviso de reenvío; más código y estado.
-- **C.** Aceptar el riesgo y documentarlo: los registros los ve solo el titular de la cuenta y el referente solo sale hacia el mismo sitio (`SECURE_REFERRER_POLICY = "same-origin"`, `global_settings.py:662`, verificado), así que los CDN no reciben la búsqueda. Se documenta en `docs/operacion/` y en la guía de lectura de registros (13-03).
-- **D.** Buscar solo por nombre, sin teléfono. Es un cambio funcional: exige confirmar con el cliente.
+Hallazgos y preguntas de la Épica 04 que no tenían iteración. **Destinos decididos por el desarrollador el 2026-11-17 (dicho por él).** Las opciones que se consideraron se conservan como registro.
 
-**2. AUD-02-030 · recuperación de contraseña y acceso propio del admin** (Baja). `accounts/` incluye `django.contrib.auth.urls` (`urls.py:25`); sin correo configurado, la recuperación no sirve. La plantilla base solo usa `logout` (`base.html:237`, por POST) y ninguna usa el cambio de contraseña (búsqueda).
-- **A.** Incluir solo `login` y `logout` en lugar de `django.contrib.auth.urls`. Es la línea que la 04-08 también toca: conviene decidir el orden entre ambas (despliegues separados, RDA-007).
-- **B.** Dejarlo y documentarlo como inofensivo.
-- **C.** A y, además, llevar el acceso del admin al de la aplicación. La 04-08 ya limita los intentos en las dos entradas.
+| Hallazgo | Destino | Dónde queda |
+| :------- | :------ | :---------- |
+| AUD-04-003 · datos personales en los registros | **Riesgo aceptado y documentado** | Auditoría (estado «Riesgo aceptado», `_planificacion/README.md`, 5.3); nota operativa en `docs/operacion/` |
+| AUD-02-030 · recuperación de contraseña y acceso del admin | **Solo documentado**, sin cambio de código | Auditoría (corrección y estado); nota en `docs/operacion/` |
+| Eliminar una cotización no registra evento | **Decisión explícita documentada:** sin evento | Esta definición y el registro (sección 4) |
+| Página de error de CSRF o sesión vencida | **Épica 08** | Registro (sección 4) y Épica 08 |
+| AUD-02-023 · `media/` sin copia | **Documentado y Épica 14** | Auditoría (corrección y estado); nota en `docs/operacion/` |
+| Pedidos con pagos borrados en cascada | **Iteración nueva 04-10:** confirmación reforzada con evento. **El cliente no ha respondido** si el borrado es intencional (`PENDIENTE_CLIENTE`) | [iteracion-04-10](iteracion-04-10-confirmacion-reforzada-al-eliminar-un-pedido-con-pagos.md) y registro, sección 2 |
 
-**3. Pregunta `PENDIENTE_CLIENTE` · pedidos con pagos borrados en cascada** (registro, sección 2; misma clase que AUD-02-001). `eliminar_pedido` borra el pedido y sus pagos (`models.py:92`) y solo deja el evento «Pedido #N eliminado» (`views.py:383`).
-- **A.** `PROTECT` en `Pago.pedido` y mensaje, como la 04-06 (Clase 1): impide borrar pedidos con pagos.
-- **B.** Permitir con confirmación reforzada y dejar en el evento cuántos pagos se borraron (solo la cantidad).
-- **C.** Anular en lugar de borrar (estado nuevo): funcionalidad nueva, requiere RDA y al cliente.
-- **D.** Dejarlo como está si el cliente lo confirma. Depende de la respuesta del cliente.
+**1. AUD-04-003 · datos personales en los registros** (Media). La búsqueda viaja por GET con `?busqueda=` en cuatro listados (`views.py:454`, `:639`, `:792`, `:1075`; cuatro plantillas) y la cadena queda en `access.log` y en `server.log`. **Destino: riesgo aceptado y documentado.** Lo que sostiene la aceptación (verificado): los registros los ve solo el titular de la cuenta de la plataforma y el referente solo sale hacia el mismo sitio (`SECURE_REFERRER_POLICY = "same-origin"`, `global_settings.py:662`), así que los CDN no reciben la búsqueda. Opciones que se descartaron: búsqueda por POST (el navegador pide confirmar el reenvío al volver, se pierden los enlaces compartibles), POST con redirección guardando la búsqueda en la sesión (más código y estado) y buscar solo por nombre (cambio funcional).
 
-**4. Eliminar una cotización no registra evento** (propuesta de la redacción de la 04-01; `views.py:949`). Los tipos de evento son un inventario cerrado (RDA-008).
-- **A.** Tipo nuevo `cotizacion_eliminada` (Clase 1, cuenta para la estimación de crecimiento).
-- **B.** Dejarlo sin evento por decisión explícita.
-- **C.** No mezclarlo con la migración `0009` de la 04-08 (un propósito por despliegue, RDA-007).
+**2. AUD-02-030 · recuperación de contraseña y acceso propio del admin** (Baja). `accounts/` incluye `django.contrib.auth.urls` (`urls.py:25`); sin correo configurado, la recuperación no sirve y solo expone formularios. **Destino: solo documentado.** Se deja constancia de que la plantilla base solo usa `logout` (`base.html:237`, por POST), de que ninguna usa el cambio de contraseña (búsqueda) y de que la 04-08 limita los intentos en las dos entradas de acceso. Opciones que se descartaron por ahora: incluir solo `login` y `logout` (toca la misma línea de `urls.py` que la 04-08) y llevar el acceso del admin al de la aplicación.
 
-**5. Página para el fallo de CSRF o la sesión vencida** (propuesta de la 03-04). `urls.py` solo define `handler404` y `handler500`; el 403 por CSRF mostraría la página mínima de Django (inferido) y el formulario se perdería. Con la 04-01 hay más formularios POST.
-- **A.** Vista propia (`CSRF_FAILURE_VIEW`, `settings.py`, consulta previa) con una plantilla en el estilo de la 500 y registro del evento.
-- **B.** Dejar la de Django.
-- **C.** Hacerlo en la Épica 08, junto con los demás avisos de interfaz (AUD-05-006 y AUD-05-007).
+**3. Eliminar una cotización no registra evento** (propuesta de la 04-01; `views.py:949`). **Destino: decisión explícita documentada: sin evento.** Los eventos son un inventario cerrado (RDA-008): `cliente_eliminado`, `producto_eliminado`, `pedido_eliminado` y `pago_eliminado` existen; el de cotización no, por decisión. No se agrega ningún tipo ni migración por esto.
 
-**6. AUD-02-023 · imágenes de `media/` sin ninguna copia** (Media; no es de la Épica 04, pero la 04-08 limita su tamaño). Hoy 3 MB en 11 archivos (2026-10-20). La asignación «Épica 07» viene de una nota de la 00-05 anterior a la renumeración de RDA-014: por confirmar.
-- **A.** Procedimiento manual de descarga periódica, documentado (Épica 13).
-- **B.** Incluir `media/` en el respaldo (más disco y CPU en un plan con 512 MiB).
-- **C.** Copia en S3 (Épica 14).
+**4. Página para el fallo de CSRF o la sesión vencida** (propuesta de la 03-04). **Destino: Épica 08**, junto con los demás avisos de interfaz (AUD-05-006 y AUD-05-007). Con la 04-01 hay más formularios POST; el 403 por CSRF sigue mostrando la página de Django (inferido). La vista propia exigirá `CSRF_FAILURE_VIEW` en `settings.py` (consulta previa).
+
+**5. AUD-02-023 · imágenes de `media/` sin ninguna copia** (Media). Hoy 3 MB en 11 archivos (2026-10-20). **Destino: documentado y Épica 14** (copia fuera del servidor); mientras tanto, la protección es manual y queda escrita. La asignación anterior («Épica 07», nota de la 00-05) queda reemplazada por esta decisión. La 04-08 limita la imagen a 5 MB, lo que acota el crecimiento.
+
+**6. Pedidos con pagos borrados en cascada** (pregunta `PENDIENTE_CLIENTE`; misma clase que AUD-02-001, sin ser ese hallazgo). `eliminar_pedido` borra el pedido y sus pagos (`models.py:92`) y solo deja el evento «Pedido #N eliminado» (`views.py:383`). **Destino: iteración nueva 04-10**, con confirmación reforzada y evento con la cantidad de pagos, sin cambiar la cascada. **El cliente no ha respondido** si el borrado es intencional; si respondiera que no, se replantea (`PROTECT` o anular), fuera de la 04-10.
 
 **Cerrados por decisión, para revisar al cerrar la épica:** AUD-02-010 (clave en el historial: sin rotación y riesgo aceptado, 04-03 D3) y AUD-04-002 (acceso al panel: solo registrado por rol, el resto a la 13-02, 04-03 D5). **Tienen iteración fuera de la épica:** AUD-03-005 (librerías sin integridad, 08-07 y 08-08, que prepara la 04-09), AUD-05-004 (Épica 08) y AUD-02-020 (modo estricto, Épica 06).
