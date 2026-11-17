@@ -1,15 +1,15 @@
 # Iteración 04-08 · Protección del acceso y límites de entrada
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones abiertas). Redactada el 2026-11-17 ([bitacora-04-08-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-08-redaccion.md)). Cinco decisiones `PENDIENTE_DESARROLLADOR` (sección «Decisiones»), cada una con opción recomendada.
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-08-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-08-redaccion.md)); D1 a D5 resueltas por el desarrollador el mismo día ([bitacora-04-08-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-08-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 03); `definicion-epica-04.md`, alcance 8 y decisión de la épica sobre la 04-08.
 - **Depende de:** la 04-04 (tope de 20 MB de la restauración, que esta iteración coordina) y las que editan `settings.py` (04-02, 04-03, 04-05): la 04-08 parte de lo que dejen. Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → … → 04-07 → **04-08**.
 - **Es requisito de:** la Épica 09 (precondición: «más cuentas, más superficie para fuerza bruta»; registro, fila 09-01).
-- **RDA relacionadas:** RDA-007. Una RDA nueva solo si D1 elige una dependencia (la siguiente libre sería la RDA-021, porque la RDA-020 está propuesta para la 04-07).
+- **RDA relacionadas:** RDA-007. **Sin RDA nueva:** D1 no agrega dependencia (la siguiente libre sería la RDA-021, porque la RDA-020 está propuesta para la 04-07).
 - **Hallazgos que cierra:** AUD-03-004. **Propuesta que absorbe:** redirigir al panel desde el acceso cuando ya hay sesión (registro, sección 4, fila de 00-06). **No cierra:** AUD-02-030 (recuperación de contraseña y acceso propio del admin), que sigue aparte.
-- **Cambio de esquema:** ninguno con D4-B; **Clase 1** (una migración de metadatos, `choices` de `RegistroEvento.tipo`) con D4-A. Con D1-B (`django-axes`) sería **Clase 2** (tablas nuevas).
-- **Respaldo previo al despliegue:** el de rutina; **obligatorio** si hay migración (D4-A) o tablas (D1-B).
-- **Archivos que tocará la ejecución:** `pedidos/limite_acceso.py` (nuevo), `pedidos/forms.py` (formularios de acceso y validación de la imagen), `pedidos/senales.py`, `pedidos/admin.py` (`admin.site.login_form`), `pedidos/views.py` (chequeo temprano del tamaño del cuerpo), `pedidos/templates/registration/login.html`, `pedidos/models.py` y `pedidos/migrations/0009_…` (**consulta previa**, solo D4-A), pruebas nuevas, `docs/operacion/` (procedimiento de desbloqueo) y **archivos de configuración con consulta previa** (`AGENTS.md`, sección 6): `PedidosApp/settings.py` (`CACHES`, límites de subida, variable de proxies), `PedidosApp/urls.py` (la vista de acceso con redirección) y `.env.example`.
+- **Cambio de esquema (D4):** **Clase 1**, una migración de metadatos (`choices` de `RegistroEvento.tipo`). **Numeración verificada el 2026-11-17:** `pedidos/migrations/` llega hasta `0007_registroevento`; la 04-06 crea la `0008` y esta iteración, que se despliega después, crea la **`0009`** con dependencia en la `0008` de la 04-06 (nombre exacto de la dependencia: el que dé `makemigrations`). Si al ejecutar la 04-06 aún no está creada, la numeración se revisa con `showmigrations pedidos` antes de escribir nada.
+- **Respaldo previo al despliegue:** **sí**, obligatorio: hay migración.
+- **Archivos que tocará la ejecución:** `pedidos/limite_acceso.py` (nuevo), `pedidos/forms.py` (formularios de acceso y validación de la imagen), `pedidos/senales.py`, `pedidos/admin.py` (`admin.site.login_form`), `pedidos/views.py` (chequeo temprano del tamaño del cuerpo), `pedidos/templates/registration/login.html`, `pedidos/models.py` y `pedidos/migrations/0009_…` (**consulta previa** para `makemigrations` y `migrate`), pruebas nuevas, `docs/operacion/` (procedimiento de desbloqueo) y **archivos de configuración con consulta previa** (`AGENTS.md`, sección 6): `PedidosApp/settings.py` (`CACHES`, límites de subida, variables de proxies y de límite por dirección), `PedidosApp/urls.py` (la vista de acceso con redirección) y `.env.example`.
 
 ## Objetivo
 
@@ -69,15 +69,15 @@ Que adivinar una contraseña por intentos repetidos sea inviable en las dos entr
 ## Alcance
 
 1. **Límite de intentos fallidos** en `accounts/login/` y en el acceso del admin, con **dos contadores independientes** (D2): por usuario (nombre normalizado) y por dirección. Al llegar al límite, bloqueo temporal; los intentos bloqueados **no** llaman a `authenticate()` y no escriben `acceso_fallido`.
-2. **Un evento por bloqueo**, escrito una sola vez cuando el bloqueo empieza (D4), con usuario nulo y sin dirección IP ni nombre tecleado (solo el identificador del usuario si existe).
+2. **Un evento `acceso_bloqueado` por bloqueo** (tipo nuevo, D4), escrito una sola vez cuando el bloqueo empieza, con usuario nulo y sin dirección IP ni nombre tecleado (solo el identificador del usuario si existe).
 3. **Mensaje al usuario** en español de Chile, igual exista o no el usuario, con el tiempo de espera; en `login.html` se agrega la rama del bloqueo (hoy la plantilla muestra siempre «Credenciales incorrectas»).
 4. **Éxito:** un acceso correcto reinicia el contador del usuario (no el de la dirección).
-5. **Dirección del cliente** con una función única (D3), con una variable de entorno para la cantidad de proxies de confianza; sin ella (local), `REMOTE_ADDR`.
-6. **Mecanismo** según D1: contador propio en un alias de caché dedicado (`CACHES`, con `MAX_ENTRIES` explícito).
-7. **Límites de tamaño** (D5): valores explícitos y comentados de `DATA_UPLOAD_MAX_MEMORY_SIZE` y `FILE_UPLOAD_MAX_MEMORY_SIZE`; validación del tamaño de la imagen de referencia en `PedidoForm`; chequeo temprano de `CONTENT_LENGTH` en las vistas que reciben archivos, coordinado con los 20 MB de la 04-04.
+5. **Dirección del cliente** con una función única (D3), con la variable `ACCESO_PROXIES_CONFIABLES` (cantidad de proxies de confianza, defecto `0`); sin ella (local), `REMOTE_ADDR`. El límite por dirección se lee de una variable opcional (`ACCESO_FALLOS_POR_DIRECCION`, defecto 20; `0` desactiva solo ese contador): hace posible la medición de producción y es el interruptor de emergencia (ver «Dirección real»).
+6. **Mecanismo** (D1): contador propio en un alias de caché dedicado (`CACHES`, con `MAX_ENTRIES` explícito).
+7. **Límites de tamaño** (D5): valores explícitos y comentados de `DATA_UPLOAD_MAX_MEMORY_SIZE` y `FILE_UPLOAD_MAX_MEMORY_SIZE` (2,5 MB, sin cambio de comportamiento); imagen de referencia de **5 MB** validada en `PedidoForm`; chequeo temprano de `CONTENT_LENGTH` en las vistas que reciben archivos, coordinado con los 20 MB de la 04-04.
 8. **Redirección:** `accounts/login/` con `redirect_authenticated_user=True` (la propuesta del registro).
 9. **Procedimiento de desbloqueo** en `docs/operacion/` (nueva página breve) y su mención en `retroceso.md` si corresponde.
-10. **Fuera:** lo de la sección anterior.
+10. **Fuera:** lo de la sección «Fuera de alcance».
 
 ## Cómo funciona el diseño recomendado
 
@@ -92,7 +92,8 @@ Que adivinar una contraseña por intentos repetidos sea inviable en las dos entr
 - **Lo que se sabe:** la web app de producción está detrás del proxy de PythonAnywhere (`linea-base-produccion.md`, línea 141: HTTPS forzado y estáticos mapeados por el panel; y la 04-02 depende de cómo ese proxy entrega el esquema, sin verificar). **No consta en el repo qué cabecera trae la dirección real ni cuántos proxies hay.** Se supone, sin verificar, que `X-Forwarded-For` la trae.
 - **El riesgo de falsificarla:** cada proxy **agrega** la dirección que ve al final de `X-Forwarded-For`. Lo que está a la izquierda lo puede escribir el propio cliente: quien confíe en el **primer** valor deja que un atacante cambie su «dirección» en cada intento y evite el contador. Lo confiable es el valor que agregó **nuestro** proxy: el de la derecha, a la altura del número de proxies que sí controlamos.
 - **Si se usa `REMOTE_ADDR` sin más** (sin cabecera) detrás de un proxy, todos los clientes parecerían tener **la dirección del proxy**: el contador de dirección sumaría los fallos de todos y **bloquearía a todos a la vez**, incluido el cliente legítimo. Es el peor error posible de esta iteración.
-- **Diseño recomendado (D3-A):** variable de entorno con la **cantidad de proxies de confianza** (propuesta: `ACCESO_PROXIES_CONFIABLES`, por defecto `0`). Con `0`, `REMOTE_ADDR`. Con `n` mayor que cero, el elemento número `n` contando desde la derecha de `X-Forwarded-For`; si la cabecera trae menos de `n` elementos o el valor no es una dirección válida, vuelve a `REMOTE_ADDR`. El valor de producción **se mide, no se supone** (verificación 3).
+- **Diseño resuelto (D3):** variable de entorno con la **cantidad de proxies de confianza**, `ACCESO_PROXIES_CONFIABLES` (nombre fijado por el desarrollador, por defecto `0`). Con `0`, `REMOTE_ADDR`. Con `n` mayor que cero, el elemento número `n` contando desde la derecha de `X-Forwarded-For`; si la cabecera trae menos de `n` elementos o el valor no es una dirección válida, vuelve a `REMOTE_ADDR`. El valor de producción **se mide, no se supone** (verificación 3).
+- **Interruptor de emergencia:** si un valor mal medido hiciera que todos compartan una misma dirección, poner `0` en `ACCESO_FALLOS_POR_DIRECCION` y recargar desactiva el contador por dirección (queda el del usuario) mientras se corrige `ACCESO_PROXIES_CONFIABLES`. Poner `ACCESO_PROXIES_CONFIABLES` en `0` **no** sirve para eso: devolvería la dirección del proxy.
 - **Sin dependencia:** `django-ipware` o equivalentes serían una dependencia más para una función de diez líneas.
 - **IPv6 (no verificado):** si el servidor entrega direcciones IPv6, un atacante con un bloque propio puede rotar de dirección; el contador por usuario sigue protegiendo.
 
@@ -118,14 +119,14 @@ Que adivinar una contraseña por intentos repetidos sea inviable en las dos entr
 
 ## Riesgo de bloquear al cliente legítimo y cómo se desbloquea
 
-- **Quién puede bloquearse:** (a) el propio dueño, tras equivocarse N veces (cuenta compartida detrás de la misma dirección); (b) **otra persona que conozca el nombre de usuario** y falle a propósito: con un contador por usuario puede dejar al dueño fuera cada 15 minutos. Mitigación parcial: la ruta del admin no es la estándar y la aplicación no publica los nombres; el costo es una espera, no una pérdida de datos. La alternativa de contar por pareja usuario más dirección elimina ese riesgo pero deja pasar a un atacante con muchas direcciones (D2-B).
-- **Bloqueo de todos por error de dirección:** si la cantidad de proxies queda mal puesta (sección «Dirección real»), el contador por dirección bloquea a todos. Por eso la verificación 3 se hace **antes** de dar por buena la iteración y el retroceso es una variable de entorno.
+- **Quién puede bloquearse:** (a) el propio dueño, tras equivocarse N veces (cuenta compartida detrás de la misma dirección); (b) **otra persona que conozca el nombre de usuario** y falle a propósito: con un contador por usuario puede dejar al dueño fuera cada 15 minutos. Mitigación parcial: la ruta del admin no es la estándar y la aplicación no publica los nombres; el costo es una espera, no una pérdida de datos. La alternativa de contar por pareja usuario más dirección eliminaría ese riesgo pero deja pasar a un atacante con muchas direcciones; el desarrollador la descartó en D2.
+- **Bloqueo de todos por error de dirección:** si la cantidad de proxies queda mal puesta (sección «Dirección real»), el contador por dirección bloquea a todos. Por eso la verificación 3 se hace **antes** de dar por buena la iteración y el interruptor de emergencia es una variable de entorno (`ACCESO_FALLOS_POR_DIRECCION=0`).
 - **Desbloqueo:** (1) **automático** al vencer el tiempo (el mensaje lo dice); (2) **manual**, **recargar la web app** (borra la caché local); (3) en el peor caso, retroceso (`retroceso.md`, caso 1). Una orden de gestión no sirve con la caché local. El cliente tiene acceso al panel de PythonAnywhere (AUD-04-002) y recarga la aplicación; el procedimiento se escribe en `docs/operacion/` en lenguaje simple.
 - **Quién entra:** no se sabe cuántos usuarios tiene producción (`PENDIENTE_DESARROLLADOR`, es un conteo de solo lectura); con un solo superusuario, el bloqueo de 15 minutos es un inconveniente, no una pérdida de servicio.
 
-## Evidencia que falta antes de fijar los números (la reúne el desarrollador; no medida)
+## Evidencia previa obligatoria (la reúne el desarrollador; no medida)
 
-Los números de D2 son una propuesta, no el resultado de una medición: no se conoce cuántos intentos fallidos hace hoy una persona legítima. La réplica trae los eventos `acceso_fallido` a la fecha de su último refresco, y esta consulta de solo lectura da los máximos por ventana de 15 minutos sin mostrar nada más que conteos (`mysql` exige consulta previa incluso en local, `AGENTS.md`, sección 6; **no ejecutada ni probada** por el agente):
+D2 fijó los números de partida (5 por usuario, 20 por dirección, 15 y 15 minutos) y pidió **medir antes**: no se conoce cuántos intentos fallidos hace hoy una persona legítima. **Regla de detención:** si la consulta muestra que algún usuario existente ya tuvo **4 o más fallos en una misma ventana de 15 minutos**, el límite de 5 queda demasiado justo y se consulta antes de seguir. La réplica trae los eventos `acceso_fallido` a la fecha de su último refresco, y esta consulta de solo lectura da los máximos por ventana de 15 minutos sin mostrar nada más que conteos (`mysql` exige consulta previa incluso en local, `AGENTS.md`, sección 6; **no ejecutada ni probada** por el agente):
 
 ```sql
 SELECT TIMESTAMPDIFF(MINUTE, '2000-01-01', momento) DIV 15 AS ventana,
@@ -138,50 +139,38 @@ ORDER BY fallos DESC
 LIMIT 10;
 ```
 
-En la bitácora se anotan solo los conteos (la columna `resumen` puede traer un nombre de usuario real: no se copia). Los eventos **no guardan la dirección**, así que **el límite por dirección no se puede calibrar con datos** (no verificado). La carpeta `media/` de producción se midió el 2026-10-20 (3 MB, 11 archivos); el archivo más grande de `media/referencias/` se mide para fijar D5 (el desarrollador, desde el panel de PythonAnywhere).
+En la bitácora se anotan solo los conteos (la columna `resumen` puede traer un nombre de usuario real: no se copia). Los eventos **no guardan la dirección**, así que **el límite por dirección no se puede calibrar con datos** (no verificado). La carpeta `media/` de producción se midió el 2026-10-20 (3 MB, 11 archivos); el archivo más grande de `media/referencias/` se mide para comprobar que los 5 MB de D5 no rechazan un uso normal (el desarrollador, desde el panel de PythonAnywhere); si hay archivos de más de 5 MB, se consulta antes de seguir.
 
-## Decisiones (`PENDIENTE_DESARROLLADOR`)
+## Decisiones (resueltas por el desarrollador, 2026-11-17)
 
-**D1 · Mecanismo.**
-- **A (recomendada): contador propio en la caché local**, en un alias de caché dedicado, sin dependencia ni tabla. Pierde los contadores al recargar y se desbloquea recargando (ver arriba). Es lo que la definición de la épica propone como primera opción y encaja con las reglas 8.10 y 8.11.
-- **B:** `django-axes`. Persiste y trae su desbloqueo, pero agrega una dependencia con RDA, tablas de Clase 2 con purga y una escritura por intento, para una aplicación de pocos usuarios.
-- **C:** contador propio sobre una caché de base de datos. Persiste, pero agrega una tabla fuera de las migraciones y un paso de producción.
+| # | Decisión | Resuelta como |
+| :- | :------- | :------------ |
+| D1 | Mecanismo | **Contador propio en la caché local** (opción A), en un alias de caché dedicado, sin dependencia ni tabla. Pierde los contadores al recargar y se desbloquea recargando. |
+| D2 | Qué se cuenta y cuánto | **5 fallos por usuario y 20 por dirección**, en una ventana de **15 minutos**, con **bloqueo de 15 minutos**; dos contadores independientes; un acceso correcto borra el del usuario. **Medir antes con la consulta incluida** (sección «Evidencia previa obligatoria»). |
+| D3 | Dirección real | **Variable de proxies de confianza, `ACCESO_PROXIES_CONFIABLES`**, defecto `0` (`REMOTE_ADDR`); el valor de producción se mide (verificación 3), con vuelta a `REMOTE_ADDR` ante cualquier duda. |
+| D4 | Evento del bloqueo | **Tipo nuevo `acceso_bloqueado`**, con migración de **Clase 1** (`0009`, después de la `0008` de la 04-06). La iteración se detiene si `sqlmigrate` muestra cualquier `ALTER` (`AGENTS.md`, regla 8.1). |
+| D5 | Límites de tamaño | **Imagen de referencia de 5 MB** y **chequeo temprano de `CONTENT_LENGTH`** (20 MB de la 04-04 más 1 MB de margen en `restaurar_bd`; imagen más 2,5 MB en `crear_pedido` y `editar_pedido`). Valores explícitos de `DATA_UPLOAD_MAX_MEMORY_SIZE` y `FILE_UPLOAD_MAX_MEMORY_SIZE` en 2,5 MB (parte de la opción recomendada, sin cambio de comportamiento). |
 
-**D2 · Qué se cuenta y cuánto (N y tiempos).**
-- **A (recomendada):** **dos contadores independientes** (usuario y dirección), ambos con **ventana de 15 minutos** desde el primer fallo y **bloqueo de 15 minutos**. Por usuario: **5 fallos**. Por dirección: **20 fallos** (más alto porque una oficina o una red móvil comparten dirección). Un acceso correcto borra el contador del usuario. Es una propuesta sin medición (sección anterior).
-- **B:** contar por **pareja** usuario y dirección: el dueño no puede ser bloqueado desde fuera, pero un atacante con muchas direcciones obtiene N intentos por dirección.
-- **C:** los números de A con bloqueo creciente (15 minutos, luego una hora). Más defensa, más estado en memoria y más forma de dejar fuera al dueño. No se recomienda ahora.
+**Qué se descartó (para no volver a discutirlo):** `django-axes` (dependencia con RDA, tablas de Clase 2 con purga y una escritura por intento), la caché en base de datos y en archivos, contar por pareja usuario más dirección, el bloqueo creciente, `REMOTE_ADDR` sin más (bloquea a todos detrás del proxy), el primer valor de `X-Forwarded-For` (lo escribe el cliente), reutilizar `acceso_fallido` para el bloqueo y bajar `DATA_UPLOAD_MAX_MEMORY_SIZE`.
 
-**D3 · Dirección real.**
-- **A (recomendada):** cantidad de proxies de confianza en una variable de entorno (`ACCESO_PROXIES_CONFIABLES`, defecto `0`), el valor se fija midiendo en producción (verificación 3), con vuelta a `REMOTE_ADDR` ante cualquier duda.
-- **B:** siempre `REMOTE_ADDR`: sin riesgo de falsificación, pero **detrás del proxy bloquea a todos a la vez**. Solo sirve si la medición muestra que `REMOTE_ADDR` ya es la dirección real.
-- **C:** el primer valor de `X-Forwarded-For`. **Descartada:** lo escribe el cliente.
-
-**D4 · Evento del bloqueo.**
-- **A (recomendada): tipo nuevo `acceso_bloqueado`** («Acceso bloqueado»): se filtra y cuenta solo en el admin de eventos y en la lectura de los informes. Requiere una migración de **Clase 1** (`choices` de `RegistroEvento.tipo`; la 04-06 usa la `0008`, esta sería la `0009`; **la iteración se detiene si `sqlmigrate` muestra cualquier `ALTER`**, `AGENTS.md`, regla 8.1) y su SQL copiado en la bitácora.
-- **B:** reutilizar `acceso_fallido` con un resumen que diga «Bloqueo temporal…». Sin migración, pero el bloqueo queda mezclado con los fallos y solo se distingue por el texto.
-
-**D5 · Límites de tamaño.**
-- **A (recomendada):** (i) `DATA_UPLOAD_MAX_MEMORY_SIZE` y `FILE_UPLOAD_MAX_MEMORY_SIZE` **explícitos** en `settings.py` en **2.621.440 bytes (2,5 MB)**, el valor actual, con un comentario de qué hace cada uno (el segundo no es tope); (ii) **imagen de referencia: 5 MB**, validada en `PedidoForm.clean_imagen_referencia` con un mensaje claro (constante en `forms.py`; el valor es una propuesta: el promedio medido es 0,27 MB, el máximo no se midió, y una foto de celular puede pesar 3 a 8 MB); (iii) **chequeo temprano de `CONTENT_LENGTH`** en `restaurar_bd` (20 MB de la 04-04 más un margen de 1 MB para el resto del formulario) y en `crear_pedido` y `editar_pedido` (imagen más 2,5 MB): se rechaza **antes** de leer `request.FILES`, para que Django no guarde en disco un archivo que después se descarta. La constante de 20 MB sigue siendo **una sola**, en `utils.py`; los topes de las otras vistas se derivan de las suyas.
-- **B:** solo (i) y (ii), sin chequeo temprano. Más simple; un archivo enorme se recibe y se guarda en un archivo temporal antes de rechazarse.
-- **C:** bajar `DATA_UPLOAD_MAX_MEMORY_SIZE` (por ejemplo a 1 MB) después de medir el mayor cuerpo legítimo (el largo máximo de los detalles lo da el anexo de la 04-07). Menos margen para un abusador, y el riesgo de rechazar un pedido legítimo muy largo.
+**Derivado de las decisiones (el desarrollador lo confirma al revisar):** `ACCESO_FALLOS_POR_DIRECCION` (variable opcional, defecto 20, `0` desactiva el contador por dirección). La redacción lo necesitó para poder medir la dirección en producción sin dejar un límite de 20 que se alcance a mano, y para tener un interruptor de emergencia; no estaba en las decisiones. Los valores de D2 siguen siendo constantes del código.
 
 ## Coordinación con los 20 MB de la 04-04
 
-- Son **límites de capas distintas** y no se pisan: la 04-04 limita **un archivo `.sql`** (después de recibirlo); `DATA_UPLOAD_MAX_MEMORY_SIZE` cuenta **solo los campos de texto** (no el archivo); la imagen tiene su tope propio; el chequeo temprano de D5-A es la única pieza que mira el tamaño total de la petición.
+- Son **límites de capas distintas** y no se pisan: la 04-04 limita **un archivo `.sql`** (después de recibirlo); `DATA_UPLOAD_MAX_MEMORY_SIZE` cuenta **solo los campos de texto** (no el archivo); la imagen tiene su tope propio; el chequeo temprano de D5 es la única pieza que mira el tamaño total de la petición.
 - `DATA_UPLOAD_MAX_MEMORY_SIZE` **no** rechaza el `.sql` de 20 MB (comprobado en `multipartparser.py:223-250`: no cuenta archivos). Una prueba lo confirma.
 - Un respaldo de 20 MB supera los 2,5 MB de `FILE_UPLOAD_MAX_MEMORY_SIZE`: va a un archivo temporal, no a la memoria. **No verificado:** el directorio temporal del servidor y si cuenta para la cuota de disco.
 - **No verificado:** el límite de cuerpo que aplica el proxy de PythonAnywhere (podría rechazar antes que la aplicación). Si lo hubiera y fuera menor que 20 MB, la 04-04 ya estaría afectada: se mide en producción durante la 04-04.
-- Si D5-A, el chequeo temprano toca `restaurar_bd`, que la 04-04 ya modificó: la 04-08 parte de lo que deje.
+- El chequeo temprano de D5 toca `restaurar_bd`, que la 04-04 ya modificó: la 04-08 parte de lo que deje.
 
 ## Pasos
 
-0. Consulta previa para `settings.py`, `urls.py`, `.env.example` y, solo con D4-A, `makemigrations` y `migrate` en local (`AGENTS.md`, sección 6). Respaldo de la réplica. Si D1 fuera B, consulta de dependencia y RDA-021.
-1. Línea base: `test pedidos` (número y fallos esperados tras la 04-07), `showmigrations pedidos` (hasta `0008` si la 04-06 ya está).
-2. Evidencia previa (sección anterior): consulta de los fallos por ventana en la réplica y archivo más grande de `media/referencias/`; ajustar D2 y D5 si hace falta.
+0. Consulta previa para `settings.py`, `urls.py`, `.env.example`, `makemigrations` y `migrate` en local (`AGENTS.md`, sección 6). Respaldo de la réplica.
+1. Línea base: `test pedidos` (número y fallos esperados tras la 04-07) y `showmigrations pedidos` (hasta `0008` si la 04-06 ya está; si no, hasta `0007` y se revisa la numeración: esta migración es la que sigue a la de la 04-06).
+2. **Evidencia previa (obligatoria, D2 y D5):** consulta de los fallos por ventana en la réplica y archivo más grande de `media/referencias/`. Si se activa la regla de detención, se consulta antes de seguir.
 3. Pruebas primero (tabla siguiente); ver fallar las de bloqueo.
 4. `pedidos/limite_acceso.py`, los dos formularios de acceso, el receptor en `senales.py`, `admin.site.login_form`, `urls.py` con `redirect_authenticated_user=True`, `CACHES`, límites de subida, `login.html` y el chequeo temprano.
-5. Solo D4-A: `makemigrations pedidos --name acceso_bloqueado`, **`sqlmigrate pedidos 0009` en la réplica** (esperado, inferido: solo el comentario del `AlterField`, sin sentencias SQL; cualquier `ALTER` detiene la iteración) y copiarlo en la bitácora.
+5. `makemigrations pedidos --name acceso_bloqueado` (debe crear **solo** `0009`, con un `AlterField`), **`sqlmigrate pedidos 0009` en la réplica** (esperado, inferido: solo el comentario del `AlterField`, sin sentencias SQL; cualquier `ALTER`, `DROP` o `ADD CONSTRAINT` detiene la iteración) y copiarlo en la bitácora; `migrate` en local y `makemigrations --check --dry-run` sin cambios.
 6. Revisión manual en la réplica: equivocarse N veces en `accounts/login/` y en el admin (mensaje, bloqueo, espera), entrar con sesión ya iniciada (redirige), subir una imagen de 5 MB y otra más grande, intentar restaurar un archivo de más de 20 MB; escritorio y 360 px.
 7. Procedimiento de desbloqueo en `docs/operacion/`.
 8. Bitácora, registro, auditoría (AUD-03-004), `.env.example`, estado «En revisión».
@@ -194,7 +183,7 @@ Todas vacían la caché en `setUp` (la caché local persiste entre pruebas) y fi
 | :---- | :----- |
 | Bloqueo por N intentos (usuario) | N POST fallidos a `/accounts/login/` con el mismo usuario existente: el intento N+1 responde con el mensaje de bloqueo y **no** llama a `authenticate` (se comprueba con un `mock`), incluso con la **contraseña correcta**. |
 | Bloqueo por dirección | Fallos con nombres distintos desde la misma dirección hasta el límite de dirección: bloquea; desde otra dirección (otro `REMOTE_ADDR`) no. |
-| Evento | Al empezar el bloqueo hay **un** evento (`acceso_bloqueado` con D4-A) con usuario nulo y sin la dirección ni el nombre tecleado; los intentos bloqueados siguientes **no** escriben más filas (conteo de eventos igual). |
+| Evento | Al empezar el bloqueo hay **un** evento (`acceso_bloqueado`) con usuario nulo y sin la dirección ni el nombre tecleado; los intentos bloqueados siguientes **no** escriben más filas (conteo de eventos igual). |
 | Sin fuga | El mensaje de bloqueo es el mismo con usuario existente que con uno inexistente. |
 | Mayúsculas | «ADMIN» y «admin» suman al mismo contador (contra MySQL). |
 | Éxito reinicia | N−1 fallos, un acceso correcto, y N−1 fallos más no bloquean. |
@@ -203,30 +192,32 @@ Todas vacían la caché en `setUp` (la caché local persiste entre pruebas) y fi
 | Admin | Lo mismo en `acceso-manzagrafica-admin/login/`; los contadores se comparten con `accounts/login/`. |
 | Dirección real (D3) | Sin variable: se usa `REMOTE_ADDR` y se ignora `X-Forwarded-For`. Con `n = 1`: el último elemento de la cabecera, **ignorando** lo que el cliente escribió a la izquierda (cabecera `falsa, real`); cabecera con menos elementos o inválida: `REMOTE_ADDR`. |
 | Redirección | GET a `/accounts/login/` con sesión iniciada: 302 al panel; sin sesión: 200 con el formulario. |
+| Variable de dirección | `ACCESO_FALLOS_POR_DIRECCION=0` desactiva el contador por dirección y deja el del usuario; un valor pequeño lo hace saltar antes. |
 | Tamaños (D5) | Imagen de tope exacto pasa; un byte más se rechaza con el mensaje y no se guarda; `crear_pedido` y `editar_pedido` con un cuerpo declarado más grande que el permitido se rechazan **antes** de leer archivos; un `.sql` de menos de 20 MB **no** lo rechaza `DATA_UPLOAD_MAX_MEMORY_SIZE`; el rechazo no muestra `str(e)`. |
 | Contrato de eventos | `test_eventos_negocio.py:176-215` en verde (con la caché vaciada en su `setUp`). |
-| Guardias | `makemigrations --check --dry-run` sin cambios (D4-B) o solo `0009` (D4-A); sin `print` ni `except Exception: pass` en el módulo nuevo (regla 8). |
+| Guardias | `makemigrations --check --dry-run` sin cambios tras crear `0009`; sin `print` ni `except Exception: pass` en el módulo nuevo (regla 8). |
 | Existentes | Suite completa con los fallos esperados heredados. |
 
 ## Verificación en producción (la hace el desarrollador; todo **no verificado** hasta entonces)
 
-1. Respaldo previo, descargado y verificado (`respaldo.md`); si hay migración, `migrate` y `showmigrations pedidos` antes del Reload.
+1. Respaldo previo, descargado y verificado (`respaldo.md`); `migrate` y `showmigrations pedidos` (marca `0009`) antes del Reload.
 2. Tras el Reload, entrar con la contraseña correcta; `server.log` sin errores nuevos.
-3. **Medir la dirección (obligatorio antes de dar por buena la iteración).** Con la variable de proxies aún en `0`, desde **la misma conexión** del desarrollador: (a) con un **nombre de usuario inexistente**, no la cuenta real, provocar fallos hasta que el contador de dirección bloquee (por eso, durante la prueba, el límite de dirección se baja a un valor pequeño por la variable de entorno o se hace con paciencia); (b) **desde otra red** (datos móviles) intentar un acceso normal: **si está bloqueado, `REMOTE_ADDR` es la dirección del proxy**, hay que fijar `ACCESO_PROXIES_CONFIABLES` y recargar; (c) con la variable puesta, repetir (a) enviando `X-Forwarded-For` falsos distintos en cada intento: **el bloqueo debe llegar igual** (la falsificación no sirve). Recargar al final (borra todo).
+3. **Medir la dirección (obligatorio antes de dar por buena la iteración).** Con la variable de proxies aún en `0`, desde **la misma conexión** del desarrollador: (a) con un **nombre de usuario inexistente**, no la cuenta real, provocar fallos hasta que el contador de dirección bloquee (por eso, durante la prueba, `ACCESO_FALLOS_POR_DIRECCION` se baja a un valor pequeño, por ejemplo 3, y se vuelve a 20 al terminar); (b) **desde otra red** (datos móviles) intentar un acceso normal: **si está bloqueado, `REMOTE_ADDR` es la dirección del proxy**, hay que fijar `ACCESO_PROXIES_CONFIABLES` y recargar; (c) con la variable puesta, repetir (a) enviando `X-Forwarded-For` falsos distintos en cada intento: **el bloqueo debe llegar igual** (la falsificación no sirve). Recargar al final (borra todo).
 4. Un fallo y un bloqueo reales del usuario de pruebas del desarrollador: ver el evento en el admin y confirmar el desbloqueo recargando.
 5. Subir una imagen de referencia dentro y fuera del tope; no se intenta restaurar archivos grandes en producción para probar.
 - **No verificado:** qué cabecera trae la dirección real y cuántos proxies hay; con cuántos usuarios cuenta producción; si el proxy limita el cuerpo; la frecuencia de reinicio del proceso (perdería los contadores); el directorio temporal y su cuota.
 
 ## Plan de retroceso
 
-- `retroceso.md`, caso 1 (sin migraciones, D4-B) o caso 2 (con la `0009` de Clase 1, D4-A: `migrate pedidos 0008`, sin SQL, y luego volver a la etiqueta y recargar; el orden es primero la migración, después el código). Con D1-B (no recomendada) habría tablas nuevas y respaldo previo.
-- **Retroceso parcial sin tocar el código:** poner la variable de proxies en `0` si el contador de dirección bloqueara a todos (la recarga también limpia los bloqueos). Recargar la web app es siempre el desbloqueo de emergencia.
-- Lo que no se deshace: nada; los contadores viven en memoria y los eventos de bloqueo ya escritos se conservan hasta su purga.
+- **`retroceso.md`, caso 2** (con migraciones; escrito para Clase 2, se aplica igual a esta de Clase 1): `python manage.py migrate pedidos 0008` (revierte la `0009`; sin SQL, igual que al aplicarla, inferido) y luego volver a la etiqueta anterior y Reload. **Orden:** primero la migración, después el código (el código viejo no conoce `acceso_bloqueado`). Si `migrate` atrás fallara, el respaldo previo y el caso 3.
+- **Retroceso parcial sin tocar el código:** si el contador por dirección bloqueara a todos, `ACCESO_FALLOS_POR_DIRECCION=0` y recargar lo desactiva, y se corrige `ACCESO_PROXIES_CONFIABLES`. Recargar la web app es siempre el desbloqueo de emergencia (borra todos los contadores).
+- **Lo que queda tras un retroceso:** los eventos `acceso_bloqueado` ya escritos permanecen en la tabla (el tipo no se valida en la base) y se purgan con la retención de 365 días; el admin de eventos los mostraría sin el nombre legible del tipo. Los contadores viven en memoria y no dejan nada.
 
 ## Criterio de término
 
 - Tabla de pruebas en verde (incluido el bloqueo por N intentos y su evento).
-- `sqlmigrate` copiado en la bitácora (D4-A) o sin migración (D4-B).
+- `sqlmigrate pedidos 0009` copiado en la bitácora, sin SQL; `0009` creada después de la `0008` de la 04-06.
+- Evidencia previa hecha (consulta de fallos por ventana y archivo más grande de `media/referencias/`) y sin activar la regla de detención.
 - Revisión manual en la réplica hecha.
 - Verificación 3 de producción hecha y valor de proxies fijado.
 - AUD-03-004 resuelto en la auditoría y procedimiento de desbloqueo escrito.
@@ -234,9 +225,11 @@ Todas vacían la caché en `setUp` (la caché local persiste entre pruebas) y fi
 ## Riesgos
 
 - **Bloquear al cliente legítimo** (dos vías: errores propios y bloqueo provocado por un tercero): espera de 15 minutos o recarga; documentado arriba.
-- **Bloquear a todos por una dirección mal medida:** peor caso de la iteración; se previene con la verificación 3 y se revierte con la variable.
+- **Bloquear a todos por una dirección mal medida:** peor caso de la iteración; se previene con la verificación 3 y se revierte con `ACCESO_FALLOS_POR_DIRECCION=0`.
 - **Contadores perdidos al recargar y expulsión por llenado de la caché:** el límite frena, no impide; mitigaciones en la sección del mecanismo.
 - **Cambios en archivos de configuración:** `settings.py`, `urls.py` y `.env.example` exigen consulta previa; `settings.py` también lo editan la 04-02, la 04-03 y la 04-05 (se parte de lo que dejen).
+- **Migración de Clase 1 con numeración dependiente de la 04-06:** si el orden de ejecución cambiara, la `0009` pasa a ser la siguiente libre; se verifica con `showmigrations` y la iteración se detiene ante cualquier `ALTER`.
+- **Límites sin medición previa:** los 5 y 20 intentos salen de la decisión, no de datos; la evidencia previa y la regla de detención lo cubren para el usuario, pero **el límite por dirección no se puede calibrar** (los eventos no guardan la dirección).
 - **Pruebas que se contaminan entre sí:** por la caché compartida; se vacía en cada `setUp`.
 - **Chequeo de `CONTENT_LENGTH`:** una cabecera ausente o falsa no es un tope duro; la validación de la imagen y el tope de 20 MB siguen aplicando después.
 - **Rechazos de tamaño poco amables:** Django responde 400 sin pantalla propia cuando se excede `DATA_UPLOAD_MAX_MEMORY_SIZE`; con el valor actual no lo alcanza un uso normal.

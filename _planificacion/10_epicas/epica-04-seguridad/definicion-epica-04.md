@@ -4,7 +4,7 @@
 - **Fase del plan:** 4 (`plan-de-trabajo.md`, «FASE 4»), ampliada el 2026-10-27 (anexo del plan, RDA-014)
 - **Objetivo:** cerrar las vulnerabilidades identificadas, defender las entradas de la aplicación (HTML enriquecido, acceso y archivos) y aplicar el estándar de configuración de producción de Django.
 - **Precondición:** Épica 02 completa. **Orden de ejecución:** después de la Épica 03 (decisión del desarrollador del 2026-10-27), incluida la 04-06.
-- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 con D1 a D6 resueltas; 04-05 con D1 a D4 resueltas; 04-06 con D1 a D4 resueltas; 04-07 con D1 a D4 resueltas; 04-08 redactada; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
+- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 con D1 a D6 resueltas; 04-05 con D1 a D4 resueltas; 04-06 con D1 a D4 resueltas; 04-07 con D1 a D4 resueltas; 04-08 con D1 a D5 resueltas; 04-09 redactada (con ella, las nueve iteraciones están redactadas); avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
 
 ## Alcance
 
@@ -31,8 +31,8 @@
 | 04-05 | [Correcciones de configuración](iteracion-04-05-correcciones-de-configuracion.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | 4.5 |
 | 04-06 | [Protección del historial ante borrados en cascada](iteracion-04-06-proteccion-del-historial.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | Nueva (Auditoría 02) |
 | 04-07 | [Sanitización del HTML enriquecido y revisión de inyección SQL](iteracion-04-07-sanitizacion-html-e-inyeccion-sql.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | Nueva (Auditoría 03) |
-| 04-08 | [Protección del acceso y límites de entrada](iteracion-04-08-proteccion-del-acceso-y-limites-de-entrada.md) (Pendiente, redactada, decisiones abiertas D1 a D5, 2026-11-17) | Nueva (Auditoría 03) |
-| 04-09 | Política de seguridad de contenido en observación | Nueva (reorganización 2026-10-27) |
+| 04-08 | [Protección del acceso y límites de entrada](iteracion-04-08-proteccion-del-acceso-y-limites-de-entrada.md) (Pendiente, redactada, decisiones resueltas D1 a D5, 2026-11-17) | Nueva (Auditoría 03) |
+| 04-09 | [Política de seguridad de contenido en observación](iteracion-04-09-politica-de-contenido-en-observacion.md) (Pendiente, redactada, decisiones abiertas D1 a D4, 2026-11-17) | Nueva (reorganización 2026-10-27) |
 
 ## Para la redacción de 04-01
 
@@ -52,8 +52,8 @@
 - 04-06 cambia el comportamiento de borrado gestionado por Django. Se espera Clase 1; la iteración se detiene si `sqlmigrate` muestra cualquier `ALTER`. **Decisión del desarrollador del 2026-10-27:** se ejecuta en el orden de la épica, después de la Épica 03 (deja sin efecto la sugerencia anterior de adelantarla).
 - Cada iteración es un despliegue con su propio propósito; 04-02 se despliega con una ventana de observación porque HSTS no se puede deshacer en los navegadores que ya lo recibieron.
 - 04-07 · Cómo se sanitiza: al guardar, al mostrar o en ambos momentos, y con qué herramienta (`nh3` es la opción recomendada: dependencia nueva, requiere consulta y RDA). **Resuelta el 2026-11-17** (D1 a D4 de la 04-07): al guardar y al mostrar; `nh3`, con consulta previa respondida y RDA-020 propuesta (se escribe al ejecutar); lista blanca exacta de la barra, sin atributos; datos ya guardados sin limpiar. El HTML ya guardado en producción se revisa en la réplica antes de decidir si hace falta limpiarlo (operación sobre datos, con respaldo previo).
-- 04-08 · Mecanismo contra fuerza bruta: contador propio en la caché local (válida porque hay un solo proceso) o una librería como `django-axes` (dependencia nueva y tabla nueva de Clase 2). `PENDIENTE_DESARROLLADOR`, detallada en la 04-08 como D1 a D5 (2026-11-17): la recomendada es el contador propio, con bloqueo antes de autenticar, y la dirección real se mide en producción.
-- 04-09 · Dónde se leen los reportes de la política en modo observación (la consola del navegador en la réplica es suficiente; no se agrega un punto de recepción de reportes). Se confirma en la iteración.
+- 04-08 · Mecanismo contra fuerza bruta: contador propio en la caché local (válida porque hay un solo proceso) o una librería como `django-axes` (dependencia nueva y tabla nueva de Clase 2). **Resuelta el 2026-11-17** (D1 a D5 de la 04-08): contador propio en la caché local; 5 fallos por usuario y 20 por dirección en 15 minutos, con bloqueo de 15 (medir antes); dirección real por `ACCESO_PROXIES_CONFIABLES`, medida en producción; evento nuevo `acceso_bloqueado` con migración de Clase 1 (`0009`); imagen de 5 MB y chequeo temprano de `CONTENT_LENGTH`.
+- 04-09 · Dónde se leen los reportes de la política en modo observación (la consola del navegador en la réplica es suficiente; no se agrega un punto de recepción de reportes). Se confirma en la iteración. **Detallada en la 04-09 como D1 a D4 (2026-11-17, abiertas):** la recomendada observa la política final (solo `'self'`), sin nonces ni cambios en plantillas, con un interruptor por variable y lectura en la consola.
 
 ## Fuera de alcance
 
@@ -94,3 +94,43 @@
 - **2026-11-17 · 04-07 redactada** con cuatro decisiones abiertas. Búsqueda: tres `|safe` con HTML del usuario (`pedido_detail.html:115`, `cotizacion_detail.html:150`, `producto_detail.html:53`), ningún `mark_safe`; única consulta directa parametrizada (`utils.py:161-162`). La revisión del HTML guardado en la réplica vale hasta su último refresco. [bitacora-04-07-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-07-redaccion.md). Siguiente por redactar: 04-08.
 - **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-07, D1 a D4 resueltas:** se sanitiza al guardar y al mostrar; `nh3` (consulta previa respondida; RDA-020 propuesta, se escribe al ejecutar; el paso 0 comprueba la instalación en PythonAnywhere); lista blanca exacta de la barra actual, sin atributos; no se limpian datos ya guardados y se agrega la prueba-guardia de SQL con `ast`. Se corrige la redacción: el filtro necesita el paquete `pedidos/templatetags/`, que no existe. [bitacora-04-07-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-07-cierre.md).
 - **2026-11-17 · 04-08 redactada** con cinco decisiones abiertas. Hoy un ataque de fuerza bruta escribe una fila de evento por intento y nada lo frena; `authenticate()` emite el fallo aunque un backend bloquee, así que el bloqueo va antes de autenticar. `FILE_UPLOAD_MAX_MEMORY_SIZE` no es un tope (es un umbral memoria o disco). La dirección real tras el proxy no consta en el repo: se mide en producción. Absorbe la propuesta de redirigir con sesión iniciada. Orden de despliegue: 04-01 → … → 04-07 → 04-08. [bitacora-04-08-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-08-redaccion.md). Siguiente por redactar: 04-09.
+- **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-08, D1 a D5 resueltas:** contador propio en la caché local; 5 por usuario y 20 por dirección en 15 minutos, bloqueo de 15, midiendo antes; `ACCESO_PROXIES_CONFIABLES`; tipo `acceso_bloqueado` con migración de Clase 1, que será la `0009` (la `0008` es de la 04-06; verificado: hoy la última es la `0007`); imagen de 5 MB y chequeo temprano de `CONTENT_LENGTH`. La redacción agrega la variable `ACCESO_FALLOS_POR_DIRECCION` (medición e interruptor de emergencia) para confirmar. [bitacora-04-08-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-08-cierre.md).
+- **2026-11-17 · 04-09 redactada** con cuatro decisiones abiertas. Nombres verificados en Django 6.0.1: `django.middleware.csp.ContentSecurityPolicyMiddleware` y `SECURE_CSP_REPORT_ONLY`. Inventario con archivo y línea: cinco servidores externos, siete scripts en línea (ninguno con variables de plantilla), dos bloques `<style>`, ocho atributos `style` y siete manejadores en línea. Orden de despliegue: 04-01 → … → 04-08 → 04-09. [bitacora-04-09-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-09-redaccion.md). **Siguiente: revisión final de la Épica 04** (con los hallazgos sin iteración de la sección siguiente).
+
+## Hallazgos sin iteración (para la revisión final · 2026-11-17)
+
+Hallazgos y preguntas que pertenecen a la Épica 04 o la tocan y **hoy no tienen iteración**. Las opciones son para decidir en la revisión final; **ninguna está decidida**.
+
+**1. AUD-04-003 · datos personales en los registros de la plataforma** (Media; `PENDIENTE_DESARROLLADOR`). La búsqueda viaja por GET con `?busqueda=` en cuatro listados (`views.py:454`, `:639`, `:792`, `:1075`; cuatro plantillas) y la cadena queda en `access.log` y en `server.log`.
+- **A.** Búsqueda por POST. Cambia cuatro vistas y cuatro plantillas; al volver con «atrás» el navegador pide confirmar el reenvío (se vio con el acceso en la evidencia de la 00-06) y se pierden los enlaces compartibles.
+- **B.** POST y redirección a una URL sin texto, guardando la búsqueda en la sesión. URL limpia y sin aviso de reenvío; más código y estado.
+- **C.** Aceptar el riesgo y documentarlo: los registros los ve solo el titular de la cuenta y el referente solo sale hacia el mismo sitio (`SECURE_REFERRER_POLICY = "same-origin"`, `global_settings.py:662`, verificado), así que los CDN no reciben la búsqueda. Se documenta en `docs/operacion/` y en la guía de lectura de registros (13-03).
+- **D.** Buscar solo por nombre, sin teléfono. Es un cambio funcional: exige confirmar con el cliente.
+
+**2. AUD-02-030 · recuperación de contraseña y acceso propio del admin** (Baja). `accounts/` incluye `django.contrib.auth.urls` (`urls.py:25`); sin correo configurado, la recuperación no sirve. La plantilla base solo usa `logout` (`base.html:237`, por POST) y ninguna usa el cambio de contraseña (búsqueda).
+- **A.** Incluir solo `login` y `logout` en lugar de `django.contrib.auth.urls`. Es la línea que la 04-08 también toca: conviene decidir el orden entre ambas (despliegues separados, RDA-007).
+- **B.** Dejarlo y documentarlo como inofensivo.
+- **C.** A y, además, llevar el acceso del admin al de la aplicación. La 04-08 ya limita los intentos en las dos entradas.
+
+**3. Pregunta `PENDIENTE_CLIENTE` · pedidos con pagos borrados en cascada** (registro, sección 2; misma clase que AUD-02-001). `eliminar_pedido` borra el pedido y sus pagos (`models.py:92`) y solo deja el evento «Pedido #N eliminado» (`views.py:383`).
+- **A.** `PROTECT` en `Pago.pedido` y mensaje, como la 04-06 (Clase 1): impide borrar pedidos con pagos.
+- **B.** Permitir con confirmación reforzada y dejar en el evento cuántos pagos se borraron (solo la cantidad).
+- **C.** Anular en lugar de borrar (estado nuevo): funcionalidad nueva, requiere RDA y al cliente.
+- **D.** Dejarlo como está si el cliente lo confirma. Depende de la respuesta del cliente.
+
+**4. Eliminar una cotización no registra evento** (propuesta de la redacción de la 04-01; `views.py:949`). Los tipos de evento son un inventario cerrado (RDA-008).
+- **A.** Tipo nuevo `cotizacion_eliminada` (Clase 1, cuenta para la estimación de crecimiento).
+- **B.** Dejarlo sin evento por decisión explícita.
+- **C.** No mezclarlo con la migración `0009` de la 04-08 (un propósito por despliegue, RDA-007).
+
+**5. Página para el fallo de CSRF o la sesión vencida** (propuesta de la 03-04). `urls.py` solo define `handler404` y `handler500`; el 403 por CSRF mostraría la página mínima de Django (inferido) y el formulario se perdería. Con la 04-01 hay más formularios POST.
+- **A.** Vista propia (`CSRF_FAILURE_VIEW`, `settings.py`, consulta previa) con una plantilla en el estilo de la 500 y registro del evento.
+- **B.** Dejar la de Django.
+- **C.** Hacerlo en la Épica 08, junto con los demás avisos de interfaz (AUD-05-006 y AUD-05-007).
+
+**6. AUD-02-023 · imágenes de `media/` sin ninguna copia** (Media; no es de la Épica 04, pero la 04-08 limita su tamaño). Hoy 3 MB en 11 archivos (2026-10-20). La asignación «Épica 07» viene de una nota de la 00-05 anterior a la renumeración de RDA-014: por confirmar.
+- **A.** Procedimiento manual de descarga periódica, documentado (Épica 13).
+- **B.** Incluir `media/` en el respaldo (más disco y CPU en un plan con 512 MiB).
+- **C.** Copia en S3 (Épica 14).
+
+**Cerrados por decisión, para revisar al cerrar la épica:** AUD-02-010 (clave en el historial: sin rotación y riesgo aceptado, 04-03 D3) y AUD-04-002 (acceso al panel: solo registrado por rol, el resto a la 13-02, 04-03 D5). **Tienen iteración fuera de la épica:** AUD-03-005 (librerías sin integridad, 08-07 y 08-08, que prepara la 04-09), AUD-05-004 (Épica 08) y AUD-02-020 (modo estricto, Épica 06).
