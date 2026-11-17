@@ -1,15 +1,15 @@
 # Iteración 04-07 · Sanitización del HTML enriquecido y revisión de inyección SQL
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones abiertas). Redactada el 2026-11-17 ([bitacora-04-07-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-07-redaccion.md)). Cuatro decisiones `PENDIENTE_DESARROLLADOR` (sección «Decisiones»), cada una con opción recomendada.
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-07-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-07-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-07-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-07-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 03); `definicion-epica-04.md`, alcance 7 y decisión de la épica sobre la 04-07.
 - **Depende de:** nada técnico de las anteriores; comparte `views.py` y plantillas con la 04-01 y la 04-06 y se desarrolla sobre ellas. Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-02 → 04-03 → 04-04 → 04-05 → 04-06 → **04-07**.
 - **Es requisito de:** la Épica 09 (operadores, RDA-017) y la 08-07 (registro, sección 1).
-- **RDA relacionadas:** RDA-007; RDA-017 (exige la sanitización antes de los operadores); **RDA-020 nueva** si se elige `nh3` (D2; la última vigente es RDA-019).
+- **RDA relacionadas:** RDA-007; RDA-017 (exige la sanitización antes de los operadores); **RDA-020: propuesto; se escribe al ejecutar la 04-07** (D2; la última vigente es RDA-019; no se agrega a `decisiones.md` hasta entonces).
 - **Hallazgos que cierra:** AUD-03-001.
-- **Cambio de esquema:** ninguno. **Posible operación sobre datos** (limpiar HTML ya guardado), solo si la revisión en la réplica lo justifica (D4), con respaldo previo.
-- **Respaldo previo al despliegue:** sí, el de rutina; obligatorio y descargado si D4 limpia datos.
-- **Archivos que tocará la ejecución:** `requirements.txt` (**consulta previa**, si D2 agrega una dependencia), `pedidos/forms.py` o `pedidos/models.py` (según D1), un módulo nuevo `pedidos/sanitizar.py`, las tres plantillas de detalle, pruebas y `decisiones.md` (RDA-020).
+- **Cambio de esquema:** ninguno. **Sin operación sobre datos** (D4): el HTML ya guardado se revisa en la réplica, pero no se limpia.
+- **Respaldo previo al despliegue:** sí, el de rutina (no hay migración ni limpieza de datos).
+- **Archivos que tocará la ejecución:** `requirements.txt` (dependencia `nh3`; la consulta previa está respondida, ver D2), `pedidos/sanitizar.py` (nuevo), `pedidos/templatetags/` (paquete nuevo con el filtro `html_seguro`; **no existe hoy**, verificado), `pedidos/forms.py` (`clean_<campo>` de `PedidoForm`, `CotizacionForm` y `ProductoForm`), las tres plantillas de detalle, pruebas nuevas y `decisiones.md` (RDA-020, al ejecutar).
 
 ## Objetivo
 
@@ -47,13 +47,14 @@ La imagen no existe, el navegador ejecuta `onerror` y ese JavaScript corre **con
 
 - **`mark_safe`, `format_html`, `SafeString`, `{% autoescape off %}`:** ninguno en código de aplicación. `test_contrato_error.py:126` comprueba que el autoescape protege un mensaje.
 - **Otros lugares donde se muestran esos campos, ya seguros:** `cotizacion_pdf.html:289` y `:318` y `producto_list.html:77` usan `|striptags` sin `|safe`, así que el resultado se escapa (inferido del comportamiento de Django; el PDF se genera con WeasyPrint, que no ejecuta JavaScript).
-- **Otra vía de escritura:** el admin de Django registra `Pedido` y `Producto` (`admin.py:11`, `:19`); quien entra al admin ya es `is_staff`.
+- **Otra vía de escritura:** el admin de Django registra `Pedido` y `Producto` (`admin.py:11`, `:19`); quien entra al admin ya es `is_staff`. Sus campos son cuadros de texto que Django escapa, pero **lo que se guarda por ahí no pasa por los formularios de la aplicación**: lo cubre el filtro al mostrar (D1).
+- **Otras vías que copian texto sin formulario:** `duplicar_pedido` copia `detalles_pedido` (`views.py:490`) y la conversión de cotización a pedido copia `cotizacion.detalles` a `detalles_pedido` (`views.py:982`): ambas heredan lo guardado sin pasar por un formulario, y las cubre el filtro al mostrar.
 
 ### El editor (Summernote)
 
 - Summernote `0.8.18` desde CDN (`base.html:38` y `:327`); se activa en los tres campos (`pedido_form.html:347`, `cotizacion_form.html:292`, `producto_form.html:96`, y `forms.py:134`).
 - Barra de herramientas (`index.js:94-102`): **negrita, cursiva, limpiar formato, lista con viñetas y lista numerada**. Imágenes bloqueadas (`onImageUpload`, `disableDragAndDrop`) y pegado reducido a texto plano (`onPaste`).
-- **Etiquetas que produce el editor (inferido de esa barra y del comportamiento de Summernote; se confirma en la réplica):** `p`, `br`, `b`, `strong`, `i`, `em`, `ul`, `ol`, `li`, y posiblemente `span` con `style` al limpiar formato. **Todo esto lo hace el navegador:** quien envía el formulario sin el editor (o con las herramientas del navegador) puede mandar cualquier HTML. La defensa tiene que estar en el servidor.
+- **Etiquetas que produce el editor (inferido de esa barra y del comportamiento de Summernote; se confirma en la réplica):** `p`, `br`, `b`, `strong`, `i`, `em`, `ul`, `ol`, `li`, y posiblemente `span` con `style` al limpiar formato, o `div` en la primera línea. **Todo esto lo hace el navegador:** quien envía el formulario sin el editor (o con las herramientas del navegador) puede mandar cualquier HTML. La defensa tiene que estar en el servidor.
 
 ### Modelos
 
@@ -75,60 +76,79 @@ La imagen no existe, el navegador ejecuta `onerror` y ese JavaScript corre **con
 - **La definición dice «revisar en la réplica el HTML ya guardado en producción».** La réplica es una copia de producción a la fecha de su último refresco; la revisión vale para esa fecha, y lo escrito después solo se ve en producción (no verificado).
 - **Summernote viene de un CDN** (contra `AGENTS.md`, regla 8.17, «no se agregan recursos nuevos»; no es nuevo). Lo resuelve la 08-07, que depende de esta iteración; aquí no se toca.
 - **`|safe|default`** en `pedido_detail.html:115`: el orden no es un problema de seguridad, pero al sanitizar se revisa que un detalle vacío tras limpiar siga mostrando el texto por defecto.
+- **El filtro propio necesita un paquete que no existe** (`pedidos/templatetags/`): la redacción inicial lo daba por supuesto; se agrega a los archivos de la ejecución.
 
 ## Alcance
 
-1. **Lista blanca** de etiquetas y atributos (D3) para `pedido.detalles_pedido`, `cotizacion.detalles` y `producto.descripcion`, aplicada en el servidor según D1, en una sola función (`pedidos/sanitizar.py`).
-2. Las tres plantillas dejan de confiar a ciegas: según D1, `|safe` solo sobre texto ya sanitizado (o un filtro propio que sanitiza y marca seguro).
-3. **Revisión de inyección SQL documentada** (sección anterior) y una **prueba-guardia** que recorre `pedidos/*.py` (sin pruebas ni migraciones) y falla si encuentra `.raw(`, `.extra(`, `RawSQL(` o un `execute(` cuyo primer argumento sea un f-string, una concatenación o `%`/`.format` (D4 fija la forma).
-4. **Revisión del HTML ya guardado en la réplica** (solo lectura, conteos): cuántos registros de cada campo traen etiquetas fuera de la lista blanca, cuáles etiquetas, sin copiar contenidos. Con eso se decide D4 (limpiar o no). **El agente no ejecuta nada contra la base**: entrega la consulta y la corre el desarrollador.
-5. RDA-020 si D2 es `nh3`.
-6. **Fuera:** sacar Summernote del CDN (08-07); política de contenido (04-09); otros campos de texto sin `|safe` (ya escapados).
+1. **Lista blanca** de etiquetas, sin atributos (D3), para `pedido.detalles_pedido`, `cotizacion.detalles` y `producto.descripcion`, aplicada **al guardar y al mostrar** (D1), en una sola función (`pedidos/sanitizar.py`) basada en `nh3` (D2).
+2. **Al guardar:** `clean_<campo>` en `PedidoForm`, `CotizacionForm` y `ProductoForm`, que también cubre la creación rápida de productos (`api_crear_producto_rapido`).
+3. **Al mostrar:** filtro propio `html_seguro` (paquete `pedidos/templatetags/`) que sanitiza y marca el resultado como seguro; reemplaza a `|safe` en las tres plantillas y protege lo ya guardado, lo del admin y lo que copian la duplicación y la conversión.
+4. **Revisión de inyección SQL documentada** (sección anterior) y una **prueba-guardia** con el módulo `ast` (D4) que recorre `pedidos/*.py` (sin pruebas ni migraciones) y falla si encuentra `.raw(`, `.extra(`, `RawSQL(` o un `execute(` cuyo primer argumento sea un f-string, una concatenación o `%`/`.format`.
+5. **Revisión del HTML ya guardado en la réplica** (solo lectura, solo conteos, sin copiar contenidos): cuántos registros de cada campo traen etiquetas o atributos fuera de la lista blanca. **No se limpia nada** (D4): si hay contenido peligroso, se anota el conteo y se propone una limpieza aparte, con respaldo previo, como operación sobre datos. **El agente no ejecuta nada contra la base**: entrega la consulta (anexo) y la corre el desarrollador.
+6. **Registrar RDA-020 al ejecutar** (propuesto: «Sanitización del HTML enriquecido con `nh3`, al guardar y al mostrar»).
+7. **Fuera:** limpiar datos ya guardados (D4); sacar Summernote del CDN (08-07); política de contenido (04-09); otros campos de texto sin `|safe` (ya escapados); ampliar la lista blanca (si la revisión de la réplica muestra que hace falta, se detiene y se consulta).
 
-## Decisiones (`PENDIENTE_DESARROLLADOR`)
+## Decisiones (resueltas por el desarrollador, 2026-11-17)
 
-**D1 · Cuándo sanitizar.**
-- **A (recomendada): al guardar y al mostrar.** Al guardar, en los formularios (`clean_<campo>` de `PedidoForm`, `CotizacionForm`, `ProductoForm`), para que la base no acumule HTML peligroso nuevo, incluido lo que entra por `api_crear_producto_rapido`. Al mostrar, con un filtro propio (`|html_seguro`) que reemplaza `|safe` en las tres plantillas, para proteger lo que **ya** está guardado y lo que entre por el admin. Doble costo pequeño (textos cortos).
-- **B:** solo al mostrar. Protege todo, pero la base sigue guardando lo que llegue.
-- **C:** solo al guardar. Deja expuesto lo ya guardado y lo del admin hasta limpiar datos.
+| # | Decisión | Resuelta como |
+| :- | :------- | :------------ |
+| D1 | Cuándo sanitizar | **Al guardar y al mostrar** (opción A). |
+| D2 | Con qué herramienta | **`nh3`** (opción A), con RDA-020. La **consulta previa** que exige `AGENTS.md` (secciones 6 y 11) para la dependencia nueva **está respondida** (autorizada por el desarrollador, dicho por él). **RDA-020: propuesto; se escribe al ejecutar la 04-07.** El paso 0 conserva la comprobación de instalación en PythonAnywhere (Python 3.13). |
+| D3 | Qué permite la lista blanca | **Exactamente lo que ofrece la barra actual** (negrita, cursiva, limpiar formato y listas): `p`, `br`, `b`, `strong`, `i`, `em`, `ul`, `ol`, `li`, **sin atributos** (ni `style`, ni `class`, ni `href`). Comentarios y etiquetas desconocidas se eliminan conservando su texto; `script` y `style` se eliminan con su contenido. |
+| D4 | Datos ya guardados y forma de la guardia | **No se limpian** datos ya guardados en esta iteración (se revisan en la réplica; el filtro al mostrar ya los neutraliza). Prueba-guardia de SQL con `ast`, sin dependencias. |
 
-**D2 · Con qué herramienta.**
-- **A (recomendada): `nh3`** (enlace a la biblioteca `ammonia` de Rust), versión exacta en `requirements.txt`. Mantenida, rápida, con lista blanca explícita; `bleach`, la alternativa clásica, está declarada obsoleta por sus autores (inferido de su anuncio; no revisado en esta redacción). **Exige tu consulta previa y RDA-020** (`AGENTS.md`, secciones 6 y 11). Justificación pedida por `AGENTS.md`: peso del paquete (a medir con `pip download` en la ejecución; no medido), arranque en frío (se importa dentro de la función, regla 8.9), disco (a medir). **Instalación en PythonAnywhere (no verificado):** se distribuye como rueda precompilada para Linux y CPython 3.13, así que `pip install --user` no debería necesitar compilar Rust; se confirma en la consola del servidor antes del despliegue (lo hace el desarrollador), sin acceso saliente extra porque PyPI está en la lista blanca (inferido).
-- **B:** sanitizador propio con `html.parser` de la biblioteca estándar. Sin dependencia, pero un sanitizador casero es exactamente donde aparecen los errores de seguridad (atributos con mayúsculas, entidades, comentarios condicionales). No se recomienda.
-- **C:** quitar el HTML enriquecido (texto plano con `|linebreaks`). Lo más seguro y sin dependencia, pero cambia lo que ve el usuario y pierde el formato ya guardado: cambio funcional, requiere confirmación del cliente.
+**Qué se descartó (para no volver a discutirlo):** `bleach` (obsoleto según sus autores, inferido de su anuncio; no revisado), sanitizador propio con `html.parser` (donde nacen los errores de seguridad) y texto plano (cambia lo que ve el usuario).
 
-**D3 · Qué permite la lista blanca.**
-- **A (recomendada):** exactamente lo que ofrece la barra actual: `p`, `br`, `b`, `strong`, `i`, `em`, `ul`, `ol`, `li`; **sin atributos** (ni `style`, ni `class`, ni `href`); comentarios y etiquetas desconocidas se eliminan conservando su texto, y `script`/`style` se eliminan con su contenido. Se confirma en la réplica que lo ya guardado no pierde formato visible (punto 4 del alcance).
-- **B:** lo mismo más `span` con `style` limitado a negrita o cursiva. Más fiel a pegados antiguos, más superficie (CSS).
-
-**D4 · Datos ya guardados y forma de la prueba-guardia.**
-- **A (recomendada):** con D1-A, **no** se limpian los datos ya guardados en esta iteración: el filtro al mostrar ya los neutraliza. Si la revisión en la réplica encuentra contenido peligroso, se anota (conteo) y se propone una limpieza aparte, con respaldo previo, como operación sobre datos. La prueba-guardia es una prueba unitaria con el módulo `ast` (sin dependencias), en el paquete de pruebas.
-- **B:** limpiar en esta misma iteración con una migración de datos (`RunPython`). Mezcla un cambio de datos con el de código (RDA-007).
+**Justificación de la dependencia que pide `AGENTS.md`, sección 6** (peso y disco se miden en la ejecución, no están medidos): *peso y disco:* `pip download nh3==<versión>` en local y `du` antes y después en el servidor, anotados en la bitácora; *arranque en frío:* se importa dentro de la función que sanitiza (regla 8.9), no al arrancar; *alternativa sin dependencia:* el sanitizador propio, descartado por D2.
 
 ## Pasos
 
-0. Consulta previa (D2: dependencia nueva, `requirements.txt`) y redacción de RDA-020 para que la apruebes. Respaldo de la réplica.
-1. Línea base: `test pedidos` (número y fallos esperados tras la 04-06).
-2. **Revisión en la réplica** (la ejecuta el desarrollador; consulta de solo lectura entregada por el agente): conteo de registros por campo con `<script`, `on…=`, `javascript:`, `<iframe`, `<img`, `style=` y etiquetas fuera de D3. Solo conteos en la bitácora.
+0. **Comprobación de instalación en PythonAnywhere (Python 3.13), la hace el desarrollador, antes de seguir.** En una consola del servidor, en el entorno virtual de la web app (no verificado cuál usa), instalar la versión exacta de `nh3` y comprobar que importa y que `nh3.clean('<p>a</p><script>b</script>', tags={'p'})` devuelve `<p>a</p>`. Anotar versión, peso en disco y segundos de CPU gastados (el plan gratuito da 100 s diarios a consolas y tareas). **Inferido, no verificado:** `nh3` se distribuye como rueda precompilada para Linux, así que no debería compilar Rust, y PyPI está en la lista blanca de salida. **Si no instala, la iteración se detiene** y se vuelve a la D2 con el desarrollador (no se cae a otra opción por cuenta propia). Con eso queda cerrada la consulta previa en la práctica.
+1. Respaldo de la réplica. Línea base: `test pedidos` (número y fallos esperados tras la 04-06).
+2. **Revisión en la réplica** (la ejecuta el desarrollador con la consulta del anexo): conteo de registros por campo con `<script`, eventos `on…=`, `javascript:`, `<iframe`, `<img`, `<svg`, `<style`, `style=`, `class=`, `<a `, `<div`, `<span`, `<table` y `data:`. Solo conteos en la bitácora, con la fecha del último refresco de la réplica.
 3. Pruebas primero (tabla siguiente); ver fallar las de `<script>` y atributos.
-4. `pedidos/sanitizar.py`, `clean_*` en los tres formularios y filtro `|html_seguro` (D1); las tres plantillas.
-5. Prueba-guardia de SQL (D4).
+4. `requirements.txt` con la versión exacta (UTF-8 sin BOM y LF, regla 8.16), `pedidos/sanitizar.py`, `clean_*` en los tres formularios, paquete `pedidos/templatetags/` con `html_seguro` y las tres plantillas.
+5. Prueba-guardia de SQL.
 6. Revisión manual en la réplica: crear y editar un pedido, una cotización y un producto con negrita, cursiva y listas; ver los detalles y el PDF; escritorio y 360 px.
-7. Bitácora, registro, auditoría (AUD-03-001), `decisiones.md` (RDA-020), estado «En revisión».
+7. Bitácora, registro, auditoría (AUD-03-001), **RDA-020 en `decisiones.md` (se escribe ahora)**, estado «En revisión».
 
 ## Pruebas
 
 | Punto | Prueba |
 | :---- | :----- |
-| `<script>` no se ejecuta | Un pedido guardado **directo en la base** (sin formulario) con `<p>a</p><script>alert(1)</script>`: el HTML de `pedido_detail` no contiene `<script` y sí `<p>a</p>`. Lo mismo para cotización y producto. |
-| Atributos de evento | `<img src=x onerror=alert(1)>` y `<a href="javascript:…">`: la respuesta no contiene `onerror` ni `javascript:`. |
-| Al guardar (D1) | POST a crear pedido, cotización y producto (incluida `api_crear_producto_rapido`) con `<script>`: lo guardado en la base no lo trae. |
+| `<script>` no se ejecuta | Un pedido guardado **directo en la base** (sin formulario) con `<p>a</p><script>alert(1)</script>`: el HTML de `pedido_detail` no contiene `<script` ni `alert(1)` y sí `<p>a</p>`. Lo mismo para cotización y producto. |
+| Variantes | `<SCRIPT>`, `<svg onload=…>`, `<iframe src=…>`, `<style>` y un comentario `<!-- -->`: ninguno llega a la respuesta. |
+| Atributos (D3) | `<img src=x onerror=alert(1)>`, `<a href="javascript:…">x</a>` y `<p class="a" style="color:red">t</p>`: la respuesta no contiene `onerror`, `javascript:`, `class` ni `style`; el texto `x` y `t` se conserva (sin la etiqueta o como `<p>t</p>`). |
+| Al guardar (D1) | POST a crear pedido, cotización y producto (incluida `api_crear_producto_rapido`) con `<script>`: lo guardado en la base no lo trae. Lo mismo al editar. |
 | Formato permitido | `<p><b>a</b> <i>b</i></p><ul><li>c</li></ul>` sale idéntico. |
+| Idempotencia (D1) | Sanitizar dos veces da lo mismo que sanitizar una vez (al guardar y al mostrar se aplican seguidas). |
 | Vacío | Un detalle que queda vacío tras sanitizar muestra «Sin especificaciones adicionales.». |
-| Guardia SQL | Pasa con el código actual; falla con un archivo de ejemplo (en la propia prueba, no en `pedidos/`) que usa un f-string en `execute`. |
+| Copias | Un pedido duplicado o convertido desde una cotización con HTML peligroso guardado directo no lo entrega al navegador. |
+| Guardia SQL (D4) | Pasa con el código actual; falla con un texto de ejemplo (dentro de la propia prueba, no en `pedidos/`) que usa un f-string en `execute`. |
+| Sin datos tocados (D4) | `makemigrations --check --dry-run` sin cambios; ninguna prueba modifica filas ya guardadas. |
 | Existentes | `test_contrato_error.py:126` y la suite completa, con los fallos esperados heredados. |
 
-Nota: las pruebas comprueban el HTML que entrega el servidor; «no se ejecuta» se garantiza porque la etiqueta no llega al navegador. La revisión manual del paso 6 lo confirma a la vista.
+Nota: las pruebas comprueban el HTML que entrega el servidor; «no se ejecuta» se garantiza porque la etiqueta no llega al navegador. La revisión manual del paso 6 lo confirma a la vista. Si el sanitizador lanza una excepción, **no se captura** (regla 4): el resultado es un error 500 visible, nunca HTML sin limpiar.
+
+## Anexo · consulta de revisión de la réplica (solo lectura, solo conteos; **no ejecutada ni probada** por el agente)
+
+`mysql` y `dbshell` exigen consulta previa incluso en local (`AGENTS.md`, sección 6); la corre el desarrollador en la réplica, nunca en producción. Se repite el mismo bloque para `pedidos_cotizacion` (columna `detalles`) y `pedidos_producto` (columna `descripcion`):
+
+```sql
+SELECT 'pedido.detalles_pedido' AS campo,
+       COUNT(*)                                                                AS registros,
+       SUM(detalles_pedido IS NOT NULL AND detalles_pedido <> '')              AS con_texto,
+       SUM(detalles_pedido LIKE '%<script%')                                   AS con_script,
+       SUM(detalles_pedido REGEXP '[[:space:]"/]on[a-z]+[[:space:]]*=')        AS con_evento,
+       SUM(detalles_pedido LIKE '%javascript:%')                               AS con_javascript,
+       SUM(detalles_pedido REGEXP '<(iframe|img|svg|style|table)')             AS con_otras_peligrosas,
+       SUM(detalles_pedido REGEXP '<(div|span|a )')                            AS con_div_span_a,
+       SUM(detalles_pedido LIKE '%style=%' OR detalles_pedido LIKE '%class=%') AS con_style_o_class,
+       MAX(CHAR_LENGTH(detalles_pedido))                                       AS largo_maximo
+FROM pedidos_pedido;
+```
+
+Solo devuelve conteos y un largo; ningún contenido. Si `con_div_span_a` o `con_style_o_class` son altos, el formato visible podría cambiar con la lista de D3: se detiene y se consulta (no se amplía la lista por cuenta propia).
 
 ## Relación con la 04-09 (política de contenido)
 
@@ -137,26 +157,30 @@ La 04-09 activa CSP en modo **solo reporte**: no bloquea nada, así que **no** p
 ## Verificación en producción (la hace el desarrollador; **no verificado** hasta entonces)
 
 1. Respaldo previo (`respaldo.md`).
-2. Instalar la dependencia (D2) en la consola **antes** del Reload y confirmar que importa.
+2. **Instalar la dependencia en la consola antes del Reload** (paso 0 ya hecho) y confirmar que importa. El import ocurre al sanitizar, no al arrancar: si el Reload va antes que la instalación, las pantallas de detalle y los formularios darían error 500.
 3. Tras el Reload: abrir el detalle de un pedido, una cotización y un producto con formato y ver que se ve igual; editar uno sin cambios y guardar.
 4. `server.log` sin errores nuevos.
-- **No verificado:** si en producción hay HTML guardado después del último refresco de la réplica con etiquetas fuera de la lista blanca.
+- **No verificado:** si en producción hay HTML guardado después del último refresco de la réplica con etiquetas fuera de la lista blanca; si `nh3` instala en el entorno de la web app (paso 0).
 
 ## Plan de retroceso
 
-`retroceso.md`, caso 1 (sin migraciones): volver a la etiqueta anterior y Reload. La dependencia instalada puede quedarse (no la usa el código anterior). Con D4-A no hay datos que deshacer; lo guardado sanitizado entre el despliegue y el retroceso queda sin las etiquetas quitadas, que es inofensivo.
+`retroceso.md`, caso 1 (sin migraciones): volver a la etiqueta anterior y Reload. **`nh3` puede quedarse instalado:** el código anterior no lo usa. Con D4 no hay datos que deshacer; lo guardado sanitizado entre el despliegue y el retroceso queda sin las etiquetas quitadas (inofensivo), y al volver a `|safe` lo ya guardado vuelve a imprimirse sin filtro, igual que antes de la iteración. Si el fallo es solo que falta la dependencia (500 en los detalles), basta instalarla y recargar; no hace falta retroceder.
 
 ## Criterio de término
 
+- Paso 0 hecho (instalación en PythonAnywhere comprobada).
 - Tabla de pruebas en verde; guardia SQL en verde.
 - Revisión de la réplica con conteos en la bitácora.
-- RDA-020 aceptada (si D2-A) y `requirements.txt` con versión exacta.
+- RDA-020 escrita en `decisiones.md` y `requirements.txt` con versión exacta.
 - AUD-03-001 resuelto en la auditoría; verificación de producción hecha.
 
 ## Riesgos
 
-- **Perder formato visible:** si lo guardado usa etiquetas fuera de D3, se verá sin ese formato. Mitigado con la revisión de la réplica antes de fijar la lista.
-- **Dependencia nueva en un plan gratuito:** si la rueda no instala en PythonAnywhere, la iteración no se despliega; se confirma antes (paso 2 de producción).
+- **Perder formato visible:** con la lista exacta de la barra y sin atributos, lo que usara `div`, `span`, `style` o enlaces se verá sin ese formato. Mitigado con la revisión de la réplica antes de ejecutar; si hay conteos altos, se detiene y se consulta.
+- **Dependencia nueva en un plan gratuito:** si la rueda no instala en PythonAnywhere, la iteración no se despliega; se comprueba en el paso 0, antes de escribir código.
 - **Sanitizar al guardar cambia lo que se guarda:** un usuario que pegue HTML verá menos formato que antes. Esperado.
+- **Datos peligrosos ya guardados siguen en la base (D4):** quedan neutralizados solo al mostrarse por la plantilla. Si algún día se leen por otra vía (una exportación, el admin con otro widget, una pantalla nueva), hay que pasar por el mismo filtro. Mitigado: queda dicho aquí y la limpieza se propone aparte si la revisión lo justifica.
+- **Doble sanitización (D1):** cuesta poco con textos cortos y es idempotente (prueba).
 - **Guardia SQL con falsos positivos:** se ajusta a los casos de la tabla; un `execute` con SQL fijo y parámetros pasa.
+- **API de `nh3` inferida:** la firma de `nh3.clean` (`tags`, `attributes`, `clean_content_tags`) viene de mi conocimiento, no se leyó su documentación en esta redacción; se confirma al instalarla (paso 0) y con las pruebas.
 - **Un despliegue, un propósito (RDA-007):** va solo, después de la 04-06.
