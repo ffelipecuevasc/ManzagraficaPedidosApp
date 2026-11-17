@@ -1,14 +1,14 @@
 # Iteración 04-04 · Endurecimiento de la restauración
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones abiertas). Redactada el 2026-11-17 ([bitacora-04-04-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-04-redaccion.md)). Seis decisiones `PENDIENTE_DESARROLLADOR` (sección «Decisiones»), cada una con opción recomendada.
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-04-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-04-redaccion.md)); D1 a D6 resueltas por el desarrollador el mismo día ([bitacora-04-04-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-04-cierre.md)).
 - **Subfase del plan:** 4.4 «Restauración endurecida» (`definicion-epica-04.md`, alcance 4).
 - **Depende de:** 04-03 (archivo temporal de opciones, D1, en `generar_respaldo_mysql` y `restaurar_bd_mysql`) y 04-01 (`generar_respaldo_bd` solo POST). Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-02 (y su subida de HSTS) → 04-03 → **04-04**.
 - **RDA relacionadas:** RDA-007, RDA-009 (tareas lentas fuera de la petición), RDA-013 (errores en `server.log`, eventos en MySQL), RDA-019 (captura fuera del `atomic`).
-- **Hallazgos que cierra:** AUD-02-024 (según D5), AUD-05-004 (según D6) y el `.sql` vacío ante un fallo de `mysqldump` (nota del 2026-10-26 de la definición). **AUD-02-019 no se cierra:** es la rotación por cantidad, asignada a la 06-03 (ver «Contradicciones»).
+- **Hallazgos que cierra:** AUD-02-024 (D5) y el **`.sql` vacío** ante un fallo de `mysqldump`, hallazgo hermano de AUD-02-019 sin ID propio (nota del 2026-10-26 de la definición). **No cierra AUD-02-019** (rotación por cantidad, 06-03) **ni AUD-05-004** (pasa a la Épica 08 por D6).
 - **Cambio de esquema:** ninguno con las opciones recomendadas.
 - **Respaldo previo al despliegue:** **sí**, obligatorio: la iteración cambia la restauración y el respaldo de emergencia.
-- **Archivos que tocará la ejecución:** `pedidos/utils.py`, `pedidos/views.py` (`restaurar_bd`), `pedidos/templates/pedidos/restaurar_bd.html`, `docs/operacion/respaldo.md` y `retroceso.md` (caso 3), y pruebas. Sin archivos de configuración salvo que D1 lleve el tope a `settings.py` (consulta previa).
+- **Archivos que tocará la ejecución:** `pedidos/utils.py`, `pedidos/views.py` (`restaurar_bd`), `pedidos/templates/pedidos/restaurar_bd.html`, `docs/operacion/respaldo.md` y `retroceso.md` (caso 3), y pruebas. Sin archivos de configuración: el tope de D1 es una constante en `utils.py`.
 
 ## Objetivo
 
@@ -40,7 +40,7 @@ Que la restauración solo acepte un volcado válido de esta aplicación, que nun
 ### La pantalla (`restaurar_bd.html`)
 
 - Formulario POST con `accept=".sql"` (`:36-40`) y una confirmación SweetAlert solo en el navegador (`:59-89`): **el servidor no verifica ninguna confirmación.**
-- **AUD-05-004:** la plantilla recorre sus propios mensajes y pinta todo `success` como la tarjeta «¡Base de Datos Restaurada Exitosamente!» (`:106-107`), aunque venga de otra pantalla.
+- AUD-05-004 (la tarjeta de `:106-107` pinta todo `success`) existe, pero **queda fuera** de esta iteración por D6: pasa a la Épica 08. Esta iteración no toca ese recorrido de mensajes.
 
 ### Respaldos en disco
 
@@ -49,8 +49,9 @@ Que la restauración solo acepte un volcado válido de esta aplicación, que nun
 
 ## Contradicciones con la planificación
 
-- **AUD-02-019 no es el `.sql` vacío.** En `auditoria-tecnica.md:84`, AUD-02-019 es la rotación por cantidad, con destino **06-03**. La nota del 2026-10-26 de la definición pide «una prueba que falle antes de la corrección (AUD-02-019)», asociando el `.sql` vacío a ese hallazgo. Esta iteración corrige el `.sql` vacío y lo trata como **hallazgo hermano**; no cambia la política de rotación (06-03).
-- **D5 roza la 06-03:** excluir el respaldo de emergencia de la rotación es un cambio en la rotación. Se propone el mínimo (ver D5) y se avisa a la 06-03.
+- **El `.sql` vacío no es AUD-02-019.** En `auditoria-tecnica.md:84`, AUD-02-019 es la rotación por cantidad, con destino **06-03**. La nota del 2026-10-26 de la definición asocia el `.sql` vacío a ese ID. Resuelto el 2026-11-17: el `.sql` vacío es un **hallazgo hermano** sin ID propio, se corrige aquí con una prueba que falla primero, y la rotación sigue en la 06-03. La definición, el registro y la auditoría usan ya esta lectura.
+- **D5 roza la 06-03:** sacar el respaldo `emergencia_` de la rotación por cantidad es una **excepción mínima** a la política vigente; la 06-03 la hereda y decide si la conserva al rediseñar la rotación.
+- **AUD-05-004 sale de esta iteración (D6):** pasa a la Épica 08, junto con AUD-05-005 a AUD-05-008.
 
 ## Alcance
 
@@ -61,45 +62,28 @@ Que la restauración solo acepte un volcado válido de esta aplicación, que nun
 5. **`.sql` vacío:** `generar_respaldo_mysql()` borra el archivo ante **cualquier** fallo de `mysqldump` y vuelve a lanzar la excepción.
 6. **Subida huérfana:** el archivo de `backups/tmp/` se borra siempre (`finally`), también si la restauración falla.
 7. **Respaldo de emergencia en el mismo disco** (AUD-02-024, D5).
-8. **AUD-05-004** (D6).
-9. **Coordinación:** usa el ayudante del archivo temporal de opciones de la 04-03 (D1); no cambia el POST de `generar_respaldo_bd` de la 04-01.
-10. **Fuera:** rotación por cantidad y política de retención (AUD-02-019, 06-03); respaldo externo (Épica 14); límites globales de subida (`DATA_UPLOAD_MAX_MEMORY_SIZE`, 04-08).
+8. **Coordinación:** usa el ayudante del archivo temporal de opciones de la 04-03 (D1); no cambia el POST de `generar_respaldo_bd` de la 04-01.
+9. **Fuera:** AUD-05-004 (Épica 08, D6); rotación por cantidad y política de retención (AUD-02-019, 06-03); respaldo externo (Épica 14); límites globales de subida (`DATA_UPLOAD_MAX_MEMORY_SIZE`, 04-08).
 
-## Decisiones (`PENDIENTE_DESARROLLADOR`)
+## Decisiones (resueltas por el desarrollador, 2026-11-17)
 
-**D1 · Tope de tamaño del volcado.**
-- **A (recomendada):** 20 MB, fijo en el código como constante con comentario (más de diez veces el respaldo medido). Se revisa si la base crece.
-- **B:** tope relativo (por ejemplo, tres veces el respaldo más reciente). Se adapta solo, pero falla si no hay respaldos previos.
-
-**D2 · Qué es un volcado válido.**
-- **A (recomendada):** texto UTF-8; primera línea de cabecera de `mysqldump` (`-- MySQL dump`) y línea final `-- Dump completed` (inferido del formato de `mysqldump`; se confirma con un respaldo real de la réplica); contiene la creación de `pedidos_pedido` y de `django_migrations`; **rechaza** `CREATE DATABASE`, `DROP DATABASE`, `USE`, `GRANT` y `CREATE USER` (un volcado de esta aplicación no los trae porque `mysqldump` se llama sin `--databases`, `utils.py:44-51`). La misma función valida el respaldo de emergencia.
-- **B:** solo cabecera y final. Más simple; deja pasar un volcado de otra base.
-
-**D3 · Confirmación explícita.**
-- **A (recomendada):** además del SweetAlert, un campo donde el superusuario escribe `RESTAURAR`; el servidor lo exige y, si falta, no toca nada. Funciona con JavaScript desactivado y se puede probar.
-- **B:** escribir el nombre del archivo subido.
-- **C:** dejar solo el SweetAlert (no verificable en el servidor).
-
-**D4 · Constancia que sobreviva.**
-- **A (recomendada):** una línea `logger.warning` en `server.log` **antes** de restaurar (usuario, nombre del archivo, respaldo de emergencia) y otra **después** con el resultado; el evento `restauracion_ejecutada` se mantiene después de restaurar, y si el volcado no trae al usuario se registra con usuario nulo (`RegistroEvento.usuario` admite nulo, `models.py:271-272`). Sin tabla nueva.
-- **B:** exportar los eventos posteriores al volcado y reinsertarlos tras restaurar. Más completo, pero más código y riesgo en el momento más delicado.
-
-**D5 · Respaldo de emergencia en el mismo disco (AUD-02-024).**
-- **A (recomendada):** nombre con prefijo `emergencia_`, **fuera de la rotación por cantidad**, conservando solo el último de emergencia (el anterior se borra al crear uno nuevo); la pantalla de respaldos lo marca; el mensaje de éxito y el de error dicen su nombre. El disco no es el problema hoy (ver «Respaldos en disco»). La descarga de un respaldo existente es funcionalidad nueva: queda como propuesta.
-- **B:** solo documentarlo en `respaldo.md` y dejarlo todo a la 06-03 y la Épica 14.
-
-**D6 · AUD-05-004.**
-- **A (recomendada):** la vista marca su mensaje con una etiqueta propia (`extra_tags='restauracion'`) y `restaurar_bd.html` solo pinta la tarjeta para esa etiqueta; los demás mensajes los pinta `base.html` como hasta hoy.
-- **B:** la pantalla de resultado deja de usar mensajes y recibe el resultado en la redirección.
+| # | Decisión | Resuelta como |
+| :- | :------- | :------------ |
+| D1 | Tope de tamaño | **20 MB**, constante con comentario en `utils.py` (más de diez veces el respaldo medido). Se revisa si la base crece. |
+| D2 | Volcado válido | Por **estructura y sentencias peligrosas**: texto UTF-8; cabecera `-- MySQL dump` y final `-- Dump completed` (inferido, se confirma con un respaldo real de la réplica); creación de `pedidos_pedido` y `django_migrations`; rechaza `CREATE DATABASE`, `DROP DATABASE`, `USE`, `GRANT` y `CREATE USER`. La **misma función valida el respaldo de emergencia**. |
+| D3 | Confirmación | Campo donde se escribe **`RESTAURAR`**, exigido por el servidor, **además** del aviso SweetAlert actual. Sin él no se toca nada. |
+| D4 | Constancia | Una línea en `server.log` **antes** (usuario, archivo, respaldo de emergencia) y otra **después** (resultado); el evento `restauracion_ejecutada` se registra después, **con usuario nulo** si el volcado no trae al usuario (`models.py:271-272`). Sin tabla nueva. |
+| D5 | Respaldo de emergencia | Prefijo **`emergencia_`**, **fuera de la rotación por cantidad**, se conserva **solo el último**; la pantalla de respaldos lo marca y los mensajes dicen su nombre. **Excepción mínima que roza la 06-03.** La descarga queda como propuesta (funcionalidad nueva). |
+| D6 | AUD-05-004 | **No se corrige aquí.** Pasa a la Épica 08 (iteración por definir). Se retiran de esta iteración el punto de alcance, la prueba y el cambio de mensajes de `restaurar_bd.html`. |
 
 ## Pasos
 
-0. Respaldo de la réplica antes de cualquier ensayo; consulta previa si D1 va a `settings.py`.
+0. Respaldo de la réplica antes de cualquier ensayo.
 1. Línea base: `test pedidos` (se anota el número tras la 04-03).
-2. Pruebas primero (tabla siguiente); ver fallar las de los puntos 2, 3, 5, 6 y 8.
-3. `utils.py`: validación de estructura (D2), borrado ante cualquier fallo, respaldo de emergencia (D5).
+2. Pruebas primero (tabla siguiente); ver fallar las de los puntos 1 a 7.
+3. `utils.py`: constante de 20 MB (D1), validación de estructura (D2), borrado ante cualquier fallo, respaldo `emergencia_` y su exclusión de la rotación (D5).
 4. `restaurar_bd`: orden validar → confirmar → respaldo de emergencia → comprobar respaldo → registrar antes → restaurar → registrar después, con `finally` para la subida.
-5. `restaurar_bd.html`: campo de D3 y mensajes de D6, según `DESIGN.md`.
+5. `restaurar_bd.html`: solo el campo de D3, según `DESIGN.md`; el recorrido de mensajes (`:100-112`) no se toca (D6).
 6. Ensayo en la réplica (ver «Riesgo de ensayar»).
 7. `respaldo.md` y `retroceso.md` (caso 3: nombre del respaldo de emergencia).
 8. Bitácora, registro, estado «En revisión».
@@ -110,15 +94,14 @@ Todas reemplazan `generar_respaldo_mysql`, `restaurar_bd_mysql` o `subprocess.ru
 
 | Punto del alcance | Prueba |
 | :---------------- | :----- |
-| 1 · Extensión, tamaño, estructura | Un `.SQL` válido pasa; un `.txt`, un archivo mayor que el tope, uno sin cabecera, uno sin final y uno con `DROP DATABASE` se rechazan sin llamar al respaldo ni a la restauración. |
+| 1 · Extensión, tamaño, estructura | Un `.SQL` válido pasa; un `.txt`, un archivo de 20 MB más un byte, uno sin cabecera, uno sin final y uno con `DROP DATABASE` se rechazan sin llamar al respaldo ni a la restauración. |
 | 2 · Aborto | Respaldo de emergencia que lanza excepción (ya existe: `test_capturas_amplias.py:65`) y respaldo que devuelve un archivo vacío o sin final: no se restaura. |
-| 3 · Confirmación | POST sin el campo de D3 o con otro texto: no se llama al respaldo ni a la restauración. |
+| 3 · Confirmación | POST sin el campo, vacío, con `restaurar` en minúsculas o con otro texto: no se llama al respaldo ni a la restauración. |
 | 4 · Constancia | `assertLogs` con las líneas antes y después; el evento se registra aunque el usuario no exista tras restaurar. |
 | 5 · `.sql` vacío | `subprocess.run` lanza `FileNotFoundError`: el `.sql` no queda en `backups/`. **Falla hoy** (`utils.py:58-63` solo cubre `CalledProcessError`). |
 | 6 · Subida huérfana | La restauración falla: `backups/tmp/` queda vacío. **Falla hoy.** |
-| 7 · Emergencia | El de emergencia lleva el prefijo y no lo borra `limpiar_backups_antiguos` aunque haya cinco respaldos más nuevos; solo se conserva el último de emergencia. |
-| 8 · AUD-05-004 | Un `messages.success` de otra pantalla no se pinta como restauración en `restaurar_bd` (la prueba de la 03-04 que lo cubre, citada en AUD-05-004, se revisa y se ajusta). |
-| Existentes | `test_capturas_amplias.py:65-91`, `test_acceso.BaseDeDatosPermisosTests` (el POST de usuario común sigue en 302) y `test_contrato_error.py` siguen en verde; las que hacen POST a `restaurar_bd` agregan el campo de D3. |
+| 7 · Emergencia | El de emergencia lleva el prefijo y no lo borra `limpiar_backups_antiguos` aunque haya cinco respaldos más nuevos; al crear otro, el `emergencia_` anterior se borra. |
+| Existentes | `test_capturas_amplias.py:65-91`, `test_acceso.BaseDeDatosPermisosTests` (el POST de usuario común sigue en 302) y `test_contrato_error.py` siguen en verde; las que hacen POST a `restaurar_bd` agregan el campo de D3. `test_un_pago_registrado_no_aparece_como_restauracion_exitosa` (03-04) sigue sin cambios: AUD-05-004 no se toca. |
 
 Suite con los mismos fallos esperados que deje la 04-01 (4).
 
@@ -152,6 +135,8 @@ Suite con los mismos fallos esperados que deje la 04-01 (4).
 ## Riesgos
 
 - **Rechazar un volcado bueno:** si la validación de D2 es más estricta que el formato real, la restauración queda bloqueada justo cuando hace falta; mitigado con un respaldo real de la réplica como caso de prueba y con el procedimiento manual de `retroceso.md`, caso 3.
-- **Restauración larga en un solo worker:** sigue corriendo dentro de la petición, en tensión con `AGENTS.md`, regla 8.10. Esta iteración no lo cambia (sería otra arquitectura); se anota como propuesta.
-- **Disco:** el respaldo de emergencia fuera de la rotación agrega un archivo; despreciable según la medición, sin verificar el uso actual del disco.
+- **Choque con `AGENTS.md`, regla 8.10 (restauración dentro de la petición):** el respaldo de emergencia y la restauración corren en el ciclo de la petición con un solo worker; mientras duran, la aplicación no atiende a nadie y una petición larga puede cortarse. Esta iteración **no lo cambia** (sería otra arquitectura y otro propósito, RDA-007). **Propuesta** (registro, sección 4): evaluar en la 06-03 o en la Épica 14 una restauración fuera de la petición (desde consola, que ya es el caso 3 de `retroceso.md`) y dejar la pantalla para volcados pequeños; mientras tanto se mide el tiempo del ensayo en la réplica y se anota en la bitácora.
+- **D2 sobre el respaldo de emergencia:** si la validación rechaza un respaldo de emergencia bueno, ninguna restauración avanza; se mitiga con el mismo caso de prueba real de la réplica.
+- **Excepción a la rotación (D5):** la 06-03 debe conocerla para no anularla sin querer al rediseñar la rotación.
+- **Disco:** el respaldo de emergencia fuera de la rotación agrega como máximo un archivo; despreciable según la medición, sin verificar el uso actual del disco.
 - **Un despliegue, un propósito (RDA-007):** va solo, después de la 04-03.
