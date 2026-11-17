@@ -4,7 +4,8 @@
 - **Pedido por:** Claude Code (Sonnet 5.5)
 - **Iteración:** [03-05](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md). Etiqueta `v3.1-integridad`; partida y destino de retroceso `v0.3-doble-envio`. Decisiones del desarrollador del 2026-11-06 registradas en la iteración.
 - **Criterios que dependen de esta evidencia:** todos los de la 03-05 salvo «Las decisiones 1 a 8 están registradas antes de ejecutar».
-- **Estado (2026-11-06; reprogramado el 2026-11-16 para el martes 2026-11-17):** **Pendiente. No se ejecutó nada.** Ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Este archivo solo deja los pasos listos. Nada se ejecuta antes de la medición de la 00-07 (~~2026-11-11, hacia las 01:32~~ no se hizo ese día: se mide antes del despliegue del 2026-11-17). **Bloqueada hasta anotarla.** Decisiones finales del 2026-11-06 aplicadas (aviso aprobado, ~~jueves 2026-11-12~~ martes 2026-11-17 desde el 2026-11-16, tiempos y números del retroceso); solo falta elegir la fuente del respaldo para la réplica (F1). **Reprogramación del 2026-11-16:** nueva ventana el martes 2026-11-17 y día 7 el martes 2026-11-24 (decisión del desarrollador); ver el calendario y [bitacora-03-05-reprogramacion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-reprogramacion.md).
+- **Estado (2026-11-17):** **Partes A, B y C hechas el lunes 2026-11-16 (día 0); en vigilancia hasta la lectura del día 7 (parte D).** `R` = **2026-11-16 23:48:12** (hora de Chile; 2026-11-17 02:48:12 UTC). Los datos de A a C son dichos por el desarrollador, de sus consolas; el agente no vio ninguna salida. Desviaciones en «Desviaciones de la ejecución del día 0». Siguen pendientes la parte D (día 7), la E (solo si se cumple su regla) y la F (limpieza de la réplica). Detalle en [bitacora-03-05-produccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-produccion.md).
+- **Estado anterior (2026-11-06, reprogramado el 2026-11-16; superado el 2026-11-17 por la ejecución del día 0; se conserva como registro):** **Pendiente. No se ejecutó nada.** Ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Este archivo solo deja los pasos listos. Nada se ejecuta antes de la medición de la 00-07 (~~2026-11-11, hacia las 01:32~~ no se hizo ese día: se mide antes del despliegue del 2026-11-17). **Bloqueada hasta anotarla.** Decisiones finales del 2026-11-06 aplicadas (aviso aprobado, ~~jueves 2026-11-12~~ martes 2026-11-17 desde el 2026-11-16, tiempos y números del retroceso); solo falta elegir la fuente del respaldo para la réplica (F1). **Reprogramación del 2026-11-16:** nueva ventana el martes 2026-11-17 y día 7 el martes 2026-11-24 (decisión del desarrollador); ver el calendario y [bitacora-03-05-reprogramacion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-reprogramacion.md).
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide, sin datos de clientes: conteos, horas, tipos de error y códigos. Nunca pegues el texto completo de una línea del registro (`despliegue.md`, 3.9).
 >
@@ -20,14 +21,47 @@
 | :--- | :------- | :-------------- |
 | Qué viaja | 03-01 a 03-04 en una sola etiqueta, sin migraciones | A3, B3 |
 | Respaldo | Nuevo el día del despliegue, verificado antes de recargar | A2 |
-| Ventana | `v3.1-integridad`, ~~**jueves 2026-11-12**~~ **martes 2026-11-17** (reprogramado el 2026-11-16), entre las 20:00 y las 23:00 (hora de Chile); día 7: ~~jueves 2026-11-19~~ martes 2026-11-24 por la noche | A0, B, D |
+| Ventana | `v3.1-integridad`, ~~**jueves 2026-11-12**~~ ~~martes 2026-11-17~~ **lunes 2026-11-16** (ejecutado ese día; `R` 23:48:12, fuera de la ventana de 20:00 a 23:00 por decisión del desarrollador); día 7: ~~jueves 2026-11-19~~ ~~martes 2026-11-24 por la noche~~ desde el lunes 2026-11-23 a las 23:48:12, o el martes 2026-11-24 | A0, B, D |
 | Aviso | Breve antes y Ctrl+F5 después, con el texto **aprobado** el 2026-11-06 (el propuesto más una frase sobre la imagen de referencia) | A4, C3 |
-| Vigilancia | Lecturas solo los días 0 (~~jueves 2026-11-12~~ martes 2026-11-17) y 7 (~~jueves 2026-11-19~~ martes 2026-11-24). Tiempos: ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga; si `access.log` no trae `response-time=`, se anota y el criterio queda en los `5xx` | C, D |
+| Vigilancia | Lecturas solo los días 0 (~~jueves 2026-11-12~~ ~~martes 2026-11-17~~ lunes 2026-11-16, hecho) y 7 (~~jueves 2026-11-19~~ ~~martes 2026-11-24~~ desde el lunes 2026-11-23 a las 23:48:12, o el martes 2026-11-24). Tiempos: ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga; si `access.log` no trae `response-time=`, se anota y el criterio queda en los `5xx` | C, D |
 | Retroceso | Datos incorrectos: sí. `5xx` repetido (2 o más en 24 h en la misma ruta, sin contar la recarga ni lo ya clasificado): sí. `5xx` suelto: no, se investiga. `ERROR` de ítem fallido: 3 o más en 24 h sin causa explicada se reproducen en la réplica antes de decidir; los de causa explicada no cuentan | E |
 | Réplica y AUD-05-002 | Último paso, después de la vigilancia | F |
 | Pruebas | Una ejecución con `OK (expected failures=9)` y 267 pruebas, más `check --deploy` y `makemigrations` | A1 |
 
-## Calendario del 2026-11-16 al 2026-11-25 (reprogramado el 2026-11-16)
+## Desviaciones de la ejecución del día 0 (2026-11-16)
+
+Datos dichos por el desarrollador el 2026-11-17, de sus consolas; horas de Chile.
+
+| # | Estaba previsto | Pasó | Efecto |
+| :- | :-------------- | :--- | :----- |
+| 1 | Despliegue el martes 2026-11-17 (reprogramación del 2026-11-16) | Se desplegó el **lunes 2026-11-16** por la noche | El día 7 se adelanta un día: desde el lunes 2026-11-23 a las 23:48:12 (02:48:12 UTC del 11-24), o el martes 2026-11-24. Ver «Calendario vigente» |
+| 2 | `R` entre las 20:00 y las 23:00 (decisión 3) | `R` = **23:48:12**, 48 min después del cierre de la ventana | Decisión del desarrollador. En UTC, `R` cae el 2026-11-17 a las 02:48:12 |
+| 3 | Aviso con la hora real de la actualización (A4) | El aviso decía **22:30**; `R` fue 23:48:12, **1 h 18 min 12 s** después. Canal, día y hora del envío: no informados (`PENDIENTE_DESARROLLADOR`) | El texto aprobado dice «Hoy a las HH:MM»: la hora no coincidió. El cliente fue avisado antes de `R` (dicho) |
+| 4 | `git diff --stat $hash..main …` de A3 sin salida | Falló en PowerShell y se repitió con comillas. No se informó el mensaje de error, la forma exacta ni el resultado de la repetición; la causa no se investigó | La etiqueta se creó y publicó igual (A3). Los comandos de A3 quedan como estaban; si se reutilizan, escribir el rango entre comillas |
+| 5 | Prueba del botón con recarga normal (F5), para ver también el caché (C2) | Se hizo en **ventana privada**, que no prueba el caché del navegador de uso normal | `bloqueado=true` y «Guardando…» prueban el bloqueo, no el caché. El cliente hará Ctrl+F5 el 2026-11-17 de día (dicho) |
+| 6 | Salidas de A1 (filas 1, 2, 6 y 8), B2 (migraciones y `check --deploy` antes), B3, B4 (`migrate --plan` y `bloquearBoton`), B5 (`check --deploy` después) y B6 (clic de Reload y reinicios) | No informadas | Quedan como «No informado» en las tablas; no se completan por inferencia |
+
+Hallazgo nuevo del día 0, ajeno a la Fase 3: [AUD-05-009](../../00_producto/auditoria-tecnica.md) (`pago_form.html` usa `$(document).ready` antes de que `base.html` cargue jQuery y la consola dice «$ is not defined»). El desarrollador verificó que en `v0.3-doble-envio` es idéntico: **no es una regresión**. Baja, Épica 08.
+
+## Calendario vigente (2026-11-17)
+
+Horas de Chile (UTC-3). `R` = lunes 2026-11-16 23:48:12 = martes 2026-11-17 02:48:12 UTC; `R` + 7 días = **lunes 2026-11-23 23:48:12** = martes 2026-11-24 02:48:12 UTC. Corrige el calendario del 2026-11-16 (el siguiente), que ponía el despliegue el martes 2026-11-17.
+
+| Día | Qué | Parte |
+| :-- | :-- | :---- |
+| Lunes 2026-11-16, por la noche (**hecho**) | Medición de la 00-07 (hacia las 23:13); pruebas y comprobaciones; respaldo (23:34:18); etiqueta; servidor antes (23:43:18); `R` (23:48:12); día 0 (C1 a C6, hasta pasadas las 23:58) | A, B, C |
+| Martes 2026-11-17, de día | El cliente hace Ctrl+F5 (dicho por el desarrollador) y empieza el uso real con el `index.js` nuevo. Lectura a demanda como sugerencia, sin decidir (C5 y C6): la tarde del 11-17 o ante un reporte | C7 |
+| Del miércoles 2026-11-18 al jueves 2026-11-19 | Sin lecturas programadas (decisión 5) | — |
+| Viernes 2026-11-20 | Informe C2 de la 00-06 (desconexiones a 28 días), **a mitad de la vigilancia**. **La recarga de `R` (2026-11-16 23:48:12 Chile = 2026-11-17 02:48:12 UTC) figura en sus conteos: sepárala usando `R`** (excluye o marca aparte esa recarga y sus unos 10 s de 502, AUD-04-002). El `OSError: write error` de las 23:55:10 del día 0 (AUD-04-004) también cae en el periodo. Sugerencia, sin decidir: aprovechar esa lectura para una lectura a demanda de la 03-05 | B6, C5, C6 |
+| Del sábado 2026-11-21 al lunes 2026-11-23 (antes de las 23:48:12) | Sin lecturas programadas | — |
+| **Lunes 2026-11-23 desde las 23:48:12** (02:48:12 UTC del 11-24), o **martes 2026-11-24** en adelante | Lectura del día 7 y criterio de cierre (D1 exige que hayan pasado 7 días completos desde `R`) | D |
+| Después de la lectura del día 7 | Respuesta del desarrollador en esta evidencia; el agente deja la bitácora de cierre, notas fechadas y los cambios de estado | D |
+| Después del cierre | Parte F (réplica y AUD-05-002) | F |
+| Domingo 2026-12-13 | La web app queda renovada hasta esa fecha (dicho por el desarrollador el 2026-11-17; el 2026-11-16 había dicho que vencía ese día). Fecha de la renovación y fecha para volver a renovar: `PENDIENTE_DESARROLLADOR` | — |
+
+El respaldo semanal de hacia el 2026-11-10 u 11: no consta si se hizo (`PENDIENTE_DESARROLLADOR`). El de A2 (2026-11-16) es el del despliegue; no lo registré como semanal.
+
+### Calendario del 2026-11-16 al 2026-11-25 (reprogramación del 2026-11-16; superado el 2026-11-17 por la ejecución del día 0; se conserva como registro)
 
 Horas de Chile (UTC-3). Los pasos A a F son los de esta evidencia. Las horas de la tarde del martes 17 son una **sugerencia** de orden (la decisión fija solo la ventana de 20:00 a 23:00 y el día). Las consolas de la noche del 17 comparten los 100 s diarios de CPU con el respaldo del mismo día (inferido; no medido): conviene no repetir comandos pesados sin necesidad. La medición de la 00-07 se hace **antes de A1** (nada de la 03-05 se ejecuta antes de anotarla); lo sugerido es hoy por la noche o la mañana del martes 17, para llegar a la tarde con el resultado ya anotado.
 
@@ -78,20 +112,20 @@ Horas de Chile (UTC-3). Los pasos A a F son los de esta evidencia. Las horas de 
 
 ### A0. Precondiciones
 
-- [ ] La medición de la 00-07 está hecha y su resultado anotado en la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) (~~2026-11-11, hacia las 01:32~~ reprogramada el 2026-11-16: antes de A1 del 2026-11-17, con el guion ajustado: D0, D1 y, si hace falta, D2).
-- [ ] ~~La web app está renovada (2026-11-10, vence el 2026-11-20).~~ La web app vence el 2026-12-13 (dicho por el desarrollador el 2026-11-16; no lo vi en el panel). Fecha para renovarla: `PENDIENTE_DESARROLLADOR`.
-- [ ] Producción confirmada en `v0.3-doble-envio` (B1: `git describe --tags --always` y `git rev-parse --short HEAD` = `5dc82a8`), antes de tocar nada.
-- [ ] Día del despliegue fijado: ~~**jueves 2026-11-12**~~ **martes 2026-11-17**, de 20:00 a 23:00 (hora de Chile) (decisión del 2026-11-06; día movido por el desarrollador el 2026-11-16). ~~Si algo lo atrasa un día, `R` el 11-13 deja la lectura final el 11-20 (el día del vencimiento); más tarde pasa de esa fecha.~~ Ese tope ya no rige: la web app vence el 2026-12-13.
-- [ ] `git status --short` vacío y `main` igual a `origin/main` (A1).
+- [x] La medición de la 00-07 está hecha y su resultado anotado en la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) (~~2026-11-11, hacia las 01:32~~ reprogramada el 2026-11-16: antes de A1 del 2026-11-17, con el guion ajustado: D0, D1 y, si hace falta, D2).
+- [x] ~~La web app está renovada (2026-11-10, vence el 2026-11-20).~~ La web app vence el 2026-12-13 (dicho por el desarrollador el 2026-11-16; el 2026-11-17 dijo «renovada hasta 2026-12-13»; no lo vi en el panel). Fecha para volver a renovarla: `PENDIENTE_DESARROLLADOR`.
+- [x] Producción confirmada en `v0.3-doble-envio` (B1: `git describe --tags --always` y `git rev-parse --short HEAD` = `5dc82a8`), antes de tocar nada. Confirmado el 2026-11-16: commit `5dc82a8` (B2, 23:43:18); la salida de `describe` no se informó.
+- [x] Día del despliegue fijado: ~~**jueves 2026-11-12**~~ ~~**martes 2026-11-17**~~ **lunes 2026-11-16** (hecho ese día; `R` 23:48:12, fuera de la ventana por decisión del desarrollador; ver «Desviaciones de la ejecución del día 0»), previsto de 20:00 a 23:00 (hora de Chile) (decisión del 2026-11-06; día movido por el desarrollador el 2026-11-16). ~~Si algo lo atrasa un día, `R` el 11-13 deja la lectura final el 11-20 (el día del vencimiento); más tarde pasa de esa fecha.~~ Ese tope ya no rige: la web app vence el 2026-12-13.
+- [ ] `git status --short` vacío y `main` igual a `origin/main` (A1). Resultado no informado.
 
-**Cuenta de días.** ~~`R` el jueves 2026-11-12 entre las 20:00 y las 23:00 → día 7 el jueves 2026-11-19, a la misma hora o más tarde (un día antes del vencimiento de la web app y del informe C2, 2026-11-20).~~ `R` el martes 2026-11-17 entre las 20:00 y las 23:00 → día 7 el martes 2026-11-24, a la misma hora o más tarde (el informe C2 del 2026-11-20 cae en medio de la semana; la web app vence el 2026-12-13). La lectura del día 7 exige que hayan pasado siete días completos desde `R` (D1 lo comprueba).
+**Cuenta de días.** ~~`R` el jueves 2026-11-12 entre las 20:00 y las 23:00 → día 7 el jueves 2026-11-19, a la misma hora o más tarde (un día antes del vencimiento de la web app y del informe C2, 2026-11-20).~~ ~~`R` el martes 2026-11-17 entre las 20:00 y las 23:00 → día 7 el martes 2026-11-24, a la misma hora o más tarde (el informe C2 del 2026-11-20 cae en medio de la semana; la web app vence el 2026-12-13).~~ **Corrección del 2026-11-17:** `R` fue el lunes 2026-11-16 a las 23:48:12 (Chile) = 2026-11-17 02:48:12 UTC → día 7 desde el lunes 2026-11-23 a las 23:48:12 (Chile) = 2026-11-24 02:48:12 UTC, o el martes 2026-11-24 en adelante. El informe C2 del 2026-11-20 cae en medio de la semana; la web app está renovada hasta el 2026-12-13. La lectura del día 7 exige que hayan pasado siete días completos desde `R` (D1 lo comprueba).
 
 | Dato | Valor |
 | :--- | :---- |
-| Hora planeada para `R` el martes 2026-11-17 (hora de Chile) | … |
-| Vencimiento de la web app (dicho: 2026-12-13) y fecha para renovarla | … |
-| Resultado de la 00-07 (`segundos_repetidos`, por día) | … |
-| Producción en `v0.3-doble-envio` (confirmada por el desarrollador: fecha y hora) | … |
+| Hora planeada para `R` (hora de Chile) | No se fijó una hora; `R` real: 2026-11-16 23:48:12, fuera de las 20:00 a 23:00 (decisión del desarrollador) |
+| Vencimiento de la web app (dicho: 2026-12-13) y fecha para renovarla | Renovada hasta el 2026-12-13 (dicho por el desarrollador, 2026-11-17). Fecha de la renovación y fecha para volver a renovar: no informadas (`PENDIENTE_DESARROLLADOR`) |
+| Resultado de la 00-07 (`segundos_repetidos`, por día) | Medida el 2026-11-16 hacia las 23:13: **12 días con registro** (2026-11-04 a 2026-11-16), todos con `segundos_repetidos=0`; 2026-11-08 y 2026-11-17 (UTC) con `lineas=0`: sin medir. **Cumple.** Salida de D0 (rotación): no informada. Detalle en la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) |
+| Producción en `v0.3-doble-envio` (confirmada por el desarrollador: fecha y hora) | Commit `5dc82a8` el 2026-11-16 a las 23:43:18 (B2). La salida de `describe` y la última línea `Starting uWSGI` previa: no informadas |
 
 ### A1. Lista de comprobación **[PC · PowerShell 7]**
 
@@ -124,19 +158,19 @@ git diff --stat 5dc82a8..main -- pedidos/static
 
 | # | Comprobación | Resultado |
 | :- | :----------- | :-------- |
-| 1 | `git status` vacío y `main` = `origin/main` | … |
-| 2 | `git diff --stat 7e14398..main` (sin documentos) sin salida | … |
-| 3 | Pruebas: `Ran N tests` y cierre | … (esperado `Ran 267 tests` · `OK (expected failures=9)`) |
-| 4 | `check --deploy` (códigos) | … (esperado `W004 W008 W009 W012 W016`) |
-| 5 | `makemigrations --check --dry-run` | … (esperado `No changes detected`) |
-| 6 | `showmigrations pedidos`: última migración | … (esperado `[X] 0007_registroevento`) |
-| 7 | `diff` de migraciones, `requirements.txt` y `settings.py` desde `5dc82a8` | … (esperado sin salida) |
-| 8 | `diff` de `pedidos/static` desde `5dc82a8` | … (esperado solo `index.js`) |
+| 1 | `git status` vacío y `main` = `origin/main` | No informado |
+| 2 | `git diff --stat 7e14398..main` (sin documentos) sin salida | No informado (la etiqueta se creó sobre `7e14398`; ver la desviación 4) |
+| 3 | Pruebas: `Ran N tests` y cierre | 267 pruebas, `OK (expected failures=9)` (igual a lo esperado) |
+| 4 | `check --deploy` (códigos) | `W004 W008 W009 W012 W016` (igual a lo esperado) |
+| 5 | `makemigrations --check --dry-run` | Sin cambios (igual a lo esperado) |
+| 6 | `showmigrations pedidos`: última migración | No informado |
+| 7 | `diff` de migraciones, `requirements.txt` y `settings.py` desde `5dc82a8` | Sin diferencias (igual a lo esperado) |
+| 8 | `diff` de `pedidos/static` desde `5dc82a8` | No informado |
 | 9 | Estilos compilados | No aplica (se compila Tailwind desde la 08-05) |
 
 ### A2. Respaldo previo **[Navegador]** y **[PC · PowerShell 7]**
 
-El día del despliegue y lo más cerca posible de `R`: en un retroceso del caso 3, se pierde todo lo registrado después del respaldo (`retroceso.md`, sección 4). El semanal es el de hacia el 2026-11-10 u 11 (no consta si se hizo), distinto de este (se hace el ~~2026-11-12~~ 2026-11-17): no los confundas en `respaldo.md`, sección 6. Si el semanal no se hizo, este puede contar también como el de la semana (decisión 2-A); anótalo en esa fila.
+El día del despliegue y lo más cerca posible de `R`: en un retroceso del caso 3, se pierde todo lo registrado después del respaldo (`retroceso.md`, sección 4). El semanal es el de hacia el 2026-11-10 u 11 (no consta si se hizo), distinto de este (se hizo el ~~2026-11-12~~ ~~2026-11-17~~ 2026-11-16): no los confundas en `respaldo.md`, sección 6. Si el semanal no se hizo, este puede contar también como el de la semana (decisión 2-A); anótalo en esa fila.
 
 1. En producción, como superusuario: «Respaldar BD» → **un solo clic** en «Generar Nuevo Respaldo BD». Guarda la descarga directo en la carpeta cifrada.
 2. Verifica:
@@ -150,13 +184,13 @@ $LASTEXITCODE
 
 | Dato | Valor |
 | :--- | :---- |
-| Nombre del archivo (hora de Chile del nombre) | … |
-| Tamaño (bytes) | … |
-| SHA-256 | … |
-| Tablas | … de 19 esperadas; faltantes: …; adicionales: … |
-| Código | … |
+| Nombre del archivo (hora de Chile del nombre) | `respaldo_16-11-2026_23-34-18.sql` (2026-11-16 23:34:18; 13 min 54 s antes de `R`, calculado) |
+| Tamaño (bytes) | 1.525.277 |
+| SHA-256 | `74e6e2a352d6b74eac5306edc34def597947bad01c45243abdac08cdeb0c3e1c` |
+| Tablas | 19 de 19 esperadas, `VÁLIDO` (faltantes y adicionales: no informados por separado) |
+| Código | 0 |
 
-Agrega la fila en `docs/operacion/respaldo.md`, sección 6 (motivo: «Previo al despliegue `v3.1-integridad` (iteración 03-05)»). _(Lo hace el agente al cerrar, con tus datos.)_
+Agrega la fila en `docs/operacion/respaldo.md`, sección 6 (motivo: «Previo al despliegue `v3.1-integridad` (iteración 03-05)»). _(Hecho el 2026-11-17 por el agente, con los datos del desarrollador.)_
 
 ### A3. Etiqueta **[PC · PowerShell 7]**
 
@@ -187,26 +221,29 @@ git ls-remote --tags origin v3.1-integridad
 
 | Dato | Valor |
 | :--- | :---- |
-| Mensaje de la etiqueta | … |
-| Commit de la etiqueta | … |
-| Objeto de la etiqueta en el remoto (`ls-remote`) | … |
-| Destino de retroceso en el remoto (`v0.3-doble-envio`) | … |
+| Mensaje de la etiqueta | No informado (el guion lo arma con la fecha del día: «Iteraciones 03-01 a 03-04 · desplegada el 2026-11-16»; no se vio la salida de `git tag -n`) |
+| Commit de la etiqueta | `7e14398` |
+| Objeto de la etiqueta en el remoto (`ls-remote`) | `c05a16b8fde34cd5f9438055f9f950e826009e96` |
+| Destino de retroceso en el remoto (`v0.3-doble-envio`) | `e68f87212245679d68ba8340db46cd9c3218419d` (objeto de la etiqueta) |
+
+**Desviación (2026-11-16):** el `git diff --stat $hash..main …` de este paso falló en PowerShell y se repitió con comillas (dicho por el desarrollador; no se informó el error ni el resultado de la repetición, y la causa no se investigó). Los comandos del bloque quedan como estaban; al reutilizarlos, escribir el rango entre comillas.
 
 ### A4. Aviso al cliente
 
-Texto **aprobado por el desarrollador el 2026-11-06** (el propuesto en [la iteración, decisión 4](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md) más una frase sobre la imagen de referencia). Cópialo tal cual y reemplaza `HH:MM` por la hora real (sugerido: envíalo el ~~jueves 2026-11-12~~ martes 2026-11-17 antes de las 20:00, el mismo día de la actualización: el texto dice «Hoy»; si lo envías otro día, cambia «Hoy» por el día y anótalo abajo. No consta si el cliente recibió un aviso para el 11-12: si lo recibió, dile que cambió):
+Texto **aprobado por el desarrollador el 2026-11-06** (el propuesto en [la iteración, decisión 4](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md) más una frase sobre la imagen de referencia). Cópialo tal cual y reemplaza `HH:MM` por la hora real (sugerido: envíalo el ~~jueves 2026-11-12~~ ~~martes 2026-11-17~~ lunes 2026-11-16 (día real del despliegue) antes de las 20:00, el mismo día de la actualización: el texto dice «Hoy»; si lo envías otro día, cambia «Hoy» por el día y anótalo abajo. No consta si el cliente recibió un aviso para el 11-12: si lo recibió, dile que cambió):
 
 ```text
 Hoy a las HH:MM vamos a actualizar el sistema. Puede dejar de responder unos segundos mientras se reinicia. Si tenías un pedido, una cotización o un pago abierto antes de eso, la primera vez que lo guardes va a salir el aviso «Este formulario venció y no se guardó»: no perdiste lo que escribiste, revisa los datos y vuelve a guardar. Si habías elegido una imagen de referencia, vuelve a elegirla: el navegador no la conserva. Después de la actualización, cierra la pestaña y abre la aplicación de nuevo (o pulsa Ctrl+F5). Notarás que los botones de guardar dicen «Guardando…» y se bloquean un momento: es para que un doble clic no cree el pedido dos veces. Si algo no funciona, cuéntanos en qué pantalla estabas y a qué hora.
 ```
 
-- [ ] Reemplazaste `HH:MM` por la hora real y lo mandaste antes de `R`.
+- [x] Lo mandaste antes de `R` (dicho por el desarrollador: el cliente «fue avisado antes»).
+- [ ] Reemplazaste `HH:MM` por la hora real: **no coincide**. El aviso decía 22:30 y `R` fue 23:48:12 (1 h 18 min 12 s después). Ver la desviación 3.
 - [ ] Si lo cambiaste, anota abajo el texto final.
 
 | Dato | Valor |
 | :--- | :---- |
-| Texto enviado (el aprobado / con cambios) | … |
-| Canal y hora del envío (hora de Chile) | … |
+| Texto enviado (el aprobado / con cambios) | El aprobado, con la hora 22:30 (dicho por el desarrollador; si cambió algo más, no se informó) |
+| Canal y hora del envío (hora de Chile) | No informados (`PENDIENTE_DESARROLLADOR`). El texto dice «Hoy»: sirve solo si se envió el 2026-11-16 |
 
 ---
 
@@ -242,11 +279,11 @@ date -u "+%F %T (UTC)"; TZ=America/Santiago date "+%F %T (hora de Chile)"
 
 | Dato | Valor |
 | :--- | :---- |
-| Commit y etiqueta antes | … |
-| Últimas migraciones y `migrate --plan` | … |
-| `check --deploy` antes (códigos) | … |
-| Filas de `django_session` antes (opcional) | … |
-| Hora antes de recargar (UTC / Chile) | … |
+| Commit y etiqueta antes | Commit `5dc82a8`; la etiqueta (`describe`) no se informó |
+| Últimas migraciones y `migrate --plan` | No informado |
+| `check --deploy` antes (códigos) | No informado (sin esta lista no se puede comparar con B5) |
+| Filas de `django_session` antes (opcional) | 106 (línea base del riesgo «el token suma entradas a la sesión») |
+| Hora antes de recargar (UTC / Chile) | 2026-11-17 02:43:18 UTC (calculada: Chile + 3 h) / 2026-11-16 23:43:18 |
 
 ### B3. Traer la etiqueta **[PA · Bash]**
 
@@ -267,9 +304,9 @@ git diff --stat v0.3-doble-envio v3.1-integridad -- pedidos/static
 
 | Dato | Valor |
 | :--- | :---- |
-| `git describe --tags` y commit | … |
-| `diff` de `requirements.txt`, migraciones y `settings.py` | … |
-| `diff` de `pedidos/static` | … |
+| `git describe --tags` y commit | No informados. El código nuevo corre: los tres formularios traen `token_envio` (C1) |
+| `diff` de `requirements.txt`, migraciones y `settings.py` | No informado (A1, fila 7, midió lo mismo en el PC: sin diferencias) |
+| `diff` de `pedidos/static` | No informado (`collectstatic` copió 1 archivo, coherente con solo `index.js`; inferido) |
 
 ### B4. Migraciones y estáticos **[PA · Bash]**
 
@@ -284,9 +321,9 @@ grep -c 'bloquearBoton' "$PROYECTO/staticfiles/pedidos/js/index.js"
 
 | Dato | Valor |
 | :--- | :---- |
-| `migrate --plan` | … |
-| `collectstatic` (última línea) | … |
-| Conteo de `bloquearBoton` en `staticfiles/…/index.js` | … |
+| `migrate --plan` | No informado |
+| `collectstatic` (última línea) | 1 archivo copiado (dicho por el desarrollador; la línea literal no se informó) |
+| Conteo de `bloquearBoton` en `staticfiles/…/index.js` | No informado (el bloqueo funciona en C2) |
 
 ### B5. Revisión de configuración **[PA · Bash]**
 
@@ -300,8 +337,8 @@ python manage.py check --deploy 2>&1 | grep -c 'ERRORS'
 
 | Dato | Valor |
 | :--- | :---- |
-| `check` | … |
-| `check --deploy` después (códigos) y `ERRORS` | … |
+| `check` | Limpio (dicho por el desarrollador) |
+| `check --deploy` después (códigos) y `ERRORS` | No informado |
 
 ### B6. Recargar **[PA · Panel]** y anotar `R` **[PA · Bash]**
 
@@ -329,10 +366,10 @@ Revisa que el segundo valor sea el primero más 3 horas (por ejemplo, 21:34:10 d
 
 | Dato | Valor |
 | :--- | :---- |
-| Hora del clic de Reload (tu reloj, Chile) | … |
-| **`R` oficial** (`Starting uWSGI`, Chile) | … |
-| `R` en UTC | … |
-| Reinicios desde `DESDE_CL` (cuántas líneas) | … (esperado 1) |
+| Hora del clic de Reload (tu reloj, Chile) | No informada |
+| **`R` oficial** (`Starting uWSGI`, Chile) | **2026-11-16 23:48:12** |
+| `R` en UTC | **2026-11-17 02:48:12** |
+| Reinicios desde `DESDE_CL` (cuántas líneas) | No informado (esperado 1) |
 
 ---
 
@@ -368,10 +405,10 @@ En ventana privada (`despliegue.md`, 3.7). No uses «Estadísticas» (AUD-01-006
 
 | Revisión | Resultado |
 | :------- | :-------- |
-| Acceso, panel, listado y detalle de pedido | … |
-| `/pedidos/nuevo/` carga y trae `token_envio` | … |
-| `/cotizaciones/nueva/` carga y trae `token_envio` | … |
-| `/pagos/ingresar/` carga y trae `token_envio` | … |
+| Acceso, panel, listado y detalle de pedido | Sin 500 (dicho por el desarrollador) |
+| `/pedidos/nuevo/` carga y trae `token_envio` | Sí, sin 500 |
+| `/cotizaciones/nueva/` carga y trae `token_envio` | Sí, sin 500 |
+| `/pagos/ingresar/` carga y trae `token_envio` | Sí, sin 500 |
 
 ### C2. Estáticos: Ctrl+F5 y prueba del botón **[Navegador]**
 
@@ -390,13 +427,13 @@ f.addEventListener('submit', e => { e.preventDefault(); const b = f.querySelecto
 
 | Dato | Valor |
 | :--- | :---- |
-| Recarga normal (F5): `bloqueado` y texto | … |
-| Tras Ctrl+F5 (solo si hizo falta): `bloqueado` y texto | … |
-| ¿Se vio el `index.js` anterior en caché? | … |
+| Recarga normal (F5): `bloqueado` y texto | `bloqueado=true` y «Guardando…» (en ventana privada) |
+| Tras Ctrl+F5 (solo si hizo falta): `bloqueado` y texto | No aplica: ya salió `true` |
+| ¿Se vio el `index.js` anterior en caché? | **No se probó.** La ventana privada no conserva el caché del navegador de uso normal (dicho por el desarrollador). Queda para el Ctrl+F5 del cliente del 2026-11-17 y la lectura a demanda |
 
 ### C3. Aviso a quien usa la aplicación
 
-- [ ] Pediste cerrar la pestaña y abrir la aplicación de nuevo (o Ctrl+F5), como dice el texto aprobado en A4.
+- [x] Pediste cerrar la pestaña y abrir la aplicación de nuevo (o Ctrl+F5), como dice el texto aprobado en A4. El cliente fue avisado antes y hará Ctrl+F5 el 2026-11-17 de día (dicho por el desarrollador); hasta entonces su navegador puede conservar el `index.js` anterior (inferido).
 
 ### C4. La línea `INFO` del rechazo **[Navegador]**
 
@@ -415,9 +452,9 @@ document.querySelector('form[data-bloquear-envio]').noValidate = true;
 
 | Dato | Valor |
 | :--- | :---- |
-| Hora del envío (tu reloj, Chile) | … |
-| Aviso en pantalla (texto) | … |
-| ¿Se creó algún pago? (revisa el listado de pagos) | … |
+| Hora del envío (tu reloj, Chile) | 23:58:23 (hora dicha por el desarrollador para C4) |
+| Aviso en pantalla (texto) | No informado por separado; la línea `INFO` del servidor confirma el rechazo (C5) |
+| ¿Se creó algún pago? (revisa el listado de pagos) | No: ningún pago creado |
 
 ### C5. Lectura de `server.log` **[PA · Bash]**
 
@@ -436,10 +473,10 @@ desde $S "$DESDE_CL" | grep 'nivel=INFO' | grep 'Envío sin token válido' | cut
 
 | Dato | Valor |
 | :--- | :---- |
-| Conteo por nivel desde `R` | … |
-| `ERROR` por registrador (y ruta) | … |
-| Líneas `INFO` «Envío sin token válido» (cuántas) y su cabecera | … |
-| ¿La de C4 aparece (método, ruta, usuario)? | … |
+| Conteo por nivel desde `R` | `ERROR`: 1; `INFO`: 1 |
+| `ERROR` por registrador (y ruta) | `root` ×1: `OSError: write error` a las 23:55:10 (ruido ya clasificado, AUD-04-004) |
+| Líneas `INFO` «Envío sin token válido» (cuántas) y su cabecera | 1 (la de C4); la cabecera no se copió aquí |
+| ¿La de C4 aparece (método, ruta, usuario)? | Sí: verificada por el desarrollador (método, ruta y usuario no se copian a este documento) |
 
 Si C4 no deja la línea `INFO`, no es un error: anótalo y, al cerrar, el agente deja la fila de `despliegue.md`, 3.9, como «sin verificar» o la retira (decisión 5b, opción C).
 
@@ -485,25 +522,30 @@ Solo imprime conteos: ninguna IP, nombre ni monto. Es de **solo lectura** (`filt
 
 | Dato | Valor |
 | :--- | :---- |
-| `POST /pedidos/nuevo/` por código (200 / 302 / otros) | … |
-| `pedidos_nuevos`, `eventos_creado`, `eventos_duplicado`, `eventos_convertida` | … |
-| `grupos_repetidos` | … |
+| `POST /pedidos/nuevo/` por código (200 / 302 / otros) | Ninguno: no hubo ningún `POST /pedidos/nuevo/` desde `R` |
+| `pedidos_nuevos`, `eventos_creado`, `eventos_duplicado`, `eventos_convertida` | 0, 0, 0, 0 |
+| `grupos_repetidos` | 0 |
+
+**Límite:** sin tráfico real en `/pedidos/nuevo/` (la lectura es de noche, antes del primer uso real del negocio), la línea base queda vacía y **no pone a prueba el criterio (iii)**. Lo ponen a prueba la lectura del día 7 (D4) y, si se hace, una lectura a demanda tras el primer uso real.
 
 ### C7. Cierre del día 0
 
-- [ ] Sin 500 en las pantallas; los tres formularios traen `token_envio` (C1).
-- [ ] `server.log` desde `R` sin `ERROR` nuevo (C5), o clasificados con la tabla de `despliegue.md`, 3.9.
-- [ ] La línea `INFO` verificada o su estado explicado (C4 y C5).
-- [ ] Botón y caché de `index.js` probados (C2).
-- [ ] Sin pedidos duplicados en la línea base (C6).
+- [x] Sin 500 en las pantallas; los tres formularios traen `token_envio` (C1).
+- [x] `server.log` desde `R` sin `ERROR` nuevo (C5), o clasificados con la tabla de `despliegue.md`, 3.9. Un solo `ERROR`: `OSError: write error`, ya clasificado (AUD-04-004).
+- [x] La línea `INFO` verificada o su estado explicado (C4 y C5). Verificada; `despliegue.md`, 3.9, actualizado el 2026-11-17.
+- [x] Botón de `index.js` probado (C2: `bloqueado=true`, «Guardando…»).
+- [ ] Caché de `index.js` probado: **sin probar** (ventana privada); queda para el Ctrl+F5 del cliente del 2026-11-17.
+- [x] Sin pedidos duplicados en la línea base (C6): 0, pero sin tráfico en `/pedidos/nuevo/` (ver el límite en C6).
 
-**Riesgo anotado (decisión 5 del 2026-11-06).** Con lecturas solo los días 0 y 7, **un problema de los días 1 a 6 solo se vería si el cliente lo reporta**. Además, la lectura del día 0 ocurre de noche, antes del primer uso real del negocio (inferido: es la hora de menor uso). **Sugerencia, sin decidir:** una lectura extra **a demanda** (con los mismos comandos de C5 y C6), por ejemplo la primera mañana tras `R` (~~viernes 2026-11-13~~ miércoles 2026-11-18) o apenas el cliente avise de un «no se guardó» o de un botón que no responde. Cada lectura es corta, pero consume parte de los 100 s diarios de CPU de la consola.
+**Día 0 cerrado el 2026-11-16 (dicho por el desarrollador).** La iteración queda **«En vigilancia (día 0 hecho)»**: faltan la lectura del día 7 (parte D) y la limpieza de la réplica (parte F). La Épica 03 no se marca Terminada y ningún hallazgo pasa a «Resuelto» antes del día 7.
+
+**Riesgo anotado (decisión 5 del 2026-11-06).** Con lecturas solo los días 0 y 7, **un problema de los días 1 a 6 solo se vería si el cliente lo reporta**. Además, la lectura del día 0 ocurre de noche, antes del primer uso real del negocio (inferido: es la hora de menor uso). **Sugerencia, sin decidir:** una lectura extra **a demanda** (con los mismos comandos de C5 y C6), por ejemplo el primer día de uso real tras `R` (~~viernes 2026-11-13~~ ~~miércoles 2026-11-18~~ martes 2026-11-17, después del Ctrl+F5 del cliente) o apenas el cliente avise de un «no se guardó» o de un botón que no responde. Cada lectura es corta, pero consume parte de los 100 s diarios de CPU de la consola.
 
 ---
 
 ## Parte D · Día 7 y criterio de cierre **[PA · Bash]**
 
-Se hace el ~~**jueves 2026-11-19 por la noche**~~ **martes 2026-11-24 por la noche**, siete días después de `R` o más tarde (de 20:00 a 23:00 de Chile; de 23:00 UTC del 11-24 a 02:00 UTC del 11-25). **Es la única lectura de la semana además de la del día 0.** Cubre toda la semana: de `R` a ahora.
+Se hace ~~el **jueves 2026-11-19 por la noche**~~ ~~el **martes 2026-11-24 por la noche**~~ **desde el lunes 2026-11-23 a las 23:48:12 (hora de Chile; 02:48:12 UTC del 11-24), o el martes 2026-11-24 en adelante**, siete días después de `R` o más tarde (corrección del 2026-11-17: `R` fue el lunes 2026-11-16 a las 23:48:12; el filtro de D1 compara con `R` + 7 días, no con la hora del día). **Es la única lectura de la semana además de la del día 0.** Cubre toda la semana: de `R` a ahora.
 
 ### D1. Preparación
 
@@ -767,7 +809,17 @@ Repite las consultas 1 a 3 de la «Evidencia P3» de la [iteración 03-02](itera
 - **`git tag`:** no se pudo comprobar que `v3.1-integridad` esté libre (el agente no ejecuta `git tag`); lo comprueba A3.
 - **Horas de uso del cliente entre semana:** sigue sin medirse; la ventana de 20:00 a 23:00 es decisión del desarrollador.
 - **Al reprogramar (2026-11-16):** dichos por el desarrollador y no verificados: producción en `v0.3-doble-envio`, medición de la 00-07 no hecha y web app con vencimiento el 2026-12-13. No sé si se hizo el semanal de hacia el 11-10 u 11 ni si el cliente recibió un aviso para el 11-12. El guion ajustado de la parte D de la 00-07 se probó solo con registros sintéticos.
+- **Día 0 (2026-11-17):** todo lo de las partes A a C es dicho por el desarrollador, de sus consolas; el agente no vio ninguna salida. Quedaron sin informar las filas listadas en la desviación 6. Tampoco sé el contenido de `server.log` ni de `access.log` fuera de lo que el desarrollador resumió, ni el día, el canal y la hora del aviso, ni si el semanal de hacia el 2026-11-10 u 11 se hizo. El hallazgo AUD-05-009 sale de la lectura del código del agente (sin ejecutar) y de lo dicho por el desarrollador (idéntico en `v0.3-doble-envio`).
 
 ## Respuesta del desarrollador
 
-_Pendiente._ Se consolidará aquí, parte por parte, cuando se ejecute la iteración.
+Partes A a C respondidas el 2026-11-17 (datos dichos por el desarrollador, hora de Chile) y consolidadas en las tablas de arriba. Puntos propios del día 0:
+
+- **00-07:** medida el 2026-11-16 hacia las 23:13; 12 días con registro (2026-11-04 a 2026-11-16), todos con `segundos_repetidos=0`; 2026-11-08 y 2026-11-17 (UTC) con `lineas=0`: sin medir. Cumple.
+- **Pruebas:** 267, `OK (expected failures=9)`; `check --deploy` con `W004 W008 W009 W012 W016`; `makemigrations` sin cambios; sin diferencias en migraciones, `requirements.txt` ni `settings.py`.
+- **Respaldo:** `respaldo_16-11-2026_23-34-18.sql`, 1.525.277 bytes, 19 de 19, `VÁLIDO`, código 0.
+- **Etiqueta:** `v3.1-integridad` sobre `7e14398` (objeto `c05a16b8fde34cd5f9438055f9f950e826009e96`); retroceso `v0.3-doble-envio` (`e68f87212245679d68ba8340db46cd9c3218419d`).
+- **Servidor:** antes, `5dc82a8`, 106 sesiones, 23:43:18; después, `collectstatic` 1 archivo y `check` limpio. **`R` = 2026-11-16 23:48:12.**
+- **Día 0:** C1 sin 500 y `token_envio` en las tres pantallas; C2 `bloqueado=true` y «Guardando…» (ventana privada); C4 a las 23:58:23, línea `INFO` verificada y ningún pago creado; C5 1 `ERROR` (`root`, `OSError: write error`, 23:55:10) y 1 `INFO`; C6 sin `POST /pedidos/nuevo/` y todos los conteos en 0.
+- **Hallazgo nuevo:** AUD-05-009 (Baja, Épica 08), idéntico en `v0.3-doble-envio`: no es una regresión.
+- **Pendientes de esta evidencia:** parte D (día 7), parte E (solo si se cumple su regla) y parte F (limpieza de la réplica).

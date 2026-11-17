@@ -234,6 +234,7 @@ done
 | Salida (pegar tal cual) |
 | :---------------------- |
 | ~~Pendiente: se mide el 2026-11-11, hacia las 01:32~~ Pendiente (2026-11-16): se mide antes del despliegue de la 03-05 (2026-11-16 por la noche o 2026-11-17 durante el día). Pega aquí la salida de D0 (nombres, tamaños y fechas) y la de D1 |
+| **Medida el 2026-11-16 hacia las 23:13 (hora de Chile; dicho por el desarrollador el 2026-11-17, no vi la salida).** 12 días con registro (2026-11-04 a 2026-11-16), todos con `segundos_repetidos=0`. El 2026-11-08 y el 2026-11-17 (UTC) salieron con `lineas=0`: **sin medir** (no se sabe si fue falta de uso o de registro; el 2026-11-17 UTC llegaba solo hasta las 02:13 UTC de la medición). D2 no hizo falta: el 2026-11-04 salió con 0. **Cumple.** No se informaron la salida de D0 (nombres, tamaños y fechas de los archivos, o sea cuántos días conserva la rotación) ni `post_nuevo` y `envios_extra` por día. |
 
 ## Lo que no se pudo verificar
 
@@ -248,4 +249,4 @@ Partes A a C respondidas el 2026-11-04 y consolidadas en las tablas de arriba. P
 - **Pruebas y `check --deploy` no repetidos:** el código es idéntico al de `bd07f21`, sobre el que corrieron el 2026-11-04.
 - **Recarga:** reinicio efectivo a las 01:32:51 (hora oficial); orden de Reload a las 01:32:45.
 - **Validación:** seis pantallas abren y muestran el cambio, sin enviar formularios; 0 líneas con `nivel=` desde el reinicio; sin retroceso.
-- **Falta:** la parte D (solo `POST /pedidos/nuevo/` sin dos en el mismo segundo). ~~El 2026-11-11 hacia las 01:32.~~ No se hizo ese día; se mide antes del despliegue de la 03-05 del 2026-11-17, con el guion ajustado el 2026-11-16.
+- **Falta (hasta el 2026-11-16; hecha ese día, ver la tabla de la parte D):** la parte D (solo `POST /pedidos/nuevo/` sin dos en el mismo segundo). ~~El 2026-11-11 hacia las 01:32.~~ No se hizo ese día; se mide antes del despliegue de la 03-05 del 2026-11-17, con el guion ajustado el 2026-11-16.
