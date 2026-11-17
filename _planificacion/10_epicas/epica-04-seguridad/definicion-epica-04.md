@@ -1,10 +1,10 @@
 # Épica 04 · Seguridad y endurecimiento
 
-- **Estado:** Pendiente
+- **Estado:** En curso desde el 2026-11-17 (redacción y desarrollo en local; nada se despliega hasta cerrar la vigilancia de la 03-05). Antes: Pendiente.
 - **Fase del plan:** 4 (`plan-de-trabajo.md`, «FASE 4»), ampliada el 2026-10-27 (anexo del plan, RDA-014)
 - **Objetivo:** cerrar las vulnerabilidades identificadas, defender las entradas de la aplicación (HTML enriquecido, acceso y archivos) y aplicar el estándar de configuración de producción de Django.
 - **Precondición:** Épica 02 completa. **Orden de ejecución:** después de la Épica 03 (decisión del desarrollador del 2026-10-27), incluida la 04-06.
-- **Última revisión:** 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
+- **Última revisión:** 2026-11-17 (04-01 redactada; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
 
 ## Alcance
 
@@ -24,7 +24,7 @@
 
 | Iteración | Nombre | Subfase |
 | :-------- | :----- | :------ |
-| 04-01 | Mutaciones solo por POST | 4.1 |
+| 04-01 | [Mutaciones solo por POST](iteracion-04-01-mutaciones-solo-por-post.md) (Pendiente, redactada, decisiones resueltas, 2026-11-17) | 4.1 |
 | 04-02 | Configuración de producción | 4.2 |
 | 04-03 | Credenciales y secretos | 4.3 |
 | 04-04 | Endurecimiento de la restauración | 4.4 |
@@ -79,3 +79,4 @@
 - **2026-10-27 (reorganización, RDA-014):** se suman las iteraciones 04-07 (AUD-03-001), 04-08 (AUD-03-004) y 04-09, y AUD-03-002 a la 04-01, a pedido del desarrollador de atender la seguridad (inyección, XSS, ataques de acceso). La épica conserva su número y su lugar, después de la 03.
 - **2026-10-27 (02-05, decisión del desarrollador, sin ID nuevo) · Respuestas de rechazo:** sin sesión, los puntos JSON `api/cliente/nuevo/` y `api/producto/nuevo/` responden 302 al acceso en HTML, no un JSON de error ni 401; un usuario autenticado que no es superusuario recibe 302 al acceso, no 403, en las cuatro vistas de la base de datos (`user_passes_test`). Comportamiento fijado en `test_acceso.PuntosJsonTests` y `test_acceso.BaseDeDatosPermisosTests`: si la Épica 04 lo cambia, actualiza esas pruebas en la misma iteración y el contrato de `index.js` (`AGENTS.md`, sección 9). Además, AUD-02-030: decidir si se desactivan la recuperación de contraseña y el acceso propio del panel de administración.
 - **2026-10-27 (Auditoría 04):** se suman AUD-04-003 (datos personales en la cadena de consulta, `PENDIENTE_DESARROLLADOR`, sin iteración asignada), una nota de AUD-04-002 para la 04-03 y la evidencia nueva de AUD-03-002 para la 04-01.
+- **2026-11-17 (decisión del desarrollador, dicha por él) · Avance en paralelo a la vigilancia de la 03-05:** la Épica 04 se redacta y se desarrolla en local mientras corre la vigilancia de `v3.1-integridad`. **Nada de la Épica 04 se despliega hasta cerrar esa vigilancia** (lectura del día 7 desde el lunes 2026-11-23 a las 23:48:12, hora de Chile). La precondición «después de la Épica 03» se mantiene para el despliegue, no para el trabajo en local. La 04-01 queda Pendiente (redactada, decisiones resueltas) con las decisiones (a) confirmación con `data-confirm` dentro de un formulario POST, sin plantillas nuevas, y (b) corregir toda ruta que escriba con GET; la revisión de `urls.py` encontró solo el panel (`registrar_metricas_diarias`, AUD-01-006) fuera de las cuatro rutas, y queda como punto P2 de la iteración. [bitacora-04-01-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-01-redaccion.md).
