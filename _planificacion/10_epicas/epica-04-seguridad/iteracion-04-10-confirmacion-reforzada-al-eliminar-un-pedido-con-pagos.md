@@ -1,15 +1,15 @@
 # Iteración 04-10 · Confirmación reforzada al eliminar un pedido con pagos
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones abiertas). Redactada el 2026-11-17 ([bitacora-04-10-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-10-redaccion.md)). Cuatro decisiones `PENDIENTE_DESARROLLADOR` (sección «Decisiones»), cada una con opción recomendada.
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-10-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-10-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-10-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-10-cierre.md)).
 - **Origen:** decisión del desarrollador del 2026-11-17 (dicha por él) sobre la pregunta `PENDIENTE_CLIENTE` «¿se puede eliminar un pedido que tiene pagos?» (registro, sección 2; detectada en la redacción de la 04-06). **El cliente no ha respondido si el borrado es intencional.** Esta iteración **no espera esa respuesta**: informa y pide confirmación, sin cambiar lo que ocurre al borrar. Si el cliente dijera que el borrado **no** es intencional, se replantea (ver «Fuera de alcance»).
 - **Subfase del plan:** nueva (revisión de la Épica 04, 2026-11-17); misma clase de riesgo que AUD-02-001 (pérdida de historial), sin ser ese hallazgo.
 - **Depende de:** la 04-01 (comparte `views.py` y el patrón de confirmación; ver «Coordinación»). Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → … → 04-09 → **04-10**, la última de la Épica 04.
-- **RDA relacionadas:** RDA-007; RDA-008 (inventario cerrado de eventos: relevante solo con D1-B); RDA-017 (borrado físico con doble confirmación, **para usuarios**; no se aplica a pedidos, ver «Contradicciones»).
+- **RDA relacionadas:** RDA-007; RDA-008 (inventario cerrado de eventos: **no cambia**, se reutiliza un tipo existente); RDA-017 (borrado físico con doble confirmación, **para usuarios**; no se aplica a pedidos, ver «Contradicciones»).
 - **Hallazgos que cierra:** ninguno por sí sola; reduce el riesgo de la pregunta `PENDIENTE_CLIENTE`.
-- **Cambio de esquema:** **ninguno con D1-A** (recomendada). Con D1-B, una migración de **Clase 1** (`choices` de `RegistroEvento.tipo`): sería la **`0010`**, porque la `0008` es de la 04-06 y la `0009` de la 04-08 (verificado: hoy la última aplicada es la `0007`).
-- **Respaldo previo al despliegue:** el de rutina con D1-A; obligatorio con D1-B (hay migración).
-- **Archivos que tocará la ejecución:** `pedidos/views.py` (`eliminar_pedido`), `pedidos/templates/pedidos/pedido_confirm_delete.html`, pruebas nuevas, `docs/operacion/` si corresponde, y con D1-B además `pedidos/models.py` y `pedidos/migrations/0010_…` (**consulta previa**, `AGENTS.md`, sección 6). Sin archivos de configuración.
+- **Cambio de esquema:** **ninguno. Esta iteración no crea migración** (D1 reutiliza `pedido_eliminado`; la `0010` quedó descartada). La `0008` es de la 04-06 y la `0009` de la 04-08 (verificado: hoy la última es la `0007`).
+- **Respaldo previo al despliegue:** el de rutina (sin migraciones ni cambios de datos).
+- **Archivos que tocará la ejecución:** `pedidos/views.py` (`eliminar_pedido`), `pedidos/templates/pedidos/pedido_confirm_delete.html`, pruebas nuevas y `docs/operacion/` si corresponde. **Sin `models.py`, sin migraciones y sin archivos de configuración:** no hay consulta previa de esta iteración (ver «Pasos», paso 0, por el número de consultas).
 
 ## Objetivo
 
@@ -53,14 +53,14 @@ Que nadie pierda sin darse cuenta los pagos de un pedido: antes de eliminarlo, l
 
 ## Contradicciones con la planificación
 
-- **El enunciado pedía «definir el tipo de evento y su migración de Clase 1».** El tipo **ya existe** (`pedido_eliminado`, verificado). Crear otro no es necesario para registrar la cantidad de pagos: basta enriquecer el resumen (D1-A, sin migración). La opción con tipo nuevo y migración `0010` queda como D1-B.
+- **El enunciado pedía «definir el tipo de evento y su migración de Clase 1».** El tipo **ya existe** (`pedido_eliminado`, verificado). Crear otro no es necesario para registrar la cantidad de pagos: el desarrollador resolvió en D1 enriquecer el resumen del tipo existente, **sin migración**; la opción de un tipo nuevo con migración `0010` quedó descartada.
 - **RDA-017 («borrado físico con doble confirmación») es para usuarios (Épica 09), no para pedidos.** Esta iteración usa un patrón parecido por analogía, no por esa RDA.
 - **`DESIGN.md` habla de modal y las confirmaciones de la aplicación son páginas.** Se mantiene la página; si la Épica 08 las convierte en modales, se actualiza junto con las demás.
 - **La 04-06 dice que la pregunta sobre pagos «queda al cliente»**: sigue siendo verdad (el cliente no ha respondido); lo nuevo es que el desarrollador decidió reforzar la confirmación mientras tanto.
 
 ## Fuera de alcance
 
-- **Cambiar la cascada** (`Pago.pedido` sigue en `CASCADE`): sin migración de comportamiento y sin tocar `models.py` con D1-A.
+- **Cambiar la cascada** (`Pago.pedido` sigue en `CASCADE`): sin tocar `models.py` ni crear migraciones.
 - **Anular en vez de borrar** (un estado nuevo): es funcionalidad nueva y exigiría una RDA y la respuesta del cliente.
 - **`PROTECT` en `Pago.pedido`:** impediría borrar cualquier pedido con pagos; lo descartó el desarrollador por ahora.
 - El borrado desde el admin de Django, y el borrado de **pagos individuales** (`eliminar_pago`, 04-01, evento `pago_eliminado` ya existente).
@@ -87,40 +87,32 @@ Que nadie pierda sin darse cuenta los pagos de un pedido: antes de eliminarlo, l
 ## Evento
 
 - **Hoy:** `pedido_eliminado`, resumen `Pedido #N eliminado`.
-- **D1-A (recomendada):** el mismo tipo, con un resumen más completo: `Pedido #N eliminado, con K pagos` o `Pedido #N eliminado, sin pagos`. Solo identificadores y una cantidad. Sin migración, sin cambio de inventario (RDA-008) y sin cambio de crecimiento: **no** se agrega ninguna fila.
+- **D1 (resuelta):** el mismo tipo, con un resumen más completo: `Pedido #N eliminado, con K pagos` o `Pedido #N eliminado, sin pagos`. Solo identificadores y una cantidad. Sin migración, sin cambio de inventario (RDA-008) y sin cambio de crecimiento: **no** se agrega ninguna fila.
 - **Qué no se guarda:** el monto, el nombre del cliente ni los pagos. La pantalla los muestra; el registro no los conserva (regla 7.4 y `models.py:276`).
 - **Quién:** el usuario autenticado (`request.user`), como hoy.
 
 ## Coordinación con las otras iteraciones
 
 - **04-01 (mutaciones solo por POST):** no cambia `eliminar_pedido` (ya cumple: GET muestra, POST borra, `iteracion-04-01`, tabla de rutas) y crea `pago_confirm_delete.html` **copiando** el patrón de `pedido_confirm_delete.html`. La 04-10 parte del estado en que la 04-01 deje esa plantilla y no toca la de pagos. Una prueba existente (`test_bloqueo_envio.py:38`) comprueba el bloqueo de doble envío de esta pantalla: se conserva el atributo `data-bloquear-envio` en el formulario.
-- **04-06 (protección del historial):** **no se mezclan.** La 04-06 cambia dos relaciones de `Cliente` y la vista `eliminar_cliente`; esta cambia `eliminar_pedido` y su plantilla. No comparten archivos de modelos, ni migraciones (con D1-A), ni pruebas (R14 sigue siendo de clientes). La 04-06 deja explícito que los pagos en cascada «quedan al cliente»; la 04-10 **no** cambia la cascada.
-- **04-08 (acceso y límites):** solo comparte la numeración de migraciones (`0009`); con D1-A no hay migración aquí.
-- **04-04 (`RESTAURAR`):** esta iteración **reutiliza el patrón** de escribir una palabra (D2-A). El criterio de comparación (espacios y mayúsculas) debe ser **el mismo** que fije la 04-04.
+- **04-06 (protección del historial):** **no se mezclan.** La 04-06 cambia dos relaciones de `Cliente` y la vista `eliminar_cliente`; esta cambia `eliminar_pedido` y su plantilla. No comparten archivos de modelos, ni migraciones (esta no crea ninguna), ni pruebas (R14 sigue siendo de clientes). La 04-06 deja explícito que los pagos en cascada «quedan al cliente»; la 04-10 **no** cambia la cascada.
+- **04-08 (acceso y límites):** crea la `0009`; esta iteración no crea migración, así que no hay nada que numerar ni coordinar.
+- **04-04 (`RESTAURAR`):** esta iteración **reutiliza el patrón** de escribir una palabra (D2). **Criterio de comparación alineado con la 04-04** (verificado en su tabla de pruebas, fila 3: `restaurar` en minúsculas se rechaza): **coincidencia exacta y sensible a mayúsculas** (`ELIMINAR`; `eliminar` se rechaza) y, en las dos pantallas, se ignoran los espacios al inicio y al final (`strip()`). La 04-04 no decía nada de los espacios; se agregó a su fila de pruebas (corrección de redacción, 2026-11-17). Conviene que ambas usen la misma función de comparación.
 
-## Decisiones (`PENDIENTE_DESARROLLADOR`)
+## Decisiones (resueltas por el desarrollador, 2026-11-17)
 
-**D1 · Tipo de evento.**
-- **A (recomendada): el mismo `pedido_eliminado`** con la cantidad de pagos en el resumen. Sin migración; el evento ya existe y está probado.
-- **B:** un tipo nuevo, por ejemplo `pedido_eliminado_con_pagos`, para poder filtrarlo en el admin de eventos. Migración de **Clase 1** (`0010`, después de la `0009` de la 04-08; se detiene si `sqlmigrate` muestra cualquier `ALTER`, `AGENTS.md`, regla 8.1), respaldo previo y cambio del inventario cerrado (RDA-008). El mismo dato ya se distingue por el texto del resumen.
+| # | Decisión | Resuelta como |
+| :- | :------- | :------------ |
+| D1 | Tipo de evento | **Reutilizar `pedido_eliminado`** con la cantidad de pagos en el resumen (`Pedido #N eliminado, con K pagos` o `sin pagos`). **Sin migración; la `0010` queda descartada.** |
+| D2 | Forma de la confirmación | **Escribir `ELIMINAR`**, exigido por el servidor, como `RESTAURAR` en la 04-04 (mismo criterio de comparación, ver «Coordinación»). |
+| D3 | Cuándo se exige | **Solo si el pedido tiene al menos un pago.** Sin pagos, se elimina como hoy. |
+| D4 | Cambio de pagos entre mostrar y confirmar | **Se compara y se repinta sin borrar:** el formulario lleva la cantidad vista y el servidor la contrasta con la real. |
 
-**D2 · Forma de la confirmación.**
-- **A (recomendada): escribir `ELIMINAR`**, exigido por el servidor, como `RESTAURAR` en la 04-04. Obliga a detenerse; es el patrón que ya existe.
-- **B:** una casilla «Entiendo que se borrarán N pagos por $X», exigida por el servidor. Menos fricción, más fácil de marcar sin leer.
-- **C:** escribir el **número del pedido**. Evita confundir un pedido con otro, pero no refuerza la lectura del aviso.
-
-**D3 · Cuándo se exige.**
-- **A (recomendada): solo cuando el pedido tiene al menos un pago.** Un pedido de prueba sin pagos se elimina como hoy.
-- **B:** siempre, aunque no haya pagos. Coherente, pero agrega pasos a un caso sin riesgo financiero.
-
-**D4 · Si cambian los pagos entre mostrar y confirmar.**
-- **A (recomendada):** el formulario lleva la cantidad vista y el servidor la compara; si difiere, repinta sin borrar. Con un solo worker la ventana es el tiempo entre abrir la pantalla y enviarla.
-- **B:** no comparar: se borra lo que haya al momento de enviar. Más simple; la persona podría perder un pago que no vio.
+**Qué se descartó (para no volver a discutirlo):** un tipo de evento nuevo con migración (`0010`), la casilla «Entiendo…», escribir el número del pedido, exigir la confirmación aunque no haya pagos y borrar lo que haya al momento de enviar sin comparar.
 
 ## Pasos
 
-0. Respaldo de la réplica (`respaldo.md`). Con D1-B, además consulta previa para `makemigrations` y `migrate` en local.
-1. Línea base: `test pedidos` (número y fallos esperados tras la 04-09; `showmigrations pedidos`, que con D1-A no cambia).
+0. Respaldo de la réplica (`respaldo.md`). **Sin consulta previa de archivos de configuración ni de migraciones** (no hay). **Consulta por el número de consultas:** la pantalla de confirmación hace **una consulta más** (el agregado de pagos: cantidad y suma), y el POST con pagos otra; `AGENTS.md`, sección 11, pide detenerse ante un aumento de consultas por página. Se anota el número **antes y después** en la bitácora y se avisa al desarrollador al ejecutar (aumento esperado de +1; si aparecieran más, se detiene).
+1. Línea base: `test pedidos` (número y fallos esperados tras la 04-09) y `showmigrations pedidos` (sin cambios: esta iteración no crea migración).
 2. **Evidencia previa (la reúne el desarrollador, en la réplica, solo lectura, solo conteos; no ejecutada ni probada por el agente):** cuántos pedidos tienen al menos un pago y cuántos eventos `pedido_eliminado` existen (la réplica trae los de hasta su último refresco). Sirve para dimensionar y comprobar que la pantalla nueva se verá en un caso frecuente:
    ```sql
    SELECT (SELECT COUNT(*) FROM pedidos_pedido)                                   AS pedidos,
@@ -131,43 +123,43 @@ Que nadie pierda sin darse cuenta los pagos de un pedido: antes de eliminarlo, l
 3. Pruebas primero (tabla siguiente); ver fallar las de aviso, confirmación y evento.
 4. `eliminar_pedido` (recuento, comprobación, `delete()` en un `transaction.atomic()`, evento) y `pedido_confirm_delete.html` (aviso, campo de confirmación, mensajes, cantidad oculta).
 5. Revisión manual en la réplica, escritorio y 360 px: eliminar un pedido **con** pagos (aviso, error por falta de la palabra, error con la palabra mal escrita, borrado correcto), uno **sin** pagos (como hoy), y ver el evento en el admin.
-6. Solo D1-B: `makemigrations pedidos --name pedido_eliminado_con_pagos`, **`sqlmigrate pedidos 0010` en la réplica** (esperado, inferido: solo el comentario del `AlterField`, sin SQL) copiado en la bitácora.
-7. Bitácora, registro, estado «En revisión»; la pregunta `PENDIENTE_CLIENTE` sigue abierta hasta que el cliente responda.
+6. **Comprobar que no hay migración:** `makemigrations --check --dry-run` sin cambios.
+7. Bitácora (con las consultas antes y después), registro, estado «En revisión»; la pregunta `PENDIENTE_CLIENTE` sigue abierta hasta que el cliente responda.
 
 ## Pruebas
 
 | Punto | Prueba |
 | :---- | :----- |
 | Aviso con pagos (GET) | Un pedido con 2 pagos: 200, la pantalla dice «2 pagos» y el monto total exacto con punto de miles, y trae el campo de confirmación y la cantidad oculta. |
-| Aviso sin pagos (GET) | 200, dice que no hay pagos, **sin** campo de confirmación (D3-A). |
+| Aviso sin pagos (GET) | 200, dice que no hay pagos, **sin** campo de confirmación (D3). |
 | Sin pagos (POST) | Borra el pedido y sus ítems, redirige a la lista, **un** evento `pedido_eliminado` con `sin pagos`. |
 | Con pagos y confirmación (POST) | Con `ELIMINAR` y la cantidad vista: el pedido, sus ítems **y sus pagos** se borran (la cascada sigue igual), redirige, **un** evento con `con 2 pagos` y sin monto ni nombre. |
-| Falta de confirmación | Con pagos y sin el campo, o vacío, o con otra palabra (`eliminar` según el criterio de la 04-04): 200 con el mensaje, **nada** se borra (pedido, ítems y pagos siguen), **ningún** evento nuevo y sin `str(e)`. |
+| Falta de confirmación | Con pagos y sin el campo, o vacío, o con otra palabra (`eliminar` en minúsculas se rechaza, igual que `restaurar` en la 04-04; con espacios alrededor de `ELIMINAR` pasa): 200 con el mensaje, **nada** se borra (pedido, ítems y pagos siguen), **ningún** evento nuevo y sin `str(e)`. |
 | Cambio de pagos (D4) | Se muestra con 1 pago; se agrega otro; se envía con `ELIMINAR` y la cantidad vieja: no se borra, la pantalla muestra «2 pagos» y el monto nuevo. |
 | Atomicidad | Con `delete()` forzado a fallar (`mock`): ninguna fila cambia y **no** queda evento. |
 | Un pedido inexistente | 404 como hoy (`test_acceso`, `PkInexistenteTests`); sin sesión, redirige al acceso. |
 | Doble envío | El formulario conserva `data-bloquear-envio` (`test_bloqueo_envio.py:38`). |
 | Existentes | `test_eventos_negocio.py:62-66` (con el nuevo resumen si lo comprueba), `test_acceso`, `test_regresiones` y la suite completa con los fallos esperados heredados. |
-| Solo con D1-B | `makemigrations --check --dry-run` sin cambios tras crear `0010`; el tipo nuevo aparece en el admin de eventos. |
+| Sin migración (D1) | `makemigrations --check --dry-run` sin cambios; el tipo `pedido_eliminado` es el único que aparece para estos borrados en el admin de eventos. |
+| Consultas | La pantalla de confirmación de un pedido con pagos hace una consulta más que antes (se mide con `assertNumQueries` o `CaptureQueriesContext` y se anota en la bitácora). |
 
 ## Verificación en producción (la hace el desarrollador; todo **no verificado** hasta entonces)
 
-1. Respaldo previo, descargado y verificado (`respaldo.md`) por rutina; con D1-B, `migrate` y `showmigrations pedidos` antes del Reload.
+1. Respaldo previo, descargado y verificado (`respaldo.md`) por rutina (no hay migración).
 2. Tras el Reload, abrir la pantalla de eliminar de un pedido **con pagos** y ver el aviso con las cifras **sin enviar el formulario**. **No se elimina un pedido real para probar.**
 3. `server.log` sin errores nuevos.
 - **No verificado:** cuántos pedidos de producción tienen pagos y cuántos se han eliminado desde el despliegue de eventos; si el cliente elimina pedidos con pagos a propósito (la pregunta sigue abierta).
 
 ## Plan de retroceso
 
-- **Con D1-A:** `retroceso.md`, caso 1 (sin migraciones): volver a la etiqueta anterior y Reload. Los eventos escritos con el resumen nuevo permanecen y son inofensivos.
-- **Con D1-B:** caso 2: `migrate pedidos 0009` (revierte la `0010`; sin SQL, inferido), luego la etiqueta y Reload; primero la migración, después el código. Los eventos del tipo nuevo ya escritos permanecen (el tipo no se valida en la base).
+- `retroceso.md`, caso 1 (sin migraciones): volver a la etiqueta anterior y Reload. Los eventos escritos con el resumen nuevo permanecen y son inofensivos (el tipo es el mismo de siempre).
 - No hay datos que deshacer: la iteración no cambia qué se borra, solo lo que se pide antes.
 
 ## Criterio de término
 
 - Tabla de pruebas en verde; resto de la suite sin cambios.
 - Revisión manual en la réplica hecha (con y sin pagos, 360 px).
-- Con D1-B, `sqlmigrate pedidos 0010` sin SQL copiado en la bitácora.
+- Sin migración nueva (`makemigrations --check --dry-run` sin cambios) y número de consultas antes y después en la bitácora.
 - Verificación 2 de producción hecha.
 - La pregunta `PENDIENTE_CLIENTE` sigue registrada (no la cierra esta iteración).
 
@@ -177,6 +169,7 @@ Que nadie pierda sin darse cuenta los pagos de un pedido: antes de eliminarlo, l
 - **No protege el historial:** los pagos se siguen borrando; la iteración solo informa, pide confirmación y deja rastro. Si el cliente dice que el borrado no es intencional, hay que replantear (`PROTECT` o anular), que es una iteración aparte.
 - **El evento no guarda el monto:** si se pierde un pago por error, el registro dice cuántos pagos eran, no cuánto sumaban (es la regla del registro). El respaldo diario es la única recuperación.
 - **Admin de Django sin aviso propio ni evento:** quien borre desde el admin sigue sin dejar rastro (fuera de alcance).
-- **Dos pantallas de confirmación con criterios distintos** (`RESTAURAR` y `ELIMINAR`): se alinea el criterio de comparación con la 04-04.
-- **Cambiar el resumen de un evento existente (D1-A):** si alguna prueba o informe lee el texto exacto, se ajusta al ejecutar; no se encontró ninguno (el `test_pedido_eliminado` comprueba tipo y entidad).
+- **Dos pantallas de confirmación con criterios distintos** (`RESTAURAR` y `ELIMINAR`): alineados (exacto, sensible a mayúsculas, con `strip()`); si la 04-04 cambiara su criterio al ejecutarse, esta debe seguirlo.
+- **Una consulta más en la pantalla de confirmación:** esperado y medido; `AGENTS.md`, sección 11, pide detenerse si el aumento fuera mayor.
+- **Cambiar el resumen de un evento existente (D1):** si alguna prueba o informe lee el texto exacto, se ajusta al ejecutar; no se encontró ninguno (el `test_pedido_eliminado` comprueba tipo y entidad).
 - **Un despliegue, un propósito (RDA-007):** va solo, después de la 04-09.

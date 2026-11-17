@@ -96,7 +96,7 @@ Todas reemplazan `generar_respaldo_mysql`, `restaurar_bd_mysql` o `subprocess.ru
 | :---------------- | :----- |
 | 1 · Extensión, tamaño, estructura | Un `.SQL` válido pasa; un `.txt`, un archivo de 20 MB más un byte, uno sin cabecera, uno sin final y uno con `DROP DATABASE` se rechazan sin llamar al respaldo ni a la restauración. |
 | 2 · Aborto | Respaldo de emergencia que lanza excepción (ya existe: `test_capturas_amplias.py:65`) y respaldo que devuelve un archivo vacío o sin final: no se restaura. |
-| 3 · Confirmación | POST sin el campo, vacío, con `restaurar` en minúsculas o con otro texto: no se llama al respaldo ni a la restauración. |
+| 3 · Confirmación | POST sin el campo, vacío, con `restaurar` en minúsculas o con otro texto: no se llama al respaldo ni a la restauración. Con espacios al inicio o al final de `RESTAURAR` pasa (se aplica `strip()`): mismo criterio que la 04-10 (`ELIMINAR`): coincidencia exacta, sensible a mayúsculas. |
 | 4 · Constancia | `assertLogs` con las líneas antes y después; el evento se registra aunque el usuario no exista tras restaurar. |
 | 5 · `.sql` vacío | `subprocess.run` lanza `FileNotFoundError`: el `.sql` no queda en `backups/`. **Falla hoy** (`utils.py:58-63` solo cubre `CalledProcessError`). |
 | 6 · Subida huérfana | La restauración falla: `backups/tmp/` queda vacío. **Falla hoy.** |

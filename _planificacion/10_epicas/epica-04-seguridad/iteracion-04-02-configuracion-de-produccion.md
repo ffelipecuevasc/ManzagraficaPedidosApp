@@ -78,7 +78,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 2. Pruebas primero (sección siguiente).
 3. Bloque de seguridad en `settings.py` según D1 a D5, con comentarios en español.
 4. `.env.example` con `SEGURIDAD_PRODUCCION` y `CSRF_TRUSTED_ORIGINS`, sin valores reales.
-5. `check --deploy` local con `DEBUG=False` y la variable activa: esperado solo W009. Con la variable apagada, `runserver` sigue entrando por `http://127.0.0.1:8000` sin redirección.
+5. `check --deploy` local con `DEBUG=False` y la variable activa: esperado **W009** (la resuelve la 04-03) y **W005 y W021**, que quedan **por D1** (HSTS sin `includeSubDomains` ni `preload`; Django las emite cuando `SECURE_HSTS_SECONDS` es mayor que cero y esas opciones no son `True`, verificado en `django/core/checks/security/base.py:177-195`). Aceptarlas documentadas o silenciarlas con justificación es `PENDIENTE_DESARROLLADOR` (revisión final de la Épica 04). Con la variable apagada, `runserver` sigue entrando por `http://127.0.0.1:8000` sin redirección.
 6. Ensayo en la réplica de D2 (sección «Pruebas»).
 7. `despliegue.md` y `retroceso.md`.
 8. Bitácora, registro, estado «En revisión», con los pasos de producción para el desarrollador.
@@ -93,7 +93,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 
 ## Verificación en producción (la hace el desarrollador; todo **no verificado** hasta entonces)
 
-1. **[PA]** `check --deploy` en el servidor, con el filtro de códigos de `evidencia-03-05.md:273`, **antes** y **después**: antes, W004 W008 W012 W016 (dicho por el desarrollador); después, ninguna.
+1. **[PA]** `check --deploy` en el servidor, con el filtro de códigos de `evidencia-03-05.md:273`, **antes** y **después**: antes, W004 W008 W012 W016 (dicho por el desarrollador); después, **solo W005 y W021** (por D1; el filtro de códigos las debe incluir para esta lectura), salvo que el desarrollador decida silenciarlas.
 2. **[PA · Panel]** «Force HTTPS» sigue activado.
 3. **[PC]** `curl -sI http://manzagrafica.pythonanywhere.com/accounts/login/` redirige a `https://`; `curl -sIL https://manzagrafica.pythonanywhere.com/accounts/login/` termina en 200 **sin bucle** (`curl` corta tras demasiadas redirecciones) y trae `Strict-Transport-Security: max-age=3600` y `Set-Cookie: csrftoken=…; Secure`.
 4. **[Navegador, ventana privada]** iniciar sesión, crear un pedido y un pago de prueba según el protocolo vigente, generar un respaldo (descarga): ningún 403 de CSRF. Las pantallas de `despliegue.md`, sección 3.7.
@@ -108,7 +108,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 
 ## Criterio de término
 
-- `check --deploy` en producción sin advertencias (no verificado hasta el despliegue).
+- `check --deploy` en producción sin advertencias, **salvo W005 y W021 por D1** (aceptadas y documentadas, o silenciadas si el desarrollador lo decide; no verificado hasta el despliegue).
 - Redirección a HTTPS sin bucle, cookies `Secure` y HSTS vistos en producción con el escalón vigente (3600, luego 604800).
 - Arranque con el dominio de producción y la variable apagada falla con un mensaje claro (prueba automatizada).
 - Suite en verde con los mismos fallos esperados que deje la 04-01.
