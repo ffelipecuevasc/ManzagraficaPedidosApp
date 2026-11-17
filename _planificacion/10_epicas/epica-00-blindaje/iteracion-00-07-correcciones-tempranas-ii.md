@@ -1,7 +1,7 @@
 # Iteración 00-07 · Correcciones tempranas II
 
 - **Épica:** 00 · Blindaje y punto de retorno (reabierta el 2026-10-27 solo para esta iteración)
-- **Estado:** En revisión (desplegada el 2026-11-04 como `v0.3-doble-envio`; falta la medición del 2026-11-11). Implementada y verificada en local el 2026-10-27 ([bitacora-00-07-revision](../../99_bitacora/epica-00-blindaje/bitacora-00-07-revision.md)); despliegue y validación en [bitacora-00-07-despliegue](../../99_bitacora/epica-00-blindaje/bitacora-00-07-despliegue.md). ~~Despliegue sin fecha, domingo 2026-11-01~~
+- **Estado:** En revisión (desplegada el 2026-11-04 como `v0.3-doble-envio`; ~~falta la medición del 2026-11-11~~ falta la medición: no se hizo el 2026-11-11 (dicho por el desarrollador, 2026-11-16) y se hace antes del despliegue de la 03-05, el 2026-11-17). Implementada y verificada en local el 2026-10-27 ([bitacora-00-07-revision](../../99_bitacora/epica-00-blindaje/bitacora-00-07-revision.md)); despliegue y validación en [bitacora-00-07-despliegue](../../99_bitacora/epica-00-blindaje/bitacora-00-07-despliegue.md). ~~Despliegue sin fecha, domingo 2026-11-01~~
 - **Subfase del plan:** 0.6 (continuación; nueva, por hallazgos de producción del 2026-10-27)
 - **Depende de:** 00-05 (protocolo de despliegue). En producción, va después de validar `v1.2-capturas` (decisión 5).
 - **RDA relacionadas:** RDA-007
@@ -50,7 +50,7 @@ El 2026-10-27 a las 14:36:20, dos `POST /pedidos/nuevo/` en el mismo segundo cre
 - [x] El botón dice «Editar Pedido» al editar y «Crear Pedido» al crear (decisión 7; observado por el desarrollador en la revisión del 2026-10-27).
 - [x] Desplegada con su propia etiqueta, `v0.3-doble-envio`, distinta de `v1.2-capturas`. **Medido el 2026-11-04:** etiqueta anotada (objeto `e68f87212245679d68ba8340db46cd9c3218419d`) sobre `5dc82a8`, publicada (`ls-remote`, una línea); en el servidor, `describe` = `v0.3-doble-envio`; reinicio efectivo a las 01:32:51; sin migraciones, `pip` ni `collectstatic`; sin retroceso ([evidencia-00-07](evidencia-00-07.md), partes B y C).
 - [x] `v1.2-capturas` apunta al último commit anterior a la 00-07, y `git diff --stat <ese commit>..v0.3-doble-envio` muestra solo `pedido_form.html` y documentos (evidencia, parte B). **Medido el 2026-11-04:** `v1.2-capturas` → `81005df`; el `diff` sin `_planificacion` ni `docs` lista solo `pedido_form.html` (1 archivo, 41 inserciones, 3 eliminaciones).
-- [ ] Una semana después del despliegue, `access.log` no muestra dos `POST /pedidos/nuevo/` en el mismo segundo (evidencia, parte D). **Sin marcar:** medición el **2026-11-11, hacia las 01:32** (hora de Chile).
+- [ ] Una semana después del despliegue, `access.log` no muestra dos `POST /pedidos/nuevo/` en el mismo segundo (evidencia, parte D). **Sin marcar:** ~~medición el **2026-11-11, hacia las 01:32** (hora de Chile)~~ la medición no se hizo el 2026-11-11 (dicho por el desarrollador, 2026-11-16); se hace **antes del despliegue de la 03-05** (2026-11-17), con 12 o 13 días desde el reinicio en lugar de siete y el guion ajustado de la parte D de [evidencia-00-07](evidencia-00-07.md).
 
 ## Fuera de alcance
 

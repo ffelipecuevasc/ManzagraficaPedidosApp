@@ -12,6 +12,8 @@
 >
 > **Nota (2026-11-04, posterior): B4 y la parte C se ejecutaron esa noche.** `v0.3-doble-envio` (objeto `e68f87212245679d68ba8340db46cd9c3218419d`) se creó y publicó sobre `5dc82a8` y se desplegó con **reinicio efectivo a las 01:32:51** (hora de Chile, la oficial; decisión 5 del desarrollador). Validación sin retroceso. Las tablas de abajo tienen los datos; la **parte D (access.log) se mide el 2026-11-11, hacia las 01:32**. Consolidación en [bitacora-00-07-despliegue](../../99_bitacora/epica-00-blindaje/bitacora-00-07-despliegue.md).
 >
+> **Nota (2026-11-16): la medición de la parte D no se hizo el 2026-11-11.** Lo dijo el desarrollador el 2026-11-16 (dato no verificado por el agente). La parte D **sigue siendo precondición de la 03-05** y se mide **antes del despliegue del martes 2026-11-17** (de 20:00 a 23:00, hora de Chile): hoy por la noche o mañana durante el día. Ya no son siete días: desde el reinicio efectivo del 2026-11-04 (01:32:51 de Chile, 04:32:51 UTC) pasan 12 días el 2026-11-16 y 13 el 2026-11-17. El guion se ajustó para cubrirlos (ver la parte D, «Ajuste del guion»). Verificado en GitHub el 2026-11-16: la etiqueta `v3.1-integridad` no existe y no hay commits posteriores a `a1653dd`; que producción siga en `v0.3-doble-envio` lo confirma el desarrollador en el servidor (`PENDIENTE_DESARROLLADOR`).
+>
 > ~~**Orden (domingo 2026-11-01, decisión 5):** parte D de la 01-06 → despliegue y validación de `v1.2-capturas` → **parte A** (si no se hizo antes) → **parte B** (etiquetas) → **parte C** (despliegue de `v0.3-doble-envio`) → una semana después, **parte D**.~~
 
 ## Qué intentó el agente
@@ -167,6 +169,51 @@ También se abrieron acceso, panel, listado de pedidos y detalle de un pedido, s
 
 ## Parte D · Una semana después **[PA · Bash]**
 
+> **Reprogramada el 2026-11-16.** ~~Se medía el 2026-11-11, hacia las 01:32.~~ No se hizo (dicho por el desarrollador). Se mide **antes del despliegue de la 03-05** (martes 2026-11-17, de 20:00 a 23:00 de Chile): hoy 2026-11-16 por la noche o el 2026-11-17 durante el día, y se anota **antes de empezar cualquier paso de la 03-05** (parte A1 de la [evidencia-03-05](../epica-03-integridad-transaccional/evidencia-03-05.md); la 03-05 está bloqueada hasta entonces). El límite duro es el Reload (B6): si se midiera después de él, el día UTC del 2026-11-17 mezclaría la 03-05 (con ella, un envío repetido también responde 302): no se hace así. Medir con más días no debilita el criterio: lo hace más exigente.
+
+### Ajuste del guion (2026-11-16)
+
+El guion original (más abajo) recorre `for i in 7 6 5 4 3 2 1 0`: mira solo los 8 últimos días UTC contados desde hoy. Medido el 2026-11-16 o el 11-17, dejaría fuera los primeros días después del despliegue (del 2026-11-04 al 11-08 o al 11-09). El guion nuevo:
+
+- parte de la fecha UTC del despliegue (`INI=2026-11-04`) y llega hasta la fecha UTC de hoy, sea cual sea (desde las 21:00 de Chile la fecha UTC ya es la del día siguiente);
+- agrega `lineas=` (todas las peticiones del día), para distinguir un día sin `POST` de un día sin registro;
+- lee los archivos **una vez por día** en lugar de dos filtros encadenados (cada `zcat` recorre el archivo actual y los rotados);
+- sigue sin imprimir IP, cadena de consulta ni datos de clientes: solo fechas y conteos.
+
+**D0 y D1 [PA · Bash]:**
+
+```bash
+cd /var/log; D=manzagrafica.pythonanywhere.com
+ls -l --time-style=long-iso $D.access.log*
+
+INI=2026-11-04
+N=$(( ( $(date -u +%s) - $(date -u -d "$INI" +%s) ) / 86400 ))
+for k in $(seq 0 $N); do
+  f=$(date -u -d "$INI +$k day" +%F); d=$(LC_ALL=C date -u -d "$INI +$k day" +%d/%b/%Y)
+  L=$(zcat -f $D.access.log* | grep "\[$d:")
+  lineas=$(printf '%s\n' "$L" | grep -c .)
+  printf '%s\n' "$L" | grep '"POST /pedidos/nuevo/ ' \
+    | sed -E 's/^[^[]*\[([^ ]+) .*/\1/' \
+    | sort | uniq -c \
+    | awk -v d="$f" -v l="$lineas" '{t+=$1; if ($1>1) {p++; e+=$1-1}} END {printf "%s lineas=%d post_nuevo=%d segundos_repetidos=%d envios_extra=%d\n", d, l, t, p, e}'
+done
+```
+
+**D2 [PA · Bash], solo si el 2026-11-04 sale con `segundos_repetidos` mayor que 0:** imprime las horas UTC (sin IP) de esos segundos, para ver si caen antes o después del reinicio efectivo (04:32:51 UTC).
+
+```bash
+zcat -f $D.access.log* | grep '\[04/Nov/2026:' | grep '"POST /pedidos/nuevo/ ' | sed -E 's/^[^[]*\[[^:]+:([^ ]+) .*/\1/' | sort | uniq -c | awk '$1>1'
+```
+
+**Cómo se lee:**
+
+- Una línea por día UTC, del 2026-11-04 a hoy. **Esperado:** `segundos_repetidos=0` en todas. El primer día mezcla unas 4,5 h anteriores al despliegue (las anteriores a 04:32:51 UTC no cuentan: D2 las separa) y el último llega solo hasta la hora de la medición.
+- `lineas=0` en un día es sospechoso (registro faltante por la rotación, o sin tráfico): compara con D0 (nombre, tamaño y fecha de cada archivo). Si D0 no muestra archivos que cubran un día, anota cuáles días quedan sin medir y no concluyas nada de ellos. Cuántos días conserva la rotación no está documentado (`PENDIENTE_DESARROLLADOR`: D0 lo muestra).
+- El guion nuevo hace 14 lecturas de los archivos (el original, 8). El consumo de CPU no se midió: si la consola se acerca a su cuota diaria de 100 s, corta el bucle y córrelo por tramos cambiando `INI` y `N`.
+- Se probó solo con registros sintéticos (un archivo actual, uno rotado sin comprimir y uno `.gz`, 14 días, con GNU `date`, `grep`, `sed` y `awk` de Git Bash): no contra el servidor ni contra el formato real de `access.log`.
+
+### Guion original (2026-10-27; referencia, no usar: solo cubre 8 días)
+
 Cuenta, por día en UTC, los `POST /pedidos/nuevo/` y los segundos con dos o más de ellos. Solo imprime fechas y conteos: ninguna IP, cadena de consulta ni dato de cliente.
 
 ```bash
@@ -181,12 +228,12 @@ done
 ```
 
 - `segundos_repetidos`: segundos con dos o más `POST /pedidos/nuevo/`. `envios_extra`: cuántos sobran en esos segundos.
-- El día de la recarga mezcla antes y después: indícalo. **Esperado** después del despliegue: `segundos_repetidos=0`. **Fecha de medición: 2026-11-11, hacia las 01:32** (hora de Chile; una semana después del reinicio efectivo, 01:32:51 del 2026-11-04). Esa hora es 04:32 UTC, y el reinicio fue a las 04:32:51 UTC del 2026-11-04: el día UTC del 2026-11-04 mezcla unas 4,5 h anteriores al despliegue, y el del 2026-11-11 llega solo hasta las 04:32 UTC.
+- El día de la recarga mezcla antes y después: indícalo. **Esperado** después del despliegue: `segundos_repetidos=0`. ~~**Fecha de medición: 2026-11-11, hacia las 01:32** (hora de Chile; una semana después del reinicio efectivo, 01:32:51 del 2026-11-04). Esa hora es 04:32 UTC, y el reinicio fue a las 04:32:51 UTC del 2026-11-04: el día UTC del 2026-11-04 mezcla unas 4,5 h anteriores al despliegue, y el del 2026-11-11 llega solo hasta las 04:32 UTC.~~ **Fecha de medición (2026-11-16): antes del despliegue de la 03-05** (ver el recuadro de arriba). Sigue valiendo que el reinicio fue a las 04:32:51 UTC del 2026-11-04 y que el día UTC del 2026-11-04 mezcla unas 4,5 h anteriores al despliegue.
 - Un `segundos_repetidos` mayor que 0 no prueba un duplicado (dos personas pueden crear pedidos en el mismo segundo), pero con un solo usuario es la señal que se busca: anótalo y no copies la línea del registro.
 
 | Salida (pegar tal cual) |
 | :---------------------- |
-| Pendiente: se mide el 2026-11-11, hacia las 01:32 |
+| ~~Pendiente: se mide el 2026-11-11, hacia las 01:32~~ Pendiente (2026-11-16): se mide antes del despliegue de la 03-05 (2026-11-16 por la noche o 2026-11-17 durante el día). Pega aquí la salida de D0 (nombres, tamaños y fechas) y la de D1 |
 
 ## Lo que no se pudo verificar
 
@@ -201,4 +248,4 @@ Partes A a C respondidas el 2026-11-04 y consolidadas en las tablas de arriba. P
 - **Pruebas y `check --deploy` no repetidos:** el código es idéntico al de `bd07f21`, sobre el que corrieron el 2026-11-04.
 - **Recarga:** reinicio efectivo a las 01:32:51 (hora oficial); orden de Reload a las 01:32:45.
 - **Validación:** seis pantallas abren y muestran el cambio, sin enviar formularios; 0 líneas con `nivel=` desde el reinicio; sin retroceso.
-- **Falta:** la parte D, el 2026-11-11 hacia las 01:32 (solo `POST /pedidos/nuevo/` sin dos en el mismo segundo).
+- **Falta:** la parte D (solo `POST /pedidos/nuevo/` sin dos en el mismo segundo). ~~El 2026-11-11 hacia las 01:32.~~ No se hizo ese día; se mide antes del despliegue de la 03-05 del 2026-11-17, con el guion ajustado el 2026-11-16.

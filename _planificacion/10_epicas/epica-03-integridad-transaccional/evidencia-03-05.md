@@ -4,7 +4,7 @@
 - **Pedido por:** Claude Code (Sonnet 5.5)
 - **Iteración:** [03-05](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md). Etiqueta `v3.1-integridad`; partida y destino de retroceso `v0.3-doble-envio`. Decisiones del desarrollador del 2026-11-06 registradas en la iteración.
 - **Criterios que dependen de esta evidencia:** todos los de la 03-05 salvo «Las decisiones 1 a 8 están registradas antes de ejecutar».
-- **Estado (2026-11-06):** **Pendiente. No se ejecutó nada.** Ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Este archivo solo deja los pasos listos. Nada se ejecuta antes de la medición de la 00-07 (2026-11-11, hacia las 01:32). **Bloqueada hasta anotarla.** Decisiones finales del 2026-11-06 aplicadas (aviso aprobado, jueves 2026-11-12, tiempos y números del retroceso); solo falta elegir la fuente del respaldo para la réplica (F1).
+- **Estado (2026-11-06; reprogramado el 2026-11-16 para el martes 2026-11-17):** **Pendiente. No se ejecutó nada.** Ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Este archivo solo deja los pasos listos. Nada se ejecuta antes de la medición de la 00-07 (~~2026-11-11, hacia las 01:32~~ no se hizo ese día: se mide antes del despliegue del 2026-11-17). **Bloqueada hasta anotarla.** Decisiones finales del 2026-11-06 aplicadas (aviso aprobado, ~~jueves 2026-11-12~~ martes 2026-11-17 desde el 2026-11-16, tiempos y números del retroceso); solo falta elegir la fuente del respaldo para la réplica (F1). **Reprogramación del 2026-11-16:** nueva ventana el martes 2026-11-17 y día 7 el martes 2026-11-24 (decisión del desarrollador); ver el calendario y [bitacora-03-05-reprogramacion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-reprogramacion.md).
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide, sin datos de clientes: conteos, horas, tipos de error y códigos. Nunca pegues el texto completo de una línea del registro (`despliegue.md`, 3.9).
 >
@@ -20,14 +20,34 @@
 | :--- | :------- | :-------------- |
 | Qué viaja | 03-01 a 03-04 en una sola etiqueta, sin migraciones | A3, B3 |
 | Respaldo | Nuevo el día del despliegue, verificado antes de recargar | A2 |
-| Ventana | `v3.1-integridad`, **jueves 2026-11-12**, entre las 20:00 y las 23:00 (hora de Chile); día 7: jueves 2026-11-19 por la noche | A0, B, D |
+| Ventana | `v3.1-integridad`, ~~**jueves 2026-11-12**~~ **martes 2026-11-17** (reprogramado el 2026-11-16), entre las 20:00 y las 23:00 (hora de Chile); día 7: ~~jueves 2026-11-19~~ martes 2026-11-24 por la noche | A0, B, D |
 | Aviso | Breve antes y Ctrl+F5 después, con el texto **aprobado** el 2026-11-06 (el propuesto más una frase sobre la imagen de referencia) | A4, C3 |
-| Vigilancia | Lecturas solo los días 0 (jueves 2026-11-12) y 7 (jueves 2026-11-19). Tiempos: ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga; si `access.log` no trae `response-time=`, se anota y el criterio queda en los `5xx` | C, D |
+| Vigilancia | Lecturas solo los días 0 (~~jueves 2026-11-12~~ martes 2026-11-17) y 7 (~~jueves 2026-11-19~~ martes 2026-11-24). Tiempos: ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga; si `access.log` no trae `response-time=`, se anota y el criterio queda en los `5xx` | C, D |
 | Retroceso | Datos incorrectos: sí. `5xx` repetido (2 o más en 24 h en la misma ruta, sin contar la recarga ni lo ya clasificado): sí. `5xx` suelto: no, se investiga. `ERROR` de ítem fallido: 3 o más en 24 h sin causa explicada se reproducen en la réplica antes de decidir; los de causa explicada no cuentan | E |
 | Réplica y AUD-05-002 | Último paso, después de la vigilancia | F |
 | Pruebas | Una ejecución con `OK (expected failures=9)` y 267 pruebas, más `check --deploy` y `makemigrations` | A1 |
 
-## Calendario del 2026-11-10 al 2026-11-19
+## Calendario del 2026-11-16 al 2026-11-25 (reprogramado el 2026-11-16)
+
+Horas de Chile (UTC-3). Los pasos A a F son los de esta evidencia. Las horas de la tarde del martes 17 son una **sugerencia** de orden (la decisión fija solo la ventana de 20:00 a 23:00 y el día). Las consolas de la noche del 17 comparten los 100 s diarios de CPU con el respaldo del mismo día (inferido; no medido): conviene no repetir comandos pesados sin necesidad. La medición de la 00-07 se hace **antes de A1** (nada de la 03-05 se ejecuta antes de anotarla); lo sugerido es hoy por la noche o la mañana del martes 17, para llegar a la tarde con el resultado ya anotado.
+
+| Día | Qué | Parte |
+| :-- | :-- | :---- |
+| Lunes 2026-11-16 (hoy) | Confirmar en el servidor que producción sigue en `v0.3-doble-envio`: B1 (`git status --short`, `git describe --tags --always`, `git rev-parse --short HEAD`) y la última línea `Starting uWSGI` de `server.log` (esperada: 2026-11-04 01:32:51, u otra que se explique). Solo lectura | A0, B1 |
+| Lunes 2026-11-16 por la noche, o martes 2026-11-17 durante el día y antes de A1 | Medición de la 00-07 (parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md), con el guion ajustado el 2026-11-16: D0, D1 y, si hace falta, D2); anotar el resultado y cerrar la 00-07. **Hasta anotarla, la 03-05 sigue bloqueada.** El resto del día, sin pasos de la 03-05 | A0 |
+| Martes 2026-11-17, por la tarde | Pruebas, `check --deploy` y `makemigrations` (decisión: el día del despliegue); etiqueta `v3.1-integridad`; aviso al cliente con la hora real (sugerido: antes de las 20:00; el texto dice «Hoy») | A1, A3, A4 |
+| Martes 2026-11-17, poco antes de las 20:00 | Respaldo nuevo, verificado (lo más cerca posible de `R`) | A2 |
+| Martes 2026-11-17, de 20:00 a 23:00 | Despliegue y anotar `R` (en UTC, entre las 23:00 del 11-17 y las 02:00 del 11-18); lectura del día 0 | B, C |
+| Del miércoles 2026-11-18 al lunes 2026-11-23 | Sin lecturas programadas. Lectura a demanda solo como sugerencia (primera mañana, miércoles 11-18, o ante un reporte del cliente) | C7 |
+| Viernes 2026-11-20 | Informe C2 de la 00-06 (desconexiones a 28 días), **a mitad de la vigilancia**. **La recarga del 11-17 figura en sus conteos: sepárala usando `R`** (la hora oficial que anotas en B6; excluye o marca aparte esa recarga y sus unos 10 s de 502). Sugerencia, sin decidir: aprovechar esa lectura de registros para una lectura a demanda de la 03-05 | B6, C5, C6 |
+| Martes 2026-11-24, por la noche (de `R` + 7 días en adelante, de 20:00 a 23:00; de 23:00 UTC del 11-24 a 02:00 UTC del 11-25) | Lectura del día 7 y criterio de cierre | D |
+| Martes 2026-11-24 por la noche o miércoles 2026-11-25 | Respuesta del desarrollador en esta evidencia; el agente deja la bitácora de producción, la fila de `despliegue.md`, sección 5, y las notas fechadas | D |
+| Después del cierre | Parte F (réplica y AUD-05-002) | F |
+| Domingo 2026-12-13 | Vence la web app (dicho por el desarrollador el 2026-11-16; los documentos decían el 2026-11-20). Fecha para renovarla: `PENDIENTE_DESARROLLADOR` | — |
+
+El respaldo semanal de hacia el 2026-11-10 u 11: no consta si se hizo (`PENDIENTE_DESARROLLADOR`). Es distinto del de A2; si no se hizo, el de A2 puede contar también como el semanal (decisión 2-A).
+
+### Calendario anterior (2026-11-06, superado el 2026-11-16; se conserva como registro)
 
 Horas de Chile (UTC-3). Los pasos A a F son los de esta evidencia. Las horas de la tarde del jueves 12 son una **sugerencia** de orden (la decisión fija solo la ventana de 20:00 a 23:00 y el día). Las consolas de la noche del 12 comparten los 100 s diarios de CPU con el respaldo del mismo día (inferido; no medido): conviene no repetir comandos pesados sin necesidad.
 
@@ -58,18 +78,20 @@ Horas de Chile (UTC-3). Los pasos A a F son los de esta evidencia. Las horas de 
 
 ### A0. Precondiciones
 
-- [ ] La medición de la 00-07 está hecha y su resultado anotado en la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) (2026-11-11, hacia las 01:32).
-- [ ] La web app está renovada (2026-11-10, vence el 2026-11-20).
-- [ ] Día del despliegue fijado: **jueves 2026-11-12**, de 20:00 a 23:00 (hora de Chile) (decisión del 2026-11-06). Si algo lo atrasa un día, `R` el 11-13 deja la lectura final el 11-20 (el día del vencimiento); más tarde pasa de esa fecha.
+- [ ] La medición de la 00-07 está hecha y su resultado anotado en la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) (~~2026-11-11, hacia las 01:32~~ reprogramada el 2026-11-16: antes de A1 del 2026-11-17, con el guion ajustado: D0, D1 y, si hace falta, D2).
+- [ ] ~~La web app está renovada (2026-11-10, vence el 2026-11-20).~~ La web app vence el 2026-12-13 (dicho por el desarrollador el 2026-11-16; no lo vi en el panel). Fecha para renovarla: `PENDIENTE_DESARROLLADOR`.
+- [ ] Producción confirmada en `v0.3-doble-envio` (B1: `git describe --tags --always` y `git rev-parse --short HEAD` = `5dc82a8`), antes de tocar nada.
+- [ ] Día del despliegue fijado: ~~**jueves 2026-11-12**~~ **martes 2026-11-17**, de 20:00 a 23:00 (hora de Chile) (decisión del 2026-11-06; día movido por el desarrollador el 2026-11-16). ~~Si algo lo atrasa un día, `R` el 11-13 deja la lectura final el 11-20 (el día del vencimiento); más tarde pasa de esa fecha.~~ Ese tope ya no rige: la web app vence el 2026-12-13.
 - [ ] `git status --short` vacío y `main` igual a `origin/main` (A1).
 
-**Cuenta de días.** `R` el jueves 2026-11-12 entre las 20:00 y las 23:00 → día 7 el jueves 2026-11-19, a la misma hora o más tarde (un día antes del vencimiento de la web app y del informe C2, 2026-11-20). La lectura del día 7 exige que hayan pasado siete días completos desde `R` (D1 lo comprueba).
+**Cuenta de días.** ~~`R` el jueves 2026-11-12 entre las 20:00 y las 23:00 → día 7 el jueves 2026-11-19, a la misma hora o más tarde (un día antes del vencimiento de la web app y del informe C2, 2026-11-20).~~ `R` el martes 2026-11-17 entre las 20:00 y las 23:00 → día 7 el martes 2026-11-24, a la misma hora o más tarde (el informe C2 del 2026-11-20 cae en medio de la semana; la web app vence el 2026-12-13). La lectura del día 7 exige que hayan pasado siete días completos desde `R` (D1 lo comprueba).
 
 | Dato | Valor |
 | :--- | :---- |
-| Hora planeada para `R` el jueves 2026-11-12 (hora de Chile) | … |
-| Renovación de la web app (hecha / fecha de vencimiento nueva) | … |
-| Resultado de la 00-07 (`segundos_repetidos`) | … |
+| Hora planeada para `R` el martes 2026-11-17 (hora de Chile) | … |
+| Vencimiento de la web app (dicho: 2026-12-13) y fecha para renovarla | … |
+| Resultado de la 00-07 (`segundos_repetidos`, por día) | … |
+| Producción en `v0.3-doble-envio` (confirmada por el desarrollador: fecha y hora) | … |
 
 ### A1. Lista de comprobación **[PC · PowerShell 7]**
 
@@ -114,7 +136,7 @@ git diff --stat 5dc82a8..main -- pedidos/static
 
 ### A2. Respaldo previo **[Navegador]** y **[PC · PowerShell 7]**
 
-El día del despliegue y lo más cerca posible de `R`: en un retroceso del caso 3, se pierde todo lo registrado después del respaldo (`retroceso.md`, sección 4). El semanal es el del 2026-11-10 u 11, distinto de este (se hace el 2026-11-12): no los confundas en `respaldo.md`, sección 6.
+El día del despliegue y lo más cerca posible de `R`: en un retroceso del caso 3, se pierde todo lo registrado después del respaldo (`retroceso.md`, sección 4). El semanal es el de hacia el 2026-11-10 u 11 (no consta si se hizo), distinto de este (se hace el ~~2026-11-12~~ 2026-11-17): no los confundas en `respaldo.md`, sección 6. Si el semanal no se hizo, este puede contar también como el de la semana (decisión 2-A); anótalo en esa fila.
 
 1. En producción, como superusuario: «Respaldar BD» → **un solo clic** en «Generar Nuevo Respaldo BD». Guarda la descarga directo en la carpeta cifrada.
 2. Verifica:
@@ -172,7 +194,7 @@ git ls-remote --tags origin v3.1-integridad
 
 ### A4. Aviso al cliente
 
-Texto **aprobado por el desarrollador el 2026-11-06** (el propuesto en [la iteración, decisión 4](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md) más una frase sobre la imagen de referencia). Cópialo tal cual y reemplaza `HH:MM` por la hora real (sugerido: envíalo el jueves 2026-11-12 antes de las 20:00):
+Texto **aprobado por el desarrollador el 2026-11-06** (el propuesto en [la iteración, decisión 4](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md) más una frase sobre la imagen de referencia). Cópialo tal cual y reemplaza `HH:MM` por la hora real (sugerido: envíalo el ~~jueves 2026-11-12~~ martes 2026-11-17 antes de las 20:00, el mismo día de la actualización: el texto dice «Hoy»; si lo envías otro día, cambia «Hoy» por el día y anótalo abajo. No consta si el cliente recibió un aviso para el 11-12: si lo recibió, dile que cambió):
 
 ```text
 Hoy a las HH:MM vamos a actualizar el sistema. Puede dejar de responder unos segundos mientras se reinicia. Si tenías un pedido, una cotización o un pago abierto antes de eso, la primera vez que lo guardes va a salir el aviso «Este formulario venció y no se guardó»: no perdiste lo que escribiste, revisa los datos y vuelve a guardar. Si habías elegido una imagen de referencia, vuelve a elegirla: el navegador no la conserva. Después de la actualización, cierra la pestaña y abre la aplicación de nuevo (o pulsa Ctrl+F5). Notarás que los botones de guardar dicen «Guardando…» y se bloquean un momento: es para que un doble clic no cree el pedido dos veces. Si algo no funciona, cuéntanos en qué pantalla estabas y a qué hora.
@@ -475,13 +497,13 @@ Solo imprime conteos: ninguna IP, nombre ni monto. Es de **solo lectura** (`filt
 - [ ] Botón y caché de `index.js` probados (C2).
 - [ ] Sin pedidos duplicados en la línea base (C6).
 
-**Riesgo anotado (decisión 5 del 2026-11-06).** Con lecturas solo los días 0 y 7, **un problema de los días 1 a 6 solo se vería si el cliente lo reporta**. Además, la lectura del día 0 ocurre de noche, antes del primer uso real del negocio (inferido: es la hora de menor uso). **Sugerencia, sin decidir:** una lectura extra **a demanda** (con los mismos comandos de C5 y C6), por ejemplo la primera mañana tras `R` (viernes 2026-11-13) o apenas el cliente avise de un «no se guardó» o de un botón que no responde. Cada lectura es corta, pero consume parte de los 100 s diarios de CPU de la consola.
+**Riesgo anotado (decisión 5 del 2026-11-06).** Con lecturas solo los días 0 y 7, **un problema de los días 1 a 6 solo se vería si el cliente lo reporta**. Además, la lectura del día 0 ocurre de noche, antes del primer uso real del negocio (inferido: es la hora de menor uso). **Sugerencia, sin decidir:** una lectura extra **a demanda** (con los mismos comandos de C5 y C6), por ejemplo la primera mañana tras `R` (~~viernes 2026-11-13~~ miércoles 2026-11-18) o apenas el cliente avise de un «no se guardó» o de un botón que no responde. Cada lectura es corta, pero consume parte de los 100 s diarios de CPU de la consola.
 
 ---
 
 ## Parte D · Día 7 y criterio de cierre **[PA · Bash]**
 
-Se hace el **jueves 2026-11-19 por la noche**, siete días después de `R` o más tarde (de 20:00 a 23:00 de Chile; de 23:00 UTC del 11-19 a 02:00 UTC del 11-20). **Es la única lectura de la semana además de la del día 0.** Cubre toda la semana: de `R` a ahora.
+Se hace el ~~**jueves 2026-11-19 por la noche**~~ **martes 2026-11-24 por la noche**, siete días después de `R` o más tarde (de 20:00 a 23:00 de Chile; de 23:00 UTC del 11-24 a 02:00 UTC del 11-25). **Es la única lectura de la semana además de la del día 0.** Cubre toda la semana: de `R` a ahora.
 
 ### D1. Preparación
 
@@ -744,6 +766,7 @@ Repite las consultas 1 a 3 de la «Evidencia P3» de la [iteración 03-02](itera
 - **Las rutas del disco de Docker** (parte F): dependen de tu versión de Docker Desktop.
 - **`git tag`:** no se pudo comprobar que `v3.1-integridad` esté libre (el agente no ejecuta `git tag`); lo comprueba A3.
 - **Horas de uso del cliente entre semana:** sigue sin medirse; la ventana de 20:00 a 23:00 es decisión del desarrollador.
+- **Al reprogramar (2026-11-16):** dichos por el desarrollador y no verificados: producción en `v0.3-doble-envio`, medición de la 00-07 no hecha y web app con vencimiento el 2026-12-13. No sé si se hizo el semanal de hacia el 11-10 u 11 ni si el cliente recibió un aviso para el 11-12. El guion ajustado de la parte D de la 00-07 se probó solo con registros sintéticos.
 
 ## Respuesta del desarrollador
 

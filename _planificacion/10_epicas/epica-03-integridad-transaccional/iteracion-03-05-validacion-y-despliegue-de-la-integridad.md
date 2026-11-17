@@ -1,15 +1,38 @@
 # Iteración 03-05 · Validación y despliegue de la integridad
 
 - **Épica:** 03 · Integridad transaccional
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-06 ([bitacora-03-05-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-redaccion.md)); las ocho decisiones las resolvió el desarrollador el mismo día ([bitacora-03-05-decisiones](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-decisiones.md); detalle en «Decisiones del desarrollador»). Sin ejecutar: ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Pasos listos en [evidencia-03-05](evidencia-03-05.md). Ronda final del 2026-11-06 registrada (aviso aprobado, jueves 2026-11-12, umbral de tiempos y números del retroceso): **solo falta elegir la fuente del respaldo para refrescar la réplica** (parte F1 de la evidencia, `PENDIENTE_DESARROLLADOR`). **Bloqueada** hasta anotar la medición de la 00-07 (2026-11-11).
+- **Estado:** Pendiente (redactada, decisiones resueltas; **reprogramada el 2026-11-16 para el martes 2026-11-17**, ver «Reprogramación del 2026-11-16»). Redactada el 2026-11-06 ([bitacora-03-05-redaccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-redaccion.md)); las ocho decisiones las resolvió el desarrollador el mismo día ([bitacora-03-05-decisiones](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-decisiones.md); detalle en «Decisiones del desarrollador»). Sin ejecutar: ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Pasos listos en [evidencia-03-05](evidencia-03-05.md). Ronda final del 2026-11-06 registrada (aviso aprobado, ~~jueves 2026-11-12~~ martes 2026-11-17 desde el 2026-11-16, umbral de tiempos y números del retroceso): **solo falta elegir la fuente del respaldo para refrescar la réplica** (parte F1 de la evidencia, `PENDIENTE_DESARROLLADOR`). **Bloqueada** hasta anotar la medición de la 00-07 (~~2026-11-11~~: no se hizo ese día; se mide antes del despliegue del 2026-11-17).
 - **Subfase del plan:** 3.5 «Validación y despliegue» (`plan-de-trabajo.md:364-371`)
-- **Depende de:** 03-04 (Terminada el 2026-11-06) y de la medición de la 00-07 (parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md), 2026-11-11, hacia las 01:32 hora de Chile)
+- **Depende de:** 03-04 (Terminada el 2026-11-06) y de la medición de la 00-07 (parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md), ~~2026-11-11, hacia las 01:32 hora de Chile~~ no se hizo ese día: se mide antes del despliegue del 2026-11-17)
 - **RDA relacionadas:** RDA-007 (rama única y etiqueta anotada antes de cada despliegue; un despliegue lleva un solo propósito), RDA-013 (diagnóstico en `server.log`, sin identificador ni tabla de errores), RDA-019 (los errores de vista los maneja Django).
 - **Hallazgos que cierra:** AUD-04-001 en la medición de producción que le faltaba (la parte de servidor ya está «Resuelto en 03-04» en código); confirma en producción los que hoy dicen «se despliega con la 03-05»: AUD-01-001, AUD-01-002, AUD-02-004 (el código; las filas históricas no se reparan), AUD-02-005, AUD-02-008, AUD-02-027 y AUD-02-029.
 - **Hallazgos relacionados:** AUD-02-006 (avance de la 03-04; sigue abierto por el GET, 04-01), AUD-02-021 (13 errores de plantilla sin causa conocida: la semana de `server.log` puede aportar evidencia, no se asume), AUD-02-023 (imágenes de `media/` sin copia: no se tocan), AUD-04-002 (cada recarga deja unos 10 s de 502), AUD-04-004 (líneas `OSError: write error`, ya clasificadas), AUD-05-002 (disco de Docker de la réplica en C:).
 - **Cambio de esquema:** Ninguno (verificado el 2026-11-06 con `git diff`, ver «Qué viaja»).
 - **Respaldo previo al despliegue:** nuevo el día del despliegue, verificado antes de recargar (decisión 2, opción A, resuelta el 2026-11-06).
-- **Etiqueta y ventana:** `v3.1-integridad` (convención de `despliegue.md`, sección 1), el **jueves 2026-11-12**, entre las 20:00 y las 23:00 (hora de Chile) (decisión 3, resuelta el 2026-11-06; reemplaza «de madrugada»; el día se fijó en la ronda final del mismo día). Día 7: jueves 2026-11-19 por la noche.
+- **Etiqueta y ventana:** `v3.1-integridad` (convención de `despliegue.md`, sección 1), el ~~**jueves 2026-11-12**~~ **martes 2026-11-17** (reprogramado el 2026-11-16), entre las 20:00 y las 23:00 (hora de Chile) (decisión 3, resuelta el 2026-11-06; reemplaza «de madrugada»; el día se fijó en la ronda final del mismo día y se movió el 2026-11-16). Día 7: ~~jueves 2026-11-19~~ martes 2026-11-24 por la noche.
+
+## Reprogramación del 2026-11-16
+
+**Qué pasó.** El despliegue previsto para el jueves 2026-11-12 no se hizo. Verificado el 2026-11-16 en GitHub: la etiqueta `v3.1-integridad` no existe y no hay commits posteriores a `a1653dd` (2026-11-06). Medido en local el mismo día: `HEAD` sigue en `a1653dd` y `git diff --stat 7e14398..HEAD` (sin `_planificacion` ni `docs`) no da salida, así que el código es el de las tres ejecuciones de pruebas del 2026-11-06. Detalle en [bitacora-03-05-reprogramacion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-reprogramacion.md).
+
+**Dicho por el desarrollador (2026-11-16; el agente no lo verificó):**
+
+- La medición de `access.log` de la 00-07 (parte D) **no se hizo** el 2026-11-11.
+- La web app vence el **2026-12-13**, no el 2026-11-20 que dicen los documentos. El 2026-11-20 queda solo para el informe C2 de la 00-06.
+- **Por confirmar por el desarrollador en el servidor** (`PENDIENTE_DESARROLLADOR`): que producción sigue en `v0.3-doble-envio` (`git status` limpio y `Starting uWSGI` sin más reinicios que el del 2026-11-04 01:32:51, o los que se expliquen).
+
+**Decisión del desarrollador (2026-11-16), sobre la decisión 3:** nueva ventana el **martes 2026-11-17**, de 20:00 a 23:00 (hora de Chile), en lugar del jueves 2026-11-12. Día 7: **martes 2026-11-24** por la noche. Las demás decisiones (1, 2 y 4 a 8) no cambian.
+
+| Qué | Cómo queda |
+| :-- | :--------- |
+| Medición de la 00-07 | Sigue siendo **precondición**. Se mide antes del despliegue (hoy por la noche o el 2026-11-17 durante el día), con 12 o 13 días desde el reinicio del 2026-11-04 01:32:51 en lugar de siete. El guion de la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) se ajustó el 2026-11-16: el original solo miraba los 8 últimos días y habría dejado fuera los primeros. La 03-05 sigue bloqueada hasta anotar el resultado |
+| Tope «`R` hasta el 2026-11-13» | Ya no rige: venía del vencimiento del 2026-11-20 y la web app vence el 2026-12-13. La vigilancia (11-17 a 11-24) termina 19 días antes |
+| Informe C2 de la 00-06 (2026-11-20) | Cae **a mitad de la vigilancia** y la **recarga del 2026-11-17 entra en sus conteos** (reinicios y desconexiones a 28 días). Hay que separarla usando `R`, la hora oficial (`Starting uWSGI`): anótala al desplegar y excluye o marca aparte esa recarga y sus unos 10 s de 502 (AUD-04-002). Sugerencia, sin decidir: aprovechar esa lectura de registros para una lectura a demanda de la 03-05 (C5 y C6 de la evidencia) |
+| Aviso al cliente | El texto aprobado dice «Hoy a las HH:MM»: **sigue valiendo si se envía el martes 2026-11-17 antes de las 20:00**, el mismo día de la actualización. Si se enviara otro día habría que cambiar «Hoy» por el día; es un cambio de una palabra sobre un texto aprobado y lo confirma el desarrollador. No consta si el cliente recibió algún aviso para el 2026-11-12 (`PENDIENTE_DESARROLLADOR`): si lo recibió, conviene decirle que cambió |
+| Respaldo | El del despliegue se hace el 2026-11-17, poco antes de las 20:00. No consta si el semanal de hacia el 2026-11-10 u 11 se hizo (`PENDIENTE_DESARROLLADOR`); si no se hizo, el del despliegue puede contar también como semanal (decisión 2-A) |
+| Producción | Se supone `v0.3-doble-envio` (documentado). B1 de la evidencia lo comprueba antes de tocar nada: `git describe --tags --always` debe decir `v0.3-doble-envio` y `git rev-parse --short HEAD`, `5dc82a8` |
+
+Lo anterior (tablas de opciones, decisiones del 2026-11-06 y fechas del jueves 2026-11-12) se conserva como registro; donde difiere, vale esta sección.
 
 ## Objetivo
 
@@ -49,7 +72,7 @@ Verificado contra `definicion-epica-03.md` (alcance 5, criterio de término y no
 
 ### Qué viaja
 
-Medido hoy: `git diff --stat 5dc82a8..HEAD -- . ":(exclude)_planificacion" ":(exclude)docs"` → **30 archivos, 1.957 inserciones y 456 eliminaciones**. Y `git diff --stat 7e14398..HEAD` con la misma exclusión → **sin salida**: desde el último commit de código (`7e14398`, corrección del abono) solo cambian documentos. `git status --short` está vacío y `HEAD` es igual a `origin/main` (`c9db60e`).
+Medido hoy: `git diff --stat 5dc82a8..HEAD -- . ":(exclude)_planificacion" ":(exclude)docs"` → **30 archivos, 1.957 inserciones y 456 eliminaciones**. Y `git diff --stat 7e14398..HEAD` con la misma exclusión → **sin salida**: desde el último commit de código (`7e14398`, corrección del abono) solo cambian documentos. `git status --short` está vacío y `HEAD` es igual a `origin/main` (`c9db60e`). **Nota 2026-11-16:** desde entonces solo hubo commits de documentos; `HEAD` es hoy `a1653dd` y `git diff --stat 7e14398..HEAD` con la misma exclusión sigue sin salida (medido el 2026-11-16).
 
 | Grupo | Archivos | Qué cambia |
 | :---- | :------- | :--------- |
@@ -74,7 +97,7 @@ Medido hoy: `git diff --stat 5dc82a8..HEAD -- . ":(exclude)_planificacion" ":(ex
 
 ### La medición de la 00-07 y por qué espera
 
-- **Documentado:** la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) se mide el **2026-11-11, hacia las 01:32** (hora de Chile; 04:32 UTC; una semana después del reinicio efectivo del 2026-11-04). Cuenta por día en UTC los `POST /pedidos/nuevo/` y los segundos con dos o más; esperado `segundos_repetidos=0`. Aparece igual en `registro-pendientes.md` (cabecera y «Fechas vigentes»). El desarrollador lo dijo; los tres documentos coinciden.
+- **Documentado:** la parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md) se mide el **2026-11-11, hacia las 01:32** (hora de Chile; 04:32 UTC; una semana después del reinicio efectivo del 2026-11-04). Cuenta por día en UTC los `POST /pedidos/nuevo/` y los segundos con dos o más; esperado `segundos_repetidos=0`. Aparece igual en `registro-pendientes.md` (cabecera y «Fechas vigentes»). El desarrollador lo dijo; los tres documentos coinciden. **Nota 2026-11-16:** ~~2026-11-11~~ no se midió ese día (dicho por el desarrollador). La medición sigue siendo precondición y se hace antes del despliegue del 2026-11-17, con 12 o 13 días desde el reinicio y el guion ajustado de la parte D de la evidencia-00-07.
 - **Por qué no se despliega antes (inferido):** esa medición mide el efecto del botón de la 00-07. Con la 03-05 en producción, el segundo POST de un doble envío responde 302 como el primero y `pedido_form.html` cambió (37 líneas), así que dejaría de poder atribuirse el resultado al botón. Es el mismo motivo del precedente de la 01-09.
 
 ## Decisiones
@@ -99,12 +122,13 @@ Medido hoy: `git diff --stat 5dc82a8..HEAD -- . ":(exclude)_planificacion" ":(ex
 
 ### Decisión 3 · Ventana y etiqueta
 
-Precondición: **no desplegar antes de la medición de la 00-07 del 2026-11-11 (hacia las 01:32)** ni de anotar su resultado. Hechos documentados que pesan en la ventana:
+Precondición: **no desplegar antes de la medición de la 00-07** (~~del 2026-11-11, hacia las 01:32~~; reprogramada el 2026-11-16: antes del 2026-11-17) ni de anotar su resultado. Hechos documentados que pesan en la ventana:
 
 - `v1.1-observabilidad` se desplegó un domingo (2026-10-25) porque «el negocio cierra el sábado en la tarde y no hay uso hasta el lunes» (`registro-pendientes.md`, sección 3, decisión de la 01-06).
 - `v1.2-capturas` y `v0.3-doble-envio` se desplegaron de madrugada del miércoles 2026-11-04 (reinicios efectivos a las 00:11:49 y 01:32:51).
 - La vigilancia de siete días termina a más tardar el 2026-11-20 (vencimiento de la web app e informe C2) solo si `R` es hasta el 2026-11-13.
 - Días de la semana calculados desde «domingo 2026-11-01» (`despliegue.md`, `evidencia-00-07`): el 2026-11-11 es miércoles y el 2026-11-14, sábado.
+- **Nota 2026-11-16 (reprogramación):** el 2026-11-16 es lunes y el 2026-11-17 y el 2026-11-24 son martes (calculado con Python). La web app vence el 2026-12-13 (dicho por el desarrollador), así que el tope «`R` hasta el 2026-11-13» de este punto y de la opción A ya no rige. La decisión sigue siendo la A (noche, entre semana); cambia solo el día.
 
 | Opción | Qué hace | Ventajas | Riesgos |
 | :----- | :------- | :------- | :------ |
@@ -116,7 +140,7 @@ Precondición: **no desplegar antes de la medición de la 00-07 del 2026-11-11 (
 - **Etiqueta (sugerida):** `v3.1-integridad`. Formato `v<fase>.<correlativo>-<propósito>` de `despliegue.md`, sección 1: fase 3, correlativo 1 (cada fase parte en 1; los documentos no registran ninguna etiqueta de la fase 2). Mensaje: `Iteraciones 03-01 a 03-04 · desplegada el AAAA-MM-DD` con la fecha de Chile del día. Anotada, publicada con `git push origin`, y comprobada con `git ls-remote --tags origin v3.1-integridad`.
 - **Destino de retroceso:** `v0.3-doble-envio` (la última desplegada; `despliegue.md`, sección 1: «el destino es la etiqueta desplegada antes»).
 - **No se crea ninguna etiqueta en esta redacción** (`AGENTS.md`, sección 6).
-- **Resuelta el 2026-11-06:** etiqueta `v3.1-integridad`, de 20:00 a 23:00 (hora de Chile) de un día entre el 2026-11-11 y el 2026-11-13. Con esa hora, desde las 21:00 la fecha UTC ya es la del día siguiente, y con el día 7 a la misma hora `R` el 11-13 deja la última lectura el 11-20 por la noche (el día del vencimiento de la web app y del informe C2); el 11-11 o el 11-12 dejan margen (sugerencia, sin decidir). **Ronda final (2026-11-06): jueves 2026-11-12, de 20:00 a 23:00; día 7, jueves 2026-11-19 por la noche**, un día antes del vencimiento de la web app y del informe C2.
+- **Resuelta el 2026-11-06:** etiqueta `v3.1-integridad`, de 20:00 a 23:00 (hora de Chile) de un día entre el 2026-11-11 y el 2026-11-13. Con esa hora, desde las 21:00 la fecha UTC ya es la del día siguiente, y con el día 7 a la misma hora `R` el 11-13 deja la última lectura el 11-20 por la noche (el día del vencimiento de la web app y del informe C2); el 11-11 o el 11-12 dejan margen (sugerencia, sin decidir). **Ronda final (2026-11-06): jueves 2026-11-12, de 20:00 a 23:00; día 7, jueves 2026-11-19 por la noche**, un día antes del vencimiento de la web app y del informe C2. **Reprogramada el 2026-11-16 (desarrollador): martes 2026-11-17, de 20:00 a 23:00; día 7: martes 2026-11-24 por la noche** (ver «Reprogramación del 2026-11-16»).
 
 ### Decisión 4 · Aviso al cliente
 
@@ -190,14 +214,14 @@ Documentado: `pruebas.md`, sección 7.1, **valor vigente `expected failures=9`**
 
 Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywhere, crea etiquetas ni hace `push`.
 
-0. **Precondiciones:** 00-07 medida (parte D, 2026-11-11, hacia las 01:32) y su resultado anotado; web app renovada (2026-11-10); `git status --short` vacío y `main` igual a `origin/main`.
+0. **Precondiciones:** 00-07 medida (parte D, ~~2026-11-11, hacia las 01:32~~ antes del 2026-11-17, con el guion ajustado el 2026-11-16) y su resultado anotado; web app con vencimiento conocido (2026-12-13, dicho por el desarrollador; ~~renovada el 2026-11-10~~); producción confirmada en `v0.3-doble-envio` por el desarrollador; `git status --short` vacío y `main` igual a `origin/main`.
 1. **Evidencia lista** (agente): [evidencia-03-05](evidencia-03-05.md), creada el 2026-11-06 al resolverse las decisiones, con comandos exactos y casillas (A, PC; B, servidor; C, día 0; D, día 7 y cierre; E, retroceso; F, limpieza de la réplica). La rellena el desarrollador al ejecutar.
 2. **Lista de comprobación previa** (`despliegue.md`, sección 2) en el PC: pruebas (decisión 8), `check --deploy`, `makemigrations --check --dry-run`, `showmigrations pedidos` (ninguna migración nueva), respaldo (decisión 2), «Estilos compilados: no aplica», etiqueta.
 3. **Etiqueta** (decisiones 1 y 3): `git diff --stat <hash>..main -- . ":(exclude)_planificacion" ":(exclude)docs"` vacío, `git tag -a`, `git push origin`, `git ls-remote --tags origin`.
-4. **Aviso al cliente** (decisión 4) el 2026-11-12, antes de la hora acordada (reinicio entre las 20:00 y las 23:00), con el texto aprobado.
+4. **Aviso al cliente** (decisión 4) el ~~2026-11-12~~ 2026-11-17, antes de la hora acordada (reinicio entre las 20:00 y las 23:00), con el texto aprobado.
 5. **Despliegue** (`despliegue.md`, 3.1 a 3.6): ubicarse, `git fetch origin --tags`, `git checkout <etiqueta>`, **sin dependencias** (3.3: `requirements.txt` no cambió), **sin migraciones** (3.4: `No planned migration operations.`), **`collectstatic --noinput`** (3.5: cambió `index.js`), **Reload** y anotar la hora del reinicio efectivo `R`.
 6. **Verificación inmediata, solo lectura** (3.7): ventana privada, acceso, panel, listado y detalle de pedidos; además, sin crear nada: que `/pedidos/nuevo/`, `/cotizaciones/nueva/` y `/pagos/ingresar/` carguen y que el código fuente de cada una traiga el campo `token_envio`. Registro de errores desde `R`.
-7. **Verificar la línea `INFO`** (decisión 5b; parte C de la evidencia) y **vigilar** (decisión 5): lecturas **solo los días 0 y 7** (2026-11-12 y 2026-11-19; partes C y D de la evidencia). Una lectura extra a demanda queda como sugerencia, sin decidir (ver «Riesgos»).
+7. **Verificar la línea `INFO`** (decisión 5b; parte C de la evidencia) y **vigilar** (decisión 5): lecturas **solo los días 0 y 7** (~~2026-11-12 y 2026-11-19~~ 2026-11-17 y 2026-11-24; partes C y D de la evidencia). Una lectura extra a demanda queda como sugerencia, sin decidir (ver «Riesgos»).
 8. **Si aparece un `ERROR` nuevo:** clasificar (3.9) y aplicar la regla de la decisión 6.
 9. **Cierre documental** (agente, con la evidencia que responda el desarrollador): `bitacora-03-05-produccion.md`; fila en `despliegue.md`, sección 5 (registro de despliegues); notas fechadas en AUD-04-001 y en los hallazgos que dicen «se despliega con la 03-05» (sin borrar lo anterior); el texto de `despliegue.md`, 3.9, según el resultado de 5b; `registro-pendientes.md`; estado de la 03-05 y de la Épica 03 (nota fechada en `definicion-epica-03.md`).
 10. **Operación** (decisión 7, opción A) como último paso, después de cerrar la vigilancia: traslado del disco de Docker, refresco de la réplica, conteo de pedidos sin ítems y comprobación de cifrado (parte F de la evidencia).
@@ -211,13 +235,30 @@ Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywher
 - [ ] Despliegue hecho por los pasos de `despliegue.md`, con `collectstatic`, sin migraciones; hora `R` anotada.
 - [ ] Verificación inmediata sin errores desde `R`; los tres formularios traen `token_envio`.
 - [ ] La línea `INFO` verificada, o su estado explicado (decisión 5b).
-- [ ] Siete días desde `R` con el criterio de cierre (parte D5 de la evidencia) cumplido, o cada excepción explicada. Lecturas: días 0 y 7 (2026-11-12 y 2026-11-19).
+- [ ] Siete días desde `R` con el criterio de cierre (parte D5 de la evidencia) cumplido, o cada excepción explicada. Lecturas: días 0 y 7 (~~2026-11-12 y 2026-11-19~~ 2026-11-17 y 2026-11-24).
 - [ ] `access.log` y el conteo de pedidos sin duplicados por envío repetido (AUD-04-001, criterio de término).
 - [ ] Fila en el registro de despliegues de `despliegue.md`; notas fechadas en los hallazgos; bitácora de producción.
 - [ ] AUD-05-002 y la limpieza de la réplica resueltas o reprogramadas por escrito (decisión 7).
 - [ ] Los `PENDIENTE_CLIENTE` abiertos siguen sin cambios de comportamiento: AUD-02-014, pedido de $0 como pagado y sobrepago.
 
 ## Fechas de operación
+
+### Vigentes (reprogramadas el 2026-11-16)
+
+| Fecha | Qué | Fuente | Estado |
+| :---- | :-- | :----- | :----- |
+| Lunes 2026-11-16 (hoy) | Reprogramación documentada. El desarrollador confirma en el servidor que producción sigue en `v0.3-doble-envio` (`git status` limpio, `git describe --tags --always` y `Starting uWSGI` desde el 2026-11-04 01:32:51) | Dicho por el desarrollador, 2026-11-16 | `PENDIENTE_DESARROLLADOR`: por confirmar |
+| Lunes 2026-11-16 por la noche, o martes 2026-11-17 durante el día y antes de empezar la 03-05 (A1 de la evidencia) | Medición de `access.log` de la 00-07 (parte D de [evidencia-00-07](../epica-00-blindaje/evidencia-00-07.md), guion ajustado el 2026-11-16: 12 o 13 días desde el reinicio) y, con ella, cierre de la 00-07 | Dicho por el desarrollador: no se hizo el 2026-11-11; sigue siendo precondición | Pendiente. No medible desde aquí |
+| Martes 2026-11-17, por la tarde | Pruebas, `check --deploy` y `makemigrations` (partes A1); etiqueta `v3.1-integridad` (A3); aviso al cliente con la hora real, antes de las 20:00 (A4: el texto dice «Hoy») | [evidencia-03-05](evidencia-03-05.md) | Pendiente |
+| Martes 2026-11-17, poco antes de las 20:00 | Respaldo nuevo, verificado (A2). Puede contar también como el semanal si el de hacia el 2026-11-10 u 11 no se hizo (decisión 2-A) | Decisión 2 | Pendiente |
+| Martes 2026-11-17, de 20:00 a 23:00 (hora de Chile) | Despliegue de la 03-05 (`R`) y lectura del día 0. En UTC, `R` cae entre las 23:00 del 11-17 y las 02:00 del 11-18 | Decisión del desarrollador, 2026-11-16 | Decidido |
+| Del miércoles 2026-11-18 al lunes 2026-11-23 | Sin lecturas programadas (decisión 5); lectura a demanda solo como sugerencia (primera mañana, miércoles 11-18, o ante un reporte) | Decisión 5 | Decidido |
+| Viernes 2026-11-20 | Informe de desconexiones a 28 días (parte C2 de [evidencia-00-06](../epica-00-blindaje/evidencia-00-06.md)), **a mitad de la vigilancia**. La recarga del 11-17 figura en sus conteos: sepárala usando `R`. Sugerencia, sin decidir: una lectura a demanda de la 03-05 en la misma sesión | `registro-pendientes.md`, sección 3 | Documentado |
+| Martes 2026-11-24, por la noche (siete días después de `R` o más tarde, de 20:00 a 23:00 de Chile; de 23:00 UTC del 11-24 a 02:00 UTC del 11-25) | Lectura del día 7 y cierre de la vigilancia | Cálculo: `R` + 7 días | Decidido por la fecha del despliegue |
+| Martes 2026-11-24 por la noche o miércoles 2026-11-25 | Respuesta del desarrollador en la evidencia; cierre documental del agente | — | Pendiente |
+| Domingo 2026-12-13 | Vence la web app (dicho por el desarrollador el 2026-11-16; reemplaza el 2026-11-20 de los documentos). Fecha para renovarla: `PENDIENTE_DESARROLLADOR` | Dicho; no visto en el panel | La vigilancia termina 19 días antes |
+
+### Anteriores (2026-11-06, superadas el 2026-11-16; se conservan como registro)
 
 | Fecha | Qué | Fuente | Estado |
 | :---- | :-- | :----- | :----- |
@@ -257,7 +298,11 @@ Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywher
 | Con la 03-05 desplegada, `access.log` ya no distingue un duplicado rechazado de uno guardado | Decisión 5a: comparar con el conteo de pedidos nuevos |
 | El token suma entradas a la sesión (hasta 20 por sesión) y suma consultas | Costo aceptado el 2026-11-04. No se encontró ninguna purga de sesiones en el repositorio (búsqueda de `clearsessions`, sin resultados): la sesión dura 14 días y el disco es escaso (inferido: el tamaño es pequeño; no medido) |
 | El navegador conserva el `index.js` anterior | Aviso con Ctrl+F5 (decisión 4); no hay nombre con hash en los estáticos |
-| La 03-05 se atrasa y la semana de vigilancia cae sobre el 2026-11-20 | Con `R` el 2026-11-12, el día 7 es el 11-19: queda un día de margen. Si algo lo atrasa un día, `R` el 11-13 deja la lectura final el 11-20 (el mismo día del vencimiento); más tarde pasa de esa fecha. Renovar la web app el 2026-11-10 |
+| ~~La 03-05 se atrasa y la semana de vigilancia cae sobre el 2026-11-20~~ (superado el 2026-11-16: la web app vence el 2026-12-13) | ~~Con `R` el 2026-11-12, el día 7 es el 11-19: queda un día de margen. Si algo lo atrasa un día, `R` el 11-13 deja la lectura final el 11-20 (el mismo día del vencimiento); más tarde pasa de esa fecha. Renovar la web app el 2026-11-10~~ |
+| La recarga del 2026-11-17 y sus 502 caen dentro del informe C2 de la 00-06 (28 días), que se hace el 2026-11-20, a mitad de la vigilancia | Anotar `R` (hora oficial, `Starting uWSGI`) y separar esa recarga en los conteos de C2: excluirla o marcarla aparte, con sus unos 10 s de 502 (AUD-04-002). Lo hace el desarrollador al medir C2 |
+| La medición de la 00-07 se vuelve a atrasar y arrastra el despliegue | Es precondición: sin su resultado anotado, no se despliega el 2026-11-17. Se reprograma por escrito; la web app vence el 2026-12-13, así que hay margen |
+| Producción no está en `v0.3-doble-envio` (no verificado desde aquí) | El desarrollador lo confirma antes (`git describe --tags --always` y `Starting uWSGI`); B1 de la evidencia exige `v0.3-doble-envio` y `5dc82a8` y manda detenerse si no coincide |
+| El cliente ya recibió un aviso para el jueves 2026-11-12 (no consta) | Si lo recibió, decirle que la actualización cambió al martes 2026-11-17; el texto del aviso final no cambia |
 | Retroceder deja sin token ni bloqueo de botón en las pantallas nuevas | Regla de la decisión 6: retroceder solo ante 5xx repetido o datos incorrectos |
 | La limpieza de la réplica borra el lugar donde reproducir errores | Decisión 7-A: después de la vigilancia |
 | **Con lecturas solo los días 0 y 7, un problema de los días 1 a 6 solo se vería si el cliente lo reporta**, y la lectura del día 0 ocurre de noche, antes del primer uso real | Riesgo aceptado por el desarrollador (decisión 5, 2026-11-06). Sugerencia, sin decidir: una lectura extra a demanda (la primera mañana tras `R` o ante un reporte de «no se guardó»), con los comandos de C5 y C6 de la evidencia. La regla de retroceso de «2 o más en 24 h» se evalúa al leer: un problema del día 3 se resolvería el día 7 o cuando el cliente lo reporte |
@@ -277,10 +322,11 @@ Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywher
 7. **`R15`.** [iteracion-03-04](iteracion-03-04-contrato-de-error-hacia-el-usuario.md) dice que la corrigen «la 04-01, 04-06, 06-01 y 07-02»; `pruebas.md`, sección 7.1, dice 06-05. **Resuelto el 2026-11-06:** no hay contradicción, es la misma iteración con dos numeraciones: la tabla de equivalencias de RDA-014 (`decisiones.md`) hace la antigua 06-05 la **07-02**, y el registro (sección 3) lo repite. `pruebas.md` y el comentario de `test_regresiones.py` conservan «06-05» (el primero con «numeración anterior a RDA-014») por la regla de [bitacora-02-cierre-epica](../../99_bitacora/epica-02-red-seguridad/bitacora-02-cierre-epica.md): lo escrito antes de RDA-014 no se reescribe. Esta iteración usa «07-02 (antes 06-05)». El comentario del código no se tocó.
 8. **Épica 03 sigue «Pendiente».** Cuatro de sus cinco iteraciones están Terminadas y el estado de la épica no cambia hasta cerrar la 03-05 (precedente de las notas de `definicion-epica-03.md`).
 9. **El aviso de la decisión 4 es texto nuevo** para el usuario: no está entre los «Textos aprobados» de la 03-04 y necesita aprobación. **Resuelto el 2026-11-06 (ronda final):** el desarrollador aprobó el texto con una frase agregada sobre la imagen de referencia.
+10. **El aviso dice «Hoy a las HH:MM» y la fecha cambió.** El texto aprobado no menciona ningún día: vale con la nueva fecha **si se envía el martes 2026-11-17 antes de la actualización**, porque «hoy» es el día del despliegue. Si se enviara antes, «Hoy» sería falso; habría que escribir el día, y eso es un cambio de una palabra sobre un texto aprobado que confirma el desarrollador. **Anotado el 2026-11-16, sin cambiar el texto.**
 
 ## No pude ver ni verificar
 
-- **Producción:** qué etiqueta corre hoy, el contenido de `server.log` y `access.log`, la hora de uso del cliente, si la renovación del 2026-11-10 se hizo y cuánto extiende. Todo lo anterior viene de documentos.
+- **Producción:** qué etiqueta corre hoy, el contenido de `server.log` y `access.log`, la hora de uso del cliente, ~~si la renovación del 2026-11-10 se hizo y cuánto extiende~~ (2026-11-16: el desarrollador dice que la web app vence el 2026-12-13; no lo vi en el panel ni sé cuándo se renovó). Todo lo anterior viene de documentos.
 - **Etiquetas:** `git tag` y `git tag -n` están fuera de lo que puedo ejecutar (`AGENTS.md`, sección 6). Las etiquetas existentes salen de `despliegue.md` y las evidencias: `v0.0-inicial`, `v0.1-higiene`, `v0.2-correcciones`, `v1.1-observabilidad`, `v1.2-capturas` y `v0.3-doble-envio`. No comprobé que `v3.1-integridad` esté libre.
 - **Hora de poco uso:** sigue sin medirse; la ventana de 20:00 a 23:00 es decisión del desarrollador (2026-11-06) y ya no es `PENDIENTE_CLIENTE`. El canal para avisar tampoco consta.
 - **Caché de `index.js`** en el navegador del cliente (inferido por la ausencia de nombre con hash).
@@ -288,6 +334,7 @@ Las hace el desarrollador salvo donde se dice. Ningún agente toca PythonAnywher
 - **Costo de las +3 consultas en producción:** medido solo en la réplica.
 - **`response-time=` en `access.log`:** consta solo como nombre de campo en `definicion-epica-13.md` y por las mediciones de AUD-04-005 (0,03 a 1,13 s; 5,6 a 9 s tras una recarga); no hay formato ni línea de ejemplo documentados. Si falta, el criterio de tiempos queda en los 5xx.
 - **Pruebas, `check` y `makemigrations`:** no se ejecutaron en esta redacción; las cifras (267 pruebas, `expected failures=9`) salen de la bitácora del 2026-11-06.
+- **Al reprogramar (2026-11-16):** no vi producción: que siga en `v0.3-doble-envio`, que la medición de la 00-07 no se hizo y que la web app vence el 2026-12-13 son datos dichos por el desarrollador. Lo único verificado es GitHub (sin etiqueta `v3.1-integridad` ni commits posteriores a `a1653dd`, dicho como verificado por el desarrollador) y el repositorio local (`HEAD` en `a1653dd`; sin diferencias de código desde `7e14398`). No sé si el cliente recibió un aviso para el 11-12, si se hizo el respaldo semanal del 11-10 u 11, ni cuántos días conserva la rotación de `access.log` (la parte D de la 00-07 lo muestra con D0). El guion ajustado de la 00-07 se probó solo con registros sintéticos.
 
 ## Decisiones del desarrollador
 
@@ -295,7 +342,7 @@ Resueltas el 2026-11-06 (dichas por el desarrollador; no verificadas por el agen
 
 1. **Qué viaja: A.** 03-01 a 03-04 en una sola etiqueta, sin migraciones. Se anota el aviso de RDA-007 (una fase cerrada con cuatro iteraciones y dos propósitos; ver «Avisos», 3).
 2. **Respaldo: A.** Nuevo el día del despliegue, verificado antes de recargar.
-3. **Ventana y etiqueta: A, con otra hora.** Etiqueta `v3.1-integridad`, entre las 20:00 y las 23:00 (hora de Chile; el desarrollador dice que es el horario de menor uso), un día entre el 2026-11-11 (después de la medición de la 00-07) y el 2026-11-13. Reemplaza «de madrugada» de la opción A. Se quita el `PENDIENTE_CLIENTE` de las horas de uso. El día se fijó en la ronda final: jueves 2026-11-12.
+3. **Ventana y etiqueta: A, con otra hora.** Etiqueta `v3.1-integridad`, entre las 20:00 y las 23:00 (hora de Chile; el desarrollador dice que es el horario de menor uso), un día entre el 2026-11-11 (después de la medición de la 00-07) y el 2026-11-13. Reemplaza «de madrugada» de la opción A. Se quita el `PENDIENTE_CLIENTE` de las horas de uso. El día se fijó en la ronda final: ~~jueves 2026-11-12~~. **Nota del 2026-11-16 (decisión del desarrollador, dicha por él): nueva ventana el martes 2026-11-17, de 20:00 a 23:00 (hora de Chile), en lugar del jueves 2026-11-12; día 7: martes 2026-11-24 por la noche. El límite «hasta el 2026-11-13» ya no rige (venía del vencimiento del 2026-11-20; la web app vence el 2026-12-13). Las demás decisiones no cambian.**
 4. **Aviso: A.** Aviso breve antes y Ctrl+F5 después, con el texto de arriba. **Aprobado en la ronda final (2026-11-06)**, con una frase agregada por el desarrollador. Dato de la lectura del código: solo los formularios que usan `data-bloquear-envio` dependen del `index.js` nuevo; «Nuevo pedido» conserva su propio script de la 00-07.
 5. **Vigilancia: lecturas solo los días 0 y 7** (no la recomendada, que eran el día 0, el 1, el 3 y el 7). Siguen la verificación deliberada de la línea `INFO` el día 0 (5b-A) y la medición de duplicados con los `POST` 302 contra los pedidos nuevos de la base. **Riesgo anotado:** un problema de los días 1 a 6 solo se vería si el cliente lo reporta. **Sugerencia, sin decidir:** una lectura extra a demanda. El umbral de los tiempos de respuesta se fijó en la ronda final.
 6. **Retroceso: A, con esta regla.** Datos incorrectos o perdidos: sí (detener y evaluar el caso 3). 5xx repetido o formulario que no guarda: sí (caso 1). Un `ERROR` aislado de ítem fallido: no. Las líneas `INFO`: sin acción. Los números de «repetido» y «aislado» y el tratamiento de varios `ERROR` de ítem fallido se fijaron en la ronda final.
@@ -305,7 +352,7 @@ Resueltas el 2026-11-06 (dichas por el desarrollador; no verificadas por el agen
 **Ronda final (2026-11-06, dicha por el desarrollador):**
 
 - **R1 · Aviso aprobado:** el texto propuesto más la frase «Si habías elegido una imagen de referencia, vuelve a elegirla: el navegador no la conserva.» (el texto decía que no se pierde nada, y la imagen sí se pierde). Se quita el `PENDIENTE_DESARROLLADOR` de la aprobación literal.
-- **R2 · Día del despliegue:** jueves 2026-11-12, de 20:00 a 23:00 (hora de Chile). Día 7: 2026-11-19 por la noche.
+- **R2 · Día del despliegue:** ~~jueves 2026-11-12, de 20:00 a 23:00 (hora de Chile). Día 7: 2026-11-19 por la noche.~~ **Reprogramado el 2026-11-16:** martes 2026-11-17, de 20:00 a 23:00 (hora de Chile). Día 7: martes 2026-11-24 por la noche.
 - **R3 · Tiempos:** ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga. Si `access.log` no trae `response-time=`, se anota y el criterio queda en los 5xx.
 - **R4 · Retroceso:** 5xx repetido = 2 o más en 24 h en la misma ruta, sin contar la recarga de unos 10 s ni las líneas ya clasificadas (`OSError`); un 5xx suelto es aislado: se investiga y no se retrocede. `ERROR` de ítem fallido: 3 o más en 24 h sin causa explicada, se reproduce en la réplica antes de decidir; los de causa explicada no cuentan.
 
