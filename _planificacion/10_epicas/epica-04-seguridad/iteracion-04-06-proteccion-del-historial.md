@@ -1,7 +1,7 @@
 # Iteración 04-06 · Protección del historial ante borrados en cascada
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones abiertas). Redactada el 2026-11-17 ([bitacora-04-06-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-06-redaccion.md)). Cuatro decisiones `PENDIENTE_DESARROLLADOR` (sección «Decisiones»), cada una con opción recomendada.
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-06-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-06-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-06-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-06-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 02); `definicion-epica-04.md`, alcance 6.
 - **Depende de:** 04-01 (puede tocar `eliminar_cliente` al exigir POST; la 04-06 parte de lo que deje). Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-02 → 04-03 → 04-04 → 04-05 → **04-06**.
 - **RDA relacionadas:** RDA-007; RDA-017 (borrado físico con doble confirmación, **para usuarios**, Épica 09; ver «Contradicciones»).
@@ -74,28 +74,19 @@ No hay limpieza de datos ni comando que borre clientes con historial: nada se ro
 
 1. `Pedido.cliente` y `Cotizacion.cliente`: `CASCADE` → `PROTECT`.
 2. Migración `0008` (Clase 1 esperada), con su `sqlmigrate` copiado en la bitácora.
-3. `eliminar_cliente`: captura `ProtectedError` **fuera** de cualquier bloque atómico (regla 8.3), vuelve a pintar la confirmación con el mensaje de D1, sin registrar `cliente_eliminado` (D3).
-4. `cliente_confirm_delete.html`: bloque de error como el de productos (según `DESIGN.md`) y advertencia corregida según D2.
-5. R14 pasa de fallo esperado a verde (se quita `@expectedFailure`).
-6. **Fuera:** pagos en cascada desde el pedido (pregunta `PENDIENTE_CLIENTE`); borrado lógico o archivado de clientes; `require_POST` de `eliminar_cliente` (04-01); doble confirmación (RDA-017 es de usuarios).
+3. `eliminar_cliente`: captura `ProtectedError` **fuera** de cualquier bloque atómico (regla 8.3), vuelve a pintar la confirmación con el mensaje de D1 y **no registra ningún evento** por el rechazo (D3).
+4. `cliente_confirm_delete.html`: bloque de error como el de productos (según `DESIGN.md`) y advertencia «Solo se puede eliminar un cliente sin pedidos ni cotizaciones» (D2), **sin conteos y sin ocultar el botón**.
+5. R14 pasa de fallo esperado a verde (se quita `@expectedFailure`) y se suman las tres pruebas de D4.
+6. **Fuera:** pagos en cascada desde el pedido (pregunta `PENDIENTE_CLIENTE`, se conserva en el registro, sección 2); borrado lógico o archivado de clientes; `require_POST` de `eliminar_cliente` (04-01); doble confirmación (RDA-017 es de usuarios).
 
-## Decisiones (`PENDIENTE_DESARROLLADOR`)
+## Decisiones (resueltas por el desarrollador, 2026-11-17)
 
-**D1 · Texto del mensaje cuando no se puede borrar.**
-- **A (recomendada):** «No se puede eliminar este cliente porque tiene pedidos o cotizaciones registrados. Para conservar su historial, no está permitido borrarlo.» Mismo tono que el de productos, sin detalles técnicos.
-- **B:** el mismo texto con los conteos («tiene 3 pedidos y 1 cotización»): más útil, una consulta más por intento.
-
-**D2 · Qué muestra la confirmación (GET) antes de intentar.**
-- **A (recomendada):** cambiar la advertencia actual, que ya no es cierta («podrías perder el historial»), por «Solo se puede eliminar un cliente sin pedidos ni cotizaciones», sin consultar conteos ni ocultar el botón. Cambio mínimo y coherente con productos.
-- **B:** consultar conteos en el GET y ocultar el botón si hay historial: mejor experiencia, más lógica en la vista y una plantilla distinta de la de productos.
-
-**D3 · ¿Se registra el intento rechazado?**
-- **A (recomendada):** no. No hubo cambio de datos; el evento `cliente_eliminado` solo se registra si se borra (igual que productos).
-- **B:** evento nuevo `cliente_eliminacion_rechazada`: más rastro, un tipo de evento más que mantener.
-
-**D4 · Pruebas de cotizaciones y de la vista.**
-- **A (recomendada):** además de R14, pruebas nuevas en el archivo de pruebas de clientes (o `test_regresiones.py` si no existe uno por dominio): cliente solo con cotización, cliente con pedido por la vista (200, mensaje, sin evento, todo sigue), cliente sin historial por la vista (se borra, con evento).
-- **B:** solo quitar `@expectedFailure` de R14.
+| # | Decisión | Resuelta como |
+| :- | :------- | :------------ |
+| D1 | Mensaje de rechazo | «No se puede eliminar este cliente porque tiene pedidos o cotizaciones registrados. Para conservar su historial, no está permitido borrarlo.» |
+| D2 | Advertencia de la confirmación (GET) | «Solo se puede eliminar un cliente sin pedidos ni cotizaciones», **sin contar pedidos y sin ocultar el botón**. |
+| D3 | Evento por el rechazo | **No** se registra. `cliente_eliminado` solo cuando se borra. |
+| D4 | Pruebas además de R14 | Cliente que solo tiene cotización; la vista **con** historial y **sin** historial. |
 
 ## Pasos
 
@@ -123,10 +114,10 @@ No hay limpieza de datos ni comando que borre clientes con historial: nada se ro
 | Punto | Prueba |
 | :---- | :----- |
 | R14 | `test_r14_eliminar_cliente_con_pedidos_se_rechaza` sin `@expectedFailure`: `ProtectedError` y el pedido sigue. |
-| Con `PROTECT`, solo cotización | `cliente.delete()` lanza `ProtectedError`; la cotización y sus ítems siguen. |
-| Vista, con historial | POST a `/clientes/eliminar/<pk>/` con pedido y pago: 200, mensaje de D1, sin evento `cliente_eliminado`, cliente, pedido, ítems y pago siguen. |
-| Vista, sin historial | POST: redirige a la lista, cliente borrado, un evento `cliente_eliminado` (`test_eventos_negocio.py:119` ya lo cubre). |
-| Confirmación (GET) | 200 con el texto de D2. |
+| Con `PROTECT`, solo cotización (D4) | `cliente.delete()` lanza `ProtectedError`; la cotización y sus ítems siguen. |
+| Vista, con historial (D4) | POST a `/clientes/eliminar/<pk>/` con pedido y pago: 200, mensaje exacto de D1, **ningún evento nuevo** (D3), cliente, pedido, ítems y pago siguen. |
+| Vista, sin historial (D4) | POST: redirige a la lista, cliente borrado, un evento `cliente_eliminado` (`test_eventos_negocio.py:119` ya lo cubre). |
+| Confirmación (GET) | 200 con el texto de D2 y con el botón de eliminar presente. |
 | Existentes | `test_acceso`, `test_bloqueo_envio`, `test_eventos_negocio` y `test_cotizaciones` en verde. |
 
 Fallos esperados: uno menos que los que deje la 04-05 (R14 sale de la lista; tras la 04-01 quedarían R8, R9 y R15).
@@ -156,5 +147,7 @@ Fallos esperados: uno menos que los que deje la 04-05 (R14 sale de la lista; tra
 - **Protege el historial pero deja clientes sin borrar:** un cliente con un solo pedido antiguo ya no se puede eliminar, y no hay forma de archivarlo. Es el efecto buscado; si el negocio necesita «ocultar» clientes, es funcionalidad nueva (propuesta, no esta iteración).
 - **`sqlmigrate` con `ALTER`:** si Django 6.0 llevara algo de `on_delete` a la base, la iteración se detiene (no se adapta sobre la marcha).
 - **Pagos en cascada desde el pedido:** el historial financiero sigue expuesto por `eliminar_pedido`; queda la pregunta al cliente.
+- **Botón visible aunque no se pueda borrar (D2):** el usuario puede intentarlo y recibir el rechazo; es lo decidido, coherente con productos.
+- **Sin rastro del intento rechazado (D3):** si alguien insiste en borrar clientes con historial, no queda en los eventos; aceptado (no cambian datos).
 - **Admin de Django:** cambia su comportamiento de borrado (mejor), sin pantalla propia; se revisa en la réplica.
 - **Un despliegue, un propósito (RDA-007):** va solo, después de la 04-05.

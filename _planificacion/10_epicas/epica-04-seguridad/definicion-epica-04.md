@@ -4,7 +4,7 @@
 - **Fase del plan:** 4 (`plan-de-trabajo.md`, «FASE 4»), ampliada el 2026-10-27 (anexo del plan, RDA-014)
 - **Objetivo:** cerrar las vulnerabilidades identificadas, defender las entradas de la aplicación (HTML enriquecido, acceso y archivos) y aplicar el estándar de configuración de producción de Django.
 - **Precondición:** Épica 02 completa. **Orden de ejecución:** después de la Épica 03 (decisión del desarrollador del 2026-10-27), incluida la 04-06.
-- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 con D1 a D6 resueltas; 04-05 con D1 a D4 resueltas; 04-06 redactada; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
+- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 con D1 a D6 resueltas; 04-05 con D1 a D4 resueltas; 04-06 con D1 a D4 resueltas; 04-07 redactada; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
 
 ## Alcance
 
@@ -29,8 +29,8 @@
 | 04-03 | [Credenciales y secretos](iteracion-04-03-credenciales-y-secretos.md) (Pendiente, redactada, decisiones resueltas D1 a D5, 2026-11-17) | 4.3 |
 | 04-04 | [Endurecimiento de la restauración](iteracion-04-04-endurecimiento-de-la-restauracion.md) (Pendiente, redactada, decisiones resueltas D1 a D6, 2026-11-17) | 4.4 |
 | 04-05 | [Correcciones de configuración](iteracion-04-05-correcciones-de-configuracion.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | 4.5 |
-| 04-06 | [Protección del historial ante borrados en cascada](iteracion-04-06-proteccion-del-historial.md) (Pendiente, redactada, decisiones abiertas D1 a D4, 2026-11-17) | Nueva (Auditoría 02) |
-| 04-07 | Sanitización del HTML enriquecido y revisión de inyección SQL | Nueva (Auditoría 03) |
+| 04-06 | [Protección del historial ante borrados en cascada](iteracion-04-06-proteccion-del-historial.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | Nueva (Auditoría 02) |
+| 04-07 | [Sanitización del HTML enriquecido y revisión de inyección SQL](iteracion-04-07-sanitizacion-html-e-inyeccion-sql.md) (Pendiente, redactada, decisiones abiertas D1 a D4, 2026-11-17) | Nueva (Auditoría 03) |
 | 04-08 | Protección del acceso y límites de entrada | Nueva (Auditoría 03) |
 | 04-09 | Política de seguridad de contenido en observación | Nueva (reorganización 2026-10-27) |
 
@@ -51,7 +51,7 @@
 
 - 04-06 cambia el comportamiento de borrado gestionado por Django. Se espera Clase 1; la iteración se detiene si `sqlmigrate` muestra cualquier `ALTER`. **Decisión del desarrollador del 2026-10-27:** se ejecuta en el orden de la épica, después de la Épica 03 (deja sin efecto la sugerencia anterior de adelantarla).
 - Cada iteración es un despliegue con su propio propósito; 04-02 se despliega con una ventana de observación porque HSTS no se puede deshacer en los navegadores que ya lo recibieron.
-- 04-07 · Cómo se sanitiza: al guardar, al mostrar o en ambos momentos, y con qué herramienta (`nh3` es la opción recomendada: dependencia nueva, requiere consulta y RDA). `PENDIENTE_DESARROLLADOR`. El HTML ya guardado en producción se revisa en la réplica antes de decidir si hace falta limpiarlo (operación sobre datos, con respaldo previo).
+- 04-07 · Cómo se sanitiza: al guardar, al mostrar o en ambos momentos, y con qué herramienta (`nh3` es la opción recomendada: dependencia nueva, requiere consulta y RDA). `PENDIENTE_DESARROLLADOR`, detallada en la 04-07 como D1 a D4 (2026-11-17); si se elige `nh3`, la RDA es la RDA-020. El HTML ya guardado en producción se revisa en la réplica antes de decidir si hace falta limpiarlo (operación sobre datos, con respaldo previo).
 - 04-08 · Mecanismo contra fuerza bruta: contador propio en la caché local (válida porque hay un solo proceso) o una librería como `django-axes` (dependencia nueva y tabla nueva de Clase 2). `PENDIENTE_DESARROLLADOR`.
 - 04-09 · Dónde se leen los reportes de la política en modo observación (la consola del navegador en la réplica es suficiente; no se agrega un punto de recepción de reportes). Se confirma en la iteración.
 
@@ -90,3 +90,5 @@
 - **2026-11-17 · 04-05 redactada** con cuatro decisiones abiertas. `views.py:19` (`from PedidosApp import settings`) queda en la 04-05 como AUD-01-009; AUD-05-008 conserva para la Épica 08 solo los estilos. La carpeta `templates/` existe vacía en la copia de trabajo, sin versionar. Orden de despliegue: 04-01 → 04-02 → 04-03 → 04-04 → 04-05. [bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md). Siguiente por redactar: 04-06.
 - **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-05, D1 a D4 resueltas:** `TEMPLATES['DIRS']` vacío hasta la 08-02; las seis pruebas que parchan `views.settings.BASE_DIR` pasan a `override_settings`; `conn_health_checks=True` con `conn_max_age=60`; **el modo estricto de `sql_mode` (AUD-02-020) sale de la 04-05 y pasa a la Épica 06 como medición**. Editar `settings.py` sigue exigiendo consulta previa. [bitacora-04-05-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-05-cierre.md).
 - **2026-11-17 · 04-06 redactada** con cuatro decisiones abiertas. Migración `0008` (la última es `0007_registroevento`), Clase 1 esperada. Cascadas que siguen: pedido → ítems y cotización → ítems (intencionales); pedido → pagos (no consta que sea intencional: pregunta `PENDIENTE_CLIENTE`, fuera de alcance). RDA-017 trata el borrado de usuarios, no de clientes. Orden de despliegue: 04-01 → … → 04-05 → 04-06. [bitacora-04-06-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-06-redaccion.md). Siguiente por redactar: 04-07.
+- **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-06, D1 a D4 resueltas:** mensaje de rechazo propuesto; advertencia «Solo se puede eliminar un cliente sin pedidos ni cotizaciones», sin conteos y sin ocultar el botón; sin evento por el rechazo; pruebas de cotización y de la vista con y sin historial además de R14. La pregunta sobre pagos borrados en cascada sigue `PENDIENTE_CLIENTE`. [bitacora-04-06-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-06-cierre.md).
+- **2026-11-17 · 04-07 redactada** con cuatro decisiones abiertas. Búsqueda: tres `|safe` con HTML del usuario (`pedido_detail.html:115`, `cotizacion_detail.html:150`, `producto_detail.html:53`), ningún `mark_safe`; única consulta directa parametrizada (`utils.py:161-162`). La revisión del HTML guardado en la réplica vale hasta su último refresco. [bitacora-04-07-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-07-redaccion.md). Siguiente por redactar: 04-08.
