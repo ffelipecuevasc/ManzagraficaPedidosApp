@@ -6,7 +6,7 @@
 
 ## Resumen
 
-Se redactó [iteracion-04-03](../../10_epicas/epica-04-seguridad/iteracion-04-03-credenciales-y-secretos.md): contraseña fuera de los argumentos de `mysqldump` y `mysql`, clave secreta obligatoria coordinada con la variable y la regla de arranque de la 04-02, revisión del historial sin reescribirlo y registro de quién tiene acceso al panel. Orden de despliegue: 04-01 → 04-02 → 04-03.
+Se redactó [iteracion-04-03](../../10_epicas/epica-04-seguridad/iteracion-04-03-credenciales-y-secretos.md): contraseña fuera de los argumentos de `mysqldump` y `mysql`, clave secreta obligatoria coordinada con `SEGURIDAD_PRODUCCION` y la regla de arranque de la 04-02, revisión del historial sin reescribirlo y registro de quién tiene acceso al panel. Orden de despliegue: 04-01 → 04-02 → 04-03.
 
 ## Verificación (solo lectura, sin mostrar valores)
 

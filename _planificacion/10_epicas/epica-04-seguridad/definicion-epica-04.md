@@ -4,7 +4,7 @@
 - **Fase del plan:** 4 (`plan-de-trabajo.md`, «FASE 4»), ampliada el 2026-10-27 (anexo del plan, RDA-014)
 - **Objetivo:** cerrar las vulnerabilidades identificadas, defender las entradas de la aplicación (HTML enriquecido, acceso y archivos) y aplicar el estándar de configuración de producción de Django.
 - **Precondición:** Épica 02 completa. **Orden de ejecución:** después de la Épica 03 (decisión del desarrollador del 2026-10-27), incluida la 04-06.
-- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 redactada; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
+- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 redactada; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
 
 ## Alcance
 
@@ -26,8 +26,8 @@
 | :-------- | :----- | :------ |
 | 04-01 | [Mutaciones solo por POST](iteracion-04-01-mutaciones-solo-por-post.md) (Pendiente, redactada, decisiones resueltas, 2026-11-17; P1 y P2 resueltos) | 4.1 |
 | 04-02 | [Configuración de producción](iteracion-04-02-configuracion-de-produccion.md) (Pendiente, redactada, decisiones resueltas D1 a D6, 2026-11-17) | 4.2 |
-| 04-03 | [Credenciales y secretos](iteracion-04-03-credenciales-y-secretos.md) (Pendiente, redactada, decisiones abiertas D1 a D5, 2026-11-17) | 4.3 |
-| 04-04 | Endurecimiento de la restauración | 4.4 |
+| 04-03 | [Credenciales y secretos](iteracion-04-03-credenciales-y-secretos.md) (Pendiente, redactada, decisiones resueltas D1 a D5, 2026-11-17) | 4.3 |
+| 04-04 | [Endurecimiento de la restauración](iteracion-04-04-endurecimiento-de-la-restauracion.md) (Pendiente, redactada, decisiones abiertas D1 a D6, 2026-11-17) | 4.4 |
 | 04-05 | Correcciones de configuración | 4.5 |
 | 04-06 | Protección del historial ante borrados en cascada | Nueva (Auditoría 02) |
 | 04-07 | Sanitización del HTML enriquecido y revisión de inyección SQL | Nueva (Auditoría 03) |
@@ -84,3 +84,5 @@
 - **2026-11-17 · 04-02 redactada** con seis decisiones abiertas (HSTS escalonado, redirección a HTTPS, activación por entorno, orígenes CSRF, arranque inseguro, ventana). Advertencias de producción W004, W008, W012 y W016: dichas por el desarrollador, no verificadas por el agente. No se despliega antes de cerrar la vigilancia de la 03-05 ni junto con la 04-01. [bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md). Siguiente por redactar: 04-03.
 - **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-02, D1 a D6 resueltas:** HSTS 3600 → 604800 sin `preload`; Django también redirige a HTTPS (ensayo en la réplica; el bucle solo se verifica en producción); variable de entorno explícita para las opciones seguras; `CSRF_TRUSTED_ORIGINS` del entorno con valor local; no arranca con el dominio de producción y la variable apagada; 3 días de observación. La 04-01 lleva la etiqueta `v4.1-mutaciones-post`; su fecha se fija al cerrar la vigilancia de la 03-05. Orden de despliegue: 04-01 → 04-02 → 04-03, uno por propósito (RDA-007). [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md).
 - **2026-11-17 · 04-03 redactada** con cinco decisiones abiertas. La lectura del historial (sin mostrar valores) encontró, además de la clave de `713260c`, una contraseña literal de la base local en `settings.py` entre `08a1a44` y `da0cbcd`; no se sabe si coincide con la de producción (D4 de la 04-03). [bitacora-04-03-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-03-redaccion.md). Siguiente por redactar: 04-04.
+- **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-03, D1 a D5 resueltas:** archivo temporal de opciones para `mysqldump` y `mysql`, borrado en `finally`; clave secreta obligatoria y, con `SEGURIDAD_PRODUCCION` (nombre fijado para la variable de la 04-02), sin prefijo `django-insecure-` ni claves cortas; sin rotación; riesgo aceptado para la contraseña local del historial (según el desarrollador no coincide con producción; no verificado por el agente); acceso al panel solo registrado por rol, lo demás a la 13-02. [bitacora-04-03-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-03-cierre.md).
+- **2026-11-17 · 04-04 redactada** con seis decisiones abiertas. Aclaración: la nota del 2026-10-26 asocia el `.sql` vacío a AUD-02-019, pero ese hallazgo es la rotación por cantidad (06-03); la 04-04 corrige el `.sql` vacío como hallazgo hermano y no cambia la rotación. Orden de despliegue: 04-01 → 04-02 → 04-03 → 04-04. [bitacora-04-04-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-04-redaccion.md). Siguiente por redactar: 04-05.

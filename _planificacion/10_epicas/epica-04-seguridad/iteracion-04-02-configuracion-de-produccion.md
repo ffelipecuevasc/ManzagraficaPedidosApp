@@ -6,7 +6,7 @@
 - **Depende de:** Épica 02 (Terminada). Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia de la 03-05 (desde el lunes 2026-11-23 a las 23:48:12)** ni en el mismo despliegue que la 04-01 (RDA-007). Orden: 04-01, 04-02, 04-03.
 - **RDA relacionadas:** RDA-004 (PythonAnywhere, plan gratuito), RDA-007 (un despliegue, un propósito; la etiqueta marca lo que está en producción).
 - **Hallazgos que cierra:** AUD-01-012 (configuración de producción sin endurecer), al verificarse en producción.
-- **Hallazgos relacionados:** AUD-02-022 (`ALLOWED_HOSTS`, **ya resuelto en la 00-04**: no se repite), AUD-02-010 y la advertencia `W009` (clave secreta: 04-03, que usa la variable de D3).
+- **Hallazgos relacionados:** AUD-02-022 (`ALLOWED_HOSTS`, **ya resuelto en la 00-04**: no se repite), AUD-02-010 y la advertencia `W009` (clave secreta: 04-03, que usa `SEGURIDAD_PRODUCCION`).
 - **Cambio de esquema:** ninguno.
 - **Respaldo previo al despliegue:** no lo exige por sí misma (sin migraciones ni datos). Se sigue el protocolo normal.
 - **Archivos que tocará la ejecución:** `PedidosApp/settings.py` y `.env.example` (configuración: **requiere consulta previa**, `AGENTS.md` sección 6), `docs/operacion/despliegue.md` y `retroceso.md` (advertencias esperadas y retroceso de la variable), y pruebas. El `.env` del servidor lo edita solo el desarrollador.
@@ -52,10 +52,10 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 | # | Decisión | Qué se hace |
 | :- | :------- | :---------- |
 | D1 | HSTS escalonado, sin `preload` | Primer despliegue con `SECURE_HSTS_SECONDS = 3600`; tras la observación (D6), un segundo despliegue de esta iteración sube a `604800`. Sin `SECURE_HSTS_PRELOAD` (el dominio es un subdominio de `pythonanywhere.com`, no propio) y sin `SECURE_HSTS_INCLUDE_SUBDOMAINS` (inferido: no hay subdominios propios; se anota en la ejecución). El valor alto (`31536000`) no es parte de esta iteración. |
-| D2 | Django **también** redirige a HTTPS | `SECURE_SSL_REDIRECT = True` cuando la variable de D3 está activa, además de «Force HTTPS» de PythonAnywhere. Se prueba antes en la réplica (ver «Pruebas») por el riesgo de bucle. |
-| D3 | Variable de entorno explícita | Las opciones seguras (cookies, redirección, HSTS) se activan con una variable propia, no derivada de `DEBUG`. Nombre propuesto: `SEGURIDAD_PRODUCCION` (`True`/`False`, falso si falta); el nombre final se confirma en la consulta previa. Va en `.env.example` sin valor real y en el `.env` del servidor (lo edita el desarrollador). |
+| D2 | Django **también** redirige a HTTPS | `SECURE_SSL_REDIRECT = True` cuando `SEGURIDAD_PRODUCCION` está activa, además de «Force HTTPS» de PythonAnywhere. Se prueba antes en la réplica (ver «Pruebas») por el riesgo de bucle. |
+| D3 | Variable de entorno explícita | Las opciones seguras (cookies, redirección, HSTS) se activan con una variable propia, no derivada de `DEBUG`. Nombre fijado por el desarrollador el 2026-11-17: **`SEGURIDAD_PRODUCCION`** (`True`/`False`, falso si falta). Va en `.env.example` sin valor real y en el `.env` del servidor (lo edita el desarrollador). |
 | D4 | `CSRF_TRUSTED_ORIGINS` desde el entorno | Lista separada por comas, con valor local por defecto `http://localhost:8000,http://127.0.0.1:8000`; en el servidor, `https://manzagrafica.pythonanywhere.com`. |
-| D5 | Arranque que falla | `ImproperlyConfigured` si `ALLOWED_HOSTS` contiene `manzagrafica.pythonanywhere.com` y la variable de D3 no está activa. Compensa el riesgo de olvidar la variable (D3). |
+| D5 | Arranque que falla | `ImproperlyConfigured` si `ALLOWED_HOSTS` contiene `manzagrafica.pythonanywhere.com` y `SEGURIDAD_PRODUCCION` no está activa. Compensa el riesgo de olvidar la variable (D3). |
 | D6 | Observación de 3 días | Tres días sin 403 de CSRF, sin bucles ni reportes del cliente antes de subir HSTS a `604800`. Sustituye los 7 días propuestos en la redacción. |
 
 **Riesgo de D3 (olvidar la variable):** si el `.env` del servidor no la trae, Django arrancaría sin cookies seguras ni HSTS ni redirección, en silencio. D5 lo convierte en un fallo ruidoso: la web app no arranca y el despliegue se nota en la verificación. Riesgo residual: un error al escribir el dominio en `ALLOWED_HOSTS` desactivaría D5; la verificación de producción (pasos 1 y 3) lo detecta. El orden de edición en el servidor importa: **primero `.env`, luego código, luego Reload** (si se recarga código nuevo sin la variable, D5 tumba el sitio hasta corregir `.env`).
@@ -73,11 +73,11 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 
 ## Pasos
 
-0. Consulta previa al desarrollador para editar `settings.py` y `.env.example` (`AGENTS.md`, sección 6) y confirmar el nombre de la variable.
+0. Consulta previa al desarrollador para editar `settings.py` y `.env.example` (`AGENTS.md`, sección 6).
 1. Línea base local: `check --deploy` con `DEBUG=False` (esperado: W004, W008, W009, W012, W016) y `test pedidos` (se anota el número tras la 04-01).
 2. Pruebas primero (sección siguiente).
 3. Bloque de seguridad en `settings.py` según D1 a D5, con comentarios en español.
-4. `.env.example` con la variable de D3 y `CSRF_TRUSTED_ORIGINS`, sin valores reales.
+4. `.env.example` con `SEGURIDAD_PRODUCCION` y `CSRF_TRUSTED_ORIGINS`, sin valores reales.
 5. `check --deploy` local con `DEBUG=False` y la variable activa: esperado solo W009. Con la variable apagada, `runserver` sigue entrando por `http://127.0.0.1:8000` sin redirección.
 6. Ensayo en la réplica de D2 (sección «Pruebas»).
 7. `despliegue.md` y `retroceso.md`.
@@ -102,7 +102,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 
 ## Plan de retroceso
 
-- **Bucle de redirecciones o 403 de CSRF:** `retroceso.md`, caso 1 (sin migraciones): volver a la etiqueta anterior y recargar. **Más rápido:** poner la variable de D3 en `False` en el `.env` del servidor y recargar apaga redirección, cookies seguras y HSTS sin tocar el código; pero D5 impide arrancar así con el dominio de producción, de modo que con la variable apagada **hay que volver también el código**. Se ensaya en la réplica cuál de los dos caminos se documenta.
+- **Bucle de redirecciones o 403 de CSRF:** `retroceso.md`, caso 1 (sin migraciones): volver a la etiqueta anterior y recargar. **Más rápido:** poner `SEGURIDAD_PRODUCCION` en `False` en el `.env` del servidor y recargar apaga redirección, cookies seguras y HSTS sin tocar el código; pero D5 impide arrancar así con el dominio de producción, de modo que con la variable apagada **hay que volver también el código**. Se ensaya en la réplica cuál de los dos caminos se documenta.
 - **Lo que no se revierte:** el HSTS ya recibido, durante su `max-age`. Por eso 3600 s primero: tras el retroceso, los navegadores aceptan HTTP de nuevo en una hora como máximo. Con «Force HTTPS» activo, el sitio funciona igual por HTTPS.
 - **Disparadores:** bucle de redirecciones, 403 de CSRF en formularios, el cliente no puede iniciar sesión, la web app no arranca por D5.
 

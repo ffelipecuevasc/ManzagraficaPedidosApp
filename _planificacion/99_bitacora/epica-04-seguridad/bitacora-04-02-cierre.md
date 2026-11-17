@@ -10,7 +10,7 @@
 | :- | :------------ |
 | D1 | HSTS 3600 s y luego 604800 s tras la observación; sin `preload`. |
 | D2 | Django **también** redirige (`SECURE_SSL_REDIRECT`), además de «Force HTTPS». Se ensaya en la réplica; se suma a riesgos, pruebas y retroceso. Se cambió la recomendación de la redacción (era confiar solo en Force HTTPS). |
-| D3 | Variable de entorno explícita, no derivada de `DEBUG` (nombre propuesto `SEGURIDAD_PRODUCCION`, se confirma en la consulta previa). Riesgo de olvidarla registrado. |
+| D3 | Variable de entorno explícita, no derivada de `DEBUG` (`SEGURIDAD_PRODUCCION`, nombre fijado el 2026-11-17). Riesgo de olvidarla registrado. |
 | D4 | `CSRF_TRUSTED_ORIGINS` del entorno, con valor local por defecto. |
 | D5 | No arranca con el dominio de producción y la variable apagada (compensa D3). |
 | D6 | 3 días de observación antes de subir HSTS (sustituye 7). |
