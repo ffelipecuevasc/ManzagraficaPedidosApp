@@ -1,7 +1,7 @@
 # Iteración 04-05 · Correcciones de configuración
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones abiertas). Redactada el 2026-11-17 ([bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md)). Cuatro decisiones `PENDIENTE_DESARROLLADOR` (sección «Decisiones»), cada una con opción recomendada.
+- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-05-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-05-cierre.md)).
 - **Subfase del plan:** 4.5 «Correcciones de configuración» (`plan-de-trabajo.md`; `definicion-epica-04.md`, alcance 5).
 - **Depende de:** 04-02 (también edita `settings.py`: `SEGURIDAD_PRODUCCION`, HSTS, `CSRF_TRUSTED_ORIGINS`) y 04-04 (también edita `views.py` y `utils.py` en la restauración). Se desarrolla en local en paralelo a la vigilancia de la 03-05. **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-02 → 04-03 → 04-04 → **04-05**.
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito).
@@ -26,7 +26,7 @@ Que la aplicación lea la configuración como manda Django, que sobreviva a una 
 
 - `pedidos/views.py:19`: `from PedidosApp import settings`. Es el **único** archivo de la aplicación que lo hace; `utils.py:5`, `urls.py` del proyecto (`PedidosApp/urls.py:20`) y las pruebas ya usan `django.conf.settings`. `wsgi.py`, `asgi.py` y `scripts/diagnostico/paridad_replica.py` solo nombran el módulo en `DJANGO_SETTINGS_MODULE`, que es lo correcto.
 - `views.py` usa `settings` solo para `settings.BASE_DIR` (`:81`, `:1194`, `:1265`, `:1331`).
-- **Seis pruebas parchan `views.settings.BASE_DIR`** con `mock.patch.object`: `test_acceso.py:73`, `test_capturas_amplias.py:57`, `test_contrato_error.py:54` y `:68`, `test_dinero.py:294`, `test_eventos_negocio.py:154`. Con el módulo importado, el parche solo afecta a `views.py`; con `django.conf.settings`, el mismo parche cambiaría `BASE_DIR` para todo el proceso mientras dura (inferido del funcionamiento de `LazySettings`; se confirma corriendo la suite). Ver D2.
+- **Seis pruebas parchan `views.settings.BASE_DIR`** con `mock.patch.object`: `test_acceso.py:73`, `test_capturas_amplias.py:57`, `test_contrato_error.py:54` y `:68`, `test_dinero.py:294`, `test_eventos_negocio.py:154`. Con el módulo importado, el parche solo afecta a `views.py`; con `django.conf.settings`, el mismo parche cambiaría `BASE_DIR` para todo el proceso mientras dura (inferido del funcionamiento de `LazySettings`; se confirma corriendo la suite). Por D2 pasan a `override_settings`.
 
 ### Conexión a la base (AUD-01-016)
 
@@ -69,44 +69,35 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 ## Contradicciones con la planificación
 
 - **AUD-05-008 asigna `views.py:19` a la Épica 08; AUD-01-009 lo asigna a la 04-05.** Es el mismo defecto con dos IDs. **Decisión del agente, con evidencia:** corresponde a la **04-05**, porque (1) AUD-01-009 es anterior, de severidad Alta y ya nombra esta iteración; (2) el plan (4.5) y la definición (alcance 5) lo ponen aquí; (3) es configuración, no interfaz, y la Épica 08 no toca `views.py` por eso; (4) la Épica 08 parte de lo que deje la 04-05. **Aviso:** al cerrar la 04-05, AUD-05-008 se edita para que su parte (2) remita a AUD-01-009 (corregido en la 04-05) y la Épica 08 conserve solo la parte (1). No se duplica trabajo. La redacción ya anota esto en la auditoría como nota.
-- **AUD-02-020 dice que el modo estricto de `sql_mode` «se prueba en 04-05»** (también `iteracion-02-01:39` y `:71`, `definicion-epica-02.md:158`), pero la definición de la Épica 04 no lo incluye y probarlo no es Clase 1. Ver D4.
-- **«`TEMPLATES['DIRS']` inexistente»:** en el repositorio es cierto; en esta copia de trabajo hay una carpeta vacía sin versionar. Ver D1.
+- **AUD-02-020 prometía probar el modo estricto de `sql_mode` «en 04-05»** (también `iteracion-02-01:39` y `:71`, `definicion-epica-02.md:158`, documentos cerrados que no se reescriben). Resuelto por D4: sale de la 04-05 y pasa a la Épica 06 como medición; AUD-02-020, la definición de la Épica 06 y el registro ya lo dicen.
+- **«`TEMPLATES['DIRS']` inexistente»:** en el repositorio es cierto; en esta copia de trabajo hay una carpeta vacía sin versionar. Por D1, `DIRS` queda vacío y la carpeta local no se toca (no se borra ni se versiona).
 - **H3 de la 02-05 ya está corregido** en el código (ver «Código muerto»).
 
 ## Alcance
 
-1. `views.py:19` → `from django.conf import settings`; las seis pruebas que parchan `views.settings` se ajustan según D2.
-2. `CONN_HEALTH_CHECKS` en la configuración de producción (D3).
+1. `views.py:19` → `from django.conf import settings`; las seis pruebas que parchan `views.settings` pasan a `override_settings(BASE_DIR=...)` (D2).
+2. `conn_health_checks=True` en `dj_database_url.config`, manteniendo `conn_max_age=60` (D3).
 3. `BASE_DIR` una sola vez, con sus comentarios ordenados.
-4. `TEMPLATES['DIRS']` según D1, sin la coma suelta.
+4. `TEMPLATES['DIRS']` vacío (`[]`) hasta la 08-02 (D1), sin la coma suelta.
 5. Importaciones: `F` una vez y sin `HttpResponseForbidden` (`views.py`); sin la importación redundante de `urls.py:2`.
 6. Código comentado de `utils.py:25`.
 7. **Coordinación con la 04-02:** la 04-05 se desarrolla **sobre** la 04-02 ya integrada en `main` y no toca sus bloques (`SEGURIDAD_PRODUCCION`, HSTS, cookies, `CSRF_TRUSTED_ORIGINS`, regla de arranque). Si la 04-02 no está integrada al empezar, se espera.
-8. **Fuera:** modo estricto (D4, salvo lo que se decida), `TruncMonth` (Épica 06), `MEDIA_ROOT` con `Path`, AUD-05-008 parte (1) (Épica 08), crear contenido en `templates/` (Épica 08, 08-02), traducir comentarios de plantilla de Django.
+8. **Fuera:** modo estricto de `sql_mode` (Épica 06, D4), `TruncMonth` (Épica 06), `MEDIA_ROOT` con `Path`, AUD-05-008 parte (1) (Épica 08), crear contenido en `templates/` (Épica 08, 08-02), traducir comentarios de plantilla de Django.
 
-## Decisiones (`PENDIENTE_DESARROLLADOR`)
+## Decisiones (resueltas por el desarrollador, 2026-11-17)
 
-**D1 · `TEMPLATES['DIRS']`.**
-- **A (recomendada):** dejar `DIRS` **vacío** (`[]`) y que la 08-02 lo vuelva a apuntar a `BASE_DIR / 'templates'` en la misma iteración en que crea la carpeta con contenido. Hoy ninguna plantilla vive ahí; no cambia nada visible y el ajuste queda junto con su razón de ser.
-- **B:** mantener `BASE_DIR / 'templates'` y crear la carpeta con un `.gitkeep`. Adelanta trabajo de la Épica 08 sin contenido.
-
-**D2 · Pruebas que parchan `views.settings.BASE_DIR`.**
-- **A (recomendada):** cambiarlas a `override_settings(BASE_DIR=...)` (o `self.settings(...)`), la forma que Django documenta; el cambio es solo en las pruebas y explícito.
-- **B:** mantener `mock.patch.object(views.settings, 'BASE_DIR', ...)`, que con `LazySettings` sigue funcionando pero cambia `BASE_DIR` para todo el proceso (inferido).
-
-**D3 · Verificación de salud de la conexión.**
-- **A (recomendada):** `conn_health_checks=True` en la llamada a `dj_database_url.config` (`settings.py:132`), manteniendo `conn_max_age=60`. Una consulta mínima al reutilizar la conexión; sin efecto en local.
-- **B:** `conn_max_age=0` (sin conexiones persistentes). Más simple, pero agrega una conexión nueva por petición en producción.
-
-**D4 · Modo estricto de `sql_mode` (AUD-02-020).**
-- **A (recomendada):** **fuera** de la 04-05 (no es Clase 1 y mezclaría propósitos): se reasigna la prueba contra la réplica a la Épica 06 (validación de datos) como medición sin cambio en producción, y se actualizan las notas de AUD-02-020.
-- **B:** incluir en la 04-05 solo la **medición** contra la réplica (correr la suite con modo estricto y anotar qué falla), sin cambiar producción.
+| # | Decisión | Resuelta como |
+| :- | :------- | :------------ |
+| D1 | `TEMPLATES['DIRS']` | **Vacío (`[]`) hasta la 08-02**, que lo vuelve a apuntar a `BASE_DIR / 'templates'` cuando cree la carpeta con contenido. |
+| D2 | Pruebas que parchan `views.settings.BASE_DIR` | Las seis pasan a **`override_settings(BASE_DIR=...)`** (o `self.settings(...)`), para aislar el cambio. |
+| D3 | Salud de la conexión | **`conn_health_checks=True`**, manteniendo **`conn_max_age=60`**. Sin efecto en local. |
+| D4 | Modo estricto de `sql_mode` (AUD-02-020) | **Sale de la 04-05** y pasa a la **Épica 06 como medición** contra la réplica, sin cambio en producción (iteración por definir). |
 
 ## Pasos
 
-0. Consulta previa para editar `settings.py` (`AGENTS.md`, sección 6). Confirmar que la 04-02 está integrada en `main`.
+0. **Consulta previa para editar `settings.py`** (`AGENTS.md`, sección 6): las decisiones de esta iteración no la reemplazan; se pide al empezar la ejecución. Confirmar que la 04-02 está integrada en `main`.
 1. Línea base: `test pedidos` (número de pruebas y fallos esperados tras la 04-04), `check`, `check --deploy` con `DEBUG=False`, `makemigrations --check --dry-run`. Se anotan en la bitácora.
-2. Pruebas de D2 y de D3 (tabla siguiente).
+2. Pruebas de D2 y de D3 (tabla siguiente): primero las seis pasan a `override_settings` con el import viejo y siguen en verde; después se cambia `views.py:19`.
 3. Cambios del alcance, uno por uno, corriendo la suite tras cada uno.
 4. Repetir el paso 1: mismos resultados, y `diff` de las salidas.
 5. Revisión manual en la réplica: panel, una lista, un detalle, `respaldar_bd` y `restaurar_bd` (solo carga), y el PDF de una cotización; escritorio y 360 px.
@@ -119,7 +110,8 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 | `python manage.py test pedidos` | Mismo número de pruebas y **los mismos** fallos esperados que antes (más las pruebas nuevas en verde). |
 | `python manage.py makemigrations --check --dry-run` | «No changes detected», antes y después. |
 | `python manage.py check` y `check --deploy` (`DEBUG=False`) | Misma salida que la línea base (ninguna advertencia nueva ni perdida). |
-| `python -c` con `django.setup()` que imprime `settings.BASE_DIR`, `TEMPLATES`, `DATABASES['default']['CONN_MAX_AGE']` y `CONN_HEALTH_CHECKS` | Mismo `BASE_DIR`; `DIRS` según D1; `CONN_HEALTH_CHECKS` según D3 solo con `DATABASE_URL`. |
+| `python -c` con `django.setup()` que imprime `settings.BASE_DIR`, `TEMPLATES`, `DATABASES['default']['CONN_MAX_AGE']` y `CONN_HEALTH_CHECKS` | Mismo `BASE_DIR`; `DIRS == []`; con `DATABASE_URL`, `CONN_MAX_AGE == 60` y `CONN_HEALTH_CHECKS is True`. |
+| Plantillas | Toda pantalla de la revisión manual carga: confirma que ninguna plantilla vivía en `templates/` de la raíz (hoy vacía). |
 | Búsqueda | `grep -rn "from PedidosApp import" pedidos` sin resultados; ninguna importación duplicada en las líneas de la tabla. |
 | Revisión manual (paso 5) | Pantallas idénticas a la línea base. |
 
@@ -127,8 +119,8 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 
 | Punto | Prueba |
 | :---- | :----- |
-| 1 · `django.conf.settings` | Las seis pruebas que parchan `BASE_DIR` siguen en verde con D2; una prueba comprueba que `views.settings is django.conf.settings`. |
-| 2 · Salud de la conexión | Con `DATABASE_URL` de ejemplo (sin credenciales reales) en el entorno de un subproceso, la configuración resultante trae `CONN_HEALTH_CHECKS=True` y `CONN_MAX_AGE=60`. No hay prueba automática de la reconexión tras hibernar: se observa en producción. |
+| 1 · `django.conf.settings` | Las seis pruebas (`test_acceso.py:73`, `test_capturas_amplias.py:57`, `test_contrato_error.py:54` y `:68`, `test_dinero.py:294`, `test_eventos_negocio.py:154`) usan `override_settings(BASE_DIR=...)` y siguen en verde; una prueba comprueba que `views.settings is django.conf.settings`. |
+| 2 · Salud de la conexión | Con una `DATABASE_URL` de ejemplo (sin credenciales reales) en el entorno de un subproceso, la configuración resultante trae `CONN_HEALTH_CHECKS=True` y `CONN_MAX_AGE=60`; sin ella, la configuración local no cambia. No hay prueba automática de la reconexión tras hibernar: se observa en producción. |
 | 3 a 6 | Sin prueba propia: los cubre la suite completa y la tabla de Clase 1. |
 
 ## Verificación en producción (la hace el desarrollador; **no verificado** hasta entonces)
@@ -152,6 +144,7 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 ## Riesgos
 
 - **Conflictos con la 04-02 y la 04-04:** las tres tocan `settings.py` o `views.py`. Mitigado con el orden: la 04-05 se desarrolla y despliega después de ambas.
-- **Parches de prueba con alcance global (D2):** si se elige B, una prueba podría dejar `BASE_DIR` cambiado para otra; con A no ocurre.
+- **`override_settings(BASE_DIR=...)` cambia `BASE_DIR` para todo el código durante la prueba (D2):** es lo buscado (aísla y restaura el valor), pero `utils.py` también escribirá en la carpeta temporal; las pruebas ya usan carpetas temporales, así que no se escribe en `backups/` real (inferido; se confirma con la suite y mirando que `backups/` no cambie).
+- **`DIRS` vacío (D1):** si alguna plantilla viviera en `templates/` de la raíz dejaría de encontrarse; hoy la carpeta está vacía y no versionada, así que no hay ninguna (verificado en esta copia).
 - **Un cambio «de limpieza» que sí cambia comportamiento:** por eso el puerto de `utils.py:25` no se activa y `TruncMonth` queda fuera.
 - **Un despliegue, un propósito (RDA-007):** va solo, después de la 04-04.

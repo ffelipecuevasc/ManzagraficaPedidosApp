@@ -33,6 +33,10 @@
 - **Duplicados históricos (AUD-04-001):** consulta de solo lectura, ensayada en la réplica, que cuenta pedidos con el mismo cliente y contenido creados con pocos segundos de diferencia. Responde la pregunta abierta «¿hubo duplicados en días anteriores?». El criterio exacto de «duplicado» y qué se hace con los encontrados: `PENDIENTE_DESARROLLADOR` (y la confirmación del cliente antes de borrar cualquier pedido). La evidencia registra conteos, nunca datos de clientes.
 - **AUD-03-002:** la corrección de la descarga sigue en la 04-01 (ver «Fuera de alcance»); aquí solo se lista y descarga cada `.sql`.
 
+## Para la iteración que se defina · modo estricto de `sql_mode` (AUD-02-020)
+
+- **2026-11-17, decisión del desarrollador (D4 de la 04-05):** medir contra la réplica el comportamiento con `STRICT_TRANS_TABLES` (correr la suite y los flujos principales con modo estricto y anotar qué falla), **sin cambiar producción**. Viene de la 04-05, donde no cabía por no ser Clase 1. Iteración por asignar al redactar la épica; proponer el cambio en producción sería otra decisión.
+
 ## Decisiones de la épica
 
 - La limpieza de filas duplicadas de `HistorialBD` es una operación destructiva sobre datos, no un cambio de esquema: se ejecuta con una orden de gestión revisada, respaldo descargado y ensayo previo en la réplica.

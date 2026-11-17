@@ -4,7 +4,7 @@
 - **Fase del plan:** 4 (`plan-de-trabajo.md`, «FASE 4»), ampliada el 2026-10-27 (anexo del plan, RDA-014)
 - **Objetivo:** cerrar las vulnerabilidades identificadas, defender las entradas de la aplicación (HTML enriquecido, acceso y archivos) y aplicar el estándar de configuración de producción de Django.
 - **Precondición:** Épica 02 completa. **Orden de ejecución:** después de la Épica 03 (decisión del desarrollador del 2026-10-27), incluida la 04-06.
-- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 con D1 a D6 resueltas; 04-05 redactada; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
+- **Última revisión:** 2026-11-17 (04-01 con P1, P2 y etiqueta resueltos; 04-02 con D1 a D6 resueltas; 04-03 con D1 a D5 resueltas; 04-04 con D1 a D6 resueltas; 04-05 con D1 a D4 resueltas; 04-06 redactada; avance en paralelo a la vigilancia de la 03-05). Anterior: 2026-10-27 (iteraciones 04-07, 04-08 y 04-09 agregadas; AUD-03-002 sumado a 04-01).
 
 ## Alcance
 
@@ -28,8 +28,8 @@
 | 04-02 | [Configuración de producción](iteracion-04-02-configuracion-de-produccion.md) (Pendiente, redactada, decisiones resueltas D1 a D6, 2026-11-17) | 4.2 |
 | 04-03 | [Credenciales y secretos](iteracion-04-03-credenciales-y-secretos.md) (Pendiente, redactada, decisiones resueltas D1 a D5, 2026-11-17) | 4.3 |
 | 04-04 | [Endurecimiento de la restauración](iteracion-04-04-endurecimiento-de-la-restauracion.md) (Pendiente, redactada, decisiones resueltas D1 a D6, 2026-11-17) | 4.4 |
-| 04-05 | [Correcciones de configuración](iteracion-04-05-correcciones-de-configuracion.md) (Pendiente, redactada, decisiones abiertas D1 a D4, 2026-11-17) | 4.5 |
-| 04-06 | Protección del historial ante borrados en cascada | Nueva (Auditoría 02) |
+| 04-05 | [Correcciones de configuración](iteracion-04-05-correcciones-de-configuracion.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | 4.5 |
+| 04-06 | [Protección del historial ante borrados en cascada](iteracion-04-06-proteccion-del-historial.md) (Pendiente, redactada, decisiones abiertas D1 a D4, 2026-11-17) | Nueva (Auditoría 02) |
 | 04-07 | Sanitización del HTML enriquecido y revisión de inyección SQL | Nueva (Auditoría 03) |
 | 04-08 | Protección del acceso y límites de entrada | Nueva (Auditoría 03) |
 | 04-09 | Política de seguridad de contenido en observación | Nueva (reorganización 2026-10-27) |
@@ -88,3 +88,5 @@
 - **2026-11-17 · 04-04 redactada** con seis decisiones abiertas. Aclaración: la nota del 2026-10-26 asocia el `.sql` vacío a AUD-02-019, pero ese hallazgo es la rotación por cantidad (06-03); la 04-04 corrige el `.sql` vacío como hallazgo hermano y no cambia la rotación. Orden de despliegue: 04-01 → 04-02 → 04-03 → 04-04. [bitacora-04-04-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-04-redaccion.md). Siguiente por redactar: 04-05.
 - **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-04, D1 a D6 resueltas:** tope de 20 MB como constante; volcado válido por estructura y sentencias peligrosas, también para el respaldo de emergencia; `RESTAURAR` exigido por el servidor además del aviso; `server.log` antes y después y evento con usuario nulo si falta; `emergencia_` fuera de la rotación, solo el último (excepción mínima que roza la 06-03); **AUD-05-004 pasa a la Épica 08**. Choque con `AGENTS.md`, regla 8.10, anotado como riesgo y propuesta. [bitacora-04-04-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-04-cierre.md).
 - **2026-11-17 · 04-05 redactada** con cuatro decisiones abiertas. `views.py:19` (`from PedidosApp import settings`) queda en la 04-05 como AUD-01-009; AUD-05-008 conserva para la Épica 08 solo los estilos. La carpeta `templates/` existe vacía en la copia de trabajo, sin versionar. Orden de despliegue: 04-01 → 04-02 → 04-03 → 04-04 → 04-05. [bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md). Siguiente por redactar: 04-06.
+- **2026-11-17 (decisiones del desarrollador, dichas por él) · 04-05, D1 a D4 resueltas:** `TEMPLATES['DIRS']` vacío hasta la 08-02; las seis pruebas que parchan `views.settings.BASE_DIR` pasan a `override_settings`; `conn_health_checks=True` con `conn_max_age=60`; **el modo estricto de `sql_mode` (AUD-02-020) sale de la 04-05 y pasa a la Épica 06 como medición**. Editar `settings.py` sigue exigiendo consulta previa. [bitacora-04-05-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-05-cierre.md).
+- **2026-11-17 · 04-06 redactada** con cuatro decisiones abiertas. Migración `0008` (la última es `0007_registroevento`), Clase 1 esperada. Cascadas que siguen: pedido → ítems y cotización → ítems (intencionales); pedido → pagos (no consta que sea intencional: pregunta `PENDIENTE_CLIENTE`, fuera de alcance). RDA-017 trata el borrado de usuarios, no de clientes. Orden de despliegue: 04-01 → … → 04-05 → 04-06. [bitacora-04-06-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-06-redaccion.md). Siguiente por redactar: 04-07.
