@@ -80,6 +80,18 @@ docker compose stop
 
 Usa siempre `pip` para Python y `pnpm` para Node. Nunca `npm`, `yarn` ni `npx`. No dejes servidores de desarrollo corriendo al terminar.
 
+### Scripts y comandos largos
+
+El equipo de desarrollo es Windows con Git Bash. Ahí la consola del agente corta los comandos largos y desarma las comillas y las barras invertidas, aunque la sintaxis sea correcta. El síntoma es `unexpected EOF while looking for matching`. Para no perder el intento:
+
+1. No uses heredocs (`<<EOF`, `<<'EOF'`) ni `python -c` con código de varias líneas.
+2. Si necesitas un script, créalo como archivo `.py` en tu carpeta temporal con la herramienta de escritura de archivos y ejecútalo aparte: `PYTHONIOENCODING=utf-8 python "<ruta>/script.py"`. No lo guardes en el repositorio, salvo que la iteración lo pida en `scripts/`.
+3. Para cambiar Markdown, plantillas o código del proyecto usa la herramienta de edición de archivos, no un script que reemplace texto.
+4. Mantén cada comando corto: el texto largo va en archivos, no en la línea de comandos.
+5. Si un comando falla por comillas o por `unexpected EOF`, no lo reintentes con otro escape: pasa directo al archivo.
+
+En Claude Code, el hook `.claude/hooks/bloquear_comandos_fragiles.py` bloquea estos comandos antes de ejecutarlos.
+
 ## 6. Límites de actuación
 
 **Prohibido (lo hace solo el desarrollador):**

@@ -1,6 +1,6 @@
-# .claude · Permisos de Claude Code
+# .claude · Permisos y hooks de Claude Code
 
-`settings.json` define qué puede hacer Claude Code en este repositorio sin preguntar, qué debe consultar antes y qué tiene prohibido. Este README explica cada grupo de reglas. Ningún agente edita esta carpeta: la mantiene el desarrollador.
+`settings.json` define qué puede hacer Claude Code en este repositorio sin preguntar, qué debe consultar antes y qué tiene prohibido, y registra los hooks de `hooks/`. Este README explica cada grupo de reglas y cada hook. Ningún agente edita esta carpeta: la mantiene el desarrollador.
 
 ---
 
@@ -59,3 +59,18 @@
 - **`.env.example` también queda bloqueado para lectura.** La regla `Read(./.env.*)` (y `Read(**/.env.*)`) calza con `.env.example`, así que el agente no puede leerlo; `Edit(**/.env.*)` también impide editarlo. Si una iteración necesita cambiarlo, el agente entrega el texto propuesto y el desarrollador lo aplica. Archivos nuevos como `.env.local` o `.env.production` quedan cubiertos por los mismos patrones.
 - **La protección es parcial.** Las reglas `Read` y `Edit` solo gobiernan las herramientas de lectura y edición de Claude Code. No cubren un `grep -r` (ni `rg`, `findstr` o `Select-String`) que recorra el repositorio, ni un guion de Python o de shell que abra el archivo. Por eso el agente excluye siempre `.env`, `.env.*`, `backups/` y la carpeta de respaldos en sus búsquedas.
 - **Sin sandbox en Windows nativo.** El sandbox de Claude Code, que limitaría a nivel de sistema los archivos que leen los comandos, no existe en Windows nativo. Aquí la única barrera para Bash y PowerShell es la disciplina del agente y la revisión del desarrollador.
+
+## 6. `hooks/` · Revisiones antes de ejecutar
+
+Un hook es un programa que Claude Code ejecuta en un momento fijo del trabajo. Los de `PreToolUse` corren **antes** de usar una herramienta y antes de las reglas de permisos: si el hook sale con código 2, la herramienta no se ejecuta, aunque calce con una regla de `allow`, y Claude recibe el mensaje de error del hook para cambiar de camino.
+
+| Hook | Cuándo corre | Qué hace | Por qué |
+| :--- | :----------- | :------- | :------ |
+| `bloquear_comandos_fragiles.py` | Antes de cada comando de `Bash` | Bloquea los heredocs (`<<EOF`), `python -c` con código de varias líneas y los comandos de más de 4.000 bytes, y le indica a Claude que escriba un archivo `.py` y lo ejecute aparte, o que use `Edit` | En Windows, Claude Code pasa cada comando a Git Bash dentro de un `bash -c` que corta la línea cerca de los 8 KB y desarma comillas y barras invertidas. El síntoma es `unexpected EOF while looking for matching`, y cada intento fallido gasta tokens. Lo explica `AGENTS.md`, sección 5, «Scripts y comandos largos». |
+
+Notas:
+
+- El hook está escrito en Python y usa solo la biblioteca estándar: no depende de Git Bash para leer la entrada ni de `jq`, que Git Bash no trae.
+- Si el hook falla por su cuenta (por ejemplo, recibe una entrada que no puede leer), deja pasar el comando: nunca bloquea el trabajo por un error suyo.
+- Solo revisa la herramienta `Bash`. La herramienta `PowerShell` no pasa por Git Bash y no tiene este problema.
+- Para probarlo a mano desde la raíz del proyecto: `echo '{"tool_input":{"command":"cat <<EOF"}}' | python .claude/hooks/bloquear_comandos_fragiles.py; echo $?` debe mostrar el mensaje y `2`.

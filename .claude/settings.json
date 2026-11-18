@@ -107,5 +107,19 @@
       "WebFetch(domain:pythonanywhere.com)",
       "WebFetch(domain:manzagrafica.pythonanywhere.com)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/bloquear_comandos_fragiles.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }
