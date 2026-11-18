@@ -1,7 +1,7 @@
 # Iteración 14-01 · Arreglo urgente de pagos
 
 - **Épica:** 14 · Mantenimiento
-- **Estado:** **Implementada, pendiente de despliegue** (2026-11-18; [bitacora-14-01](../../99_bitacora/epica-14-mantenimiento/bitacora-14-01.md)). Se cierra solo con la verificación del día 0 en producción. Antes: Pendiente (redactada, decisiones resueltas). D1 a D5 y la etiqueta, resueltas el 2026-11-18 (decisión del desarrollador, dicha por él): D1 A, D2 A, D3 A, D4 A, D5 B, `v14.1-pagos`. Redactada el 2026-11-18 ([bitacora-04-replanificacion](../../99_bitacora/epica-04-seguridad/bitacora-04-replanificacion.md)). Es el primer arreglo urgente del método de la RDA-022.
+- **Estado:** **Terminada · Cerrada: verificada en producción el 2026-11-18 (día 0, dicho por el desarrollador)** ([bitacora-14-01](../../99_bitacora/epica-14-mantenimiento/bitacora-14-01.md)). `v14.1-pagos` desplegada con Reload hacia las 19:30 (hora de Chile) y desde entonces es la versión estable vigente. Antes: Implementada, pendiente de despliegue (2026-11-18); Pendiente (redactada, decisiones resueltas). D1 a D5 y la etiqueta, resueltas el 2026-11-18 (decisión del desarrollador, dicha por él): D1 A, D2 A, D3 A, D4 A, D5 B, `v14.1-pagos`. Redactada el 2026-11-18 ([bitacora-04-replanificacion](../../99_bitacora/epica-04-seguridad/bitacora-04-replanificacion.md)). Es el primer arreglo urgente del método de la RDA-022.
 - **Subfase del plan:** ninguna (no existe en el plan original; RDA-022).
 - **Depende de:** ninguna. **Se ejecuta y se despliega ANTES de la 04-01** (decisión del desarrollador, 2026-11-18). Producción está en `v3.1-integridad`, sobre `7e14398` (dicho por el desarrollador).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito; aviso al cliente), RDA-021 (sin esperas: verificación del mismo día y plan de retroceso), RDA-022 (gravedad Crítica y arreglo urgente).
@@ -131,9 +131,15 @@ La herramienta de diagnóstico de consultas es de la 05-02 y aún no existe: en 
 - [x] T1 a T5 fallan antes de la corrección y pasan después.
 - [x] Suite completa en verde con `OK (expected failures=9)`; `check` y `makemigrations --check --dry-run` sin cambios.
 - [x] Consultas de `GET /pagos/ingresar/` medidas antes y después en la bitácora, constantes con N (en pruebas; la réplica no se midió).
-- [ ] Revisión manual en la réplica a escritorio y a 360 px (puntos a a d del paso 6).
-- [ ] Un pago desde un pedido con id ≥ 1000 se guarda en producción (verificación 5) y no hay `ERROR` nuevos (6).
-- [ ] AUD-05-010 y AUD-05-011 pasan a «Resuelto en 14-01» en la auditoría, con la evidencia mínima.
+- [ ] Revisión manual en la réplica a escritorio y a 360 px (puntos a a d del paso 6). **No informada:** no consta si se hizo antes de etiquetar. En producción, la edición del pedido y el selector de «Ingresar pago» funcionaron (dicho por el desarrollador).
+- [x] Un pago desde un pedido con id ≥ 1000 se guarda en producción (verificación 5). **Fuente:** dicho por el desarrollador, 2026-11-18: pedido de prueba, pago de $1.000 guardado y pedido borrado (opción A). El id del pedido de prueba no se informó; se infiere ≥ 1000 porque el último pedido era el #1014. Después, el cliente registró pagos sin problemas (dicho).
+- [ ] Sin `ERROR` nuevos (verificación 6): **no verificado**. No se informaron `error.log` ni `server.log` después del Reload.
+- [ ] Tiempo de `/pagos/ingresar/` bajo 2 s (verificación 7): **no verificado** con medición. El selector «carga muy rápido» (dicho por el desarrollador, sin cifra).
+- [x] AUD-05-010 y AUD-05-011 pasan a «Resuelto y verificado en producción (14-01, 2026-11-18)» en la auditoría.
+
+**Cierre:** el desarrollador da la iteración por cerrada con el pago de prueba y el uso del cliente. Las verificaciones 6 y 7 quedan como no verificadas: no reabren la iteración, pero si aparece un `ERROR` o un tiempo alto en `/pagos/ingresar/`, se registra como hallazgo nuevo.
+
+**Lección:** un id ≥ 1000 se localizaba con separador de miles. Con `es-cl` y `USE_THOUSAND_SEPARATOR = True`, Django usa un **espacio duro** (`\xa0`), no un punto, así que «1 002» parece un espacio normal y no se nota a simple vista. Todo id o número que viaje en un atributo `value`, un enlace o un dato de JavaScript se escribe con `|unlocalize` (o `|stringformat:'d'`), y las pruebas usan ids ≥ 1000.
 
 ## Riesgos
 
@@ -170,13 +176,15 @@ La herramienta de diagnóstico de consultas es de la 05-02 y aún no existe: en 
 
 ## Verificación del día 0 (resumen)
 
-Los puntos 1 a 8 de «Verificación el mismo día» de arriba. Lo esencial: un **pago de prueba de $1.000** (valor de prueba propuesto; `PENDIENTE_DESARROLLADOR` confirmarlo junto con el protocolo de la parte C de `evidencia-03-05.md`) desde el detalle de un pedido de prueba con id ≥ 1000. El campo oculto lleva el id sin separador, el pago se guarda, queda `pago_registrado` y `server.log` no muestra `ERROR` nuevos. Después se borran los datos de prueba según ese protocolo. Al terminar: AUD-05-010 y AUD-05-011 pasan a «Resuelto en 14-01», la iteración a Terminada y el cliente registra de nuevo el pago del #1004.
+Los puntos 1 a 8 de «Verificación el mismo día» de arriba. Lo esencial: un **pago de prueba de $1.000** (**resuelto el 2026-11-18: se usó la opción A**, pedido de prueba, pago de $1.000 y borrado del pedido) desde el detalle de un pedido de prueba con id ≥ 1000. El campo oculto lleva el id sin separador, el pago se guarda, queda `pago_registrado` y `server.log` no muestra `ERROR` nuevos. Después se borran los datos de prueba según ese protocolo. Al terminar: AUD-05-010 y AUD-05-011 pasan a «Resuelto en 14-01», la iteración a Terminada y el cliente registra de nuevo el pago del #1004.
 
 ## Retroceso (RDA-021)
 
 `retroceso.md`, caso 1 (sin migraciones): **[PA]** `git checkout v3.1-integridad`, `git describe --tags` = `v3.1-integridad`, `python manage.py check`, **Reload** y las pantallas de `despliegue.md`, sección 3.7. No hay dependencias, estáticos ni migraciones que deshacer. Disparadores: los de «Plan de retroceso».
 
 ## Datos requeridos del cliente
+
+**Cerrado el 2026-11-18 con el despliegue:** el cliente vuelve a registrar los pagos que no se guardaron (incluido el del #1004). Queda fuera de esta iteración, en el registro: si el #1000 y el #1010 son pagos no guardados o pedidos impagos (`PENDIENTE_CLIENTE`). La segunda consulta (hora del pago contra creación del pedido) ya no bloquea nada y queda como opcional. Lo que sigue se conserva como historia.
 
 - **Pagos que «no se guardaron»** (`PENDIENTE_CLIENTE`): si el cliente intentó registrar otros pagos de pedidos desde el #1000 y no los volvió a ingresar. Sin ese dato no se sabe qué faltó: la aplicación no dejó rastro de los rechazos.
 - **Pago no guardado conocido: pedido #1004** (audio del cliente del 2026-11-18, dicho por el desarrollador; no verificado). Coincide con la causa (id ≥ 1000). Tras el despliegue, el cliente lo registra de nuevo.

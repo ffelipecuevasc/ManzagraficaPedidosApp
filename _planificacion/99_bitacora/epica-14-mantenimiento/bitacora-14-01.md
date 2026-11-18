@@ -51,3 +51,15 @@ La réplica (994 pedidos) no se midió.
 ## Despliegue
 
 Pasos, verificación del día 0 y retroceso a `v3.1-integridad`: en la iteración. Sin respaldo previo obligatorio.
+
+## Producción (2026-11-18; todo dicho por el desarrollador, sin salidas pegadas)
+
+- **Despliegue:** `v14.1-pagos`, con Reload hacia las **19:30** (hora de Chile). Sin `pip`, `migrate` ni `collectstatic`. No se informaron la hora de `Starting uWSGI` ni el commit de la etiqueta.
+- **Día 0 (opción A):** pedido de prueba, pago de **$1.000**, que se registró sin problemas, y borrado del pedido. La edición del pedido funcionó y el selector de «Ingresar pago» carga muy rápido.
+- **Uso real:** después, el cliente registró pagos sin problemas mientras probaba.
+- **No verificado:** `error.log` y `server.log` desde el Reload, y el tiempo medido de `/pagos/ingresar/`. Tampoco consta la revisión manual en la réplica a 360 px.
+- **Resultado:** iteración cerrada, sin retroceso. AUD-05-010 y AUD-05-011 quedan resueltos y verificados en producción; AUD-05-009 sigue abierto (Baja). **`v14.1-pagos` es la versión estable vigente** y el destino de retroceso del próximo despliegue (la 04-01).
+
+## Lección
+
+**Un id ≥ 1000 se localizaba con separador de miles.** Con `es-cl` y `USE_THOUSAND_SEPARATOR = True`, Django usa un espacio duro (`\xa0`), no un punto, y por eso «1 002» no se distingue a simple vista de un espacio normal. Todo id que viaje en un `value`, un enlace o un dato de JavaScript lleva `|unlocalize` (o `|stringformat:'d'`), y las pruebas de formularios usan ids ≥ 1000. El defecto apareció solo cuando los pedidos llegaron al #1000: las pruebas con ids pequeños no lo podían ver.
