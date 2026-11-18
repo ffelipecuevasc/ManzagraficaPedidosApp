@@ -48,7 +48,7 @@
 ## Fuera de alcance
 
 - Modularización de vistas, capa de servicios y deuda menor: Épica 07.
-- Respaldo fuera del servidor (S3): Épica 14.
+- Respaldo fuera del servidor: Épica 14 (~~S3~~ **sin AWS desde el 2026-11-18, RDA-022;** el destino de la copia es `PENDIENTE_DESARROLLADOR`).
 - Corregir la descarga del respaldo desde la web: la resuelve la 04-01 al pasar el enlace a formulario (AUD-03-002).
 
 ## Criterio de término

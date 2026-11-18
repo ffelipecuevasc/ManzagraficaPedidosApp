@@ -3,7 +3,7 @@
 - **Cliente:** Manza Gráfica (diseño, publicidad e impresión)
 - **Desarrollador:** Francisco Felipe Cuevas Cerón · https://felipecuevas.dev
 - **Documento base:** `plan-de-trabajo.md` (Plan de Trabajo Técnico — ManzagraficaPedidosApp)
-- **Última revisión:** 2026-10-27 (reorganización de épicas, RDA-014)
+- **Última revisión:** 2026-11-18 (RDA-022: la Épica 14 pasa a «Mantenimiento» y AWS sale del plan; antes, 2026-10-27, reorganización de épicas, RDA-014)
 
 ---
 
@@ -11,14 +11,26 @@
 
 Que el equipo de Manza Gráfica pueda cotizar, registrar, producir, entregar y cobrar sus trabajos en un solo sistema confiable, y que ese sistema nunca pierda ni corrompa en silencio el historial comercial que ya contiene.
 
-La primera parte de este ciclo (Épicas 00 a 08) no agrega funciones de negocio: convierte una aplicación que funciona en una aplicación en la que se puede confiar, que se puede diagnosticar cuando falla y que se puede cambiar sin miedo. Desde el 2026-10-27, por decisión del desarrollador, el ciclo continúa con funciones nuevas construidas sobre esa base (Épicas 09 a 12) y con respaldos en la nube (Épica 14).
+La primera parte de este ciclo (Épicas 00 a 08) no agrega funciones de negocio: convierte una aplicación que funciona en una aplicación en la que se puede confiar, que se puede diagnosticar cuando falla y que se puede cambiar sin miedo. Desde el 2026-10-27, por decisión del desarrollador, el ciclo continúa con funciones nuevas construidas sobre esa base (Épicas 09 a 12) y con el mantenimiento continuo de las fallas (Épica 14, RDA-022).
+
+### Objetivos a largo plazo
+
+Posibilidades futuras que **no forman parte del plan** ni de ninguna épica. Solo se retoman después de conversarlas con el cliente y con una RDA propia.
+
+- **Respaldos en la nube (AWS, Amazon S3).** Estuvo planeada como Épica 14 (2026-10-27) y salió del plan el 2026-11-18 por decisión del desarrollador (RDA-022). Contexto de la definición anterior, que no se volvió a verificar:
+  - **Qué cubriría:** hoy los respaldos automáticos quedan en el mismo disco de 512 MiB que la base (AUD-01-014, AUD-02-019, AUD-02-024) y las imágenes de `media/` no tienen copia (AUD-02-023). Si el disco falla, se pierden la base y sus copias a la vez.
+  - **Viabilidad medida el 2026-10-27:** `.amazonaws.com` está en la lista blanca de salida de PythonAnywhere, así que el plan gratuito puede subir archivos a S3. S3 guarda archivos; un servicio de bases de datos (RDS, DynamoDB) sería un servidor que administrar y pagar.
+  - **Costo (dato de la definición anterior):** las cuentas nuevas de AWS entran a un plan gratuito con créditos por tiempo limitado y después pasan a un plan pagado; con unos 24 respaldos al año de pocos MB el almacenamiento cuesta del orden de centavos de dólar al mes, pero exige una tarjeta registrada.
+  - **Condiciones si se retomara:** cuenta a nombre del negocio, autenticación de dos factores en la cuenta raíz, un usuario con mínimo privilegio (solo subir a un prefijo, sin borrar ni listar), alerta de presupuesto, bucket privado con cifrado y versionado, y credenciales solo en el entorno. Exigiría una biblioteca de AWS (dependencia nueva, a medir en disco) y sería el primer servicio externo de la aplicación después del correo: RDA-004 no lo contemplaba.
+  - **Mientras tanto:** la copia fuera del servidor es la descarga manual del protocolo de la 00-02. A dónde irá una copia automática sin AWS: `PENDIENTE_DESARROLLADOR` (Épica 14).
+- **Correo con Amazon SES** como alternativa al canal de la 11-01, si este resultara poco confiable. Misma condición: conversarlo antes.
 
 ## 2. Qué es
 
 1. Una aplicación web interna, con acceso por usuario y contraseña, para el equipo de la empresa.
 2. Un registro de clientes, catálogo de productos, cotizaciones, pedidos con ítems, pagos y producción semanal, ya en uso con datos reales.
-3. Un monolito Django publicado en el plan gratuito de PythonAnywhere, que debe funcionar dentro de sus límites (disco, un solo proceso, una tarea diaria, salida a internet solo hacia la lista blanca de la plataforma). Los únicos servicios externos previstos son el correo saliente (Épica 11) y el almacenamiento de respaldos en Amazon S3 (Épica 14).
-4. En este ciclo, un proyecto de **mejora continua**: blindaje, observabilidad, pruebas, integridad, seguridad, rendimiento, mantención y respaldos, arquitectura del código y frontend; luego usuarios y roles, mejoras del tablero «Trabajo Semanal», automatizaciones por correo y proyección de pedidos; y al final operación continua y nube (AWS), en ese orden de dependencias (Épicas 00 a 14).
+3. Un monolito Django publicado en el plan gratuito de PythonAnywhere, que debe funcionar dentro de sus límites (disco, un solo proceso, una tarea diaria, salida a internet solo hacia la lista blanca de la plataforma). El único servicio externo previsto es el correo saliente (Épica 11); AWS no forma parte del plan (sección 1, «Objetivos a largo plazo»).
+4. En este ciclo, un proyecto de **mejora continua**: blindaje, observabilidad, pruebas, integridad, seguridad, rendimiento, mantención y respaldos, arquitectura del código y frontend; luego usuarios y roles, mejoras del tablero «Trabajo Semanal», automatizaciones por correo y proyección de pedidos; y al final operación continua y mantenimiento de fallas, en ese orden de dependencias (Épicas 00 a 14).
 
 ## 3. Qué no es
 
@@ -27,7 +39,7 @@ La primera parte de este ciclo (Épicas 00 a 08) no agrega funciones de negocio:
 3. No es un inventario de stock: el catálogo de productos fija precios, no existencias.
 4. No es una API para terceros: los endpoints JSON existen solo para la propia interfaz.
 5. No se agregan módulos ni funciones de negocio fuera de las Épicas 09 a 12, aprobadas por el desarrollador el 2026-10-27; las ideas que aparezcan se anotan como propuestas fuera de alcance.
-6. No se cambia de hosting ni de plan como parte de este trabajo; el plan define de antemano las señales que justificarían evaluarlo. La Épica 14 usa AWS solo para guardar respaldos, no para alojar la aplicación ni la base.
+6. No se cambia de hosting ni de plan como parte de este trabajo; el plan define de antemano las señales que justificarían evaluarlo. AWS no forma parte del plan: sería, en el futuro y solo después de conversarlo con el cliente, un lugar donde guardar respaldos, no donde alojar la aplicación ni la base (sección 1).
 7. No es un sistema de aprendizaje automático: la proyección de pedidos usa estadística simple con la biblioteca estándar de Python (RDA-018).
 
 Cualquier sección o función adicional se cotiza por separado.
@@ -65,7 +77,7 @@ Condiciones de uso a considerar en todo diseño:
 5. **Rendimiento:** reducción medida del tiempo hasta el primer contenido pintado, del peso transferido, del número de peticiones y del número de consultas por página en las tres vistas más usadas, contra la línea base (servidor en la Épica 05, navegador en la Épica 08).
 6. **Operación autónoma:** la tarea diaria se ejecuta sola y deja constancia de cada ejecución; la base se respalda sola los días 1 y 15 de cada mes; el uso de disco está vigilado con un umbral.
 7. **Roles:** un operador no puede abrir el módulo de base de datos, la gestión de usuarios ni el admin; lo comprueban las pruebas de control de acceso.
-8. **Respaldo fuera del servidor:** los respaldos programados llegan a Amazon S3 y uno de ellos se restaura con éxito en la réplica (Épica 14).
+8. **Respaldo fuera del servidor:** hay una copia de los respaldos fuera del disco del servidor y una de ellas se restaura con éxito en la réplica (Épica 14). Hoy la copia es la descarga manual de la 00-02; el destino de una copia automática sin AWS es `PENDIENTE_DESARROLLADOR`.
 
 ## 7. Hitos comprometidos
 

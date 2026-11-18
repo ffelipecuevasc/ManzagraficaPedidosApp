@@ -3,7 +3,7 @@
 - **Épica:** 04 · Seguridad y endurecimiento
 - **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md)); D1 a D6 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md)). Queda abierta solo la etiqueta y la fecha del despliegue.
 - **Subfase del plan:** 4.2 «Configuración de producción» (`plan-de-trabajo.md:400-408`).
-- **Depende de:** Épica 02 (Terminada). Se redactó en paralelo a la vigilancia de la 03-05; **su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia de la 03-05 (desde el lunes 2026-11-23 a las 23:48:12)** ni en el mismo despliegue que la 04-01 (RDA-007). Orden (decisión del 2026-11-17): 04-01, **04-10**, 04-02 (dos escalones), 04-03 y siguientes.
+- **Depende de:** Épica 02 (Terminada). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia de la 03-05 (desde el lunes 2026-11-23 a las 23:48:12)**~~ **superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar**; no se despliega en el mismo despliegue que la 04-01 (RDA-007). Orden (decisión del 2026-11-17; desde el 2026-11-18 la 14-01 va antes): 14-01, 04-01, **04-10**, 04-02 (dos escalones, el mismo día), 04-03 y siguientes.
 - **RDA relacionadas:** RDA-004 (PythonAnywhere, plan gratuito), RDA-007 (un despliegue, un propósito; la etiqueta marca lo que está en producción).
 - **Hallazgos que cierra:** AUD-01-012 (configuración de producción sin endurecer), al verificarse en producción.
 - **Hallazgos relacionados:** AUD-02-022 (`ALLOWED_HOSTS`, **ya resuelto en la 00-04**: no se repite), AUD-02-010 y la advertencia `W009` (clave secreta: 04-03, que usa `SEGURIDAD_PRODUCCION`).
@@ -51,12 +51,12 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 
 | # | Decisión | Qué se hace |
 | :- | :------- | :---------- |
-| D1 | HSTS escalonado, sin `preload` | Primer despliegue con `SECURE_HSTS_SECONDS = 3600`; tras la observación (D6), un segundo despliegue de esta iteración sube a `604800`. Sin `SECURE_HSTS_PRELOAD` (el dominio es un subdominio de `pythonanywhere.com`, no propio) y sin `SECURE_HSTS_INCLUDE_SUBDOMAINS` (inferido: no hay subdominios propios; se anota en la ejecución). El valor alto (`31536000`) no es parte de esta iteración. |
+| D1 | HSTS escalonado, sin `preload` | Primer despliegue con `SECURE_HSTS_SECONDS = 3600`; tras ~~la observación~~ **la comprobación del mismo día** (D6, RDA-021), un segundo despliegue de esta iteración sube a `604800`. Sin `SECURE_HSTS_PRELOAD` (el dominio es un subdominio de `pythonanywhere.com`, no propio) y sin `SECURE_HSTS_INCLUDE_SUBDOMAINS` (inferido: no hay subdominios propios; se anota en la ejecución). El valor alto (`31536000`) no es parte de esta iteración. |
 | D2 | Django **también** redirige a HTTPS | `SECURE_SSL_REDIRECT = True` cuando `SEGURIDAD_PRODUCCION` está activa, además de «Force HTTPS» de PythonAnywhere. Se prueba antes en la réplica (ver «Pruebas») por el riesgo de bucle. |
 | D3 | Variable de entorno explícita | Las opciones seguras (cookies, redirección, HSTS) se activan con una variable propia, no derivada de `DEBUG`. Nombre fijado por el desarrollador el 2026-11-17: **`SEGURIDAD_PRODUCCION`** (`True`/`False`, falso si falta). Va en `.env.example` sin valor real y en el `.env` del servidor (lo edita el desarrollador). |
 | D4 | `CSRF_TRUSTED_ORIGINS` desde el entorno | Lista separada por comas, con valor local por defecto `http://localhost:8000,http://127.0.0.1:8000`; en el servidor, `https://manzagrafica.pythonanywhere.com`. |
 | D5 | Arranque que falla | `ImproperlyConfigured` si `ALLOWED_HOSTS` contiene `manzagrafica.pythonanywhere.com` y `SEGURIDAD_PRODUCCION` no está activa. Compensa el riesgo de olvidar la variable (D3). |
-| D6 | Observación de 3 días | Tres días sin 403 de CSRF, sin bucles ni reportes del cliente antes de subir HSTS a `604800`. Sustituye los 7 días propuestos en la redacción. |
+| D6 | ~~Observación de 3 días~~ **Comprobación del mismo día (RDA-021, 2026-11-18)** | ~~Tres días sin 403 de CSRF, sin bucles ni reportes del cliente antes de subir HSTS a `604800`. Sustituye los 7 días propuestos en la redacción.~~ **El segundo escalón (`604800`) sube el mismo día, después de comprobar el primero (`3600`) con los pasos 1 a 5 de la verificación:** sin 403 de CSRF, sin bucles y sin errores nuevos en `server.log`. Siguen siendo **dos despliegues**, cada uno con su etiqueta. |
 
 **Nota: W005 y W021 (decisión del desarrollador, 2026-11-17).** Con HSTS activo y sin `includeSubDomains` ni `preload`, `check --deploy` seguirá mostrando `security.W005` y `security.W021` (verificado en `django/core/checks/security/base.py:177-195`). **Se aceptan y quedan documentadas como esperadas; no se silencian.** Por qué: el dominio es de PythonAnywhere, no propio. `preload` exige el dominio registrable (`pythonanywhere.com`), que pertenece a la plataforma, así que el sitio no puede enviarse a esa lista. `includeSubDomains` protegería subdominios de `manzagrafica.pythonanywhere.com`, que no existen (inferido), y activarlo sin necesidad agrega un riesgo: si algún día se usara un subdominio sin HTTPS, los navegadores lo bloquearían durante el `max-age`. Dejarlas visibles evita esconder que HSTS está en modo prudente. Se anotan como esperadas en `despliegue.md` (alcance 7).
 
@@ -100,7 +100,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 3. **[PC]** `curl -sI http://manzagrafica.pythonanywhere.com/accounts/login/` redirige a `https://`; `curl -sIL https://manzagrafica.pythonanywhere.com/accounts/login/` termina en 200 **sin bucle** (`curl` corta tras demasiadas redirecciones) y trae `Strict-Transport-Security: max-age=3600` y `Set-Cookie: csrftoken=…; Secure`.
 4. **[Navegador, ventana privada]** iniciar sesión, crear un pedido y un pago de prueba según el protocolo vigente, generar un respaldo (descarga): ningún 403 de CSRF. Las pantallas de `despliegue.md`, sección 3.7.
 5. **[PA]** `server.log` desde el reinicio efectivo: sin `Forbidden (CSRF` ni errores nuevos.
-6. **Observación (D6):** 3 días. Después, segundo despliegue con HSTS `604800` y repetición de los pasos 1, 3 y 5.
+6. ~~**Observación (D6):** 3 días. Después, segundo despliegue con HSTS `604800` y repetición de los pasos 1, 3 y 5.~~ **Comprobación del mismo día (D6, RDA-021):** con los pasos 1 a 5 hechos y sin problemas, el mismo día, segundo despliegue con HSTS `604800` y repetición de los pasos 1, 3 y 5.
 
 ## Plan de retroceso
 
@@ -114,12 +114,12 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 - Redirección a HTTPS sin bucle, cookies `Secure` y HSTS vistos en producción con el escalón vigente (3600, luego 604800).
 - Arranque con el dominio de producción y la variable apagada falla con un mensaje claro (prueba automatizada).
 - Suite en verde con los mismos fallos esperados que deje la 04-01.
-- Observación de 3 días cumplida y subida a 604800 registrada en la bitácora.
+- ~~Observación de 3 días cumplida y subida a 604800 registrada en la bitácora.~~ Comprobación del primer escalón y subida a 604800 el mismo día, registradas en la bitácora (RDA-021).
 
 ## Riesgos
 
 - **Bucle de redirección (D2):** solo verificable en producción; mitigado con la prueba del cliente de pruebas, la verificación 3 inmediata y el retroceso del caso 1.
 - **Olvidar la variable (D3):** mitigado con D5 y con el orden `.env` → código → Reload.
-- **HSTS irreversible por `max-age`:** mitigado con 3600 s primero (D1).
+- **HSTS irreversible por `max-age`:** mitigado con 3600 s primero (D1). **Desde el 2026-11-18 (RDA-021) el escalón de 3600 s dura solo lo que tarda la comprobación del mismo día:** un problema que aparezca después de subir a 604800 puede durar hasta 7 días en los navegadores que ya recibieron la cabecera. «Force HTTPS» de PythonAnywhere ya estaba activo (medido el 2026-10-20), lo que lo hace menos probable (inferido, no verificado hoy).
 - **Sesiones abiertas:** al pasar las cookies a `Secure`, las sesiones vigentes siguen por HTTPS (inferido). Se avisa al cliente antes del despliegue.
 - **Un despliegue, un propósito (RDA-007):** solo configuración de producción; ni la 04-01 ni la 04-03 viajan en la misma etiqueta. La subida de HSTS es un despliegue aparte de esta misma iteración.

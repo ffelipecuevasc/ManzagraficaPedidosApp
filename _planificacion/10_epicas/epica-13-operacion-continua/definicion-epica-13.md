@@ -16,7 +16,7 @@
    - **semanal:** errores en `server.log` y ejecución de la tarea diaria;
    - **mensual:** crecimiento de tablas, disco, registro del servidor, que existan los respaldos de los días 1 y 15, y que lleguen los correos de la Épica 11;
    - el hábito de convertir cada error recurrente en una prueba antes de corregirlo.
-4. Ensayo semestral de recuperación: restaurar un respaldo en la réplica (y, desde la Épica 14, uno descargado de S3) y verificar su integridad.
+4. Ensayo semestral de recuperación: restaurar un respaldo en la réplica (~~y, desde la Épica 14, uno descargado de S3~~ **superado el 2026-11-18, RDA-022: sin S3;** si la Épica 14 deja una copia fuera del servidor, el ensayo incluye restaurar esa copia) y verificar su integridad.
 5. Registro de la deuda diferida: unificación de `estado_pago` (Clase 3), copia de ítems al duplicar (decisión del cliente), nomenclatura del código e integración continua.
 6. Señales que justificarían evaluar un plan de pago, definidas con datos y no por frustración.
 7. **Hallazgos de producción del 2026-10-27:**

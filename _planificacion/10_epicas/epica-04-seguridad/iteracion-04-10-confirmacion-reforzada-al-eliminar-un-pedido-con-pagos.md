@@ -2,11 +2,11 @@
 
 - **Épica:** 04 · Seguridad y endurecimiento
 - **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-10-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-10-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-10-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-10-cierre.md)).
-- **Origen:** decisión del desarrollador del 2026-11-17 (dicha por él) sobre la pregunta `PENDIENTE_CLIENTE` «¿se puede eliminar un pedido que tiene pagos?» (registro, sección 2; detectada en la redacción de la 04-06). **El cliente no ha respondido si el borrado es intencional.** Esta iteración **no espera esa respuesta**: informa y pide confirmación, sin cambiar lo que ocurre al borrar. Si el cliente dijera que el borrado **no** es intencional, se replantea (ver «Fuera de alcance»).
+- **Origen:** decisión del desarrollador del 2026-11-17 (dicha por él) sobre la pregunta `PENDIENTE_CLIENTE` «¿se puede eliminar un pedido que tiene pagos?» (registro, sección 2; detectada en la redacción de la 04-06). ~~**El cliente no ha respondido si el borrado es intencional.** Esta iteración **no espera esa respuesta**: informa y pide confirmación, sin cambiar lo que ocurre al borrar. Si el cliente dijera que el borrado **no** es intencional, se replantea (ver «Fuera de alcance»).~~ **Respondido el 2026-11-18 (respuesta 1 del cliente, dicha por el desarrollador): borrar los pagos junto con el pedido es intencional;** la cascada no se replantea. Esta iteración sigue igual: informa y pide confirmación, sin cambiar lo que ocurre al borrar.
 - **Subfase del plan:** nueva (revisión de la Épica 04, 2026-11-17); misma clase de riesgo que AUD-02-001 (pérdida de historial), sin ser ese hallazgo.
-- **Depende de:** la 04-01 (comparte `views.py` y el patrón de confirmación; ver «Coordinación»). Se redactó en paralelo a la vigilancia de la 03-05; **su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → **04-10** → 04-02 → … → 04-09: se despliega **justo después de la 04-01** (decisión del desarrollador, 2026-11-17), no al final.
+- **Depende de:** la 04-01 (comparte `views.py` y el patrón de confirmación; ver «Coordinación»). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → **04-10** → 04-02 → … → 04-09: se despliega **justo después de la 04-01** (decisión del desarrollador, 2026-11-17), no al final.
 - **RDA relacionadas:** RDA-007; RDA-008 (inventario cerrado de eventos: **no cambia**, se reutiliza un tipo existente); RDA-017 (borrado físico con doble confirmación, **para usuarios**; no se aplica a pedidos, ver «Contradicciones»).
-- **Hallazgos que cierra:** ninguno por sí sola; reduce el riesgo de la pregunta `PENDIENTE_CLIENTE`.
+- **Hallazgos que cierra:** ninguno por sí sola; reduce el riesgo del borrado accidental (la pregunta `PENDIENTE_CLIENTE` se respondió el 2026-11-18: el borrado es intencional).
 - **Cambio de esquema:** **ninguno. Esta iteración no crea migración** (D1 reutiliza `pedido_eliminado`; la `0010` quedó descartada). La `0008` es de la 04-06 y la `0009` de la 04-08 (verificado: hoy la última es la `0007`).
 - **Respaldo previo al despliegue:** el de rutina (sin migraciones ni cambios de datos).
 - **Excepción a `AGENTS.md`, sección 11 (aceptada el 2026-11-17, dicha por el desarrollador):** la pantalla de confirmación hace **una consulta más** (el agregado de pagos, cantidad y suma) y el POST con pagos otra; la sección 11 pide detenerse y preguntar ante un aumento de consultas por página. El desarrollador **aceptó** ese aumento: la excepción vale **solo** para esta pantalla y para **+1 consulta**. Se mide antes y después y se anota; si el aumento fuera mayor que +1, la iteración se detiene.
@@ -57,7 +57,7 @@ Que nadie pierda sin darse cuenta los pagos de un pedido: antes de eliminarlo, l
 - **El enunciado pedía «definir el tipo de evento y su migración de Clase 1».** El tipo **ya existe** (`pedido_eliminado`, verificado). Crear otro no es necesario para registrar la cantidad de pagos: el desarrollador resolvió en D1 enriquecer el resumen del tipo existente, **sin migración**; la opción de un tipo nuevo con migración `0010` quedó descartada.
 - **RDA-017 («borrado físico con doble confirmación») es para usuarios (Épica 09), no para pedidos.** Esta iteración usa un patrón parecido por analogía, no por esa RDA.
 - **`DESIGN.md` habla de modal y las confirmaciones de la aplicación son páginas.** Se mantiene la página; si la Épica 08 las convierte en modales, se actualiza junto con las demás.
-- **La 04-06 dice que la pregunta sobre pagos «queda al cliente»**: sigue siendo verdad (el cliente no ha respondido); lo nuevo es que el desarrollador decidió reforzar la confirmación mientras tanto.
+- **La 04-06 dice que la pregunta sobre pagos «queda al cliente»**: ~~sigue siendo verdad (el cliente no ha respondido)~~ **el cliente respondió el 2026-11-18 que es intencional**; lo nuevo es que el desarrollador decidió reforzar la confirmación mientras tanto.
 
 ## Fuera de alcance
 
@@ -126,7 +126,7 @@ Que nadie pierda sin darse cuenta los pagos de un pedido: antes de eliminarlo, l
 4. `eliminar_pedido` (recuento, comprobación, `delete()` en un `transaction.atomic()`, evento) y `pedido_confirm_delete.html` (aviso, campo de confirmación, mensajes, cantidad oculta).
 5. Revisión manual en la réplica, escritorio y 360 px: eliminar un pedido **con** pagos (aviso, error por falta de la palabra, error con la palabra mal escrita, borrado correcto), uno **sin** pagos (como hoy), y ver el evento en el admin.
 6. **Comprobar que no hay migración:** `makemigrations --check --dry-run` sin cambios.
-7. Bitácora (con las consultas antes y después), registro, estado «En revisión»; la pregunta `PENDIENTE_CLIENTE` sigue abierta hasta que el cliente responda.
+7. Bitácora (con las consultas antes y después), registro, estado «En revisión»; ~~la pregunta `PENDIENTE_CLIENTE` sigue abierta hasta que el cliente responda~~ la pregunta `PENDIENTE_CLIENTE` ya está cerrada (respuesta 1 del cliente, 2026-11-18).
 
 ## Pruebas
 
@@ -163,7 +163,7 @@ Que nadie pierda sin darse cuenta los pagos de un pedido: antes de eliminarlo, l
 - Revisión manual en la réplica hecha (con y sin pagos, 360 px).
 - Sin migración nueva (`makemigrations --check --dry-run` sin cambios) y número de consultas antes y después en la bitácora.
 - Verificación 2 de producción hecha.
-- La pregunta `PENDIENTE_CLIENTE` sigue registrada (no la cierra esta iteración).
+- ~~La pregunta `PENDIENTE_CLIENTE` sigue registrada (no la cierra esta iteración).~~ La pregunta se cerró el 2026-11-18 con la respuesta 1 del cliente (registro, sección 2); no la cierra esta iteración.
 
 ## Riesgos
 

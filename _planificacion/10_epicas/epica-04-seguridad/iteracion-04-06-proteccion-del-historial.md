@@ -3,7 +3,7 @@
 - **Épica:** 04 · Seguridad y endurecimiento
 - **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-06-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-06-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-06-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-06-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 02); `definicion-epica-04.md`, alcance 6.
-- **Depende de:** 04-01 (puede tocar `eliminar_cliente` al exigir POST; la 04-06 parte de lo que deje). Se redactó en paralelo a la vigilancia de la 03-05; **su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → 04-05 → **04-06**.
+- **Depende de:** 04-01 (puede tocar `eliminar_cliente` al exigir POST; la 04-06 parte de lo que deje). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → 04-05 → **04-06**.
 - **RDA relacionadas:** RDA-007; RDA-017 (borrado físico con doble confirmación, **para usuarios**, Épica 09; ver «Contradicciones»).
 - **Hallazgos que cierra:** AUD-02-001 (R14).
 - **Clase de cambio esperada:** **Clase 1** (comportamiento de borrado gestionado por Django). **La iteración se detiene si `sqlmigrate` muestra cualquier `ALTER`** (decisión de la épica; `AGENTS.md`, regla 8.1).
@@ -38,7 +38,7 @@ Que eliminar un cliente nunca borre sus pedidos, ítems, pagos, cotizaciones ni 
 
 - **Pedido → ítems:** intencional. Los ítems no existen sin su pedido (composición); `editar_pedido` incluso los borra y recrea (`views.py:329`).
 - **Cotización → ítems:** intencional, por la misma razón (`views.py:896`).
-- **Pedido → pagos:** **no consta que sea intencional.** `eliminar_pedido` (`views.py:382`) borra el pedido y con él sus pagos, es decir, historial financiero. Ninguna RDA ni regla del cliente lo decide. **Fuera** de esta iteración (no es AUD-02-001); se registra como pregunta `PENDIENTE_CLIENTE` (registro, sección 2): ¿se puede eliminar un pedido con pagos?
+- **Pedido → pagos:** ~~**no consta que sea intencional.**~~ **Intencional (respondido el 2026-11-18, respuesta 1 del cliente, dicha por el desarrollador).** `eliminar_pedido` (`views.py:382`) borra el pedido y con él sus pagos, es decir, historial financiero. Ninguna RDA ni regla del cliente lo decide. **Fuera** de esta iteración (no es AUD-02-001); se registra como pregunta `PENDIENTE_CLIENTE` (registro, sección 2): ¿se puede eliminar un pedido con pagos?
 - Con la 04-06, borrar un cliente **sin** historial no arrastra nada; **con** historial, se rechaza entero (Django revisa todos los objetos relacionados antes de borrar, inferido de la documentación de `PROTECT`).
 
 ### La vista y la pantalla
@@ -77,7 +77,7 @@ No hay limpieza de datos ni comando que borre clientes con historial: nada se ro
 3. `eliminar_cliente`: captura `ProtectedError` **fuera** de cualquier bloque atómico (regla 8.3), vuelve a pintar la confirmación con el mensaje de D1 y **no registra ningún evento** por el rechazo (D3).
 4. `cliente_confirm_delete.html`: bloque de error como el de productos (según `DESIGN.md`) y advertencia «Solo se puede eliminar un cliente sin pedidos ni cotizaciones» (D2), **sin conteos y sin ocultar el botón**.
 5. R14 pasa de fallo esperado a verde (se quita `@expectedFailure`) y se suman las tres pruebas de D4.
-6. **Fuera:** pagos en cascada desde el pedido (pregunta `PENDIENTE_CLIENTE`, se conserva en el registro, sección 2); borrado lógico o archivado de clientes; `require_POST` de `eliminar_cliente` (04-01); doble confirmación (RDA-017 es de usuarios).
+6. **Fuera:** pagos en cascada desde el pedido (~~pregunta `PENDIENTE_CLIENTE`, se conserva en el registro, sección 2~~ respondida el 2026-11-18: es intencional); borrado lógico o archivado de clientes; `require_POST` de `eliminar_cliente` (04-01); doble confirmación (RDA-017 es de usuarios).
 
 ## Decisiones (resueltas por el desarrollador, 2026-11-17)
 

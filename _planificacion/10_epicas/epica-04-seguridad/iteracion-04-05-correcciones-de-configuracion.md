@@ -3,7 +3,7 @@
 - **Épica:** 04 · Seguridad y endurecimiento
 - **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-05-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-05-cierre.md)).
 - **Subfase del plan:** 4.5 «Correcciones de configuración» (`plan-de-trabajo.md`; `definicion-epica-04.md`, alcance 5).
-- **Depende de:** 04-02 (también edita `settings.py`: `SEGURIDAD_PRODUCCION`, HSTS, `CSRF_TRUSTED_ORIGINS`) y 04-04 (también edita `views.py` y `utils.py` en la restauración). Se redactó en paralelo a la vigilancia de la 03-05; **su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → **04-05**.
+- **Depende de:** 04-02 (también edita `settings.py`: `SEGURIDAD_PRODUCCION`, HSTS, `CSRF_TRUSTED_ORIGINS`) y 04-04 (también edita `views.py` y `utils.py` en la restauración). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → **04-05**.
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito).
 - **Hallazgos que cierra:** AUD-01-009 (`from PedidosApp import settings`), AUD-01-016 (`CONN_HEALTH_CHECKS`), AUD-01-025 (importaciones duplicadas y código muerto) y AUD-02-016 (`TEMPLATES['DIRS']` y `BASE_DIR` duplicado). Además, la parte (2) de AUD-05-008 (ver «Contradicciones»).
 - **Clase de cambio:** **Clase 1** en el sentido amplio de esta épica: sin cambios de comportamiento visibles ni de base de datos, **sin migraciones**. `CONN_HEALTH_CHECKS` cambia cómo se reutiliza la conexión, no qué datos se leen ni se escriben.
@@ -128,7 +128,7 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 1. Respaldo previo (`respaldo.md`).
 2. Tras el Reload: acceso, panel, una lista y el PDF de una cotización responden como antes.
 3. Dejar hibernar la aplicación y volver a entrar: la primera petición responde sin error 500; `server.log` sin `OperationalError` ni «MySQL server has gone away» (que hoy no sabemos si ocurre: no verificado).
-4. `server.log` sin errores nuevos durante tres días.
+4. `server.log` sin errores nuevos ~~durante tres días~~ **desde el reinicio efectivo, en la verificación del mismo día (RDA-021, 2026-11-18)**.
 
 ## Plan de retroceso
 

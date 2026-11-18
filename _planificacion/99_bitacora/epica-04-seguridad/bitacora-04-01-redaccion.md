@@ -1,5 +1,7 @@
 # Bitácora 04-01 · Redacción de la iteración
 
+> **Nota del 2026-11-18 (RDA-021):** las esperas que cita esta bitácora («hasta cerrar la vigilancia», «no antes del 2026-11-23 23:48», los 3 días entre los escalones de HSTS) quedaron superadas, y la 14-01 se despliega antes de la 04-01 (RDA-022). El texto de abajo no se editó; ver [bitacora-04-replanificacion](bitacora-04-replanificacion.md).
+
 - **Fecha:** 2026-11-17
 - **Agente:** Claude Code (Opus 5.5)
 - **Estado final:** En revisión (la redacción). La 04-01 queda «Pendiente (redactada, decisiones resueltas)», con P1 y P2 por confirmar. Solo documentos: sin cambios de código, pruebas ni plantillas.

@@ -19,13 +19,15 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-011 | Épicas numeradas igual que las fases del plan | Reemplazada por RDA-014 |
 | RDA-012 | Procedimientos operativos en `docs/operacion/` | Aceptada |
 | RDA-013 | Errores en el registro del servidor con `logging`; eventos de negocio en MySQL | Aceptada |
-| RDA-014 | Épicas numeradas según su orden de ejecución, de 00 a 14 | Aceptada |
+| RDA-014 | Épicas numeradas según su orden de ejecución, de 00 a 14 | Aceptada; reemplazada en parte por RDA-022 (contenido de la Épica 14) |
 | RDA-015 | Vistas delgadas con servicios y selectores; sin patrón repositorio sobre el ORM | Aceptada |
 | RDA-016 | Interfaz renderizada en el servidor con plantillas de Django; sin migración a React | Aceptada |
 | RDA-017 | Dos roles sobre la tabla nativa de usuarios y borrado físico con doble confirmación | Aceptada |
 | RDA-018 | Proyección de pedidos con la biblioteca estándar de Python; sin aprendizaje automático | Aceptada |
 | RDA-019 | Se retira `@transaccion_segura`; los errores de vista los maneja Django y la atomicidad se declara donde se escribe | Aceptada |
+| RDA-020 | (Reservada) Sanitización del HTML enriquecido con `nh3`, al guardar y al mostrar; se escribe al ejecutar la 04-07 | Propuesta |
 | RDA-021 | Sin esperas de 3, 5 ni 7 días: cada despliegue se valida con el día 0 y el plan de retroceso | Aceptada |
+| RDA-022 | Las fallas se corrigen según su gravedad, y la Épica 14 pasa a ser «Mantenimiento», sin AWS | Aceptada |
 
 ---
 
@@ -180,8 +182,9 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 ## RDA-014 · Épicas numeradas según su orden de ejecución, de 00 a 14
 
 - **Fecha:** 2026-10-27
-- **Estado:** Aceptada
+- **Estado:** Aceptada; reemplazada en parte por RDA-022 (solo el contenido de la Épica 14)
 - **Reemplaza a:** RDA-011
+- **Reemplazada en parte por RDA-022 (2026-11-18):** la Épica 14 ya no es «Tecnología en la nube (AWS)» sino «Mantenimiento» (tabla de abajo, fila «— → Épica 14»). La numeración por orden de ejecución sigue vigente.
 
 **Contexto:** el desarrollador pidió, durante la Épica 02, sumar al plan trabajo que no existía en él: reorganizar el frontend, un módulo de usuarios con roles, mejoras del tablero «Trabajo Semanal», automatizaciones por correo, una proyección de pedidos y servicios de AWS. Además separó la antigua Fase 6 en dos (mantención y arquitectura) y sacó de la Fase 5 los estilos y recursos del navegador. Con eso, la regla «la Épica `NN` es la Fase `N`» de RDA-011 deja de ser posible.
 **Decisión:** las épicas se numeran según su **orden de ejecución**, de 00 a 14, y el número de cada épica coincide con su lugar en la secuencia. El origen en el plan queda escrito en la cabecera de cada definición («Fase del plan») y en el anexo de `plan-de-trabajo.md`. Las iteraciones nuevas toman el correlativo libre de su épica; los números que quedan sin uso no se reasignan, para que ninguna referencia antigua apunte a otra cosa. Las referencias a la numeración anterior en documentos escritos antes de esta fecha (bitácoras, iteraciones cerradas, evidencias, Auditorías 01 y 02, documentos de la Épica 02 y `docs/operacion/`) no se reescriben: se leen con la tabla de equivalencias de abajo.
@@ -265,3 +268,36 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Decisión:** se eliminan las esperas de 3, 5 y 7 días. Cada despliegue se valida con la lectura del día 0 y se respalda con el plan de retroceso (`docs/operacion/retroceso.md` y la regla de retroceso de la evidencia de la iteración); no hay un periodo de vigilancia posterior. Al cerrar una épica se pasa de inmediato a la siguiente. Se cancela la lectura del día 7 de la 03-05.
 **Alternativas consideradas:** mantener las esperas (descartado por el desarrollador).
 **Consecuencias:** la 03-05 y la Épica 03 quedan Terminadas el 2026-11-18. Un problema que aparezca días después de un despliegue se verá solo si el usuario lo reporta o si el desarrollador hace una lectura a demanda: es el riesgo que la decisión 5 de la 03-05 ya anotaba, ahora sin lecturas programadas. La etiqueta anotada, el respaldo previo y el retroceso siguen vigentes, así que **no contradice RDA-007** (verificado leyéndola: no fija ninguna espera). Quedan superados, sin borrar, los textos que condicionan trabajo a «cerrar la vigilancia» o fijan esperas: el día 7 de la 03-05 y, en la Épica 04 (que no se editó el 2026-11-18, por instrucción del desarrollador), «nada se despliega hasta cerrar la vigilancia», la fecha de la 04-01 «no antes del 2026-11-23 23:48» y la observación de 3 días de la 04-02 (D6). Cómo queda esa observación de 3 días entre los escalones de HSTS: `PENDIENTE_DESARROLLADOR`. La RDA-020 queda reservada para la sanitización con `nh3` (propuesta de la 04-07, se escribe al ejecutarla): por eso la numeración salta de RDA-019 a RDA-021.
+
+**Actualización 2026-11-18 (decisión del desarrollador, dicha por él):** la observación de 3 días entre los dos escalones de HSTS de la 04-02 queda así: el segundo escalón (`604800`) **sube el mismo día, después de comprobar el primero** (`3600`), sin los 3 días; siguen siendo **dos despliegues**. La 04-01 y la 04-10 ya pueden ejecutarse (no hay vigilancia que cerrar). Los documentos de la Épica 04 se alinearon con esta RDA ([bitacora-04-replanificacion](../99_bitacora/epica-04-seguridad/bitacora-04-replanificacion.md)). Sigue sin respuesta si existe una espera de 5 días y dónde (`PENDIENTE_DESARROLLADOR`).
+
+## RDA-022 · Las fallas se corrigen según su gravedad, y la Épica 14 pasa a ser «Mantenimiento», sin AWS
+
+- **Fecha:** 2026-11-18
+- **Estado:** Aceptada (decisión del desarrollador, dicha por él)
+- **Reemplaza en parte a:** RDA-014 (solo el contenido de la Épica 14; la numeración por orden de ejecución sigue vigente)
+
+**Contexto:** la lectura anticipada de la 03-05 dejó dos hallazgos anteriores a la Fase 3: AUD-05-010 (los pagos de pedidos desde el #1000 se rechazan sin avisar) y AUD-05-011 (el selector de pedidos de `/pagos/ingresar/` hace una consulta por pedido). El desarrollador le puso gravedad «Crítica» al primero, una gravedad que la escala de `_planificacion/README.md` (sección 5.3: Alta, Media y Baja) no tiene. La primera salida, sumarlo a la 04-01 («mutaciones solo por POST»), choca con «un despliegue, un propósito» (`AGENTS.md`, sección 10, punto 3, y RDA-007) y deja un defecto vivo en producción detrás de una iteración de otro tema. Faltaba un método para decidir dónde y cuándo se corrige cada falla. Además, la Épica 14 (AWS) era la última del plan y el desarrollador decidió sacar AWS del compromiso.
+**Decisión:**
+
+1. **Cada falla se corrige según su gravedad:**
+
+   | Gravedad | Qué es | Dónde y cuándo se corrige |
+   | :------- | :----- | :------------------------ |
+   | **Crítica** | Rechazo o pérdida silenciosa de datos comerciales en producción (texto propuesto para la escala; ver «Consecuencias») | **Arreglo urgente:** una iteración propia con despliegue propio, **antes** de cualquier otra iteración pendiente, sin mezclar otros propósitos (RDA-007). Se numera en la Épica 14: la primera es la 14-01 |
+   | **Alta** | La definición vigente de la sección 5.3 (bloquea la publicación o afecta al usuario o al negocio) | **La siguiente iteración** que se ejecute |
+   | **Media** y **Baja** | Las definiciones vigentes de la sección 5.3 | **Épica 14**, agrupadas **por tema** (una iteración reúne las fallas de un mismo tema) |
+
+2. **La Épica 14 pasa a llamarse «Mantenimiento» y queda abierta siempre:** nunca se marca Terminada; se cierran sus iteraciones, no la épica. Reúne los arreglos urgentes, las fallas Media y Baja por tema y el respaldo fuera del servidor (AUD-02-023 y AUD-02-024).
+3. **AWS sale del plan.** Pasa a `producto.md`, sección 1, subsección «Objetivos a largo plazo»: una posibilidad futura, que solo se retoma después de conversarlo con el cliente. No hay cuenta de AWS, ni dependencia nueva, ni servicio externo nuevo. Las tres iteraciones que tenía la Épica 14 (14-01 cuenta de AWS, 14-02 respaldo en S3 y 14-03 restauración desde S3) quedan **Descartadas**; no tenían archivo de iteración.
+4. **Numeración:** el número 14-01 se reasigna al arreglo urgente de pagos por decisión del desarrollador (2026-11-18), como excepción explícita a la regla de RDA-014 de no reasignar números sin uso. Los números 14-02 y 14-03 **no** se reasignan.
+5. **Respaldo fuera del servidor:** sigue en la Épica 14, pero sin S3. A dónde va esa copia: `PENDIENTE_DESARROLLADOR`.
+
+**Alternativas consideradas:** sumar el arreglo de pagos a la 04-01 (descartada por el desarrollador el 2026-11-18: lleva despliegue propio); mantener la Épica 14 con AWS (descartada por el desarrollador).
+**Consecuencias:**
+
+- `_planificacion/README.md` es un documento protegido: la sección 5.3 sigue con tres severidades y la tabla de la sección 2.2 sigue llamando a la carpeta `epica-14-nube-aws`. Se entregó al desarrollador el texto propuesto para agregar la gravedad «Crítica» («rechazo o pérdida silenciosa de datos comerciales en producción») y el cambio del nombre de la carpeta ([bitacora-04-replanificacion](../99_bitacora/epica-04-seguridad/bitacora-04-replanificacion.md)). Mientras no se edite, la Auditoría 05 usa «Crítica» con esta RDA como respaldo.
+- `plan-de-trabajo.md` (anexo, fila de la Épica 14) sigue diciendo «Tecnología en la nube (AWS)»: el plan no se reescribe (`_planificacion/README.md`, sección 2.1, punto 5) y esa fila queda superada por esta RDA, con una fila en el historial del registro.
+- La carpeta `10_epicas/epica-14-nube-aws/` conserva su nombre: moverla exige consulta previa (`AGENTS.md`, sección 6). Renombrarla (propuesta: `epica-14-mantenimiento`): `PENDIENTE_DESARROLLADOR`.
+- Cada falla crítica agrega un despliegue y retrasa el resto del plan lo que dure su arreglo. Con la RDA-021, cada despliegue se valida con el día 0 y el plan de retroceso, sin vigilancia posterior.
+- Las fallas ya asignadas a otras épicas (por ejemplo AUD-05-001 y AUD-05-005 a AUD-05-008, a la Épica 08) se quedan donde están; si deben pasar a la Épica 14: `PENDIENTE_DESARROLLADOR`. Tampoco está decidido cuándo se ejecutan las iteraciones de Media y Baja de la Épica 14 (entre épicas, al cerrar cada una o al final del plan), ni si una falla Alta se numera en la Épica 14 o en la de su tema.

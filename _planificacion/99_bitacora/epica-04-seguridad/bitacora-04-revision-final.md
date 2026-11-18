@@ -1,5 +1,7 @@
 # Bitácora · Revisión final de la Épica 04 (documental)
 
+> **Nota del 2026-11-18 (RDA-021):** las esperas que cita esta bitácora («hasta cerrar la vigilancia», «no antes del 2026-11-23 23:48», los 3 días entre los escalones de HSTS) quedaron superadas, y la 14-01 se despliega antes de la 04-01 (RDA-022). El texto de abajo no se editó; ver [bitacora-04-replanificacion](bitacora-04-replanificacion.md).
+
 - **Fecha:** 2026-11-17
 - **Agente:** Claude Code (Sonnet 5.5)
 - **Alcance:** revisión de las diez iteraciones (04-01 a 04-10), la definición, el registro, la auditoría, `decisiones.md`, `AGENTS.md` y las bitácoras de la épica. **Solo documentos:** sin código, pruebas, `manage.py`, consultas a la base ni acceso a producción.

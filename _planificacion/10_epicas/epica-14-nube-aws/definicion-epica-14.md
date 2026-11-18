@@ -1,65 +1,71 @@
-# Épica 14 · Tecnología en la nube (AWS)
+# Épica 14 · Mantenimiento
 
-- **Estado:** Pendiente
-- **Fase del plan:** no existe en el plan original; anexo del plan del 2026-10-27 (RDA-014). Es la última épica por decisión del desarrollador.
-- **Objetivo:** sacar los respaldos del disco de PythonAnywhere y guardarlos en Amazon S3, en una cuenta de AWS del negocio, protegida y con costo vigilado. El servidor deja de ser el único lugar donde viven las copias automáticas.
-- **Precondición:** 06-02 y 06-03 desplegadas (la orden diaria genera los respaldos de los días 1 y 15, y la rotación local ya es por antigüedad). La Épica 13 sigue corriendo en paralelo: sus rutinas incorporan las de esta épica.
-- **Última revisión:** 2026-10-27 (creada a pedido del desarrollador).
+- **Estado:** Abierta siempre (RDA-022). Nunca se marca Terminada: se cierran sus iteraciones, no la épica.
+- **Fase del plan:** no existe en el plan original; anexo del plan del 2026-10-27 (RDA-014), donde era «Tecnología en la nube (AWS)». **Desde el 2026-11-18 (RDA-022) es «Mantenimiento» y AWS sale del plan** (ver «Qué salió de la épica»). La carpeta conserva el nombre `epica-14-nube-aws`: renombrarla exige consulta y cambiar un documento protegido (`PENDIENTE_DESARROLLADOR`).
+- **Objetivo:** que las fallas se corrijan según su gravedad y no queden sin dueño: los arreglos urgentes con despliegue propio, las fallas Media y Baja agrupadas por tema y el respaldo fuera del servidor.
+- **Precondición:** ninguna. La 14-01 se ejecuta y se despliega **antes** de la 04-01 (decisión del desarrollador, 2026-11-18).
+- **Última revisión:** 2026-11-18 (reescrita por RDA-022; antes, creada el 2026-10-27 a pedido del desarrollador).
 
-## Por qué S3 y no otro servicio (contexto para quien llega)
+## Cómo funciona (RDA-022)
 
-- **El riesgo que se cubre:** hoy los respaldos automáticos quedan en `backups/` del servidor, en el mismo disco de 512 MiB que la base. Si el disco falla o se llena, se pierden la base y sus copias a la vez (AUD-01-014, AUD-02-019, AUD-02-024). La rotación que borra respaldos es código propio (`limpiar_backups_antiguos`), no una política de PythonAnywhere: la corrige la 06-03.
-- **S3 es almacenamiento de archivos:** un `.sql` comprimido es exactamente eso. Un servicio de bases de datos (RDS, DynamoDB) sería un servidor que administrar y pagar, no un lugar donde guardar copias.
-- **Viabilidad verificada el 2026-10-27:** `.amazonaws.com` está en la lista blanca de salida de PythonAnywhere, así que el plan gratuito puede subir archivos a S3.
-- **Costo:** desde julio de 2025, las cuentas nuevas de AWS entran a un plan gratuito con hasta USD 200 en créditos que dura seis meses o hasta agotar los créditos; después hay que pasar al plan pagado. Con unos 24 respaldos al año de pocos MB, el almacenamiento en S3 cuesta del orden de centavos de dólar al mes, pero exige una tarjeta registrada: por eso la épica parte por la seguridad y la alerta de presupuesto.
+| Gravedad | Qué es | Dónde y cuándo se corrige |
+| :------- | :----- | :------------------------ |
+| **Crítica** | Rechazo o pérdida silenciosa de datos comerciales en producción | **Arreglo urgente**: una iteración propia con despliegue propio, antes de cualquier otra iteración pendiente, sin mezclar otros propósitos. Se numera aquí |
+| **Alta** | La definición vigente de `_planificacion/README.md`, sección 5.3 | La siguiente iteración que se ejecute |
+| **Media** y **Baja** | Las definiciones vigentes de la sección 5.3 | Esta épica, agrupadas por tema |
 
-## Alcance
-
-1. **Cuenta y seguridad (14-01):**
-   - cuenta de AWS a nombre del negocio, porque los datos son de Manza Gráfica;
-   - autenticación de dos factores en la cuenta raíz, sin usarla para el trabajo diario;
-   - un usuario IAM para la aplicación con **mínimo privilegio**: solo subir objetos a un prefijo de un bucket, sin permiso para borrar ni listar todo, de modo que una clave filtrada no pueda destruir los respaldos;
-   - alerta de presupuesto (AWS Budgets) con un umbral bajo;
-   - región a decidir;
-   - credenciales solo en `.env` y en `.env.example` sin valores.
-
-   Se documenta en `docs/operacion/`.
-2. **Respaldo de la base en S3 (14-02):** la orden diaria, los días 1 y 15, comprime el volcado (`gzip` de la biblioteca estándar), lo sube a un bucket privado con cifrado del lado del servidor, bloqueo de acceso público y versionado, y registra el resultado como evento. Una regla de ciclo de vida del bucket fija la retención en la nube. Un fallo de subida no impide que el respaldo quede en el servidor (RDA-009).
-3. **Restauración ensayada desde S3 (14-03):** descargar un respaldo de S3, verificarlo con `scripts/verificar_respaldo.py` y restaurarlo en la réplica local. Se suma al ensayo semestral de la 13-04.
+- **Una iteración, un propósito (RDA-007).** Una iteración de mantenimiento reúne las fallas de **un** tema; si dos fallas no comparten tema, van en iteraciones y despliegues distintos.
+- **Cada arreglo escribe antes la prueba que falla** (`AGENTS.md`, sección 8, regla 15) y trae su plan de retroceso y su verificación del mismo día (RDA-021).
+- **Lo que ya está asignado a otra épica se queda ahí** hasta que el desarrollador lo mueva (por ejemplo, AUD-05-001 y AUD-05-005 a AUD-05-008, a la Épica 08): `PENDIENTE_DESARROLLADOR`. Hoy no hay ninguna falla Media o Baja movida a esta épica.
+- **Cuándo se ejecutan las iteraciones de Media y Baja** (entre épicas, al cerrar cada una o al final del plan): `PENDIENTE_DESARROLLADOR`.
 
 ## Iteraciones
 
-| Iteración | Nombre |
-| :-------- | :----- |
-| 14-01 | Cuenta de AWS y seguridad |
-| 14-02 | Respaldo de la base en S3 |
-| 14-03 | Restauración ensayada desde S3 |
+| Iteración | Nombre | Estado |
+| :-------- | :----- | :----- |
+| 14-01 | [Arreglo urgente de pagos](iteracion-14-01-arreglo-urgente-de-pagos.md): AUD-05-010 (Crítica) y AUD-05-011 (Alta); AUD-05-009 está por decidir | Pendiente (redactada, decisiones abiertas) |
+| ~~14-02~~ | ~~Respaldo de la base en S3~~ | **Descartada** (RDA-022). El número no se reasigna |
+| ~~14-03~~ | ~~Restauración ensayada desde S3~~ | **Descartada** (RDA-022). El número no se reasigna |
+| ~~14-01 (anterior)~~ | ~~Cuenta de AWS y seguridad~~ | **Descartada** (RDA-022). El número 14-01 se reasignó al arreglo de pagos por decisión del desarrollador; esta iteración nunca tuvo archivo |
 
-## Ideas propuestas (el desarrollador decide; serían 14-04 en adelante)
+### Propuestas de destino, sin redactar (2026-11-18)
 
-- **Respaldo de `media/` en S3** (AUD-02-023): las imágenes de referencia hoy no tienen copia automática.
-- **Correo con Amazon SES** como alternativa al canal de la 11-01, si este resultara poco confiable.
+Salen de las respuestas del cliente (registro, sección 2). Son **propuestas**: el desarrollador confirma el destino y el número se fija al redactar cada una (los números 14-02 y 14-03 no se reasignan, así que las nuevas parten en 14-04). Las que cambian una regla del negocio necesitan una RDA aprobada antes de redactarse (`AGENTS.md`, sección 1).
+
+| Tema | Qué | Origen | Gravedad |
+| :--- | :-- | :----- | :------- |
+| Pagos | No permitir el sobrepago: avisar y repintar el formulario (pago, edición del pago y abono inicial) | Respuesta 6 | `PENDIENTE_DESARROLLADOR`; va después de la 14-01, no con ella |
+| Pedidos | Al duplicar un pedido, copiar los ítems (no los pagos) | Respuesta 2 | `PENDIENTE_DESARROLLADOR`; después de la 04-01, que reescribe `duplicar_pedido` |
+| Tablero semanal y panel | Sacar los pedidos `ENTREGADO` del tablero semanal (si también salen de «crítico» del panel principal: `PENDIENTE_CLIENTE`) | Respuesta 7 | `PENDIENTE_DESARROLLADOR` |
+| Cotizaciones | Cotización neta con línea de IVA y total bruto, como una factura chilena | Respuesta 3 | Cambia una regla del negocio: requiere RDA |
+| Respaldos | Copia de los respaldos y de `media/` fuera del servidor (AUD-02-023, AUD-02-024) | RDA-022 | Media; destino de la copia sin S3: `PENDIENTE_DESARROLLADOR` |
+
+El resto de las respuestas (8, 9 y 12) tiene destino fuera de esta épica: ver el registro.
+
+## Qué salió de la épica (AWS)
+
+La definición anterior (2026-10-27) proponía sacar los respaldos a Amazon S3 en una cuenta de AWS del negocio (14-01 cuenta y seguridad, 14-02 respaldo en S3, 14-03 restauración ensayada). **El desarrollador sacó AWS del plan el 2026-11-18 (RDA-022).** Pasa a «Objetivos a largo plazo» de `producto.md`, sección 1, con el contexto de la definición anterior (la viabilidad con la lista blanca, el costo y las condiciones de seguridad). Si algún día se retoma, se conversa primero con el cliente y se redacta de nuevo, con su RDA.
+
+Siguen vigentes dos hallazgos que ese plan resolvía y que ahora quedan en esta épica sin destino técnico definido: AUD-02-023 (las imágenes de `media/` no tienen copia) y AUD-02-024 (el respaldo de emergencia de la restauración vive en el mismo disco que la base). Mientras tanto, la protección es la descarga manual del protocolo de la 00-02 (`docs/operacion/respaldo.md`).
 
 ## Decisiones de la épica
 
-- Biblioteca para hablar con S3: `boto3` (oficial, pero ocupa decenas de MB en un disco de 512 MiB) u otra más liviana: `PENDIENTE_DESARROLLADOR`, se decide en 14-02 midiendo el espacio y con RDA (dependencia nueva). La RDA de la épica también registra el primer servicio externo de la aplicación, que RDA-004 no contemplaba.
-- Región de AWS y retención en el bucket: `PENDIENTE_DESARROLLADOR`, se deciden en 14-01 y 14-02.
-- Quién abre la cuenta y registra el medio de pago (el cliente, con apoyo del desarrollador): `PENDIENTE_CLIENTE`.
-- **2026-10-27 · Sin aprendizaje automático en la nube (RDA-018).**
+- 2026-11-18 · Gravedad, destino de cada falla y «Mantenimiento, abierta siempre»: RDA-022.
+- A dónde va la copia fuera del servidor ahora que AWS salió: `PENDIENTE_DESARROLLADOR`.
+- Si las fallas ya asignadas a otras épicas se mueven aquí: `PENDIENTE_DESARROLLADOR`.
+- 2026-10-27 · Sin aprendizaje automático en la nube (RDA-018). Sigue vigente, sin nube.
 
 ## Fuera de alcance
 
-- Cambiar de hosting o mover la base de datos a AWS.
-- Servicios de aprendizaje automático (SageMaker y similares).
-- Subir a S3 los respaldos generados a mano desde la web: siguen el protocolo de descarga local de 00-02.
+- Funcionalidades nuevas del negocio sin una RDA aprobada.
+- Cambiar de hosting o mover la base de datos a la nube.
+- Servicios de aprendizaje automático (RDA-018).
 
 ## Criterio de término
 
-- Un respaldo del día 1 o del 15 aparece en S3 sin intervención manual y queda su evento.
-- La clave de la aplicación no puede borrar objetos del bucket (comprobado con un intento que falla).
-- Un respaldo descargado de S3 se restaura en la réplica y pasa la verificación.
-- La alerta de presupuesto está activa.
+Ninguno: la épica queda abierta. Cada iteración trae sus propios criterios de aceptación.
 
 ## Notas
 
 - **2026-10-27:** creada a pedido del desarrollador, que pidió sacar de la Épica 06 todo lo de S3 y reunir lo de AWS al final del plan.
+- **2026-11-18:** RDA-022. La épica pasa a «Mantenimiento», abierta siempre; AWS sale a `producto.md`; la 14-01 pasa a ser el arreglo urgente de pagos ([bitacora-04-replanificacion](../../99_bitacora/epica-04-seguridad/bitacora-04-replanificacion.md)).
