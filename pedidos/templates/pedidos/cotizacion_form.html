@@ -1,5 +1,6 @@
 {% extends 'pedidos/base.html' %}
 {% load widget_tweaks %}
+{% load l10n %}
 
 {% block title %}
     {% if form.instance.pk %}Editar Cotización #{{ form.instance.id }}{% else %}Nueva Cotización{% endif %} - Manza
@@ -135,7 +136,7 @@
                                         data-placeholder="Buscar productos...">
                                     <option></option>
                                     {% for producto in productos_disponibles %}
-                                        <option value="{{ producto.id }}"
+                                        <option value="{{ producto.id|unlocalize }}"
                                                 data-precio="{{ producto.valor_bruto|stringformat:'d' }}"
                                                 data-unidad="{{ producto.get_unidad_display }}"
                                                 data-codigo-unidad="{{ producto.unidad }}"> {{ producto.nombre }}

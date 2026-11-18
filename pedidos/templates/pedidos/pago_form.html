@@ -1,6 +1,7 @@
 {% extends 'pedidos/base.html' %}
 {% load widget_tweaks %}
 {% load humanize %}
+{% load l10n %}
 
 {% block title %}
     {% if form.instance.pk %}Editar Pago #{{ form.instance.id }}{% else %}Registrar Pago{% endif %} - Manza Gráfica
@@ -74,8 +75,11 @@
 
                         {% if pedido_obj and not form.instance.pk %}
                             <input type="text" class="form-control bg-slate-100 dark:bg-neutral-800 cursor-not-allowed"
-                                   value="Pedido #{{ pedido_obj.id }} - {{ pedido_obj.cliente.nombre }}" disabled>
-                            <input type="hidden" name="pedido" value="{{ pedido_obj.id }}">
+                                   value="Pedido #{{ pedido_obj.pk|unlocalize }} - {{ pedido_obj.cliente.nombre }}" disabled>
+                            <input type="hidden" name="pedido" value="{{ pedido_obj.pk|unlocalize }}">
+                            {% if form.pedido.errors %}
+                                <p id="error-pedido" role="alert" class="text-red-600 dark:text-red-400 text-xs mt-1 font-bold">{{ form.pedido.errors.0 }}</p>
+                            {% endif %}
                         {% else %}
                             {% render_field form.pedido class="form-select select2" %}
                             {% if form.pedido.errors %}

@@ -1,7 +1,7 @@
 # Iteración 14-01 · Arreglo urgente de pagos
 
 - **Épica:** 14 · Mantenimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). D1 a D5 y la etiqueta, resueltas el 2026-11-18 (decisión del desarrollador, dicha por él): D1 A, D2 A, D3 A, D4 A, D5 B, `v14.1-pagos`. Redactada el 2026-11-18 ([bitacora-04-replanificacion](../../99_bitacora/epica-04-seguridad/bitacora-04-replanificacion.md)). Es el primer arreglo urgente del método de la RDA-022.
+- **Estado:** **Implementada, pendiente de despliegue** (2026-11-18; [bitacora-14-01](../../99_bitacora/epica-14-mantenimiento/bitacora-14-01.md)). Se cierra solo con la verificación del día 0 en producción. Antes: Pendiente (redactada, decisiones resueltas). D1 a D5 y la etiqueta, resueltas el 2026-11-18 (decisión del desarrollador, dicha por él): D1 A, D2 A, D3 A, D4 A, D5 B, `v14.1-pagos`. Redactada el 2026-11-18 ([bitacora-04-replanificacion](../../99_bitacora/epica-04-seguridad/bitacora-04-replanificacion.md)). Es el primer arreglo urgente del método de la RDA-022.
 - **Subfase del plan:** ninguna (no existe en el plan original; RDA-022).
 - **Depende de:** ninguna. **Se ejecuta y se despliega ANTES de la 04-01** (decisión del desarrollador, 2026-11-18). Producción está en `v3.1-integridad`, sobre `7e14398` (dicho por el desarrollador).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito; aviso al cliente), RDA-021 (sin esperas: verificación del mismo día y plan de retroceso), RDA-022 (gravedad Crítica y arreglo urgente).
@@ -128,9 +128,9 @@ La herramienta de diagnóstico de consultas es de la 05-02 y aún no existe: en 
 
 ## Criterios de aceptación
 
-- [ ] T1 a T5 fallan antes de la corrección y pasan después.
-- [ ] Suite completa en verde con `OK (expected failures=9)`; `check` y `makemigrations --check --dry-run` sin cambios.
-- [ ] Consultas de `GET /pagos/ingresar/` medidas antes y después en la bitácora, constantes con N.
+- [x] T1 a T5 fallan antes de la corrección y pasan después.
+- [x] Suite completa en verde con `OK (expected failures=9)`; `check` y `makemigrations --check --dry-run` sin cambios.
+- [x] Consultas de `GET /pagos/ingresar/` medidas antes y después en la bitácora, constantes con N (en pruebas; la réplica no se midió).
 - [ ] Revisión manual en la réplica a escritorio y a 360 px (puntos a a d del paso 6).
 - [ ] Un pago desde un pedido con id ≥ 1000 se guarda en producción (verificación 5) y no hay `ERROR` nuevos (6).
 - [ ] AUD-05-010 y AUD-05-011 pasan a «Resuelto en 14-01» en la auditoría, con la evidencia mínima.
@@ -149,6 +149,32 @@ La herramienta de diagnóstico de consultas es de la 05-02 y aún no existe: en 
 - AUD-05-009 (D3 A).
 - El pedido #1015: **ausente, borrado por un usuario del sistema, autor no verificado** (consulta de solo lectura en producción del 2026-11-18: el último pedido es el #1014; dicho por el desarrollador que lo borró el cliente u otra persona). La revisión de duplicados se hizo: del #995 al #1014 no hay grupos repetidos por cliente, resumen y valor. Ya no queda nada que borrar. Opcional: buscar `pedido_eliminado` en `server.log` para fijar fecha y autor.
 - Cualquier otra optimización de consultas: Épica 05.
+
+## Ejecución (2026-11-18)
+
+- **Causa confirmada por prueba.** El separador de miles no es un punto: el formato de Django para «es» usa un espacio duro (`THOUSAND_SEPARATOR = "\xa0"`), así que el pedido 1002 salía `value="1\xa0002"` → «1 002». Donde este documento dice «1.002», léase «1 002»; la causa y el arreglo no cambian.
+- **Código:** `pago_form.html` (`{% load l10n %}`, `|unlocalize` en el texto «Pedido #…» y en el campo oculto, aviso `id="error-pedido"` `role="alert"` también en la rama del campo oculto); `forms.py` (`select_related('cliente')` y `invalid_choice` de D4); `pedido_form.html` y `cotizacion_form.html` (`|unlocalize` en `producto.id`). AUD-05-009 no se tocó (D3 A).
+- **Pruebas:** `pedidos/tests/test_pagos_ids.py`, 6 pruebas (T1, T2, T3 ×2, T4, T5). Antes del arreglo: `FAILED (failures=6)`. Después: `OK`. Suite completa: 273 pruebas, `OK (expected failures=9)`. `check` sin problemas; `makemigrations --check --dry-run`: `No changes detected`.
+- **Medición (pruebas, MySQL):** `GET /pagos/ingresar/` pasó de 9 consultas con 3 pedidos y 36 con 30 a un número igual con 3 y con 30. `editar_pago`: de 10 y 37 a igual. En la réplica no se midió.
+- **No hecho por el agente:** la revisión manual en la réplica, en escritorio y a 360 px (paso 6). La hace el desarrollador antes de etiquetar.
+
+## Despliegue paso a paso (lo hace el desarrollador; RDA-007)
+
+1. **[PC]** Revisión manual del paso 6 en la réplica (puntos a a d).
+2. **[PC]** Commit en `main`; lista de `despliegue.md`, sección 2: `python manage.py test pedidos` → `OK (expected failures=9)` con 273 pruebas, `check --deploy` con las advertencias ya conocidas y `makemigrations --check --dry-run` → `No changes detected`.
+3. **[PC]** Etiqueta anotada sobre ese commit y publicación: `git tag -a v14.1-pagos -m "Iteración 14-01: arreglo urgente de pagos"`, `git push origin v14.1-pagos` y `git ls-remote --tags origin v14.1-pagos`.
+4. **[PC]** `git diff --stat v3.1-integridad v14.1-pagos -- requirements.txt pedidos/migrations PedidosApp/settings.py pedidos/static` **sin salida**.
+5. **[Cliente]** Aviso antes del despliegue (texto en «Aviso al cliente»).
+6. **[PA]** `despliegue.md`, sección 3: `git fetch origin --tags`, `git checkout v14.1-pagos`, `git describe --tags` = `v14.1-pagos`. Sin `pip`, `migrate` ni `collectstatic`. `python manage.py check` y **Reload**. Se anota la hora del reinicio efectivo (`Starting uWSGI`).
+7. Verificación del día 0 (sección siguiente) y fila en `despliegue.md`, sección 5.
+
+## Verificación del día 0 (resumen)
+
+Los puntos 1 a 8 de «Verificación el mismo día» de arriba. Lo esencial: un **pago de prueba de $1.000** (valor de prueba propuesto; `PENDIENTE_DESARROLLADOR` confirmarlo junto con el protocolo de la parte C de `evidencia-03-05.md`) desde el detalle de un pedido de prueba con id ≥ 1000. El campo oculto lleva el id sin separador, el pago se guarda, queda `pago_registrado` y `server.log` no muestra `ERROR` nuevos. Después se borran los datos de prueba según ese protocolo. Al terminar: AUD-05-010 y AUD-05-011 pasan a «Resuelto en 14-01», la iteración a Terminada y el cliente registra de nuevo el pago del #1004.
+
+## Retroceso (RDA-021)
+
+`retroceso.md`, caso 1 (sin migraciones): **[PA]** `git checkout v3.1-integridad`, `git describe --tags` = `v3.1-integridad`, `python manage.py check`, **Reload** y las pantallas de `despliegue.md`, sección 3.7. No hay dependencias, estáticos ni migraciones que deshacer. Disparadores: los de «Plan de retroceso».
 
 ## Datos requeridos del cliente
 

@@ -82,11 +82,18 @@ class PagoForm(ErroresAccesiblesMixin, forms.ModelForm):
             'metodo': forms.Select(attrs={'class': 'form-select'}),
             'nota': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Detalles opcionales...'}),
         }
+        # Aviso con tuteo cuando el pedido no se reconoce (14-01, D4, AUD-05-010).
+        error_messages = {
+            'pedido': {
+                'invalid_choice': "No se reconoció el pedido. Vuelve a abrir el pago desde el pedido o elígelo en la lista.",
+            },
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Opcional: ordenar pedidos por ID descendente para facilitar búsqueda
-        self.fields['pedido'].queryset = Pedido.objects.all().order_by('-id')
+        # Pedidos por id descendente. `select_related('cliente')` porque cada opción pinta
+        # `Pedido.__str__`, que lee el cliente: sin él, una consulta por pedido (14-01, AUD-05-011).
+        self.fields['pedido'].queryset = Pedido.objects.select_related('cliente').order_by('-id')
 
 class ConversionCotizacionForm(forms.Form):
     """Datos de la conversión de una cotización en pedido (03-03, AUD-02-005 y AUD-02-027).
