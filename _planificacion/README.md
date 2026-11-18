@@ -54,7 +54,7 @@ Una subcarpeta por épica, con nombre descriptivo en ASCII (`epica-00-blindaje/`
 | 03 | `epica-03-integridad-transaccional` | 11 | `epica-11-automatizaciones` |
 | 04 | `epica-04-seguridad` | 12 | `epica-12-proyeccion-pedidos` |
 | 05 | `epica-05-rendimiento` | 13 | `epica-13-operacion-continua` |
-| 06 | `epica-06-mantencion-respaldos` | 14 | `epica-14-nube-aws` |
+| 06 | `epica-06-mantencion-respaldos` | 14 | `epica-14-mantenimiento` |
 | 07 | `epica-07-arquitectura-codigo` | | |
 
 Los documentos escritos antes del 2026-10-27 usan la numeración anterior (por ejemplo, «07-01» para la vigilancia de la expiración, hoy 13-01): se leen con la tabla de equivalencias de RDA-014.
@@ -109,7 +109,7 @@ Una subcarpeta por épica, con el mismo nombre que la carpeta de la épica en `1
 - Las auditorías se agregan al final y nunca se borran ni se reescriben.
 - **Antes de agregar una auditoría, busca el último número usado en el archivo y suma uno.** Los IDs de hallazgo tienen el formato `AUD-NN-MMM` (auditoría y correlativo) y nunca se reutilizan.
 - Un hallazgo se cierra indicando dónde: «Resuelto en XX-YY» o «Resuelto en RDA-XXX», con la evidencia mínima. «Riesgo aceptado» solo si el desarrollador lo aceptó y consta dónde.
-- Severidad: Alta (bloquea la publicación o afecta al usuario o al negocio), Media (afecta calidad o rendimiento), Baja (mejora).
+- Severidad: **Crítica** (rechazo o pérdida silenciosa de datos comerciales en producción; se corrige con un arreglo urgente de despliegue propio, antes de cualquier otra iteración, RDA-022), Alta (bloquea la publicación o afecta al usuario o al negocio), Media (afecta calidad o rendimiento) y Baja (mejora). Las fallas Alta se corrigen en la siguiente iteración; las Media y Baja, en la Épica 14, agrupadas por tema.
 
 ### 5.4 Bitácoras
 
@@ -271,5 +271,5 @@ Qué se hizo, en tres a cinco líneas.
 ```markdown
 | ID | Severidad | Área | Hallazgo | Acción recomendada | Estado |
 | :- | :-------- | :--- | :------- | :----------------- | :----- |
-| AUD-NN-MMM | Alta / Media / Baja | … | … | … | Abierto / Resuelto en XX-YY o RDA-XXX |
+| AUD-NN-MMM | Crítica / Alta / Media / Baja | … | … | … | Abierto / Resuelto en XX-YY o RDA-XXX |
 ```

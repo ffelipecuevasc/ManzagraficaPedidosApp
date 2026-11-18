@@ -37,7 +37,7 @@ Principios:
 | Texto secundario oscuro | `#94A3B8` (slate-400) | Etiquetas y textos de apoyo en modo oscuro |
 | Peligro | `#DC2626` (red-600) | Botones de acciones destructivas |
 
-Los colores de estado (verde, azul, rojo y amarillo de Tailwind en sus variantes 50, 100, 400, 600 y 900) se usan en etiquetas de estado de pedidos y pagos. Su asignación por estado es `PENDIENTE_DESARROLLADOR`.
+Los colores de estado (verde, azul, rojo, amarillo y violeta de Tailwind en sus variantes 50, 100, 400, 600 y 900) se usan en etiquetas de estado de pedidos y pagos; el violeta se reserva para la zona «Sin Agendar» del tablero semanal (pedidos sin fecha de entrega), para que se distinga de los demás estados. Su asignación por estado es `PENDIENTE_DESARROLLADOR`.
 
 ### 2.3 Contraste
 
