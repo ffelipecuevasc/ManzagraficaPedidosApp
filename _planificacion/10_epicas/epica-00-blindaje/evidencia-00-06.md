@@ -290,4 +290,17 @@ Mismo bloque, con `seq 27 -1 0` en lugar de `6 5 4 3 2 1 0` en el primer `for`. 
 
 | Ventana | Días | `Broken pipe` | Por día |
 | :------ | ---: | ------------: | ------: |
-| | 28 | | |
+| 2026-10-24 a 2026-11-18 (parcial) | 26 | 18 | 0,69 |
+
+**Informe del 2026-11-18 (anticipado y parcial; datos dichos por el desarrollador, el agente no vio ninguna salida).** Se hizo con 26 días (del 2026-10-24 al 2026-11-18, este último incompleto) y no con los 28 previstos, antes del 2026-11-20 (RDA-021: sin esperas).
+
+| Medida | Valor | Por día | Línea base |
+| :----- | ----: | ------: | :--------- |
+| `Broken pipe` | 18 | 0,69 | 0,44 por día (39 en 89 días) |
+| `SIGPIPE` | 55 | 2,1 | No se informó una base para este conteo. La línea base cuenta «`SIGPIPE` o cerrado»: 152 en 89 días (unas 1,7 por día, calculado), un patrón que no es necesariamente el mismo |
+| Peticiones a `/robots.txt` | 15 | — | 7 en 7 días, con respuesta 404 en las líneas de muestra |
+| …de ellas con 404 | 0 | — | — |
+
+- **Cálculo:** 18 ÷ 26 = 0,69 y 55 ÷ 26 = 2,1 (cociente simple). No se informó si se separó la recarga de `R` (2026-11-17 02:48:12 UTC, con sus unos 10 s de 502, AUD-04-002) ni el `OSError: write error` (AUD-04-004).
+- **`/robots.txt`:** los 200 no se contaron; solo consta que ninguna de las 15 peticiones respondió 404. La confirmación de que un rastreador real recibe 200 ya constaba desde el 2026-11-03 (`registro-pendientes.md`, sección 3).
+- **Lectura:** la tasa de `Broken pipe` queda sobre la base (0,69 frente a 0,44), sin umbral definido: esta iteración lo mide, no lo corrige (AUD-04-004). No se concluye la causa.

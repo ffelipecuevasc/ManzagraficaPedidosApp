@@ -4,7 +4,8 @@
 - **Pedido por:** Claude Code (Sonnet 5.5)
 - **Iteración:** [03-05](iteracion-03-05-validacion-y-despliegue-de-la-integridad.md). Etiqueta `v3.1-integridad`; partida y destino de retroceso `v0.3-doble-envio`. Decisiones del desarrollador del 2026-11-06 registradas en la iteración.
 - **Criterios que dependen de esta evidencia:** todos los de la 03-05 salvo «Las decisiones 1 a 8 están registradas antes de ejecutar».
-- **Estado (2026-11-17):** **Partes A, B y C hechas el lunes 2026-11-16 (día 0); en vigilancia hasta la lectura del día 7 (parte D).** `R` = **2026-11-16 23:48:12** (hora de Chile; 2026-11-17 02:48:12 UTC). Los datos de A a C son dichos por el desarrollador, de sus consolas; el agente no vio ninguna salida. Desviaciones en «Desviaciones de la ejecución del día 0». Siguen pendientes la parte D (día 7), la E (solo si se cumple su regla) y la F (limpieza de la réplica). Detalle en [bitacora-03-05-produccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-produccion.md).
+- **Estado (2026-11-18):** **Terminada** (decisión del desarrollador, dicha por él). Se canceló la lectura del día 7 (RDA-021, [decisiones](../../00_producto/decisiones.md)): la parte D se hizo como **lectura anticipada** de `R` (2026-11-17 02:48:12 UTC) hasta el 2026-11-18 17:22 UTC, 38 h 34 min (D2 a D5, abajo), y la parte F quedó hecha el 2026-11-18 (F1 a F4). La parte E no se aplicó: sin retroceso. Datos dichos por el desarrollador; el agente no vio ninguna salida. Detalle en [bitacora-03-05-produccion-2](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-produccion-2.md).
+- **Estado anterior (2026-11-17, superado el 2026-11-18; se conserva como registro):** **Partes A, B y C hechas el lunes 2026-11-16 (día 0); en vigilancia hasta la lectura del día 7 (parte D).** `R` = **2026-11-16 23:48:12** (hora de Chile; 2026-11-17 02:48:12 UTC). Los datos de A a C son dichos por el desarrollador, de sus consolas; el agente no vio ninguna salida. Desviaciones en «Desviaciones de la ejecución del día 0». Siguen pendientes la parte D (día 7), la E (solo si se cumple su regla) y la F (limpieza de la réplica). Detalle en [bitacora-03-05-produccion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-produccion.md).
 - **Estado anterior (2026-11-06, reprogramado el 2026-11-16; superado el 2026-11-17 por la ejecución del día 0; se conserva como registro):** **Pendiente. No se ejecutó nada.** Ni pruebas, ni respaldo, ni etiqueta, ni despliegue. Este archivo solo deja los pasos listos. Nada se ejecuta antes de la medición de la 00-07 (~~2026-11-11, hacia las 01:32~~ no se hizo ese día: se mide antes del despliegue del 2026-11-17). **Bloqueada hasta anotarla.** Decisiones finales del 2026-11-06 aplicadas (aviso aprobado, ~~jueves 2026-11-12~~ martes 2026-11-17 desde el 2026-11-16, tiempos y números del retroceso); solo falta elegir la fuente del respaldo para la réplica (F1). **Reprogramación del 2026-11-16:** nueva ventana el martes 2026-11-17 y día 7 el martes 2026-11-24 (decisión del desarrollador); ver el calendario y [bitacora-03-05-reprogramacion](../../99_bitacora/epica-03-integridad-transaccional/bitacora-03-05-reprogramacion.md).
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide, sin datos de clientes: conteos, horas, tipos de error y códigos. Nunca pegues el texto completo de una línea del registro (`despliegue.md`, 3.9).
@@ -23,7 +24,7 @@
 | Respaldo | Nuevo el día del despliegue, verificado antes de recargar | A2 |
 | Ventana | `v3.1-integridad`, ~~**jueves 2026-11-12**~~ ~~martes 2026-11-17~~ **lunes 2026-11-16** (ejecutado ese día; `R` 23:48:12, fuera de la ventana de 20:00 a 23:00 por decisión del desarrollador); día 7: ~~jueves 2026-11-19~~ ~~martes 2026-11-24 por la noche~~ desde el lunes 2026-11-23 a las 23:48:12, o el martes 2026-11-24 | A0, B, D |
 | Aviso | Breve antes y Ctrl+F5 después, con el texto **aprobado** el 2026-11-06 (el propuesto más una frase sobre la imagen de referencia) | A4, C3 |
-| Vigilancia | Lecturas solo los días 0 (~~jueves 2026-11-12~~ ~~martes 2026-11-17~~ lunes 2026-11-16, hecho) y 7 (~~jueves 2026-11-19~~ ~~martes 2026-11-24~~ desde el lunes 2026-11-23 a las 23:48:12, o el martes 2026-11-24). Tiempos: ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga; si `access.log` no trae `response-time=`, se anota y el criterio queda en los `5xx` | C, D |
+| Vigilancia | Lecturas solo los días 0 (~~jueves 2026-11-12~~ ~~martes 2026-11-17~~ lunes 2026-11-16, hecho) y 7 (~~jueves 2026-11-19~~ ~~martes 2026-11-24~~ desde el lunes 2026-11-23 a las 23:48:12, o el martes 2026-11-24). Tiempos: ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga; si `access.log` no trae `response-time=`, se anota y el criterio queda en los `5xx` | C, D (D1 a D5 reemplazadas el 2026-11-18 por una lectura anticipada, RDA-021) |
 | Retroceso | Datos incorrectos: sí. `5xx` repetido (2 o más en 24 h en la misma ruta, sin contar la recarga ni lo ya clasificado): sí. `5xx` suelto: no, se investiga. `ERROR` de ítem fallido: 3 o más en 24 h sin causa explicada se reproducen en la réplica antes de decidir; los de causa explicada no cuentan | E |
 | Réplica y AUD-05-002 | Último paso, después de la vigilancia | F |
 | Pruebas | Una ejecución con `OK (expected failures=9)` y 267 pruebas, más `check --deploy` y `makemigrations` | A1 |
@@ -43,7 +44,11 @@ Datos dichos por el desarrollador el 2026-11-17, de sus consolas; horas de Chile
 
 Hallazgo nuevo del día 0, ajeno a la Fase 3: [AUD-05-009](../../00_producto/auditoria-tecnica.md) (`pago_form.html` usa `$(document).ready` antes de que `base.html` cargue jQuery y la consola dice «$ is not defined»). El desarrollador verificó que en `v0.3-doble-envio` es idéntico: **no es una regresión**. Baja, Épica 08.
 
-## Calendario vigente (2026-11-17)
+## Calendario vigente (2026-11-18, RDA-021)
+
+Sin esperas (RDA-021). **Cancelada** la lectura del día 7 (~~desde el lunes 2026-11-23 a las 23:48:12, o el martes 2026-11-24~~). La parte D se hizo el 2026-11-18 como lectura anticipada (de `R` a las 17:22 UTC, 38 h 34 min) y la parte F, ese mismo día. El informe C2 de la 00-06 también se hizo el 2026-11-18, antes del 2026-11-20 y de forma parcial (26 días; [evidencia-00-06](../epica-00-blindaje/evidencia-00-06.md), parte C2). Todo el calendario de abajo (día 7, informe C2 del viernes 2026-11-20, «después del cierre») queda **superado, sin borrar**. La web app sigue renovada hasta el 2026-12-13 (fecha de la renovación y de la próxima: `PENDIENTE_DESARROLLADOR`).
+
+## Calendario del 2026-11-17 (superado el 2026-11-18; se conserva como registro)
 
 Horas de Chile (UTC-3). `R` = lunes 2026-11-16 23:48:12 = martes 2026-11-17 02:48:12 UTC; `R` + 7 días = **lunes 2026-11-23 23:48:12** = martes 2026-11-24 02:48:12 UTC. Corrige el calendario del 2026-11-16 (el siguiente), que ponía el despliegue el martes 2026-11-17.
 
@@ -545,6 +550,8 @@ Solo imprime conteos: ninguna IP, nombre ni monto. Es de **solo lectura** (`filt
 
 ## Parte D · Día 7 y criterio de cierre **[PA · Bash]**
 
+> **Cambio del 2026-11-18 (RDA-021):** se canceló la lectura del día 7. D2 y D3 se reemplazaron por una **lectura anticipada** (dicha por el desarrollador) con ventana desde `R` (2026-11-17 02:48:12 UTC) hasta el 2026-11-18 17:22 UTC: 38 h 34 min (calculado). D1 («ya pasaron 7 días») no se cumplió y queda superado, sin borrar. D4 y D5 se llenaron con la misma ventana. Los guiones de abajo se conservan como estaban; las celdas con datos no informados lo dicen.
+
 Se hace ~~el **jueves 2026-11-19 por la noche**~~ ~~el **martes 2026-11-24 por la noche**~~ **desde el lunes 2026-11-23 a las 23:48:12 (hora de Chile; 02:48:12 UTC del 11-24), o el martes 2026-11-24 en adelante**, siete días después de `R` o más tarde (corrección del 2026-11-17: `R` fue el lunes 2026-11-16 a las 23:48:12; el filtro de D1 compara con `R` + 7 días, no con la hora del día). **Es la única lectura de la semana además de la del día 0.** Cubre toda la semana: de `R` a ahora.
 
 ### D1. Preparación
@@ -575,13 +582,13 @@ Para cada `ERROR` nuevo, clasifica con la tabla de `despliegue.md`, 3.9, y **ano
 
 | Dato | Valor |
 | :--- | :---- |
-| Conteo por nivel (semana) | … |
-| `ERROR` por registrador y ruta | … |
-| Horas de los `ERROR` | … |
-| `INFO` «Envío sin token válido» (cuántas) | … |
-| Reinicios de uWSGI desde `R` | … |
-| Clasificación de cada `ERROR` (tipo y hora) | … |
-| `ERROR` de ítem fallido: hora y ruta, y cuáles tienen causa explicada | … |
+| Conteo por nivel (semana) | No informado |
+| `ERROR` por registrador y ruta | Ningún `ERROR` nuevo, salvo el `OSError` ya clasificado (AUD-04-004); cantidad, registrador y rutas: no informados |
+| Horas de los `ERROR` | No informadas |
+| `INFO` «Envío sin token válido» (cuántas) | No informado |
+| Reinicios de uWSGI desde `R` | No informado |
+| Clasificación de cada `ERROR` (tipo y hora) | `OSError: write error` (AUD-04-004, sin acción); ningún otro. Horas: no informadas |
+| `ERROR` de ítem fallido: hora y ruta, y cuáles tienen causa explicada | Ninguno (deducido de «sin `ERROR` nuevo salvo el `OSError`») |
 
 ### D3. `access.log` de la semana
 
@@ -602,10 +609,10 @@ ventana "$A" "$B" | grep -E '" 5[0-9]{2} ' | sed -E 's/.*\[([0-9]+\/[A-Za-z]+\/[
 
 | Dato | Valor |
 | :--- | :---- |
-| Rutas de creación y edición por método y código | … |
-| `5xx` de la semana por código (y cuántos son de la recarga) | … |
-| Respuestas de las tres rutas de más de 2 s (hora, ruta, código y segundos), sin contar la recarga; `con_response_time`, `sin_response_time` y máximo | … |
-| `5xx` con hora y ruta (para la regla de 24 h) | … |
+| Rutas de creación y edición por método y código | No informado por separado; sin `5xx` en ninguna ruta (dicho) |
+| `5xx` de la semana por código (y cuántos son de la recarga) | Ninguno (dicho) |
+| Respuestas de las tres rutas de más de 2 s (hora, ruta, código y segundos), sin contar la recarga; `con_response_time`, `sin_response_time` y máximo | `/pagos/ingresar/`: de **2,7 a 8,0 s** el 2026-11-17 entre las 02:55 y las 02:58 UTC (las pruebas del día 0; entre unos 7 y 11 minutos después de `R`, calculado: fuera de los 60 s de la recarga). Cuántas respuestas, cuántas traían `response-time=`, el máximo global y si hubo otras de más de 2 s: no informados |
+| `5xx` con hora y ruta (para la regla de 24 h) | Ninguno |
 
 ### D4. Duplicados de la semana (302 contra pedidos nuevos)
 
@@ -637,30 +644,32 @@ Es el mismo guion de C6, ahora con la semana completa (se lee igual). El último
 
 | Dato | Valor |
 | :--- | :---- |
-| `POST /pedidos/nuevo/` por código (semana) | … |
-| `pedidos_nuevos`, `eventos_creado`, `eventos_duplicado`, `eventos_convertida` | … |
-| `grupos_repetidos` | … |
-| Filas de `django_session` ahora (opcional) | … |
+| `POST /pedidos/nuevo/` por código (semana) | No informado |
+| `pedidos_nuevos`, `eventos_creado`, `eventos_duplicado`, `eventos_convertida` | **11, 10, 1, 0** (11 = 10 + 1 + 0: cuadra). El `pedido_duplicado` es el pedido #1015 (AUD-02-006, dicho por el desarrollador) |
+| `grupos_repetidos` | **0** |
+| Filas de `django_session` ahora (opcional) | No informado |
 
 ### D5. Criterio de cierre
 
 La iteración se cierra cuando **todas** estas casillas están marcadas, o cada excepción queda explicada por escrito. Cada una remite a la lectura que la prueba.
 
-- [ ] **(i)** Siete días desde `R` sin `ERROR` nuevo de `django.request` ni de `pedidos.views` en las rutas modificadas, descontando lo ya clasificado y los `ERROR` de ítem fallido de causa explicada; **3 o más en 24 h sin causa explicada** no se cierran hasta reproducirlos en la réplica (D2).
-- [ ] **(ii)** Ningún `5xx` en las rutas de creación y edición (D3). Un `5xx` suelto es aislado: se investiga y, si queda explicado, cuenta como excepción explicada (no obliga a retroceder).
-- [ ] **(iii)** Ningún pedido, cotización ni pago duplicado en la ventana: `grupos_repetidos=0` y las cuentas de D4 cuadran (D4). `access.log` solo **no** decide este punto.
+- [x] **(i)** Siete días desde `R` sin `ERROR` nuevo de `django.request` ni de `pedidos.views` en las rutas modificadas, descontando lo ya clasificado y los `ERROR` de ítem fallido de causa explicada; **3 o más en 24 h sin causa explicada** no se cierran hasta reproducirlos en la réplica (D2).
+- [x] **(ii)** Ningún `5xx` en las rutas de creación y edición (D3). Un `5xx` suelto es aislado: se investiga y, si queda explicado, cuenta como excepción explicada (no obliga a retroceder).
+- [x] **(iii)** Ningún pedido, cotización ni pago duplicado en la ventana: `grupos_repetidos=0` y las cuentas de D4 cuadran (D4). `access.log` solo **no** decide este punto.
 - [ ] **(iv)** **Ninguna respuesta de `GET` o `POST` de crear pedido, crear cotización e ingresar pago pasa de 2 s, sin contar la recarga** (D3; umbral del desarrollador, 2026-11-06). Si `access.log` no trae `response-time=`, se anota y este criterio queda en los `5xx` de (ii).
-- [ ] **(v)** La línea `INFO` verificada (C4 y C5) o su estado explicado.
+- [x] **(v)** La línea `INFO` verificada (C4 y C5) o su estado explicado.
 - [ ] Nadie reportó un doble envío, un «no se guardó» ni un botón que no responde durante la semana (dicho por el desarrollador).
 
 | Criterio | Resultado | Excepción explicada |
 | :------- | :-------- | :------------------ |
-| (i) `ERROR` nuevos | … | … |
-| (ii) `5xx` en creación y edición | … | … |
-| (iii) duplicados | … | … |
-| (iv) tiempos | … | … |
-| (v) línea `INFO` | … | … |
-| Reportes del cliente | … | … |
+| (i) `ERROR` nuevos | Cumple: ninguno nuevo; solo el `OSError` ya clasificado (AUD-04-004) | Se aplicó a la lectura anticipada de 38 h 34 min, no a siete días (RDA-021) |
+| (ii) `5xx` en creación y edición | Cumple: ningún `5xx` | Igual que (i) |
+| (iii) duplicados | Cumple: `grupos_repetidos=0` y 11 = 10 + 1 + 0 | El `pedido_duplicado` (#1015) es del evento de duplicar un pedido, no un envío repetido (AUD-02-006, dicho). El conteo de `POST /pedidos/nuevo/` con 302 de `access.log` no se informó |
+| (iv) tiempos | **No cumple:** `/pagos/ingresar/` tardó de 2,7 a 8,0 s el 2026-11-17 de 02:55 a 02:58 UTC (pruebas del día 0) | **Excepción por decisión del desarrollador.** Causa inferida: N+1 al armar el selector de pedidos; igual en `v0.3-doble-envio` (dicho): no es una regresión de la Fase 3 → AUD-05-011. Lectura de código del agente, sin ejecutar: `PagoForm` usa `Pedido.objects.all()` sin `select_related('cliente')` y `Pedido.__str__` lee `cliente.nombre` (`forms.py:89`, `models.py:61`) |
+| (v) línea `INFO` | Cumple: verificada el día 0 (C4 y C5) | — |
+| Reportes del cliente | El cliente reportó que un pago «no se guardó» (día y hora: no informados) | Defecto anterior, igual en `v0.3-doble-envio` (dicho) → AUD-05-010. Regla E: **sin retroceso**; «formulario que no guarda» se exceptúa por decisión del desarrollador, porque no es una regresión de esta etiqueta |
+
+Con (iv) y el reporte del cliente como excepciones explicadas, el desarrollador dio la iteración por cerrada el 2026-11-18 (RDA-021).
 
 Con esto se cierra la parte de servidor de AUD-04-001 (`auditoria-tecnica.md`) y el criterio de término de la Épica 03. El agente deja después la bitácora de producción, la fila de `despliegue.md`, sección 5, y las notas fechadas.
 
@@ -669,6 +678,8 @@ Con esto se cierra la parte de servidor de AUD-04-001 (`auditoria-tecnica.md`) y
 ## Parte E · Retroceso (solo si se cumple la regla)
 
 ### E1. Regla (decisión 6 y ronda final, 2026-11-06)
+
+> **Resultado (2026-11-18):** regla E aplicada a la lectura anticipada: **sin retroceso** (dicho por el desarrollador). Un «formulario que no guarda» se exceptuó por decisión suya, porque el defecto es anterior a `v3.1-integridad` (AUD-05-010, igual en `v0.3-doble-envio`). Las partes E2 y E3 no se ejecutaron.
 
 | Qué aparece | ¿Retroceder? | Qué hacer |
 | :---------- | :----------- | :-------- |
@@ -736,6 +747,8 @@ Agrega la fila en `docs/operacion/retroceso.md`, sección 6, y deja la etiqueta 
 
 ## Parte F · Limpieza de la réplica y AUD-05-002 (último paso)
 
+> **Hecha el 2026-11-18** (dicho por el desarrollador), sin esperar el día 7 (RDA-021). F1: se usó un respaldo nuevo, hecho para la réplica.
+
 **Solo después de cerrar la parte D** (decisión 7): la réplica sigue disponible durante la semana para reproducir cualquier error. Con este paso se cierra la Épica 03.
 
 ### F1. Qué respaldo usar
@@ -744,8 +757,8 @@ Agrega la fila en `docs/operacion/retroceso.md`, sección 6, y deja la etiqueta 
 
 | Dato | Valor |
 | :--- | :---- |
-| Respaldo elegido (nombre, SHA-256, tamaño) | … |
-| Motivo | … |
+| Respaldo elegido (nombre, SHA-256, tamaño) | `respaldo_18-11-2026_14-26-45.sql` (2026-11-18 14:26:45), 1.535.086 bytes, SHA-256 `774bda86774fa54b516d3cf4e92e2246827a9e8cc8b49a6aeef5e83a36625b35`; 19 de 19, `VÁLIDO` |
+| Motivo | Motivo informado: «réplica». Es un respaldo nuevo: no es ninguna de las opciones (a), (b) ni (c) de arriba, y reemplaza el «sin respaldo nuevo» del texto de AUD-05-002 |
 
 ### F2. Trasladar el disco de Docker a D: (o cifrar C:) **[PC · PowerShell 7]**
 
@@ -762,9 +775,9 @@ Get-ChildItem "$env:LOCALAPPDATA\Docker" -Recurse -Filter *.vhdx -ErrorAction Si
 
 | Dato | Valor |
 | :--- | :---- |
-| `manage-bde -status D:` (protección y porcentaje) | … |
-| Ruta del `.vhdx` ahora (solo unidad y carpeta) | … |
-| ¿Queda un `.vhdx` con datos en C:? | … |
+| `manage-bde -status D:` (protección y porcentaje) | «Cifrado completo», 100,0 %, «Protección activada» |
+| Ruta del `.vhdx` ahora (solo unidad y carpeta) | `D:\Docker\datos_nuevos_nov_2026\DockerDesktopWSL` |
+| ¿Queda un `.vhdx` con datos en C:? | **No** (sin `.vhdx` en C:). Queda una copia vieja de 40,3 GB en `D:\Docker\datos`, también en D: y cifrada; borrarla: `PENDIENTE_DESARROLLADOR` |
 
 ### F3. Refrescar la réplica **[PC · PowerShell 7]**
 
@@ -787,14 +800,14 @@ Repite las consultas 1 a 3 de la «Evidencia P3» de la [iteración 03-02](itera
 
 | Dato | Valor |
 | :--- | :---- |
-| Pedidos, sin ítems, sin ítems posteriores al primero con ítems | … |
-| Cotizaciones y sin ítems | … |
+| Pedidos, sin ítems, sin ítems posteriores al primero con ítems | **994, 127, 39** (2026-11: 1). Antes (2026-11-04, volcado del 2026-10-25): 888, 126, 38. Indicio, sin concluir |
+| Cotizaciones y sin ítems | **33 y 0**. Antes: 27 y 0 |
 
 | Cierre de la parte F | Valor |
 | :------------------- | :---- |
-| Refresco (código y segundos) y tablas | … |
-| AUD-05-002: disco en D: y sin `.vhdx` en C: | … |
-| Conteo de F4 repetido | … |
+| Refresco (código y segundos) y tablas | Código **0**, **4,4 s**, **19 tablas**; última migración `0007` |
+| AUD-05-002: disco en D: y sin `.vhdx` en C: | **Cumple:** disco en `D:\Docker\datos_nuevos_nov_2026\DockerDesktopWSL`, sin `.vhdx` en C:, D: cifrada al 100,0 %. **Cierra AUD-05-002** |
+| Conteo de F4 repetido | Hecho (ver F4) |
 
 ---
 
@@ -810,6 +823,7 @@ Repite las consultas 1 a 3 de la «Evidencia P3» de la [iteración 03-02](itera
 - **Horas de uso del cliente entre semana:** sigue sin medirse; la ventana de 20:00 a 23:00 es decisión del desarrollador.
 - **Al reprogramar (2026-11-16):** dichos por el desarrollador y no verificados: producción en `v0.3-doble-envio`, medición de la 00-07 no hecha y web app con vencimiento el 2026-12-13. No sé si se hizo el semanal de hacia el 11-10 u 11 ni si el cliente recibió un aviso para el 11-12. El guion ajustado de la parte D de la 00-07 se probó solo con registros sintéticos.
 - **Día 0 (2026-11-17):** todo lo de las partes A a C es dicho por el desarrollador, de sus consolas; el agente no vio ninguna salida. Quedaron sin informar las filas listadas en la desviación 6. Tampoco sé el contenido de `server.log` ni de `access.log` fuera de lo que el desarrollador resumió, ni el día, el canal y la hora del aviso, ni si el semanal de hacia el 2026-11-10 u 11 se hizo. El hallazgo AUD-05-009 sale de la lectura del código del agente (sin ejecutar) y de lo dicho por el desarrollador (idéntico en `v0.3-doble-envio`).
+- **Lectura anticipada y parte F (2026-11-18):** todo lo de D2 a D5 y F es dicho por el desarrollador, de sus consolas; el agente no vio ninguna salida. No se informaron: el conteo por nivel, las horas y las rutas de los `ERROR`; los reinicios de uWSGI; los `POST /pedidos/nuevo/` por código y los 302 de `access.log`; las respuestas de más de 2 s fuera de `/pagos/ingresar/`, cuántas traían `response-time=` y el máximo global; las sesiones; el código de salida de la verificación del respaldo del 2026-11-18; la comprobación de paridad del refresco; y el día y la hora del «no se guardó» del cliente. La causa de AUD-05-010 y de AUD-05-011 sale de lectura de código, no de una ejecución ni de una medición. Que el defecto sea igual en `v0.3-doble-envio` es dicho por el desarrollador, no verificado.
 
 ## Respuesta del desarrollador
 
@@ -823,3 +837,11 @@ Partes A a C respondidas el 2026-11-17 (datos dichos por el desarrollador, hora 
 - **Día 0:** C1 sin 500 y `token_envio` en las tres pantallas; C2 `bloqueado=true` y «Guardando…» (ventana privada); C4 a las 23:58:23, línea `INFO` verificada y ningún pago creado; C5 1 `ERROR` (`root`, `OSError: write error`, 23:55:10) y 1 `INFO`; C6 sin `POST /pedidos/nuevo/` y todos los conteos en 0.
 - **Hallazgo nuevo:** AUD-05-009 (Baja, Épica 08), idéntico en `v0.3-doble-envio`: no es una regresión.
 - **Pendientes de esta evidencia:** parte D (día 7), parte E (solo si se cumple su regla) y parte F (limpieza de la réplica).
+
+**Respuesta del 2026-11-18** (dicha por el desarrollador, hora de Chile; el agente no vio ninguna salida):
+
+- **Decisión:** se eliminan las esperas de 3, 5 y 7 días (RDA-021). Se cancela la lectura del día 7 y la 03-05 y la Épica 03 pasan a Terminada.
+- **Parte D (lectura anticipada, de `R` al 2026-11-18 17:22 UTC):** D2 y D3, sin `ERROR` nuevo salvo el `OSError` ya clasificado (AUD-04-004) y sin `5xx`. D4, pedidos nuevos 11, `creado` 10, `duplicado` 1 (#1015, AUD-02-006), `convertida` 0 y `grupos_repetidos` 0. D5: (i), (ii), (iii) y (v) cumplen; **(iv) no cumple** (`/pagos/ingresar/` tardó de 2,7 a 8,0 s el 2026-11-17 de 02:55 a 02:58 UTC, pruebas del día 0; causa inferida N+1, igual en `v0.3-doble-envio`: excepción, AUD-05-011). El «no se guardó» de un pago que reportó el cliente es AUD-05-010, igual en `v0.3-doble-envio`.
+- **Regla E:** sin retroceso; «formulario que no guarda» se exceptúa por decisión del desarrollador.
+- **Parte F:** respaldo nuevo `respaldo_18-11-2026_14-26-45.sql` (1.535.086 bytes, 19 de 19, `VÁLIDO`; SHA-256 en F1); refresco en 4,4 s, código 0, 19 tablas, migración `0007`; F4: 994 pedidos, 127 sin ítems, 39 sin ítems posteriores al primero con ítems (2026-11: 1), 33 cotizaciones, 0 sin ítems (antes 888, 126, 38: indicio, sin concluir); disco de Docker en `D:\Docker\datos_nuevos_nov_2026\DockerDesktopWSL`, sin `.vhdx` en C:, D: cifrada al 100,0 % y con protección activada; queda una copia vieja de 40,3 GB en `D:\Docker\datos`, también cifrada. **AUD-05-002 cerrado.**
+- **Pendientes de esta evidencia (2026-11-18):** ninguno. Fuera de ella quedan AUD-05-010 (destino: 04-01), AUD-05-011 (sin iteración) y el borrado de la copia vieja de `D:\Docker\datos`.

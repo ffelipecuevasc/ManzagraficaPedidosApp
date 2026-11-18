@@ -25,6 +25,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-017 | Dos roles sobre la tabla nativa de usuarios y borrado físico con doble confirmación | Aceptada |
 | RDA-018 | Proyección de pedidos con la biblioteca estándar de Python; sin aprendizaje automático | Aceptada |
 | RDA-019 | Se retira `@transaccion_segura`; los errores de vista los maneja Django y la atomicidad se declara donde se escribe | Aceptada |
+| RDA-021 | Sin esperas de 3, 5 ni 7 días: cada despliegue se valida con el día 0 y el plan de retroceso | Aceptada |
 
 ---
 
@@ -254,3 +255,13 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Decisión:** se retira el decorador de las 17 vistas y se elimina `pedidos/decorators.py` (opción C de la iteración 03-01). Los errores de vista quedan en el manejo nativo de Django (página 500 de la 01-03 y una línea `django.request` con traza). La atomicidad no se agrega en un decorador: se declara con `transaction.atomic` explícito, con la captura **fuera** del bloque, donde se escribe (03-03), y pasa a los servicios en la 07-02 (RDA-015).
 **Alternativas consideradas:** dividir en `transaction.atomic` y un decorador de errores con nombre honesto (descartado: la mitad de errores repetía a Django, y envolver las 17 vistas adelantaba la 03-03 sin revisarlas una por una); un solo decorador con el orden correcto (descartado: juntaba dos responsabilidades y habría que deshacerlo en la 07-02).
 **Consecuencias:** un `pk` inexistente responde 404 en todas las vistas. El registrador de los errores de vista pasa de `pedidos.decorators` a `django.request`, y la vista se lee en la traza (`docs/operacion/despliegue.md`). La 03-01 no deja ninguna vista más protegida que antes: la atomicidad llega en la 03-03, donde también se cierra AUD-01-001.
+
+## RDA-021 · Sin esperas de 3, 5 ni 7 días: cada despliegue se valida con el día 0 y el plan de retroceso
+
+- **Fecha:** 2026-11-18
+- **Estado:** Aceptada (decisión del desarrollador, dicha por él)
+
+**Contexto:** la 03-05 pedía una lectura del día 7 antes de cerrar la iteración y la Épica 03, y la Épica 04, ya redactada, ata sus despliegues a esa lectura y fija una observación de 3 días entre los dos escalones de HSTS de la 04-02. En los documentos solo consta una espera de 3 días (04-02) y una de 7 (03-05): no encontré una de 5 días (`PENDIENTE_DESARROLLADOR`: si existe, dónde). El 2026-11-18 el desarrollador hizo una lectura anticipada de la 03-05, de 38 h 34 min desde el reinicio (`evidencia-03-05`, parte D): sin `ERROR` nuevo salvo el `OSError` ya clasificado, sin `5xx` y sin duplicados. Sus dos incumplimientos (tiempos de `/pagos/ingresar/` y un «no se guardó» de un pago) son defectos anteriores, iguales en `v0.3-doble-envio` (dicho por el desarrollador): AUD-05-011 y AUD-05-010.
+**Decisión:** se eliminan las esperas de 3, 5 y 7 días. Cada despliegue se valida con la lectura del día 0 y se respalda con el plan de retroceso (`docs/operacion/retroceso.md` y la regla de retroceso de la evidencia de la iteración); no hay un periodo de vigilancia posterior. Al cerrar una épica se pasa de inmediato a la siguiente. Se cancela la lectura del día 7 de la 03-05.
+**Alternativas consideradas:** mantener las esperas (descartado por el desarrollador).
+**Consecuencias:** la 03-05 y la Épica 03 quedan Terminadas el 2026-11-18. Un problema que aparezca días después de un despliegue se verá solo si el usuario lo reporta o si el desarrollador hace una lectura a demanda: es el riesgo que la decisión 5 de la 03-05 ya anotaba, ahora sin lecturas programadas. La etiqueta anotada, el respaldo previo y el retroceso siguen vigentes, así que **no contradice RDA-007** (verificado leyéndola: no fija ninguna espera). Quedan superados, sin borrar, los textos que condicionan trabajo a «cerrar la vigilancia» o fijan esperas: el día 7 de la 03-05 y, en la Épica 04 (que no se editó el 2026-11-18, por instrucción del desarrollador), «nada se despliega hasta cerrar la vigilancia», la fecha de la 04-01 «no antes del 2026-11-23 23:48» y la observación de 3 días de la 04-02 (D6). Cómo queda esa observación de 3 días entre los escalones de HSTS: `PENDIENTE_DESARROLLADOR`. La RDA-020 queda reservada para la sanitización con `nh3` (propuesta de la 04-07, se escribe al ejecutarla): por eso la numeración salta de RDA-019 a RDA-021.

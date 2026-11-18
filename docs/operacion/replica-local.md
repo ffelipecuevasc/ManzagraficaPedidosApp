@@ -61,6 +61,8 @@ Debe aparecer `ext4.vhdx` (en versiones recientes de Docker Desktop puede llamar
 
 > **Nota 2026-11-04:** la comprobación (b) **hoy falla**: el disco de datos de Docker (`docker_data.vhdx`) está en C:, que no está cifrada, y no en D:. La comprobación (a) pasa (D: con BitLocker al 100 %). Causa probable, no verificada: una actualización de Docker Desktop. Ver AUD-05-002 en `_planificacion/00_producto/auditoria-tecnica.md`. Los pasos de esta sección no cambian.
 
+> **Nota 2026-11-18 (dicho por el desarrollador; AUD-05-002 resuelto):** la comprobación (b) **ya pasa**. El disco de datos de Docker está en `D:\Docker\datos_nuevos_nov_2026\DockerDesktopWSL` y no hay ningún `.vhdx` en C:. `manage-bde` sobre D: informa «Cifrado completo», 100,0 % y «Protección activada». Queda una copia vieja de 40,3 GB en `D:\Docker\datos`, también en D: (cifrada); borrarla: `PENDIENTE_DESARROLLADOR`.
+
 ## 3. Pasar del contenedor «mysql» al compose (una sola vez)
 
 El contenedor anterior se llama `mysql`, usa `mysql:8.0` (8.0.43) y guarda los datos en el volumen `mysql_data`. Quitarlo **no** borra el volumen.
@@ -221,5 +223,8 @@ Cuando los datos queden viejos (por ejemplo, antes de ensayar una migración o u
 | :----------------- | :------------------------------- | :------------------------- | :------ |
 | 2026-10-21 (primera restauración, 00-03) | 2026-10-20 13:09:17 | 4,17 | 7 de 8 coinciden; Python aceptado; `pip freeze` 21/21 |
 | 2026-10-25 (ensayo de retroceso de la 01-06, parte A3) | 2026-10-25 21:02:34 | 3,6 | No se repitió la comprobación completa de la sección 7. Se comprobaron 18 tablas, `[X] 0006` como última migración y 79 pruebas en `OK` con la réplica restaurada y migrada (A5) |
+| 2026-11-18 (refresco de la parte F de la 03-05) | 2026-11-18 14:26:45 (`respaldo_18-11-2026_14-26-45.sql`, 19 de 19, `VÁLIDO`) | 4,4 | Código 0; 19 tablas; última migración `0007`. La comprobación completa de la sección 7 no se informó |
 
 > **Nota 2026-11-04:** el paso 2 (repetir la comprobación de cifrado) hoy no pasa, por el disco de Docker en C: (AUD-05-002). El traslado del disco a D: (o el cifrado de C:) y el refresco de la réplica con el respaldo del 2026-11-04 00:12:37 se hacen al cerrar la Épica 03, sin respaldo nuevo. Hasta entonces, la última fila de la tabla es la del 2026-10-25. Los pasos de esta sección no cambian.
+
+> **Nota 2026-11-18:** la nota anterior quedó superada: el paso 2 (comprobación de cifrado) ya pasa, el disco de Docker está en D: y la réplica se refrescó ese día con un respaldo nuevo (el del 2026-11-18 14:26:45), no con el del 2026-11-04 (AUD-05-002 resuelto; [evidencia-03-05](../../_planificacion/10_epicas/epica-03-integridad-transaccional/evidencia-03-05.md), parte F). Este refresco también borra los datos de prueba de las revisiones de la 03-03 y la 03-04. Los pasos de esta sección no cambian.

@@ -59,11 +59,11 @@ La épica se cerró por decisión del desarrollador con la evidencia C1 de la 00
 
 ### Seguimientos abiertos (no bloquean la Épica 01)
 
-- **C2 de la 00-06 (2026-11-20):** tasa diaria de `Broken pipe` a 28 días, sin umbral. En el mismo conteo, confirmar que un rastreador real recibe 200 en `/robots.txt` (seguimiento del cierre de AUD-01-020).
+- **C2 de la 00-06 (2026-11-20):** tasa diaria de `Broken pipe` a 28 días, sin umbral. En el mismo conteo, confirmar que un rastreador real recibe 200 en `/robots.txt` (seguimiento del cierre de AUD-01-020). **Hecho el 2026-11-18, antes de la fecha y de forma parcial (26 días, del 2026-10-24 al 2026-11-18; RDA-021):** `Broken pipe` 18 (0,69 por día frente a 0,44 de la línea base) y `/robots.txt` con 15 peticiones, 0 con 404 (los 200 no se contaron); la confirmación de un rastreador real con 200 ya constaba desde el 2026-11-03 (`registro-pendientes.md`, sección 3). Detalle en [evidencia-00-06](evidencia-00-06.md), parte C2.
 - **AUD-02-023:** `media/` sin copia automática; protección manual hasta que el desarrollador defina la iteración de la épica 07.
 - **`favicon.ico`:** 404 en producción; hallazgo menor registrado en `registro-pendientes.md`, sección 4.
 - **Propuesta para la Épica 04:** redirigir al panel desde el acceso cuando ya hay sesión.
-- **`AGENTS.md`, sección 5:** la propuesta del comando del contenedor (bitacora-00-03) sigue pendiente de edición del desarrollador.
+- ~~**`AGENTS.md`, sección 5:** la propuesta del comando del contenedor (bitacora-00-03) sigue pendiente de edición del desarrollador.~~ **Resuelto (verificado el 2026-11-18):** la propuesta está aplicada, con el mismo texto, desde el commit `27f7ff9` (2026-10-21): `AGENTS.md`, sección 5, trae `docker compose up -d` y `docker compose stop`, la prohibición sobre `down -v` y el volumen, y el enlace a `docs/operacion/replica-local.md`.
 
 ## Notas
 
