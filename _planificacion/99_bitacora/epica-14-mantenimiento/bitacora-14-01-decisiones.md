@@ -1,7 +1,7 @@
 # Bitácora 14-01 · Decisiones resueltas
 
 - **Fecha:** 2026-11-18
-- **Iteración:** [14-01 · Arreglo urgente de pagos](../../10_epicas/epica-14-nube-aws/iteracion-14-01-arreglo-urgente-de-pagos.md)
+- **Iteración:** [14-01 · Arreglo urgente de pagos](../../10_epicas/epica-14-mantenimiento/iteracion-14-01-arreglo-urgente-de-pagos.md)
 - **Tipo:** solo documentos. Sin código, sin pruebas, sin `manage.py`.
 - **Estado resultante:** Pendiente (redactada, decisiones resueltas).
 

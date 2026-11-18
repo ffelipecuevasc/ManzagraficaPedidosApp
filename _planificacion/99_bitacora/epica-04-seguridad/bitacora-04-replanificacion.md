@@ -141,3 +141,22 @@ Respuestas dichas por el desarrollador el 2026-11-18; el agente no habló con el
 ## 10. Commit sugerido (157 caracteres)
 
 `Épica 14 - Iteración 14-01: redacta el arreglo urgente de pagos (RDA-022), alinea la Épica 04 con la RDA-021 y cierra respuestas del cliente; solo documentos`
+
+## 11. Respuestas del cliente del 2026-11-18, segunda tanda (dichas por el desarrollador)
+
+El agente no habló con el cliente. Cierran las preguntas abiertas de la sección 5. Los destinos son propuestas sin redactar.
+
+| # | Respuesta | ¿Cambia el código actual? | Destino propuesto | Observaciones |
+| :- | :-------- | :------------------------ | :---------------- | :------------ |
+| a | Al convertir una cotización en pedido, el valor de venta queda neto, con el IVA aparte | Probablemente no en el valor (hoy `valor_venta` = `valor_total` sin IVA, `docs/operacion/pruebas.md:175`); sí, si el pedido debe mostrar el IVA | Épica 14, tema Cotizaciones, con la RDA de la respuesta 3 | Ver «Contradicción» abajo |
+| b | Todo abono a un pedido de $0 es sobrepago y se rechaza | Sí (hoy se acepta) | Épica 14, tema Pagos, junto con la respuesta 6, después de la 14-01 | Cierra el borde entre las respuestas 5 y 6 |
+| c | Un pedido `ENTREGADO` sale del panel principal y de toda métrica pendiente, aunque se entregara atrasado | Sí | Épica 14, tema Tablero semanal y panel, con la respuesta 7 | Revisar qué métricas de atraso cuentan hoy `ENTREGADO` |
+| d | Cualquier usuario edita precios. Dos perfiles, superusuario y operador; el operador no entra a Base de datos (estadísticas, respaldar, restaurar) ni a usuarios, con protección en el servidor y no solo con el menú oculto | Sí (funcionalidad nueva) | **Épica 09** | El candado de precio de la respuesta 9 deja de depender de la 09-01. **Abierto:** la respuesta 12 decía «un solo superusuario»; esta dice «los superusuarios» |
+| e | El cliente no recuerda qué pagos no se guardaron | No | 14-01, «Datos requeridos» | Pistas: #1000, #1004 y #1010 sin pagos |
+| f | El mínimo «mañana» de la fecha de entrega vale también al duplicar y al convertir | Sí | Épica 10 (con la respuesta 8) y Épica 14, tema Pedidos (duplicar) | Hoy la conversión sugiere entrega a 7 días (`pruebas.md:175`) |
+
+**Contradicción (a) con la respuesta 3 y con la respuesta 6:** no contradice la respuesta 3, porque esta fija la **cotización** como una factura chilena (neto, línea de IVA y total bruto; `definicion-epica-14.md:40`) y la (a) fija el **pedido** en neto. Pero choca con el sobrepago prohibido: si el cliente final paga el total bruto de la cotización y el saldo se compara con un `valor_venta` neto, el último abono supera el saldo en el IVA y se rechazaría. Hay que decidir (`PENDIENTE_CLIENTE`) si el saldo se calcula sobre el neto más IVA o si el IVA se cobra fuera de la aplicación.
+
+**Datos de producción del mismo día (consultas de solo lectura, dichas por el desarrollador):** del #995 al #1014 no hay grupos repetidos por cliente, resumen y valor; el #1015 está ausente, borrado por un usuario del sistema, autor no verificado; desde el #1000 no tienen pagos el #1000, el #1004 y el #1010. Falta la consulta que compara la hora del pago con la de creación del pedido.
+
+**Carpetas (2026-11-18, aprobado por el desarrollador):** `epica-14-nube-aws` pasó a `epica-14-mantenimiento` en `10_epicas` y `99_bitacora` con `git mv`; se borraron las vacías `99_bitacora/epica-06-arquitectura-automatizacion` y `99_bitacora/epica-07-operacion-continua` (solo `.gitkeep`). Las menciones del nombre antiguo en las secciones 4 y 6 de esta bitácora quedan como historia.

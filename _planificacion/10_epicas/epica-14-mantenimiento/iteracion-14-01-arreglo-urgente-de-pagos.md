@@ -82,7 +82,7 @@ Opciones tal como se redactaron (se conservan como historia):
 3. Corregir (alcance 1 a 3) hasta que pasen.
 4. Suite completa: `OK (expected failures=9)` (los nueve fallos esperados no cambian: ninguno es de pagos); `check`; `makemigrations --check --dry-run` sin cambios.
 5. **Medir después** (misma medición).
-6. **Revisión manual en la réplica**, en escritorio y a 360 px: (a) detalle de un pedido con id ≥ 1000 (inferido: el #1015 es anterior al respaldo con que se refrescó la réplica el 2026-11-18; se confirma al abrir el listado de pedidos) → «Registrar pago» → guardar; el campo oculto lleva el id sin punto; (b) forzar el error: con las herramientas del navegador cambiar el valor oculto a «1.002» y enviar: el aviso se ve junto al pedido; (c) `/pagos/ingresar/` sin pedido y `editar_pago`: el selector carga y busca (Select2); (d) crear pedido y cotización: el selector de productos funciona. El caso de un producto con id ≥ 1000 lo cubren las pruebas: si el id mayor de la réplica es menor, no se puede ver a mano.
+6. **Revisión manual en la réplica**, en escritorio y a 360 px: (a) detalle de un pedido con id ≥ 1000 (en producción existen del #1000 al #1014 al 2026-11-18; se confirma al abrir el listado de pedidos de la réplica) → «Registrar pago» → guardar; el campo oculto lleva el id sin punto; (b) forzar el error: con las herramientas del navegador cambiar el valor oculto a «1.002» y enviar: el aviso se ve junto al pedido; (c) `/pagos/ingresar/` sin pedido y `editar_pago`: el selector carga y busca (Select2); (d) crear pedido y cotización: el selector de productos funciona. El caso de un producto con id ≥ 1000 lo cubren las pruebas: si el id mayor de la réplica es menor, no se puede ver a mano.
 7. Bitácora, registro, auditoría, estado «En revisión», con los pasos de producción para el desarrollador y el mensaje de commit.
 
 ## Pruebas (reglas 15 y 12 de `AGENTS.md`; en `pedidos/tests/test_pagos.py` o un archivo nuevo del dominio de pagos, con las factorías de `factorias.py`)
@@ -115,7 +115,7 @@ La herramienta de diagnóstico de consultas es de la 05-02 y aún no existe: en 
 2. **[PC]** `git diff --stat v3.1-integridad v14.1-pagos -- requirements.txt pedidos/migrations PedidosApp/settings.py pedidos/static` **sin salida** (sin dependencias, migraciones, configuración ni estáticos).
 3. **[PA]** Despliegue sin `pip`, `migrate` ni `collectstatic`; `git describe --tags` = `v14.1-pagos`; `check`; Reload (`despliegue.md`, sección 3).
 4. **[Navegador, ventana privada]** las pantallas de `despliegue.md`, sección 3.7 (inicio, panel, listado y detalle de pedido).
-5. **[Navegador]** pago de prueba desde el detalle de un pedido de prueba con id ≥ 1000 (los pedidos nuevos ya lo son: el último conocido es el #1015), con el protocolo de pedido y pago de prueba de la parte C de [evidencia-03-05](../epica-03-integridad-transaccional/evidencia-03-05.md): se guarda y queda `pago_registrado` (`PENDIENTE_DESARROLLADOR`: confirmar que ese protocolo sigue vigente y cómo se borran los datos de prueba).
+5. **[Navegador]** pago de prueba desde el detalle de un pedido de prueba con id ≥ 1000 (los pedidos nuevos ya lo son: el último existente es el #1014, consulta del 2026-11-18), con el protocolo de pedido y pago de prueba de la parte C de [evidencia-03-05](../epica-03-integridad-transaccional/evidencia-03-05.md): se guarda y queda `pago_registrado` (`PENDIENTE_DESARROLLADOR`: confirmar que ese protocolo sigue vigente y cómo se borran los datos de prueba).
 6. **[PA]** `server.log` desde el reinicio efectivo: sin `nivel=ERROR` nuevos.
 7. **Tiempo:** ninguna respuesta de `/pagos/ingresar/` pasa de 2 s (el umbral de (iv) de la 03-05), sin contar la recarga; si `access.log` no trae `response-time=`, el criterio no se puede medir y se anota.
 8. **Mediciones opcionales de solo lectura (conteos, sin datos de clientes):** el id mayor de productos y de pedidos; la fecha en que se creó el pedido #1000 (`fecha_solicitud`), para acotar desde cuándo existe el defecto.
@@ -147,10 +147,13 @@ La herramienta de diagnóstico de consultas es de la 05-02 y aún no existe: en 
 - Los ids con separador de miles en **texto visible** («#1.002»): propuesta en el registro, sección 4.
 - No permitir el sobrepago, la mayor parte de la regla de saldos y cualquier otro cambio de las reglas de pagos: propuesta de destino en la Épica 14 (respuesta 6 del cliente).
 - AUD-05-009 (D3 A).
-- Borrar el pedido #1015: va después de la 04-10, con confirmación del cliente y respaldo verificado. **Antes de borrarlo**, el desarrollador revisa duplicados en producción con una consulta de solo lectura (conteos, sin datos de clientes en la documentación).
+- El pedido #1015: **ausente, borrado por un usuario del sistema, autor no verificado** (consulta de solo lectura en producción del 2026-11-18: el último pedido es el #1014; dicho por el desarrollador que lo borró el cliente u otra persona). La revisión de duplicados se hizo: del #995 al #1014 no hay grupos repetidos por cliente, resumen y valor. Ya no queda nada que borrar. Opcional: buscar `pedido_eliminado` en `server.log` para fijar fecha y autor.
 - Cualquier otra optimización de consultas: Épica 05.
 
 ## Datos requeridos del cliente
 
 - **Pagos que «no se guardaron»** (`PENDIENTE_CLIENTE`): si el cliente intentó registrar otros pagos de pedidos desde el #1000 y no los volvió a ingresar. Sin ese dato no se sabe qué faltó: la aplicación no dejó rastro de los rechazos.
-- **Pago no guardado conocido: pedido #1004** (audio del cliente del 2026-11-18, dicho por el desarrollador; no verificado). Coincide con la causa (id ≥ 1000). Tras el despliegue, el cliente lo registra de nuevo. Si hubo otros, sigue `PENDIENTE_CLIENTE`.
+- **Pago no guardado conocido: pedido #1004** (audio del cliente del 2026-11-18, dicho por el desarrollador; no verificado). Coincide con la causa (id ≥ 1000). Tras el despliegue, el cliente lo registra de nuevo.
+- **Pedidos desde el #1000 sin ningún pago** (consulta de solo lectura en producción, 2026-11-18, dicha por el desarrollador): **#1000, #1004 y #1010**. El #1004 coincide con el audio. El #1000 y el #1010 pueden ser pagos no guardados o pedidos impagos: sin verificar.
+- **El cliente no recuerda cuáles pagos no se guardaron** (respuesta del 2026-11-18). Por eso la lista de arriba es la única pista; se le muestra el #1000 y el #1010 para que confirme si los pagó (`PENDIENTE_CLIENTE`).
+- **Segunda consulta de solo lectura, pendiente (`PENDIENTE_DESARROLLADOR`, sin resultado):** comparar la hora de cada pago con la de creación de su pedido, desde el #1000, para separar el abono inicial (que no usa el campo afectado) de los pagos posteriores. En la documentación solo se anotan conteos y números de pedido.

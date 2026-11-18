@@ -1,7 +1,7 @@
 # Épica 14 · Mantenimiento
 
 - **Estado:** Abierta siempre (RDA-022). Nunca se marca Terminada: se cierran sus iteraciones, no la épica.
-- **Fase del plan:** no existe en el plan original; anexo del plan del 2026-10-27 (RDA-014), donde era «Tecnología en la nube (AWS)». **Desde el 2026-11-18 (RDA-022) es «Mantenimiento» y AWS sale del plan** (ver «Qué salió de la épica»). La carpeta conserva el nombre `epica-14-nube-aws`: renombrarla exige consulta y cambiar un documento protegido (`PENDIENTE_DESARROLLADOR`).
+- **Fase del plan:** no existe en el plan original; anexo del plan del 2026-10-27 (RDA-014), donde era «Tecnología en la nube (AWS)». **Desde el 2026-11-18 (RDA-022) es «Mantenimiento» y AWS sale del plan** (ver «Qué salió de la épica»). La carpeta se llamó `epica-14-nube-aws` hasta el 2026-11-18, cuando se renombró a `epica-14-mantenimiento` en `10_epicas` y en `99_bitacora` (aprobado por el desarrollador).
 - **Objetivo:** que las fallas se corrijan según su gravedad y no queden sin dueño: los arreglos urgentes con despliegue propio, las fallas Media y Baja agrupadas por tema y el respaldo fuera del servidor.
 - **Precondición:** ninguna. La 14-01 se ejecuta y se despliega **antes** de la 04-01 (decisión del desarrollador, 2026-11-18).
 - **Última revisión:** 2026-11-18 (reescrita por RDA-022; antes, creada el 2026-10-27 a pedido del desarrollador).
