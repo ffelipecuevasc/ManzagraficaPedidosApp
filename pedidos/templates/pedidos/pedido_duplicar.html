@@ -1,0 +1,69 @@
+{% extends 'pedidos/base.html' %}
+
+{% block title %}Reabrir Pedido - Manza Gráfica{% endblock %}
+
+{% block content %}
+    {# 14-02 (AUD-05-012, D4): página intermedia de Reabrir Pedido, con el patrón de las de eliminar. #}
+    <div class="flex items-center justify-center min-h-[60vh]">
+        <div class="w-full max-w-md">
+
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-blue-200 dark:border-blue-900/50 shadow-xl overflow-hidden relative">
+
+                <div class="h-2 bg-blue-600 w-full absolute top-0 left-0"></div>
+
+                <div class="p-8 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 mb-6">
+                        <span class="material-icons-round text-4xl" aria-hidden="true">refresh</span>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        ¿Reabrir el Pedido #{{ pedido.id }}?
+                    </h2>
+
+                    <p class="text-slate-500 dark:text-slate-400 mb-6">
+                        Se creará un pedido nuevo para el cliente <br>
+                        <span class="font-bold text-slate-900 dark:text-white text-lg">"{{ pedido.cliente }}"</span>
+                    </p>
+
+                    {% if form.errors %}
+                        <div role="alert" id="error-fecha_entrega" class="bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-800 rounded-lg p-4 mb-4 text-sm font-semibold text-red-800 dark:text-red-200 text-left">
+                            {% for error in form.fecha_entrega.errors %}{{ error }} {% endfor %}No se creó ningún pedido.
+                        </div>
+                    {% endif %}
+
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-lg p-4 mb-6 text-sm text-blue-900 dark:text-blue-200 text-left flex items-start">
+                        <span class="material-icons-round text-base mr-2 mt-0.5 flex-shrink-0" aria-hidden="true">info</span>
+                        <div>
+                            El pedido nuevo copia
+                            {% if pedido.cantidad_items %}<strong>{{ pedido.cantidad_items }} ítem{{ pedido.cantidad_items|pluralize }}</strong> con sus cantidades y precios{% else %}el detalle (este pedido no tiene ítems){% endif %}
+                            y el valor de venta. Los pagos no se copian: nace pendiente y sin pagos.
+                        </div>
+                    </div>
+
+                    <form method="post" data-bloquear-envio="Reabriendo…" class="flex flex-col sm:flex-row sm:flex-wrap gap-3 justify-center">
+                        {% csrf_token %}
+                        <div class="w-full text-left mb-2">
+                            <label for="{{ form.fecha_entrega.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">{{ form.fecha_entrega.label }}</label>
+                            <input type="date" id="{{ form.fecha_entrega.id_for_label }}" name="{{ form.fecha_entrega.html_name }}" required
+                                   min="{{ form.fecha_entrega.field.widget.attrs.min }}"
+                                   {% if form.is_bound and form.fecha_entrega.value %}value="{{ form.fecha_entrega.value }}"{% endif %}
+                                   aria-describedby="ayuda-fecha{% if form.errors %} error-fecha_entrega{% endif %}"
+                                   {% if form.errors %}aria-invalid="true"{% endif %}
+                                   class="w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <p id="ayuda-fecha" class="mt-1 text-xs text-slate-600 dark:text-slate-300">Obligatoria. Desde mañana en adelante.</p>
+                        </div>
+
+                        <a href="{% url 'detalle_pedido' pedido.id %}" class="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
+                            Cancelar
+                        </a>
+
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center">
+                            <span class="material-icons-round text-lg mr-2" aria-hidden="true">refresh</span>
+                            Sí, Reabrir
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

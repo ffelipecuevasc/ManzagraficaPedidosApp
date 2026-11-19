@@ -6,12 +6,12 @@ from django.core.files.storage import FileSystemStorage
 from django.db.models import Q, Count, Sum, F, ProtectedError, F, Value, IntegerField
 from django.db.models.functions import TruncMonth, Coalesce
 from django.http import JsonResponse, FileResponse, HttpResponseForbidden, HttpResponse
-from django.views.decorators.http import require_POST, require_safe
+from django.views.decorators.http import require_POST, require_safe, require_http_methods
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.db import transaction
 from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotizacion, HistorialBD, Pago
-from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm, ConversionCotizacionForm
+from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm, ConversionCotizacionForm, ReabrirPedidoForm
 from .eventos import registrar_evento
 from . import envio_unico
 from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
@@ -506,30 +506,44 @@ def lista_pedidos(request):
     return render(request, 'pedidos/pedido_list.html', context)
 
 @login_required
-@require_POST  # Solo POST con CSRF (04-01, AUD-02-006).
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def duplicar_pedido(request, pk):
-    # 1. Obtener el pedido original
-    original = get_object_or_404(Pedido, pk=pk)
+    """Reabrir Pedido (14-02, AUD-05-012).
 
-    # 2. Crear una copia en memoria (sin PK para que sea nuevo)
-    nuevo_pedido = Pedido(
-        cliente=original.cliente,
-        resumen_pedido=original.resumen_pedido,
-        detalles_pedido=original.detalles_pedido,
-        valor_venta=original.valor_venta,
-        estado='PENDIENTE',  # IMPORTANTE: Nace pendiente
-        fecha_entrega=original.fecha_entrega,  # Mantenemos fecha ref, usuario editará si quiere
-        imagen_referencia=original.imagen_referencia,  # Mantenemos la imagen si tenía
-        creado_por=request.user,  # El autor es quien duplica (04-01, AUD-02-028)
-    )
+    GET solo muestra la página que pide la fecha de entrega (D4); no escribe (regla 8.5). Es una
+    excepción al «solo POST» de la 04-01, como P1. POST valida la fecha y crea el pedido nuevo con
+    los ítems del original (producto, cantidad y precio unitario, D1), sin pagos, con el mismo
+    `valor_venta` (D3), en estado PENDIENTE y con quien reabre como autor (04-01, AUD-02-028).
+    """
+    # Cliente y cantidad de ítems en la misma consulta del pedido (regla 8.12).
+    original = get_object_or_404(
+        Pedido.objects.select_related('cliente').annotate(cantidad_items=Count('items')), pk=pk)
+    form = ReabrirPedidoForm(request.POST if request.method == 'POST' else None)
 
-    # 3. Guardar el nuevo registro (esto genera fecha_solicitud actual automática)
-    nuevo_pedido.save()
-    registrar_evento('pedido_duplicado', request.user, 'pedido', nuevo_pedido.pk,
-                     f'Pedido #{nuevo_pedido.pk} duplicado desde el pedido #{original.pk}')
+    if request.method == 'POST' and form.is_valid():
+        # Pedido e ítems en una sola transacción (regla 8.3): si falla la copia, no queda nada.
+        # El evento usa on_commit, así que tampoco queda evento.
+        with transaction.atomic():
+            nuevo_pedido = Pedido.objects.create(
+                cliente=original.cliente,
+                resumen_pedido=original.resumen_pedido,
+                detalles_pedido=original.detalles_pedido,
+                valor_venta=original.valor_venta,
+                estado='PENDIENTE',
+                fecha_entrega=form.cleaned_data['fecha_entrega'],
+                imagen_referencia=original.imagen_referencia,  # misma ruta, sin copiar el archivo
+                creado_por=request.user,
+            )
+            ItemPedido.objects.bulk_create([
+                ItemPedido(pedido=nuevo_pedido, producto_id=item.producto_id,
+                           cantidad=item.cantidad, precio_unitario=item.precio_unitario)
+                for item in original.items.all()
+            ])
+            registrar_evento('pedido_duplicado', request.user, 'pedido', nuevo_pedido.pk,
+                             f'Pedido #{nuevo_pedido.pk} duplicado desde el pedido #{original.pk}')
+        return redirect('detalle_pedido', pk=nuevo_pedido.pk)
 
-    # 4. Redirigir al detalle del nuevo pedido clonado
-    return redirect('detalle_pedido', pk=nuevo_pedido.pk)
+    return render(request, 'pedidos/pedido_duplicar.html', {'pedido': original, 'form': form})
 
 @login_required
 def estadisticas_pedidos(request):

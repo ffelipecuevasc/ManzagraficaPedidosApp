@@ -205,12 +205,14 @@ class EscrituraPorGetTests(RegresionBase):
         self.assertEqual((respuesta.status_code, pedido.estado), (405, 'PENDIENTE'))
 
     @tag('regresion')  # R6b · AUD-02-006: duplicar_pedido creaba un pedido con GET. Corregido en la 04-01.
-    def test_r6_duplicar_pedido_rechaza_get(self):
+    def test_r6_duplicar_pedido_get_no_escribe(self):
+        # Desde la 14-02 (D4) el GET muestra la página que pide la fecha (200), como P1 en la 04-01.
+        # Lo que protege R6b se mantiene: un GET nunca crea un pedido.
         pedido = crear_pedido()
 
         respuesta = self.ejecutar('get', f'/pedido/duplicar/{pedido.pk}/')
 
-        self.assertEqual((respuesta.status_code, Pedido.objects.count()), (405, 1))
+        self.assertEqual((respuesta.status_code, Pedido.objects.count()), (200, 1))
 
     @tag('regresion')  # R6c · AUD-02-006: generar_respaldo_bd generaba el respaldo con GET. Corregido en la 04-01.
     def test_r6_generar_respaldo_rechaza_get(self):

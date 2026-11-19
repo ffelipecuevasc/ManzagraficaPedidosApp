@@ -86,16 +86,12 @@
                         </form>
 
                     {% elif pedido.estado == 'TERMINADO' %}
-                        {# Reabrir crea un pedido: formulario POST; el modal confirma y envía el formulario (04-01). #}
-                        <form method="post" action="{% url 'duplicar_pedido' pedido.id %}"
-                              data-bloquear-envio="Reabriendo…" class="flex-1 lg:flex-none flex">
-                            {% csrf_token %}
-                            <button type="submit" data-confirm="true" data-type="CLONAR"
-                                    class="w-full px-4 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
-                                <span class="material-icons-round">refresh</span>
-                                Reabrir Pedido
-                            </button>
-                        </form>
+                        {# Reabrir lleva a una página que pide la fecha de entrega; esa página crea por POST (14-02, D4). #}
+                        <a href="{% url 'duplicar_pedido' pedido.id %}"
+                           class="flex-1 lg:flex-none px-4 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
+                            <span class="material-icons-round">refresh</span>
+                            Reabrir Pedido
+                        </a>
                     {% endif %}
 
                     <a href="{% url 'editar_pedido' pedido.id %}"

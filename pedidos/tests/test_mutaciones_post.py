@@ -48,7 +48,7 @@ class DuplicarPostTests(TestCase):
     def test_post_duplica_con_el_usuario_como_autor(self):
         original = crear_pedido()
 
-        self.client.post(f'/pedido/duplicar/{original.pk}/')
+        self.client.post(f'/pedido/duplicar/{original.pk}/', ayudas.datos_reabrir())  # fecha: 14-02
 
         duplicado = Pedido.objects.exclude(pk=original.pk).get()
         self.assertEqual(duplicado.creado_por, self.usuario)
@@ -112,13 +112,14 @@ class PlantillasConFormularioPostTests(TestCase):
                 self.assertIn(f'<form method="post" action="{ruta}"', html)
                 self.assertIn('name="csrfmiddlewaretoken"', html)
 
-    def test_reabrir_es_formulario_post(self):
+    def test_reabrir_es_enlace_a_la_pagina_de_la_fecha(self):
+        # Desde la 14-02 (D4) Reabrir lleva a una página que pide la fecha; esa página crea por
+        # POST con CSRF (test_duplicar_items.PaginaTests). Excepción a la 04-01, como P1.
         pedido, html = self._detalle('TERMINADO')
         ruta = f'/pedido/duplicar/{pedido.pk}/'
         self.assertNotIn(f'data-url="{ruta}"', html)
-        self.assertNotIn(f'href="{ruta}"', html)
-        self.assertIn(f'<form method="post" action="{ruta}"', html)
-        self.assertIn('name="csrfmiddlewaretoken"', html)
+        self.assertIn(f'href="{ruta}"', html)
+        self.assertNotIn(f'action="{ruta}"', html)
 
     def test_respaldo_es_formulario_post_sin_recarga(self):
         texto = _plantilla('respaldar_bd.html')

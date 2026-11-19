@@ -270,12 +270,13 @@ class PkInexistenteTests(TestCase):
         f'/{PK_INEXISTENTE}/', f'/cotizaciones/detalle/{PK_INEXISTENTE}/',
         f'/productos/{PK_INEXISTENTE}/', f'/pagos/detalle/{PK_INEXISTENTE}/',
         f'/cotizaciones/{PK_INEXISTENTE}/pdf/',
+        # Desde la 14-02 (D4) el GET de duplicar muestra la página de la fecha: responde 404 con GET.
+        f'/pedido/duplicar/{PK_INEXISTENTE}/',
     )
     # Solo POST desde la 04-01: con GET, `@require_POST` responde 405 antes de buscar el objeto,
     # así que el 404 se prueba con POST.
     SOLO_POST_404 = (
         f'/pedido/{PK_INEXISTENTE}/cambiar/PENDIENTE/',
-        f'/pedido/duplicar/{PK_INEXISTENTE}/',
     )
     # Vistas que tenían @transaccion_segura: el decorador capturaba el Http404 y respondía 500
     # (AUD-02-029). La 03-01 lo retiró (RDA-019) y ahora responden 404. R20

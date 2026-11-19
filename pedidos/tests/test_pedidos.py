@@ -342,7 +342,7 @@ class DuplicarPedidoTests(FlujoBase):
         crear_pago(self.original, monto=25_000)
 
     def duplicar(self):
-        # Depende del GET actual (ayudas.duplicar; 04-01).
+        # POST con la fecha de mañana (ayudas.duplicar; 04-01 y 14-02).
         antes = timezone.now()
         with self.captureOnCommitCallbacks(execute=True):
             respuesta = ayudas.duplicar(self.client, self.original)
@@ -354,10 +354,12 @@ class DuplicarPedidoTests(FlujoBase):
 
         self.assertRedirects(respuesta, f'/{nuevo.pk}/', fetch_redirect_response=False)
         self.assertNotEqual(nuevo.pk, self.original.pk)
-        copiados = ('cliente_id', 'resumen_pedido', 'detalles_pedido', 'valor_venta', 'fecha_entrega')
+        copiados = ('cliente_id', 'resumen_pedido', 'detalles_pedido', 'valor_venta')
         for campo in copiados:
             with self.subTest(campo):
                 self.assertEqual(getattr(nuevo, campo), getattr(self.original, campo))
+        # Desde la 14-02 (D4) la fecha de entrega no se copia: la elige quien reabre (desde mañana).
+        self.assertEqual(nuevo.fecha_entrega.isoformat(), ayudas.datos_reabrir()['fecha_entrega'])
         # Comparte el mismo archivo: no se copia la imagen, solo su ruta.
         self.assertEqual(nuevo.imagen_referencia.name, self.original.imagen_referencia.name)
         self.assertEqual(self.tipos_de_evento(), ['pedido_duplicado'])
@@ -370,8 +372,9 @@ class DuplicarPedidoTests(FlujoBase):
         # Desde la 04-01 (AUD-02-028) el autor es quien duplica, no el autor del original.
         self.assertEqual(nuevo.creado_por, self.usuario)
         self.assertFalse(nuevo.pagos.exists())
-        # PENDIENTE_CLIENTE: ¿al duplicar se deben copiar los ítems? Hoy no se copian.
-        self.assertFalse(nuevo.items.exists())
+        # Respuesta 2 del cliente (14-02, AUD-05-012): se copian los ítems, no los pagos.
+        self.assertEqual(list(nuevo.items.values_list('cantidad', 'precio_unitario')),
+                         [(Decimal('2.00'), 5_000)])
         self.assertEqual(self.original.items.count(), 1)
 
     def test_fecha_de_solicitud_es_la_actual(self):

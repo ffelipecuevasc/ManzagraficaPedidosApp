@@ -1,8 +1,8 @@
 """Ayudas para las pruebas de flujos (iteración 02-03).
 
 - `items_json`: arma el campo oculto `items_json` que envía el JavaScript de los formularios.
-- `cambiar_estado` y `duplicar`: concentran el método HTTP ACTUAL de esas rutas (GET).
-  Cuando la 04-01 las pase a POST, se cambia solo aquí (y las pruebas que lo declaran).
+- `cambiar_estado` y `duplicar`: concentran el método HTTP de esas rutas (POST desde la 04-01).
+  `duplicar` envía además la fecha de entrega que exige la 14-02 (`datos_reabrir`).
 - `congelar_hora`: fija `timezone.now()` donde lo buscan las vistas (decisión D3 de la 02-02).
   Es la única definición: `test_dinero.py` la importa desde aquí (tarea 0 de la 02-04).
 - `cerrar_respuesta`: cierra un `FileResponse` sin romper la transacción de la prueba (02-05).
@@ -34,9 +34,17 @@ def cambiar_estado(client, pedido, estado):
     return client.post(f'/pedido/{pedido.pk}/cambiar/{estado}/')
 
 
+def datos_reabrir():
+    """Fecha de entrega válida para Reabrir Pedido: mañana en hora de Chile (14-02, D4)."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+    return {'fecha_entrega': (timezone.localdate() + timedelta(days=1)).isoformat()}
+
+
 def duplicar(client, pedido):
-    # Solo POST desde la 04-01 (AUD-02-006); antes escribía con GET.
-    return client.post(f'/pedido/duplicar/{pedido.pk}/')
+    # Solo escribe por POST (04-01, AUD-02-006). Desde la 14-02 (D4) el POST exige la fecha de entrega.
+    return client.post(f'/pedido/duplicar/{pedido.pk}/', datos_reabrir())
 
 
 def congelar_hora(momento=MEDIODIA):

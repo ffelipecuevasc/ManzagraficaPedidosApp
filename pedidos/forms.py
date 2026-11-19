@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django import forms
+from django.utils import timezone
 from .models import Pedido, Cliente, Cotizacion, Producto, Pago
 
 
@@ -128,6 +131,40 @@ class ConversionCotizacionForm(forms.Form):
         if self.valor_total > 0 and abono > self.valor_total:
             raise forms.ValidationError("El abono no puede ser mayor al valor total de la cotización.")
         return abono
+
+
+class FechaDesdeMananaValidator:
+    """Exige una fecha desde mañana en hora de Chile (14-02, respuesta f del cliente; regla 8.6).
+
+    Reutilizable: por ahora solo lo usa `ReabrirPedidoForm`. Aplicarlo al crear, editar o
+    convertir es trabajo de la Épica 10.
+    """
+    mensaje = "La fecha de entrega debe ser desde mañana."
+
+    def minimo(self):
+        return timezone.localdate() + timedelta(days=1)
+
+    def __call__(self, valor):
+        if valor is not None and valor < self.minimo():
+            raise forms.ValidationError(self.mensaje, code='fecha_minima')
+
+
+class ReabrirPedidoForm(ErroresAccesiblesMixin, forms.Form):
+    """Fecha de entrega del pedido reabierto (14-02, D4): obligatoria, vacía al abrir y desde mañana."""
+    fecha_entrega = forms.DateField(
+        label="Fecha de entrega del pedido nuevo",
+        validators=[FechaDesdeMananaValidator()],
+        widget=forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+        error_messages={
+            'required': "Indica para cuándo es el pedido nuevo.",
+            'invalid': "Escribe una fecha de entrega válida.",
+        },
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # El navegador ayuda con el mínimo; la regla la valida el servidor.
+        self.fields['fecha_entrega'].widget.attrs['min'] = FechaDesdeMananaValidator().minimo().isoformat()
 
 
 class ProductoForm(ErroresAccesiblesMixin, forms.ModelForm):

@@ -80,7 +80,7 @@ class EventosPedidoTests(EventosNegocioBase):
 
     def test_pedido_duplicado(self):
         original = factorias.crear_pedido()
-        self.ejecutar('post', f'/pedido/duplicar/{original.pk}/')
+        self.ejecutar('post', f'/pedido/duplicar/{original.pk}/', ayudas.datos_reabrir())  # fecha: 14-02
         nuevo = Pedido.objects.exclude(pk=original.pk).get()
         evento = self.assertUnEvento('pedido_duplicado', 'pedido', nuevo.pk)
         self.assertIn(f'#{original.pk}', evento.resumen)

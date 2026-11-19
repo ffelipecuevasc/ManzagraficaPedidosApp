@@ -1,7 +1,7 @@
 # Iteración 14-02 · Copiar los ítems al duplicar un pedido
 
 - **Épica:** 14 · Mantenimiento
-- **Estado:** **Pendiente (redactada, decisiones abiertas D1 a D4).** Redactada el 2026-11-19. No se ejecuta hasta que el desarrollador resuelva las decisiones.
+- **Estado:** **Implementada, pendiente de revisión manual y despliegue.** Redactada el 2026-11-19; decisiones D1 a D4 resueltas por el desarrollador el 2026-11-19 (sección «Decisiones resueltas»); implementada el mismo día ([bitácora](../../99_bitacora/epica-14-mantenimiento/bitacora-14-02.md)).
 - **Origen:** AUD-05-012 (Alta, propuesta). El desarrollador lo vio en el día 0 de la 04-01 (2026-11-18). Respuesta 2 del cliente (2026-11-18, dicha por el desarrollador): **al duplicar se copian los ítems, no los pagos.**
 - **Subfase del plan:** ninguna (RDA-022: una Alta va en una iteración propia de la Épica 14).
 - **Numeración:** el número 14-02 se reasignó el 2026-11-18 por decisión del desarrollador. Es la segunda excepción explícita a la RDA-022, punto 4. El 14-03 sigue sin reasignarse.
@@ -11,7 +11,7 @@
 - **Cambio de esquema:** **ninguno**. Sin `models.py` ni migraciones (verificado: `ItemPedido` ya tiene todo lo que hace falta copiar).
 - **Respaldo previo al despliegue:** el de rutina. La iteración no cambia el esquema ni los datos que ya existen; solo crea filas nuevas al duplicar.
 - **Etiqueta y retroceso:** despliegue propio. Etiqueta propuesta **`v14.2-duplicar-items`** (formato de `despliegue.md`, sección 1; `PENDIENTE_DESARROLLADOR`). Destino de retroceso: **`v4.2-confirmar-eliminar-pedido`**.
-- **Archivos que tocará la ejecución:** `pedidos/views.py` (`duplicar_pedido`) y pruebas (`pedidos/tests/test_pedidos.py`, `DuplicarPedidoTests`, y pruebas nuevas). Según D4, quizás `pedido_detail.html` (un mensaje). **Sin** `models.py`, migraciones, configuración ni estáticos.
+- **Archivos que tocará la ejecución:** `pedidos/views.py` (`duplicar_pedido`), `pedidos/forms.py` (formulario de la fecha y validador de fecha mínima), plantilla nueva `pedidos/templates/pedidos/pedido_duplicar.html`, `pedido_detail.html` (el botón pasa a enlace) y pruebas. **Sin** `models.py`, migraciones, configuración ni estáticos.
 
 ## Objetivo
 
@@ -48,7 +48,30 @@ Que «Reabrir Pedido» cree un pedido nuevo con el mismo detalle de productos qu
 - Duplicar cotizaciones.
 - Formato de montos e ids (AUD-05-013, AUD-05-015).
 
-## Decisiones abiertas (las resuelve el desarrollador)
+## Decisiones resueltas (desarrollador, 2026-11-19)
+
+- **D1 = A.** Cada ítem copiado lleva el `precio_unitario` del ítem original.
+- **D2 = A.** Nada especial: el producto está protegido contra borrado (`PROTECT`) y no existe un estado inactivo. Se copia el mismo producto.
+- **D3 = A.** Se conserva el `valor_venta` del original.
+- **D4 = nueva (reemplaza a la propuesta B).** Al pulsar «Reabrir Pedido» se abre una **página intermedia** con el patrón de las de eliminar, que pide la **fecha de entrega**: obligatoria, **vacía al abrir** y **desde mañana** (respuesta f del cliente). «Mañana» es `timezone.localdate() + 1 día` (hora de Chile, regla 8.6).
+
+### Alcance de D4
+
+- `duplicar_pedido` acepta **GET** (solo muestra la página; no escribe) y **POST** (valida la fecha y crea). Es una **excepción explícita** al «solo POST» de la 04-01, del mismo tipo que P1 (`eliminar_pago`): el GET muestra una confirmación y la escritura sigue siendo solo por POST con CSRF (regla 8.5).
+- Formulario de Django con un campo `fecha_entrega` obligatorio y un **validador de fecha mínima reutilizable** en `forms.py`. **No** se aplica al crear ni editar pedidos ni al convertir cotizaciones: eso queda en la Épica 10.
+- Fecha vacía, pasada o de hoy: se repinta la página con el error (`role="alert"`), sin crear pedido ni evento.
+- «Reabrir Pedido» en `pedido_detail.html` pasa de formulario POST con `data-confirm` a **enlace** a la página nueva.
+- La página: `label` asociado, `data-bloquear-envio`, válida a 360 px y con teclado, según `DESIGN.md`.
+
+### Riesgos de D4
+
+- **Regla de la fecha a medias:** el mínimo «mañana» rige al reabrir, pero todavía no al crear, editar ni convertir (Épica 10). Puede sorprender que una pantalla lo exija y otras no.
+- **Un paso más para reabrir:** la persona pasa por una página antes de crear el pedido.
+- **Excepción a la 04-01:** se actualizan las pruebas que fijaban «GET da 405» para duplicar (R6b y otras); el cambio se explica en la bitácora. La propiedad que protegen («GET nunca escribe») se mantiene y se prueba.
+- **Consultas:** la página nueva agrega una petición GET. Si sus consultas superan en más de +1 a las de una página comparable (la confirmación de eliminar), se detiene la iteración (`AGENTS.md`, sección 11).
+- **Bloqueo de la zona horaria:** sin el parche de la hora, una prueba que cruce la medianoche podría fallar; las pruebas de la fecha congelan la hora cerca de la medianoche en Chile.
+
+## Decisiones abiertas (texto original, ya resueltas arriba)
 
 | # | Decisión | Opciones | Recomendación |
 | :- | :------- | :------- | :------------ |
