@@ -1,7 +1,7 @@
 # Iteración 04-02 · Configuración de producción
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **Escalón 1 desplegado y verificado (pendiente solo `sessionid` con `Secure` en el navegador); escalón 2 implementado, pendiente de despliegue** (2026-11-19, [bitacora-04-02](../../99_bitacora/epica-04-seguridad/bitacora-04-02.md), [bitacora-04-02-escalon-2](../../99_bitacora/epica-04-seguridad/bitacora-04-02-escalon-2.md)). ~~Escalón 1 implementado, pendiente de despliegue; escalón 2 pendiente~~. **Etiquetas (decisión del desarrollador, 2026-11-19):** `v4.3-configuracion-produccion` (HSTS 3600) y `v4.4-hsts-semana` (HSTS 604800). **Retroceso:** `v14.2-duplicar-items`. Se avisa al cliente antes del despliegue. Antes: Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md)); D1 a D6 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md)). Queda abierta solo la etiqueta y la fecha del despliegue.
+- **Estado:** **Completada y verificada en producción (2026-11-19)**: `v4.3-configuracion-produccion` (`c62a92e`) y `v4.4-hsts-semana` (`854cd74`). AUD-01-012 resuelto. W005 y W021 siguen aceptadas, sin silenciar. HSTS de 604800 s ya emitido: dura hasta 7 días en los navegadores. ~~Escalón 1 desplegado y verificado (pendiente solo `sessionid` con `Secure` en el navegador); escalón 2 implementado, pendiente de despliegue~~ (2026-11-19, [bitacora-04-02](../../99_bitacora/epica-04-seguridad/bitacora-04-02.md), [bitacora-04-02-escalon-2](../../99_bitacora/epica-04-seguridad/bitacora-04-02-escalon-2.md)). ~~Escalón 1 implementado, pendiente de despliegue; escalón 2 pendiente~~. **Etiquetas (decisión del desarrollador, 2026-11-19):** `v4.3-configuracion-produccion` (HSTS 3600) y `v4.4-hsts-semana` (HSTS 604800). **Retroceso:** `v14.2-duplicar-items`. Se avisa al cliente antes del despliegue. Antes: Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md)); D1 a D6 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md)). Queda abierta solo la etiqueta y la fecha del despliegue.
 - **Subfase del plan:** 4.2 «Configuración de producción» (`plan-de-trabajo.md:400-408`).
 - **Depende de:** Épica 02 (Terminada). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia de la 03-05 (desde el lunes 2026-11-23 a las 23:48:12)**~~ **superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar**; no se despliega en el mismo despliegue que la 04-01 (RDA-007). Orden (decisión del 2026-11-17; desde el 2026-11-18 la 14-01 va antes): 14-01, 04-01, **04-10**, 04-02 (dos escalones, el mismo día), 04-03 y siguientes.
 - **RDA relacionadas:** RDA-004 (PythonAnywhere, plan gratuito), RDA-007 (un despliegue, un propósito; la etiqueta marca lo que está en producción).
@@ -150,7 +150,20 @@ Hora de Chile; la consola de PythonAnywhere marca UTC (Chile = UTC−3). «Pegad
 | 5 · Registros | `grep` de «csrf» y «forbidden» en `server.log` y `error.log`: sin resultados | Pegado |
 | No verificado | `sessionid` con `Secure` en el navegador (solo lo cubren las pruebas automáticas); se revisa en el escalón 2 | — |
 
-## Escalón 2 (implementado el 2026-11-19, pendiente de despliegue)
+## Despliegue y verificación del escalón 2 (2026-11-19)
+
+| Paso | Resultado | Fuente |
+| :--- | :-------- | :----- |
+| Respaldo previo | `respaldo_19-11-2026_12-07-14.sql`, `VÁLIDO`, 19 de 19, 1.542.750 bytes, SHA-256 `b7d320f6…ba11c` | Pegado |
+| Etiqueta | `v4.4-hsts-semana` sobre `854cd74`, en `origin`; `git describe` en el servidor da la etiqueta; diff de `v4.3` a `v4.4`: `settings.py`, la prueba y documentos | Pegado |
+| Reload | «Starting» a las 12:10:01, listo a las 12:10:08. Se citó 11:25 (hora del escalón 1): **vale el registro** | Pegado (`server.log`) |
+| 1 · `check --deploy` | Después del Reload: solo W005 y W021 | Pegado |
+| 3 · `curl.exe` (15:13 UTC) | HTTPS 200, `Strict-Transport-Security: max-age=604800`, `csrftoken` `Secure`; HTTP 302 a HTTPS y luego 200, sin bucle | Pegado |
+| Cookies (DevTools) | `sessionid` HttpOnly, Secure, Lax; `csrftoken` Secure, Lax. Cierra lo que faltaba del escalón 1. Además, dos `_ga` con dominio de Tailwind: AUD-05-020 (Baja, Épica 14, origen sin investigar) | Captura |
+| 4 · Ventana privada | Pedido, pago, respaldo y «Reabrir Pedido» sin 403 | Dicho |
+| 5 · Registros | Sin «csrf» ni «forbidden» en `server.log` ni `error.log` | Pegado |
+
+## Escalón 2 (implementado el 2026-11-19; desplegado y verificado el mismo día)
 
 - **Cuándo:** el mismo día, con las verificaciones 1 a 5 del escalón 1 correctas (D6, RDA-021).
 - **Cambio exacto:** en `PedidosApp/settings.py`, `SECURE_HSTS_SECONDS = 3600` pasa a `SECURE_HSTS_SECONDS = 604800` y el comentario «escalón 1: una hora» pasa a «escalón 2: una semana». Nada más.

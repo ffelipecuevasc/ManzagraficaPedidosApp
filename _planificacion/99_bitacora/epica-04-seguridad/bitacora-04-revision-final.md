@@ -45,10 +45,10 @@ Cada despliegue es un propósito, con etiqueta anotada antes (RDA-007) [V]. **Na
 | Orden | Despliegue | Etiqueta (propuesta, salvo la 04-01) | Depende de (duro) | Antes del Reload |
 | :---- | :--------- | :----------------------------------- | :---------------- | :--------------- |
 | 1 | 04-01 | **`v4.1-mutaciones-post`** [D, fijada] | Épica 02 (terminada) | Respaldo de rutina |
-| 2 | **04-10** (decisión del 2026-11-17: justo después de la 04-01) | `v4.2-confirmar-eliminar-pedido` | 04-01 | Respaldo de rutina |
-| 3 | 04-02, escalón 1 (HSTS 3600) | `v4.3-configuracion-produccion` | — | **`.env` primero** (`SEGURIDAD_PRODUCCION`, `CSRF_TRUSTED_ORIGINS`) |
-| 4 | 04-02, escalón 2 (HSTS 604800), tras **3 días** de observación sin 403 de CSRF ni bucles | `v4.4-hsts-semana` | escalón 1 | — |
-| 5 | 04-03 | `v4.5-credenciales` | 04-02 (su variable y su regla de arranque) | Respaldo previo; ensayo de respaldo y restauración en la réplica |
+| 2 | **04-10** (decisión del 2026-11-17: justo después de la 04-01) | `v4.2-confirmar-eliminar-pedido` **[desplegada y verificada, 2026-11-19]** | 04-01 | Respaldo de rutina |
+| 3 | 04-02, escalón 1 (HSTS 3600) | `v4.3-configuracion-produccion` **[fijada y desplegada, `c62a92e`, verificada el 2026-11-19]** | — | **`.env` primero** (`SEGURIDAD_PRODUCCION`, `CSRF_TRUSTED_ORIGINS`) |
+| 4 | 04-02, escalón 2 (HSTS 604800), ~~tras **3 días** de observación sin 403 de CSRF ni bucles~~ el mismo día, tras comprobar el escalón 1 (RDA-021) | `v4.4-hsts-semana` **[fijada y desplegada, `854cd74`, verificada el 2026-11-19]** | escalón 1 | — |
+| 5 | 04-03 | `v4.5-credenciales` (prevista por el desarrollador el 2026-11-19, sin fijar) | 04-02 (su variable y su regla de arranque) | Respaldo previo; ensayo de respaldo y restauración en la réplica |
 | 6 | 04-04 | `v4.6-restauracion` | 04-03 y 04-01 | Respaldo previo |
 | 7 | 04-05 | `v4.7-correcciones-config` | 04-02 y 04-04 (mismos archivos) | Respaldo de rutina |
 | 8 | 04-06 | `v4.8-historial-clientes` | 04-01 y 04-05 | Respaldo previo; `migrate` (`0008`) |

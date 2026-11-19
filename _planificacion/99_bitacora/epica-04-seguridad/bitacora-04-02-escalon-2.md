@@ -2,7 +2,19 @@
 
 - **Fecha:** 2026-11-19
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión · escalón 2 implementado, pendiente de despliegue
+- **Estado final:** **Completada y verificada en producción (2026-11-19)** · `v4.4-hsts-semana` (`854cd74`). ~~En revisión · escalón 2 implementado, pendiente de despliegue~~
+
+## Cierre en producción (2026-11-19)
+
+- Respaldo previo `respaldo_19-11-2026_12-07-14.sql`, `VÁLIDO`, 19 de 19, 1.542.750 bytes (pegado).
+- Reload: «Starting» 12:10:01, listo 12:10:08 según `server.log` (se citó 11:25, hora del escalón 1; vale el registro).
+- `check --deploy` después del Reload: solo W005 y W021 (pegado). Siguen aceptadas y sin silenciar.
+- `curl.exe` (15:13 UTC): `max-age=604800`, `csrftoken` `Secure`, HTTP 302 → HTTPS 200 sin bucle (pegado).
+- DevTools (captura): `sessionid` HttpOnly, Secure, Lax; `csrftoken` Secure, Lax.
+- Sin 403 en la ventana privada (dicho); sin «csrf» ni «forbidden» en los registros (pegado).
+- AUD-01-012: resuelto y verificado en producción. Hallazgo nuevo: AUD-05-020 (Baja, Épica 14), dos cookies `_ga` con dominio de Tailwind, origen sin investigar.
+- **El HSTS de 604800 s ya emitido dura hasta 7 días** en los navegadores que lo recibieron, aunque se haga un retroceso.
+- Destino de retroceso para la siguiente iteración: `v4.4-hsts-semana`.
 
 ## Resumen
 
@@ -45,9 +57,9 @@ El escalón 1 (`v4.3-configuracion-produccion`) quedó desplegado y verificado e
 ## Criterios de aceptación
 
 - [x] Prueba primero que falla con 3600 y pasa con 604800.
-- [ ] HSTS 604800 en producción: no verificado.
-- [ ] `sessionid` con `Secure` en el navegador: no verificado.
-- [ ] AUD-01-012 cerrado: se cierra al verificar este escalón.
+- [x] HSTS 604800 en producción (`curl`, pegado).
+- [x] `sessionid` con `Secure` en el navegador (captura de DevTools).
+- [x] AUD-01-012 resuelto y verificado en producción.
 
 ## Pendientes y riesgos
 
