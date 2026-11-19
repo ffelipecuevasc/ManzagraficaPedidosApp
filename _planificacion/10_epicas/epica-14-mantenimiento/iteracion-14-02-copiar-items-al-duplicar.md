@@ -1,7 +1,7 @@
 # Iteración 14-02 · Copiar los ítems al duplicar un pedido
 
 - **Épica:** 14 · Mantenimiento
-- **Estado:** **Implementada, pendiente de revisión manual y despliegue.** Redactada el 2026-11-19; decisiones D1 a D4 resueltas por el desarrollador el 2026-11-19 (sección «Decisiones resueltas»); implementada el mismo día ([bitácora](../../99_bitacora/epica-14-mantenimiento/bitacora-14-02.md)).
+- **Estado:** ~~Implementada, pendiente de revisión manual y despliegue.~~ **Terminada · verificada en producción el 2026-11-19** (`v14.2-duplicar-items` sobre `068be10`; [bitacora-14-02](../../99_bitacora/epica-14-mantenimiento/bitacora-14-02.md), «Cierre en producción»). Redactada el 2026-11-19; decisiones D1 a D4 resueltas por el desarrollador el 2026-11-19 (sección «Decisiones resueltas»); implementada el mismo día ([bitácora](../../99_bitacora/epica-14-mantenimiento/bitacora-14-02.md)).
 - **Origen:** AUD-05-012 (Alta, propuesta). El desarrollador lo vio en el día 0 de la 04-01 (2026-11-18). Respuesta 2 del cliente (2026-11-18, dicha por el desarrollador): **al duplicar se copian los ítems, no los pagos.**
 - **Subfase del plan:** ninguna (RDA-022: una Alta va en una iteración propia de la Épica 14).
 - **Numeración:** el número 14-02 se reasignó el 2026-11-18 por decisión del desarrollador. Es la segunda excepción explícita a la RDA-022, punto 4. El 14-03 sigue sin reasignarse.
@@ -10,7 +10,7 @@
 - **Hallazgos que cierra:** AUD-05-012.
 - **Cambio de esquema:** **ninguno**. Sin `models.py` ni migraciones (verificado: `ItemPedido` ya tiene todo lo que hace falta copiar).
 - **Respaldo previo al despliegue:** el de rutina. La iteración no cambia el esquema ni los datos que ya existen; solo crea filas nuevas al duplicar.
-- **Etiqueta y retroceso:** despliegue propio. Etiqueta propuesta **`v14.2-duplicar-items`** (formato de `despliegue.md`, sección 1; `PENDIENTE_DESARROLLADOR`). Destino de retroceso: **`v4.2-confirmar-eliminar-pedido`**.
+- **Etiqueta y retroceso:** despliegue propio. Etiqueta ~~propuesta~~ **`v14.2-duplicar-items`** (formato de `despliegue.md`, sección 1; usada el 2026-11-19 sobre `068be10`). Destino de retroceso: **`v4.2-confirmar-eliminar-pedido`**.
 - **Archivos que tocará la ejecución:** `pedidos/views.py` (`duplicar_pedido`), `pedidos/forms.py` (formulario de la fecha y validador de fecha mínima), plantilla nueva `pedidos/templates/pedidos/pedido_duplicar.html`, `pedido_detail.html` (el botón pasa a enlace) y pruebas. **Sin** `models.py`, migraciones, configuración ni estáticos.
 
 ## Objetivo
@@ -121,10 +121,10 @@ Que «Reabrir Pedido» cree un pedido nuevo con el mismo detalle de productos qu
 
 ## Criterio de término
 
-- Tabla de pruebas en verde y resto de la suite sin cambios en los fallos esperados.
-- Revisión manual en la réplica refrescada, en escritorio y a 360 px.
-- Sin migración nueva y consultas anotadas.
-- Día 0 en producción hecho, y AUD-05-012 resuelto y verificado.
+- [x] Tabla de pruebas en verde y resto de la suite sin cambios en los fallos esperados. **Fuente:** ejecución del agente en local (298 → 316, `OK (expected failures=4)`; bitácora).
+- [ ] Revisión manual en la réplica refrescada, en escritorio y a 360 px. **Fuente: no informada** en el cierre del 2026-11-19 (ni hecha ni descartada); el día 0 en producción cubrió el comportamiento en escritorio (dicho). Queda como salvedad: el desarrollador pidió el cierre sin informarla (`PENDIENTE_DESARROLLADOR`: confirmar si se hizo, incluidos 360 px y teclado).
+- [x] Sin migración nueva y consultas anotadas. **Fuente:** `makemigrations --check --dry-run` del agente y `git diff --stat` vacío en requirements, migraciones, settings y estáticos (pegado).
+- [x] Día 0 en producción hecho (**dicho**) y AUD-05-012 resuelto y verificado. **Fuente:** checkout con `git describe` y Reload (pegados), un solo evento `pedido_duplicado` solo con identificadores (captura) y `error.log`/`server.log` sin errores nuevos (pegados).
 
 ## Riesgos
 

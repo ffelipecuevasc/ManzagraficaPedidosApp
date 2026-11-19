@@ -2,9 +2,9 @@
 
 - **Fecha:** 2026-11-19
 - **Iteración:** [14-02 · Copiar los ítems al duplicar un pedido](../../10_epicas/epica-14-mantenimiento/iteracion-14-02-copiar-items-al-duplicar.md)
-- **Estado resultante:** Implementada, pendiente de revisión manual y despliegue.
+- **Estado resultante:** ~~Implementada, pendiente de revisión manual y despliegue~~ **Terminada · verificada en producción el 2026-11-19** (sección «Cierre en producción»).
 - **Base:** `main` en `b1427bf`.
-- **Hallazgos:** AUD-05-012 pasa a **corregido en código, pendiente de verificar en producción**. Sin hallazgos nuevos; una contradicción con `DESIGN.md` (sección «Contradicciones»).
+- **Hallazgos:** AUD-05-012 pasa a ~~corregido en código, pendiente de verificar en producción~~ **resuelto y verificado en producción (2026-11-19)**. Nuevos al cerrar: AUD-05-017 (sin token de envío único), AUD-05-018 (rama `CLONAR` sin uso) y AUD-05-019 (`DESIGN.md:101`), los tres Baja propuesta, Épica 14.
 - **Decisiones (desarrollador, 2026-11-19):** D1 precio unitario del original; D2 nada especial (producto protegido contra borrado); D3 se conserva `valor_venta`; D4 nueva, reemplaza a la propuesta B: página intermedia que pide la fecha de entrega, obligatoria, vacía al abrir y desde mañana (respuesta f del cliente).
 
 ## Archivos modificados
@@ -83,7 +83,28 @@ Medidas con `CaptureQueriesContext` en una prueba temporal (borrada), pedido de 
 
 ## Criterio de término
 
-- [x] Pruebas de la tabla en verde; suite `OK (expected failures=4)`.
-- [x] Sin migración; consultas medidas y anotadas.
-- [ ] Revisión manual en la réplica, en escritorio, a 360 px y con teclado.
-- [ ] Día 0 en producción y AUD-05-012 verificado.
+- [x] Pruebas de la tabla en verde; suite `OK (expected failures=4)` (agente, local).
+- [x] Sin migración; consultas medidas y anotadas (agente; `git diff --stat` vacío, pegado).
+- [ ] Revisión manual en la réplica, en escritorio, a 360 px y con teclado: **no informada** en el cierre (`PENDIENTE_DESARROLLADOR`).
+- [x] Día 0 en producción (dicho) y AUD-05-012 verificado (evento en captura; registros pegados).
+
+## Cierre en producción (2026-11-19)
+
+Fuentes: salidas pegadas por el desarrollador, salvo lo marcado **dicho** o **captura**.
+
+- **Respaldo previo (pegado):** `respaldo_19-11-2026_01-29-31.sql`, `VÁLIDO`, 19 de 19 tablas, SHA-256 `e13a10a0…022bd`.
+- **Etiqueta (pegado):** `v14.2-duplicar-items` sobre `068be10`. `git diff --stat` de `requirements.txt`, migraciones, `settings.py` y estáticos **vacío**: sin `pip`, `migrate` ni `collectstatic`.
+- **Checkout (pegado):** `git describe` = `v14.2-duplicar-items`.
+- **Reload (pegado, `server.log`):** a las 01:32:05 (hora de Chile); uWSGI arriba a las 01:32:12 y el proceso listo («loyalty») a las 01:32:39. El desarrollador no informó la hora por su cuenta: la oficial es la de `server.log` (`despliegue.md`, regla del 2026-11-04).
+- **Día 0 (dicho), con pedidos de prueba ya borrados:** la página abre con la fecha vacía; la fecha de hoy se rechaza; con una fecha desde mañana, el pedido nuevo tiene los dos ítems con los mismos precios, el mismo total, sin pagos y con el autor correcto.
+- **Registro de eventos (captura):** un solo «Pedido duplicado» (#1022 desde #1021, 01:34:45), solo con identificadores.
+- **`error.log` (pegado):** sin errores nuevos desde el Reload; la última línea (04:29:34 UTC) es anterior. Los dos `OSError` del 2026-11-18 son anteriores (AUD-04-004). **`server.log` (pegado):** sin errores.
+- **Retroceso:** no hizo falta. `v14.2-duplicar-items` pasa a ser la versión estable vigente y el destino de retroceso (`despliegue.md`, sección 5).
+- **Salvedades:** la revisión manual en la réplica (360 px y teclado) no se informó; no se vio la hora del primer acceso del cliente tras el despliegue.
+
+## Propuesta para `DESIGN.md` (AUD-05-019, la edita el desarrollador)
+
+- **Archivo y sección:** `DESIGN.md`, tabla de componentes, fila «Modal de confirmación» (línea 101).
+- **Texto actual:** «Toda acción irreversible (eliminar, reabrir, restaurar la base) se confirma en un modal que explica la consecuencia antes de ejecutarla. La acción confirmada se envía como formulario POST.»
+- **Texto propuesto:** «Toda acción irreversible (eliminar, reabrir, restaurar la base) se confirma en un modal o en una página de confirmación que explica la consecuencia antes de ejecutarla. Se usa una página cuando la confirmación pide datos (por ejemplo, la fecha de entrega al reabrir o la palabra ELIMINAR). La acción confirmada se envía como formulario POST.»
+- **Por qué:** desde la 04-01 (eliminar pago), la 04-10 (eliminar pedido) y la 14-02 (reabrir), esas confirmaciones son páginas. **Si no se cambia:** `DESIGN.md`, que es la fuente de verdad del diseño, describe un comportamiento que ya no existe y un agente podría «corregir» las páginas de vuelta a modales.

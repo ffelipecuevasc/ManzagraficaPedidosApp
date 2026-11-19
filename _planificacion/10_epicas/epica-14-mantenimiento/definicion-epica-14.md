@@ -24,7 +24,7 @@
 | Iteración | Nombre | Estado |
 | :-------- | :----- | :----- |
 | 14-01 | [Arreglo urgente de pagos](iteracion-14-01-arreglo-urgente-de-pagos.md): AUD-05-010 (Crítica) y AUD-05-011 (Alta); AUD-05-009 no entró (D3 A) | **Terminada (2026-11-18): verificada en producción**, `v14.1-pagos` |
-| 14-02 | [Copiar los ítems al duplicar un pedido](iteracion-14-02-copiar-items-al-duplicar.md): AUD-05-012 (Alta) | **Implementada, pendiente de revisión manual y despliegue (2026-11-19)**; D1 a D4 resueltas ([bitacora-14-02](../../99_bitacora/epica-14-mantenimiento/bitacora-14-02.md)). Número reasignado el 2026-11-18 por decisión del desarrollador, segunda excepción explícita a la RDA-022, punto 4 |
+| 14-02 | [Copiar los ítems al duplicar un pedido](iteracion-14-02-copiar-items-al-duplicar.md): AUD-05-012 (Alta) | ~~Implementada, pendiente de revisión manual y despliegue (2026-11-19)~~ **Terminada · verificada en producción el 2026-11-19** (`v14.2-duplicar-items`, `068be10`); D1 a D4 resueltas ([bitacora-14-02](../../99_bitacora/epica-14-mantenimiento/bitacora-14-02.md)). Número reasignado el 2026-11-18 por decisión del desarrollador, segunda excepción explícita a la RDA-022, punto 4 |
 | ~~14-02 (anterior)~~ | ~~Respaldo de la base en S3~~ | **Descartada** (RDA-022). El número 14-02 se reasignó a AUD-05-012 |
 | ~~14-03~~ | ~~Restauración ensayada desde S3~~ | **Descartada** (RDA-022). El número no se reasigna |
 | ~~14-01 (anterior)~~ | ~~Cuenta de AWS y seguridad~~ | **Descartada** (RDA-022). El número 14-01 se reasignó al arreglo de pagos por decisión del desarrollador; esta iteración nunca tuvo archivo |
