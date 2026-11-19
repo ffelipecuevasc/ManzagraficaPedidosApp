@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-11-19
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** Implementada, pendiente de ensayo y despliegue. Etiqueta prevista `v4.6-restauracion`, sin fecha fija (RDA-021); retroceso `v4.5-credenciales`. El formato D2 sobre respaldos reales y el ensayo en la réplica están **pendientes de ejecutar por el desarrollador**.
+- **Estado final:** **Completada y verificada en producción (2026-11-19)** con `v4.6-restauracion` (`58d7c3d`); retroceso vigente `v4.6-restauracion`. Ver «Cierre». ~~Implementada, pendiente de ensayo y despliegue. Etiqueta prevista `v4.6-restauracion`, sin fecha fija (RDA-021); retroceso `v4.5-credenciales`. El formato D2 sobre respaldos reales y el ensayo en la réplica están pendientes de ejecutar por el desarrollador.~~
 - **Regla:** ningún valor de clave, ningún contenido de volcado y ningún nombre de persona en este documento.
 
 ## Resumen
@@ -187,4 +187,22 @@ Borra la carpeta del ensayo y el respaldo del paso 0 **solo si salió `CUMPLE`**
 - `python manage.py test pedidos` → **375 pruebas, `OK (expected failures=4)`** (342 + 33).
 - `python manage.py check` → sin problemas. `makemigrations --check --dry-run` → `No changes detected`.
 - Finales de línea conservados (CRLF en `utils.py`, las dos plantillas y `test_contrato_error.py`; LF en el resto).
-- Pendiente del desarrollador: formato D2 sobre respaldos reales, ensayo en la réplica, revisión manual de `restaurar_bd.html` en escritorio y a 360 px, y el despliegue.
+- ~~Pendiente del desarrollador: formato D2 sobre respaldos reales, ensayo en la réplica, revisión manual de `restaurar_bd.html` en escritorio y a 360 px, y el despliegue.~~ Hecho: ver «Cierre».
+
+## Cierre (2026-11-19): despliegue y verificación
+
+Datos pegados por el desarrollador salvo los marcados «dicho». Consola en UTC; `server.log` en hora de Chile (UTC−3). Solo documentos: sin código, pruebas ni `manage.py` en esta sesión.
+
+- **D2:** `CUMPLE D2` sobre el respaldo del paso 0 de la réplica y sobre `respaldo_19-11-2026_14-13-28.sql` (producción).
+- **Ensayo en la réplica:** `CUMPLE`. Restauración de **6,2 s**; inválido y sin `RESTAURAR` rechazados; 1 `emergencia_` que cumple D2; subida borrada; 4999 → 5000 filas (solo eventos +1); contraseña en argumentos 0; residuales 0. Excepción de `replica-local.md`, sección 8, **usada y agotada**. No se informó el borrado de la carpeta del ensayo ni del respaldo del paso 0.
+- **Pantalla:** escritorio y 360 px revisados por el desarrollador (dicho).
+- **Etiqueta:** `v4.6-restauracion` sobre `58d7c3d`; diff `v4.5…v4.6`: código solo `utils.py`, `views.py`, `restaurar_bd.html` y `respaldar_bd.html`.
+- **Servidor:** checkout a las 20:21 UTC; `git describe` = `v4.6-restauracion`; `check --deploy` antes y después: solo W005 y W021; `emergencia_` en `backups/` antes: 0.
+- **Arranques de uWSGI tras el checkout:** 17:22:49, 17:29:34 y 17:41:57 (Chile). Los tres son Reloads del desarrollador, repetidos porque creyó que los anteriores no se habían ejecutado (dicho). Ninguno de origen desconocido.
+- **Respaldo previo, con salvedad:** `respaldo_19-11-2026_17-40-30.sql` (`VÁLIDO`, `CUMPLE D2`, 1.547.705 bytes, `457a9e8a…998b`) se generó con `v4.6` ya activo: **no es un respaldo previo con el código anterior**. El último hecho con `v4.5` es `respaldo_19-11-2026_14-13-28.sql`. No hubo daño (sin migraciones ni restauración real), pero el orden de `despliegue.md` 3.11 (respaldo antes del Reload) no se cumplió tal como estaba escrito. Lección para la 04-05: tomar el respaldo **antes** del checkout y comprobar el Reload en `server.log` («Starting uWSGI») en vez de repetirlo.
+- **Después:** `vacio.sql` (0 bytes) con `RESTAURAR` rechazado con el mensaje fijo (dicho); `emergencia_` sigue en 0; `grep` «Restauración» sin resultados. Respaldo desde la web `respaldo_19-11-2026_17-48-17.sql`: `VÁLIDO` 19 de 19, `CUMPLE D2`, 1.547.831 bytes, `b804277d…b622`. Registros del día sin `Traceback`, `OSError`, `mysqldump` ni `mysql_opciones`; `/tmp/mysql_opciones_*` → 0.
+- **Sin restauración real en producción**, por diseño.
+- **Regla 8.10:** el tiempo medido (6,2 s, una medición en la réplica) queda anotado en la propuesta del registro, sección 4.
+- **Pendientes heredados:** D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR`. AUD-05-004 sigue en la Épica 08 (D6). La excepción a la rotación (D5) la hereda la 06-03.
+- **No visto por el agente:** el servidor, los registros, los volcados y la pantalla; todo lo anterior es lo pegado o dicho.
+- **Retroceso vigente:** `v4.6-restauracion`. Siguiente: la 04-05 (`v4.7-correcciones-config`).

@@ -1,7 +1,7 @@
 # Iteración 04-04 · Endurecimiento de la restauración
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **Implementada, pendiente de ensayo y despliegue (2026-11-19)** ([bitacora-04-04](../../99_bitacora/epica-04-seguridad/bitacora-04-04.md)). Etiqueta prevista `v4.6-restauracion`, sin fecha fija: se despliega el día en que quede ensayada, con verificación el mismo día (RDA-021); retroceso `v4.5-credenciales`. **Pendientes de ejecutar por el desarrollador:** la revisión del formato D2 sobre respaldos reales y el ensayo en la réplica (`despliegue.md`, 3.11; excepción en `replica-local.md`, sección 8). D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR` (no bloquea). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-04-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-04-redaccion.md)); D1 a D6 resueltas por el desarrollador el mismo día ([bitacora-04-04-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-04-cierre.md)).
+- **Estado:** **Completada y verificada en producción (2026-11-19)** con `v4.6-restauracion` (`58d7c3d`); detalle en «Despliegue y verificación». Retroceso vigente desde aquí: `v4.6-restauracion`. **Salvedad:** el respaldo `17-40-30` se generó con `v4.6` ya activo; el último respaldo con el código anterior es `14-13-28`. D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR` (no bloquea). ~~Implementada, pendiente de ensayo y despliegue (2026-11-19)~~ ([bitacora-04-04](../../99_bitacora/epica-04-seguridad/bitacora-04-04.md)). ~~Etiqueta prevista `v4.6-restauracion`, sin fecha fija: se despliega el día en que quede ensayada, con verificación el mismo día (RDA-021); retroceso `v4.5-credenciales`. Pendientes de ejecutar por el desarrollador: la revisión del formato D2 sobre respaldos reales y el ensayo en la réplica~~ Formato D2 y ensayo **realizados: `CUMPLE`** (`despliegue.md`, 3.11; excepción de `replica-local.md`, sección 8, usada y agotada). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-04-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-04-redaccion.md)); D1 a D6 resueltas por el desarrollador el mismo día ([bitacora-04-04-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-04-cierre.md)).
 - **Subfase del plan:** 4.4 «Restauración endurecida» (`definicion-epica-04.md`, alcance 4).
 - **Depende de:** 04-03 (archivo temporal de opciones, D1, en `generar_respaldo_mysql` y `restaurar_bd_mysql`) y 04-01 (`generar_respaldo_bd` solo POST). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 (y su subida de HSTS) → 04-03 → **04-04**.
 - **RDA relacionadas:** RDA-007, RDA-009 (tareas lentas fuera de la petición), RDA-013 (errores en `server.log`, eventos en MySQL), RDA-019 (captura fuera del `atomic`).
@@ -132,6 +132,26 @@ Suite con los mismos fallos esperados que deje la 04-01 (4).
 3. **No se ejecuta una restauración real en producción** para validar la iteración: el camino completo se valida en la réplica.
 4. `server.log` sin errores nuevos.
 5. (Agregado el 2026-11-19) Un respaldo desde la web sale `VÁLIDO`: `generar_respaldo_mysql` cambió (prefijo y borrado ante cualquier fallo).
+
+## Despliegue y verificación (2026-11-19, datos pegados o dichos por el desarrollador)
+
+Horas: consola en UTC; `server.log` en hora de Chile (UTC−3).
+
+| Paso | Resultado |
+| :--- | :-------- |
+| Formato D2 | `CUMPLE D2` sobre el respaldo del paso 0 de la réplica y sobre `respaldo_19-11-2026_14-13-28.sql` (producción). |
+| Ensayo en la réplica | `CUMPLE`: restauración de **6,2 s**; volcado inválido y sin `RESTAURAR` rechazados sin tocar nada; 1 `emergencia_` que cumple D2; subida borrada; 4999 → 5000 filas, solo eventos +1; contraseña en argumentos 0; residuales 0. |
+| Pantalla | `restaurar_bd.html` en escritorio y a 360 px (dicho; el agente no la vio). |
+| Etiqueta | `v4.6-restauracion` sobre `58d7c3d`; diff `v4.5…v4.6`: código solo `utils.py`, `views.py`, `restaurar_bd.html` y `respaldar_bd.html`; sin `requirements.txt`, migraciones ni estáticos. |
+| Servidor, antes del Reload | Checkout a las 20:21 UTC; `git describe` = `v4.6-restauracion`; `check --deploy` solo W005 y W021; `emergencia_` en `backups/`: 0. |
+| Reload | Tres arranques de uWSGI tras el checkout: 17:22:49, 17:29:34 y 17:41:57 (hora de Chile). Los tres son Reloads pulsados por el desarrollador, que lo repitió creyendo que los anteriores no se habían ejecutado (dicho). Ninguno de origen desconocido. |
+| Respaldo previo | **No hubo respaldo previo con el código anterior tomado en esta ventana.** `respaldo_19-11-2026_17-40-30.sql` (`VÁLIDO`, `CUMPLE D2`, 1.547.705 bytes, SHA-256 `457a9e8a…998b`) se generó con `v4.6` ya activo (después del arranque de las 17:22:49). El último respaldo hecho con `v4.5` es `respaldo_19-11-2026_14-13-28.sql` (`VÁLIDO`, `CUMPLE D2`). Sin daño observado: la iteración no tiene migraciones y no hubo restauración real. |
+| Después del Reload | `check --deploy` solo W005 y W021. `vacio.sql` (0 bytes) con `RESTAURAR`: rechazado con «El archivo no es un respaldo válido de esta aplicación (o supera los 20 MB). No se tocó la base.» (dicho); `emergencia_` sigue en 0; sin «Restauración» en `server.log`. |
+| Respaldo desde la web | `respaldo_19-11-2026_17-48-17.sql`: `VÁLIDO` (19 de 19), `CUMPLE D2`, 1.547.831 bytes, SHA-256 `b804277d…b622`. |
+| Registros | Sin `Traceback`, `OSError`, `mysqldump` ni `mysql_opciones` del día; `/tmp/mysql_opciones_*` → 0 (consola; no mide el `/tmp` del worker). |
+| Restauración real en producción | No se hizo, por diseño (punto 3). |
+
+Criterio de término: cumplido (pruebas, ensayo, documentos y puntos 1, 2 y 4 de producción; el punto 1 con la salvedad del respaldo previo). Tiempo de la restauración para la propuesta de la regla 8.10 (registro, sección 4): **6,2 s en la réplica** (una sola medición, con el volumen actual).
 
 ## Plan de retroceso
 
