@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-11-18
 - **Iteración:** [04-10 · Confirmación reforzada al eliminar un pedido con pagos](../../10_epicas/epica-04-seguridad/iteracion-04-10-confirmacion-reforzada-al-eliminar-un-pedido-con-pagos.md)
-- **Estado resultante:** **Implementada, pendiente de revisión manual y despliegue.**
+- **Estado resultante:** ~~Implementada, pendiente de revisión manual y despliegue~~ **Terminada · verificada en producción el 2026-11-19** (sección «Cierre en producción»).
 - **Base:** `main` en `ab7ce82` (tras el cierre de la 04-01), más el ajuste documental de la numeración de la 14-02 (commit aparte, sin código).
 - **Hallazgos:** ninguno se cierra (la iteración no cierra hallazgos). Sin hallazgos nuevos; una contradicción de formato de montos (sección «Contradicciones»).
 
@@ -49,9 +49,25 @@ Medidas con `CaptureQueriesContext` sobre un pedido con 2 pagos, sin contar los 
 ## Criterio de término
 
 - [x] Tabla de pruebas en verde; resto de la suite sin cambios (`OK (expected failures=4)`).
-- [ ] Revisión manual en la réplica (con y sin pagos, escritorio, 360 px y teclado): **pendiente del desarrollador**.
+- [x] Revisión manual en la réplica (con y sin pagos, escritorio, 360 px y teclado): hecha el 2026-11-18 (dicho por el desarrollador).
 - [x] Sin migración nueva; consultas antes y después anotadas.
-- [ ] Verificación 2 de producción: pendiente del despliegue.
+- [x] Verificación 2 de producción: hecha el 2026-11-19 (dicho por el desarrollador), con `error.log` pegado sin errores.
+
+## Cierre en producción (2026-11-19)
+
+Fuente de cada dato: **pegado** (salida que el desarrollador pegó) o **dicho** (lo informó el desarrollador; el agente no lo comprobó).
+
+- **Paso 2 en la réplica (pegado):** réplica refrescada el 2026-11-18 a las 14:26 (19 tablas, último id 1015, diferencia de código 0). Conteos: **994 pedidos, 970 con al menos un pago (97,6 %) y 2 eliminaciones registradas** (`pedido_eliminado`). La pantalla nueva aparece en casi todos los pedidos.
+- **Revisión manual en la réplica (dicho):** escritorio, 360 px y teclado. Con pagos, rechaza el campo vacío y «eliminar» y acepta «ELIMINAR» con o sin espacios; sin pagos, borra después de confirmar; el admin de eventos muestra «con 1 pago» y «sin pagos».
+- **La réplica ya no es fiel:** en la revisión se borraron dos pedidos. Hay que refrescarla (`replica-local.md`) antes de usarla para otro ensayo (anotado en el registro).
+- **Respaldo previo de producción (pegado):** `respaldo_19-11-2026_00-09-05.sql`, `VÁLIDO`, 19 de 19 tablas, SHA-256 `225c3b30…1747`.
+- **Etiqueta y checkout (pegado):** `v4.2-confirmar-eliminar-pedido` sobre `3442a5e`; `git diff --stat` de `requirements.txt`, migraciones, `settings.py` y estáticos vacío (sin `pip`, `migrate` ni `collectstatic`); checkout confirmado con `git describe`.
+- **Reload (pegado):** 2026-11-19 hacia las 00:18 (hora de Chile); uWSGI arriba a las 00:17:15.
+- **Día 0 (dicho):** en un pedido real con pagos se vio el aviso con las cifras, sin enviar. Se borraron dos pedidos de prueba, uno con pagos (con la palabra) y otro sin pagos, y los eventos quedaron correctos.
+- **`error.log` (pegado):** sin errores desde el Reload (03:17 UTC). El último `OSError` es del 2026-11-18 a las 18:40:18 UTC, anterior al despliegue (AUD-04-004).
+- **Hallazgos nuevos:** AUD-05-015 (formato de montos con espacio duro) y AUD-05-016 (el texto dice «esos pagos» cuando hay un solo pago). En local, `/media/pedidos/…` da 404 porque la réplica no trae los archivos subidos; se anotó con el pendiente de `media/` (AUD-02-023).
+- **Retroceso:** desde ahora el destino es `v4.2-confirmar-eliminar-pedido` (`despliegue.md`, sección 5).
+- **Siguiente:** ejecutar la 14-02 cuando sus decisiones estén resueltas ([iteracion-14-02](../../10_epicas/epica-14-mantenimiento/iteracion-14-02-copiar-items-al-duplicar.md)).
 
 ## No verificado
 
@@ -71,4 +87,4 @@ Medidas con `CaptureQueriesContext` sobre un pedido con 2 pagos, sin contar los 
 
 ## Siguiente
 
-Redactar la 14-02 (copiar los ítems al duplicar, AUD-05-012).
+~~Redactar la 14-02 (copiar los ítems al duplicar, AUD-05-012).~~ La 14-02 quedó redactada el 2026-11-19, con decisiones abiertas.
