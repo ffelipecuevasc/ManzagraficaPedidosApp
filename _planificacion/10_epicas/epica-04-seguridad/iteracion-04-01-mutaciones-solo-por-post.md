@@ -1,7 +1,7 @@
 # Iteración 04-01 · Mutaciones solo por POST
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **Implementada, pendiente de revisión manual y despliegue** (2026-11-18; [bitacora-04-01](../../99_bitacora/epica-04-seguridad/bitacora-04-01.md)). No está Terminada: faltan la revisión manual en la réplica, el despliegue y el día 0. Antes: Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-01-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-01-redaccion.md)) con las decisiones (a) y (b) del desarrollador del 2026-11-17. P1 y P2 **resueltos el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-01-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-01-cierre.md)): P1, se crea `pago_confirm_delete.html` y R7 queda como está; P2, el panel queda en la 06-01. Etiqueta `v4.1-mutaciones-post` fijada el 2026-11-17; ~~la fecha se fija al cerrar la vigilancia de la 03-05~~ (superado el 2026-11-18, RDA-021: la fija el desarrollador, después de la 14-01).
+- **Estado:** **Terminada · verificada en producción el 2026-11-18** (día 0 dicho por el desarrollador; `v4.1-mutaciones-post`, Reload hacia las 22:16, hora de Chile; [bitacora-04-01](../../99_bitacora/epica-04-seguridad/bitacora-04-01.md), sección «Cierre en producción»). Antes, el mismo día: ~~Implementada, pendiente de revisión manual y despliegue~~. Antes: Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-01-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-01-redaccion.md)) con las decisiones (a) y (b) del desarrollador del 2026-11-17. P1 y P2 **resueltos el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-01-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-01-cierre.md)): P1, se crea `pago_confirm_delete.html` y R7 queda como está; P2, el panel queda en la 06-01. Etiqueta `v4.1-mutaciones-post` fijada el 2026-11-17; ~~la fecha se fija al cerrar la vigilancia de la 03-05~~ (superado el 2026-11-18, RDA-021: la fija el desarrollador, después de la 14-01).
 - **Subfase del plan:** 4.1 «Mutaciones solo por POST» (`plan-de-trabajo.md`, FASE 4).
 - **Depende de:** Épica 02 (Terminada). Se redactó en paralelo a la vigilancia de la 03-05; ~~**ni se ejecuta en local ni se despliega hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17) (desde el lunes 2026-11-23 a las 23:48:12, nota del 2026-11-17 en `definicion-epica-04.md`)~~ **superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar y puede ejecutarse. Se despliega después de la 14-01** (arreglo urgente de pagos, RDA-022, que va antes; **esta iteración no suma AUD-05-010 ni AUD-05-011**, decisión del desarrollador del 2026-11-18).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging`), RDA-019 (errores de vista los maneja Django; la captura va fuera del `atomic`).
@@ -138,10 +138,14 @@ Se revisaron las 41 rutas de `pedidos/urls.py` y todas las escrituras de `views.
 | R6a, R6b, R6c, R7 (sin cambios en su afirmación) y R19 sin `@expectedFailure` y en verde | **Cumplido** |
 | Ninguna de las cuatro vistas escribe con GET; sin `href` a cambiar estado, duplicar ni generar respaldo; eliminar pago lleva a una confirmación que responde 200 | **Cumplido** (pruebas y búsqueda en `pedidos/templates`) |
 | `respaldar_bd.html` sin `location.reload` | **Cumplido** |
-| En la réplica, un respaldo de más de 2 s llega completo al equipo | **Pendiente del desarrollador** (el agente no tiene la réplica) |
+| En la réplica, un respaldo de más de 2 s llega completo al equipo | **Cumplido en producción, dicho por el desarrollador** (2026-11-18): el respaldo desde la web se descargó completo y la página no se recargó sola. Si se hizo además en la réplica con un `mysqldump` de más de 2 s no se informó |
 | `check` sin errores y `makemigrations --check --dry-run` sin cambios | **Cumplido** |
-| Revisión manual en escritorio, a 360 px y con teclado | **Pendiente del desarrollador** |
-| Después del despliegue: respaldo real desde la web en producción llega al equipo (cierra AUD-03-002) | **Pendiente del desarrollador** |
+| Revisión manual en escritorio, a 360 px y con teclado | **Cumplido, dicho por el desarrollador** (2026-11-18). Hallazgos que salieron: AUD-05-012 a AUD-05-014 (ninguno bloquea el cierre) |
+| Después del despliegue: respaldo real desde la web en producción llega al equipo (cierra AUD-03-002) | **Cumplido, dicho por el desarrollador** (2026-11-18, día 0): descarga completa, sin recarga |
+| Día 0: cambiar estado, reabrir (duplicar), eliminar pago con confirmación | **Cumplido, dicho por el desarrollador** (pedidos de prueba, borrados después) |
+| `server.log` desde el Reload sin `nivel=ERROR` nuevos | **Cumplido, según el registro pegado por el desarrollador:** Reload 22:16:26, uWSGI arriba 22:16:31, sin errores; solo `INFO` «Respaldo antiguo eliminado» a las 22:25. `error.log` (UTC) sin errores desde las 01:16 UTC |
+
+**Cierre (2026-11-18):** desplegada como `v4.1-mutaciones-post` **con `collectstatic`** (cambió `index.js`; la orden de la ejecución decía «sin collectstatic» y se corrigió en estos pasos) y Ctrl+F5 del cliente. Se mantiene la decisión del botón del respaldo: bloqueo con «Generando…» y **desbloqueo a los 10 s** (`data-desbloquear-ms`). AUD-02-002, AUD-02-006 (parte GET), AUD-02-028 y AUD-03-002 quedan resueltos y verificados en producción. Desde aquí, `v4.1-mutaciones-post` es el destino de retroceso. El agente no vio la pantalla ni la descarga: solo los registros pegados.
 
 **Decisiones de la ejecución:**
 - **Respaldo:** el botón se bloquea («Generando…») y se **desbloquea a los 10 s** (`data-desbloquear-ms="10000"`, atributo nuevo y genérico de `initBloqueoEnvio`). Motivo en la bitácora.
@@ -164,7 +168,7 @@ Se revisaron las 41 rutas de `pedidos/urls.py` y todas las escrituras de `views.
 
 **Retroceso (RDA-021):** `retroceso.md`, caso 1 (sin migraciones): **[PA]** `git checkout v14.1-pagos`, `git describe --tags` = `v14.1-pagos`, **`python manage.py collectstatic --noinput`** (vuelve el `index.js` anterior), `check`, **Reload** y las pantallas de 3.7; Ctrl+F5 en el navegador del cliente. Disparadores: cualquier 500 en detalle de pedido, pagos o respaldos; un botón de cambiar estado, reabrir o eliminar pago que no funciona; el respaldo que no descarga.
 
-**Después:** la 04-10 se ejecuta en local (sin empezar) y se despliega justo después, en commit separado, con retroceso a `v4.1-mutaciones-post`.
+**Después:** la 04-10 se ejecuta en local (sin empezar; próximo hito desde el 2026-11-18) y se despliega justo después, en commit separado, con retroceso a `v4.1-mutaciones-post`.
 
 ## Riesgos
 

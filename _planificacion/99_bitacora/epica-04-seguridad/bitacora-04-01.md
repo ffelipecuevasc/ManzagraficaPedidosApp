@@ -2,9 +2,9 @@
 
 - **Fecha:** 2026-11-18
 - **Iteración:** [04-01 · Mutaciones solo por POST](../../10_epicas/epica-04-seguridad/iteracion-04-01-mutaciones-solo-por-post.md)
-- **Estado resultante:** Implementada, pendiente de revisión manual y despliegue. No está Terminada.
+- **Estado resultante:** ~~Implementada, pendiente de revisión manual y despliegue~~ **Terminada · verificada en producción el 2026-11-18** (sección «Cierre en producción»).
 - **Base:** `main` en `46fe24b` (tras la 14-01). El código de las cuatro vistas coincidía con lo descrito en la iteración: no hubo contradicciones que detuvieran el trabajo.
-- **Hallazgos:** AUD-02-002, AUD-02-006 (parte GET), AUD-02-028 y AUD-03-002, corregidos en código y pendientes de verificar en producción. AUD-03-002 se cierra solo con un respaldo real desde la web.
+- **Hallazgos:** AUD-02-002, AUD-02-006 (parte GET), AUD-02-028 y AUD-03-002: **Resuelto y verificado en producción (04-01, 2026-11-18)**. Antes: corregidos en código, pendientes de verificar en producción. Hallazgos nuevos del cierre: AUD-05-012, AUD-05-013 y AUD-05-014.
 
 ## Archivos modificados
 
@@ -70,3 +70,23 @@ Cuenta: 273 + 9 (`test_mutaciones_post.py`) + 1 (`test_acceso`, 404 con POST) �
 ## Despliegue
 
 Pasos exactos, día 0 y retroceso a `v14.1-pagos` en la iteración. Sin respaldo previo obligatorio. **Con `collectstatic`** y Ctrl+F5 del cliente. La 04-10 va justo después, en commit separado.
+
+## Cierre en producción (2026-11-18)
+
+Datos dichos por el desarrollador, salvo los registros, que pegó. El agente no vio la pantalla, la descarga ni el servidor.
+
+| Criterio | Estado | Fuente |
+| :------- | :----- | :----- |
+| Despliegue de `v4.1-mutaciones-post` con `collectstatic`, Reload hacia las 22:16 (hora de Chile) y Ctrl+F5 del cliente | Hecho | Dicho por el desarrollador |
+| Revisión manual en escritorio, 360 px y teclado | Cumplido | Dicho por el desarrollador |
+| Día 0 con pedidos de prueba (borrados después): cambiar estado, «Reabrir Pedido», eliminar pago con su página de confirmación | Cumplido | Dicho por el desarrollador |
+| Respaldo real desde la web: descarga completa y sin recarga de la página (cierra AUD-03-002) | Cumplido | Dicho por el desarrollador |
+| `server.log` desde el Reload | Sin errores: Reload 22:16:26, uWSGI arriba 22:16:31; solo `INFO` «Respaldo antiguo eliminado» a las 22:25 | Registro pegado |
+| `error.log` (UTC) desde el Reload (01:16 UTC del 2026-11-19) | Sin errores | Registro pegado |
+
+- **Collectstatic:** este despliegue sí lo necesitó, porque cambió `index.js`. La orden de ejecución decía «sin pip, migrate ni collectstatic»; los pasos de la iteración ya lo corregían.
+- **Botón del respaldo:** se mantiene la decisión de bloquearlo con «Generando…» y desbloquearlo a los 10 s. La duración real del `mysqldump` en producción no se midió.
+- **Dos `OSError: write error` anteriores al despliegue** en `error.log`: 2026-11-18 17:26:49 y 18:40:18 UTC (14:26:49 y 15:40:18, hora de Chile). El primero llegó 60 ms después de «Respaldo antiguo eliminado», es decir, durante una descarga de respaldo con la versión anterior. Encaja con la recarga a los 2 s que cortaba la descarga (**inferido**, sin línea de acceso que lo confirme). Es la familia de AUD-04-004 (desconexión del cliente, sin acción) y la causa probable es la de AUD-03-002, ya corregida. El segundo no tiene contexto informado. Desde el Reload no hubo ninguno: es coherente con la corrección, pero una sola noche no basta para medir la tendencia (13-03).
+- **Hallazgos nuevos:** AUD-05-012 (duplicar no copia los ítems), AUD-05-013 (id con separador de miles en pantalla) y AUD-05-014 (el cuadro de confirmación no se cierra con Escape ni recibe el foco). Están en `auditoria-tecnica.md`.
+- **Retroceso:** desde ahora el destino es `v4.1-mutaciones-post` (`despliegue.md`, sección 5).
+- **Siguiente:** ejecutar la 04-10 (sin empezarla) y después la iteración que copia los ítems al duplicar (AUD-05-012).

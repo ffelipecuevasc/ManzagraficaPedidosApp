@@ -25,7 +25,7 @@
 
 | Iteración | Nombre | Subfase |
 | :-------- | :----- | :------ |
-| 04-01 | [Mutaciones solo por POST](iteracion-04-01-mutaciones-solo-por-post.md) (Pendiente, redactada, decisiones resueltas, 2026-11-17; P1 y P2 resueltos) | 4.1 |
+| 04-01 | [Mutaciones solo por POST](iteracion-04-01-mutaciones-solo-por-post.md) (~~Pendiente, redactada, decisiones resueltas, 2026-11-17; P1 y P2 resueltos~~ **Terminada · verificada en producción el 2026-11-18**, `v4.1-mutaciones-post`) | 4.1 |
 | 04-02 | [Configuración de producción](iteracion-04-02-configuracion-de-produccion.md) (Pendiente, redactada, decisiones resueltas D1 a D6, 2026-11-17) | 4.2 |
 | 04-03 | [Credenciales y secretos](iteracion-04-03-credenciales-y-secretos.md) (Pendiente, redactada, decisiones resueltas D1 a D5, 2026-11-17) | 4.3 |
 | 04-04 | [Endurecimiento de la restauración](iteracion-04-04-endurecimiento-de-la-restauracion.md) (Pendiente, redactada, decisiones resueltas D1 a D6, 2026-11-17) | 4.4 |
