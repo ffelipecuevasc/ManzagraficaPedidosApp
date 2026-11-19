@@ -52,6 +52,44 @@ ALLOWED_HOSTS = [
 if '*' in ALLOWED_HOSTS:
     raise ImproperlyConfigured("ALLOWED_HOSTS no puede contener '*': indica cada dominio por su nombre.")
 
+# SEGURIDAD DE PRODUCCIÓN (iteración 04-02, AUD-01-012)
+# ------------------------------------------------------
+# Variable propia, no derivada de DEBUG (D3): solo el texto exacto 'True' la activa; si falta,
+# queda apagada. En local y en las pruebas va apagada; en el servidor, SEGURIDAD_PRODUCCION=True.
+SEGURIDAD_PRODUCCION = os.getenv('SEGURIDAD_PRODUCCION') == 'True'
+
+# Arranque que falla (D5): con el dominio de producción en ALLOWED_HOSTS, la variable es
+# obligatoria. Así, olvidarla en el .env del servidor tumba el arranque en vez de dejar el
+# sitio sin cookies seguras ni HTTPS en silencio.
+DOMINIO_PRODUCCION = 'manzagrafica.pythonanywhere.com'
+if DOMINIO_PRODUCCION in ALLOWED_HOSTS and not SEGURIDAD_PRODUCCION:
+    raise ImproperlyConfigured(
+        f'ALLOWED_HOSTS incluye {DOMINIO_PRODUCCION} pero SEGURIDAD_PRODUCCION no es True: '
+        'agrega SEGURIDAD_PRODUCCION=True al .env del servidor (ver .env.example).'
+    )
+
+# Orígenes de confianza para CSRF (D4), separados por comas. Sin la variable, los locales.
+# En el servidor: CSRF_TRUSTED_ORIGINS=https://manzagrafica.pythonanywhere.com
+CSRF_TRUSTED_ORIGINS = [
+    origen.strip()
+    for origen in (os.getenv('CSRF_TRUSTED_ORIGINS') or 'http://localhost:8000,http://127.0.0.1:8000').split(',')
+    if origen.strip()
+]
+
+if SEGURIDAD_PRODUCCION:
+    # Cookies de sesión y CSRF solo por HTTPS (W012, W016).
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Django también redirige a HTTPS, además de «Force HTTPS» de PythonAnywhere (D2, W008).
+    # No se define SECURE_PROXY_SSL_HEADER: hoy los POST pasan la comprobación CSRF sin
+    # orígenes de confianza, señal de que el proxy ya entrega el esquema https (inferido; un
+    # bucle de redirecciones en producción lo desmentiría: retroceso.md).
+    SECURE_SSL_REDIRECT = True
+    # HSTS escalonado (D1), escalón 1: una hora. El escalón 2 lo sube a 604800 en otro
+    # despliegue. Sin includeSubDomains ni preload: el dominio es de PythonAnywhere, por eso
+    # check --deploy muestra W005 y W021, aceptadas y sin silenciar (decisión del 2026-11-17).
+    SECURE_HSTS_SECONDS = 3600
+
 # Application definition
 
 INSTALLED_APPS = [

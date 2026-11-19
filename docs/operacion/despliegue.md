@@ -111,7 +111,7 @@ python manage.py showmigrations pedidos
 ```
 
 - `check --deploy` usa tu `.env` local, así que la advertencia `security.W009` (clave secreta) describe tu clave local, no la de producción.
-- Advertencias medidas el 2026-10-21 (00-05): `W004` (HSTS), `W008` (redirección a HTTPS), `W009` (clave secreta), `W012` (cookie de sesión segura) y `W016` (cookie CSRF segura). Se corrigen en 04-02 y 04-03. Si aparece una advertencia que no está en esta lista o un error (`ERRORS:`), detente y revísala antes de desplegar.
+- Advertencias medidas el 2026-10-21 (00-05): `W004` (HSTS), `W008` (redirección a HTTPS), `W009` (clave secreta), `W012` (cookie de sesión segura) y `W016` (cookie CSRF segura). Se corrigen en 04-02 y 04-03. **Desde la 04-02 (2026-11-19):** con `DEBUG=False` y `SEGURIDAD_PRODUCCION=True`, lo esperado en local es `W005` (HSTS sin `includeSubDomains`), `W021` (HSTS sin `preload`) y `W009` (hasta la 04-03); en producción, solo `W005` y `W021`. Las dos de HSTS son **esperadas y no se silencian**: el dominio es de PythonAnywhere (04-02, D1, decisión del 2026-11-17). Con la variable apagada, en local siguen saliendo las cinco de arriba. Si aparece una advertencia que no está en esta lista o un error (`ERRORS:`), detente y revísala antes de desplegar.
 - `showmigrations`: anota las migraciones que aparecen. Para saber cuáles son nuevas, compáralas con la lista que da el servidor en el paso 5.3. Para cada migración nueva:
 
   ```powershell
@@ -149,6 +149,21 @@ git describe --tags --always
   ```
 
   Esperado: `ls-remote` devuelve una línea. Si `git tag` responde `Not a valid object name`, ese commit no está en tu repositorio local (se hizo directo en el servidor o no se publicó): no sigas con el despliegue y revísalo.
+
+### 3.1 bis Variables del `.env` del servidor (desde la 04-02)
+
+**Orden obligatorio: primero `.env`, luego código, luego Reload.** Desde `v4.3-configuracion-produccion`, si el `.env` del servidor tiene `ALLOWED_HOSTS=manzagrafica.pythonanywhere.com` y **no** tiene `SEGURIDAD_PRODUCCION=True`, Django no arranca (`ImproperlyConfigured`) y el sitio cae hasta corregirlo.
+
+**[PA · Panel o Bash]** Abre el `.env` del proyecto con el editor de PythonAnywhere (pestaña **Files**) y agrega, si faltan, estas dos líneas sin tocar las demás:
+
+```text
+SEGURIDAD_PRODUCCION=True
+CSRF_TRUSTED_ORIGINS=https://manzagrafica.pythonanywhere.com
+```
+
+- `True` con mayúscula inicial; cualquier otro texto deja la variable apagada.
+- El código anterior a la 04-02 ignora las dos variables: agregarlas antes del checkout no cambia nada hasta el Reload.
+- Comprueba sin mostrar el resto del archivo: `grep -cE "^(SEGURIDAD_PRODUCCION=True|CSRF_TRUSTED_ORIGINS=https://manzagrafica.pythonanywhere.com)$" .env` → `2`.
 
 ### 3.2 Traer la versión etiquetada
 

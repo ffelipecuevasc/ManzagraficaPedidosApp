@@ -1,7 +1,7 @@
 # Iteración 04-02 · Configuración de producción
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md)); D1 a D6 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md)). Queda abierta solo la etiqueta y la fecha del despliegue.
+- **Estado:** **Escalón 1 implementado, pendiente de despliegue; escalón 2 pendiente** (2026-11-19, [bitacora-04-02](../../99_bitacora/epica-04-seguridad/bitacora-04-02.md)). **Etiquetas (decisión del desarrollador, 2026-11-19):** `v4.3-configuracion-produccion` (HSTS 3600) y `v4.4-hsts-semana` (HSTS 604800). **Retroceso:** `v14.2-duplicar-items`. Se avisa al cliente antes del despliegue. Antes: Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md)); D1 a D6 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md)). Queda abierta solo la etiqueta y la fecha del despliegue.
 - **Subfase del plan:** 4.2 «Configuración de producción» (`plan-de-trabajo.md:400-408`).
 - **Depende de:** Épica 02 (Terminada). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia de la 03-05 (desde el lunes 2026-11-23 a las 23:48:12)**~~ **superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar**; no se despliega en el mismo despliegue que la 04-01 (RDA-007). Orden (decisión del 2026-11-17; desde el 2026-11-18 la 14-01 va antes): 14-01, 04-01, **04-10**, 04-02 (dos escalones, el mismo día), 04-03 y siguientes.
 - **RDA relacionadas:** RDA-004 (PythonAnywhere, plan gratuito), RDA-007 (un despliegue, un propósito; la etiqueta marca lo que está en producción).
@@ -98,7 +98,7 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 1. **[PA]** `check --deploy` en el servidor, con el filtro de códigos de `evidencia-03-05.md:273`, **antes** y **después**: antes, W004 W008 W012 W016 (dicho por el desarrollador); después, **solo W005 y W021** (esperadas y documentadas; el filtro de códigos las debe incluir para esta lectura).
 2. **[PA · Panel]** «Force HTTPS» sigue activado.
 3. **[PC]** `curl -sI http://manzagrafica.pythonanywhere.com/accounts/login/` redirige a `https://`; `curl -sIL https://manzagrafica.pythonanywhere.com/accounts/login/` termina en 200 **sin bucle** (`curl` corta tras demasiadas redirecciones) y trae `Strict-Transport-Security: max-age=3600` y `Set-Cookie: csrftoken=…; Secure`.
-4. **[Navegador, ventana privada]** iniciar sesión, crear un pedido y un pago de prueba según el protocolo vigente, generar un respaldo (descarga): ningún 403 de CSRF. Las pantallas de `despliegue.md`, sección 3.7.
+4. **[Navegador, ventana privada]** iniciar sesión, crear un pedido y un pago de prueba según el protocolo vigente, generar un respaldo (descarga) y **abrir «Reabrir Pedido» y enviarlo con una fecha desde mañana** sobre el pedido de prueba (formulario POST nuevo de la 14-02; agregado el 2026-11-19): ningún 403 de CSRF. Las pantallas de `despliegue.md`, sección 3.7. Los pedidos de prueba se borran al final.
 5. **[PA]** `server.log` desde el reinicio efectivo: sin `Forbidden (CSRF` ni errores nuevos.
 6. ~~**Observación (D6):** 3 días. Después, segundo despliegue con HSTS `604800` y repetición de los pasos 1, 3 y 5.~~ **Comprobación del mismo día (D6, RDA-021):** con los pasos 1 a 5 hechos y sin problemas, el mismo día, segundo despliegue con HSTS `604800` y repetición de los pasos 1, 3 y 5.
 
@@ -123,3 +123,21 @@ Que `python manage.py check --deploy` en producción no muestre advertencias res
 - **HSTS irreversible por `max-age`:** mitigado con 3600 s primero (D1). **Desde el 2026-11-18 (RDA-021) el escalón de 3600 s dura solo lo que tarda la comprobación del mismo día:** un problema que aparezca después de subir a 604800 puede durar hasta 7 días en los navegadores que ya recibieron la cabecera. «Force HTTPS» de PythonAnywhere ya estaba activo (medido el 2026-10-20), lo que lo hace menos probable (inferido, no verificado hoy).
 - **Sesiones abiertas:** al pasar las cookies a `Secure`, las sesiones vigentes siguen por HTTPS (inferido). Se avisa al cliente antes del despliegue.
 - **Un despliegue, un propósito (RDA-007):** solo configuración de producción; ni la 04-01 ni la 04-03 viajan en la misma etiqueta. La subida de HSTS es un despliegue aparte de esta misma iteración.
+
+## Ejecución del escalón 1 (2026-11-19)
+
+Detalle en [bitacora-04-02](../../99_bitacora/epica-04-seguridad/bitacora-04-02.md). Consulta previa de `settings.py` y `.env.example` aprobada el 2026-11-19, solo para esta iteración.
+
+- **`settings.py`**, después de `ALLOWED_HOSTS`: `SEGURIDAD_PRODUCCION` (solo `'True'` la activa), `ImproperlyConfigured` si `ALLOWED_HOSTS` trae `manzagrafica.pythonanywhere.com` y la variable no está activa (D5), `CSRF_TRUSTED_ORIGINS` del entorno con los dos orígenes locales por defecto (D4) y, con la variable activa, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_SSL_REDIRECT` y `SECURE_HSTS_SECONDS = 3600`.
+- **`SECURE_PROXY_SSL_HEADER` no se define:** la iteración no lo exige y lo da por innecesario (inferido de que hoy los POST pasan CSRF). Si la verificación 3 muestra un bucle, el retroceso es el caso 1 y la cabecera se decide en otra iteración.
+- **Pruebas:** `pedidos/tests/test_seguridad_produccion.py`, 11 pruebas (9 fallaban antes del cambio).
+- **`.env.example`: no editado.** La configuración de permisos de Claude Code bloquea leerlo; el desarrollador agrega las líneas de la bitácora.
+
+## Escalón 2 (pendiente; se hace en otro prompt tras comprobar el escalón 1)
+
+- **Cuándo:** el mismo día, con las verificaciones 1 a 5 del escalón 1 correctas (D6, RDA-021).
+- **Cambio exacto:** en `PedidosApp/settings.py`, `SECURE_HSTS_SECONDS = 3600` pasa a `SECURE_HSTS_SECONDS = 604800` y el comentario «escalón 1: una hora» pasa a «escalón 2: una semana». Nada más.
+- **Prueba que cambia:** en `test_seguridad_produccion.py`, `assertEqual(datos['SECURE_HSTS_SECONDS'], 3600)` pasa a `604800` y la cabecera esperada pasa a `'max-age=604800'`. Se cambia primero la prueba (falla) y después el valor.
+- **Sin cambios en el `.env`** del servidor.
+- **Etiqueta:** `v4.4-hsts-semana`; retroceso: `v4.3-configuracion-produccion` (o `v14.2-duplicar-items` si el problema viene del escalón 1).
+- **Verificación:** se repiten los pasos 1, 3 (ahora `max-age=604800`) y 5.

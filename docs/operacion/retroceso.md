@@ -21,6 +21,8 @@ Necesitas:
 - **La etiqueta de destino:** la anterior a la desplegada (`git tag -n` en tu PC). Para el primer despliegue es `v0.0-inicial` o el commit anotado en el paso 3.1 de `despliegue.md`.
 - Las variables `PROYECTO` y `VENV` definidas en la consola Bash: son los mismos valores que usaste con `scripts/diagnostico/linea_base.sh` (`despliegue.md`, sección 0, tiene el comando que los define y los comprueba).
 
+**La variable `SEGURIDAD_PRODUCCION` (desde la 04-02).** Al volver a una etiqueta anterior a `v4.3-configuracion-produccion` (por ejemplo `v14.2-duplicar-items`), **deja la variable como está**: el código anterior la ignora, igual que `CSRF_TRUSTED_ORIGINS`. **No la pongas en `False` sin volver también el código:** con el dominio de producción en `ALLOWED_HOSTS`, el código de la 04-02 se niega a arrancar si la variable no es `True`. Así, el retroceso más rápido ante un bucle de redirecciones o un 403 de CSRF es el caso 1 (checkout de la etiqueta anterior y Reload), sin tocar el `.env`. Lo que no se revierte: los navegadores que ya recibieron HSTS siguen yendo por HTTPS durante su `max-age` (3600 s en el escalón 1, 604800 s en el escalón 2); con «Force HTTPS» activo, el sitio funciona igual por HTTPS.
+
 ## 2. Caso 1 · Sin migraciones: volver el código
 
 1. **[PA · Bash]** Ubicarse:
