@@ -1,7 +1,7 @@
 # Iteración 04-03 · Credenciales y secretos
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-03-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-03-redaccion.md)); D1 a D5 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-03-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-03-cierre.md)).
+- **Estado:** **Implementada, pendiente de despliegue (2026-11-19)** ([bitacora-04-03](../../99_bitacora/epica-04-seguridad/bitacora-04-03.md)). Etiqueta prevista `v4.5-credenciales`, sin fecha fija: se despliega el día en que quede ensayada, con verificación el mismo día (RDA-021); retroceso `v4.4-hsts-semana`. **Faltan:** el ensayo en la réplica (paso 5, pendiente de la consulta previa del puente al contenedor), la comprobación de la clave de producción (condición previa del Reload) y el registro por rol de D5 (`PENDIENTE_DESARROLLADOR`). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-03-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-03-redaccion.md)); D1 a D5 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-03-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-03-cierre.md)).
 - **Subfase del plan:** 4.3 «Credenciales y secretos» (`plan-de-trabajo.md`, sección 4.3).
 - **Depende de:** 04-02 (usa su variable `SEGURIDAD_PRODUCCION`, D3, y su regla de arranque, D5). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 (con su subida de HSTS) → **04-03**.
 - **RDA relacionadas:** RDA-004 (PythonAnywhere, servidor compartido), RDA-007, RDA-013 (errores con `logging`, nunca con la salida de los comandos al usuario).
@@ -74,7 +74,7 @@ Que la contraseña de la base no aparezca en los argumentos de ningún proceso, 
 ## Pasos
 
 0. Consulta previa para editar `settings.py` y `.env.example` (`AGENTS.md`, sección 6).
-1. Línea base: `test pedidos` y `check --deploy` con `DEBUG=False` y `SEGURIDAD_PRODUCCION` activa (tras la 04-02, esperado solo W009).
+1. Línea base: `test pedidos` y `check --deploy` con `DEBUG=False` y `SEGURIDAD_PRODUCCION` activa (~~tras la 04-02, esperado solo W009~~ corregido el 2026-11-19: en local, W005, W009 y W021; ver la corrección en «Verificación en producción»).
 2. Pruebas primero (sección siguiente).
 3. `utils.py` según D1, en las dos funciones, con un único ayudante que crea y borra el archivo.
 4. `settings.py` según D2, junto al bloque de la 04-02.
@@ -90,11 +90,21 @@ Que la contraseña de la base no aparezca en los argumentos de ningún proceso, 
 - Las pruebas existentes de respaldo y restauración (`test_capturas_amplias.py`, `test_acceso.BaseDeDatosPermisosTests`, `test_contrato_error.py`) siguen en verde.
 - Suite con los mismos fallos esperados que deje la 04-01 (4).
 
+**Corrección del 2026-11-19 (ejecución):** tras la 04-02, `check --deploy` nunca queda «sin advertencias» ni con «solo W009»: W005 y W021 se mantienen (aceptadas, sin silenciar). Lo esperado es: en local, con la variable apagada, las cinco de siempre (W004, W008, W009, W012, W016); en local con `SEGURIDAD_PRODUCCION=True`, **ya no W009 sino un arranque fallido** si la clave del `.env` local no cumple D2 (medido el 2026-11-19: falla), y con una clave válida pasada solo a ese comando, W005 y W021; en producción, solo W005 y W021.
+
+## Implementación (2026-11-19)
+
+- `pedidos/utils.py`: ayudante `archivo_opciones_mysql()` (gestor de contexto) que crea con `tempfile.mkstemp` un archivo `[client]` con `password="…"` (escapa `\` y `"`), en la carpeta temporal del sistema, y lo borra en `finally`. `mysqldump` y `mysql` reciben `--defaults-extra-file=<archivo>` como **primer** argumento; `-h`, `-u` y el resto quedan igual. Mismos mensajes y manejo de errores que la 01-09.
+- `PedidosApp/settings.py` (consulta previa aprobada el 2026-11-19): sin `SECRET_KEY`, `ImproperlyConfigured` en todo entorno; con `SEGURIDAD_PRODUCCION`, además se rechaza lo mismo que W009: menos de 50 caracteres, menos de 5 distintos o prefijo `django-insecure-`. El mensaje no muestra la clave.
+- Pruebas: `pedidos/tests/test_credenciales.py` (15) y `test_seguridad_produccion.py` pasa una clave válida generada a sus procesos hijos.
+- `.env.example`: **no editado por el agente** (decisión del desarrollador); el texto propuesto está en la bitácora.
+
 ## Verificación en producción (la hace el desarrollador; **no verificado** hasta entonces)
 
-1. `.env` del servidor con `SECRET_KEY` válida para la regla de D2 **antes** del Reload (el agente no ve el `.env`).
-2. Tras el Reload, la aplicación arranca; `check --deploy` sin advertencias.
-3. Un respaldo desde la web se descarga completo; `server.log` sin errores de `mysqldump`; no queda ningún archivo de opciones.
+0. **Condición previa del Reload:** la clave del `.env` del servidor cumple D2, medida con el comando de `despliegue.md`, sección 3.1 bis (solo imprime largo, caracteres distintos y prefijo). Que W009 no aparezca en producción es un indicio, no una prueba.
+1. `.env` del servidor con `SECRET_KEY` válida para la regla de D2 **antes** del Reload (el agente no ve el `.env`). Después del checkout y antes del Reload, `check --deploy` no debe fallar con `ImproperlyConfigured`.
+2. Tras el Reload, la aplicación arranca; `check --deploy` con solo W005 y W021.
+3. Un respaldo desde la web se descarga completo; `server.log` sin errores de `mysqldump`; no queda ningún archivo de opciones (`ls /tmp/mysql_opciones_* 2>/dev/null | wc -l` → `0`).
 
 ## Plan de retroceso
 

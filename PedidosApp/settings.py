@@ -90,6 +90,25 @@ if SEGURIDAD_PRODUCCION:
     # check --deploy muestra W005 y W021, aceptadas y sin silenciar (decisión del 2026-11-17).
     SECURE_HSTS_SECONDS = 604800
 
+# CLAVE SECRETA OBLIGATORIA (iteración 04-03, D2, AUD-02-010)
+# ------------------------------------------------------------
+# Sin SECRET_KEY no arranca en ningún entorno. Con SEGURIDAD_PRODUCCION, además se exige lo
+# mismo que la advertencia security.W009 de Django: al menos 50 caracteres, al menos 5
+# distintos y sin el prefijo django-insecure-. El mensaje nunca muestra la clave.
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        'SECRET_KEY no está definida: agrégala al .env (ver .env.example).'
+    )
+if SEGURIDAD_PRODUCCION and (
+    len(SECRET_KEY) < 50
+    or len(set(SECRET_KEY)) < 5
+    or SECRET_KEY.startswith('django-insecure-')
+):
+    raise ImproperlyConfigured(
+        'SECRET_KEY no es segura para producción: debe tener al menos 50 caracteres, al menos 5 '
+        'distintos y no empezar con django-insecure- (ver .env.example).'
+    )
+
 # Application definition
 
 INSTALLED_APPS = [

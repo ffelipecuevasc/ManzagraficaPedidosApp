@@ -3,12 +3,38 @@ from django.utils import timezone
 from .models import HistorialBD, Pedido, Cliente, Cotizacion, Producto
 from datetime import datetime
 from django.conf import settings
+from contextlib import contextmanager
 import glob
 import logging
 import subprocess
 import os
+import tempfile
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def archivo_opciones_mysql(db_password):
+    """
+    Archivo temporal de opciones con la contraseña de la base (04-03, D1).
+
+    Así la contraseña no viaja en los argumentos de mysqldump ni de mysql, que en un servidor
+    compartido otros usuarios pueden ver con `ps`. El archivo nace con permisos solo para el
+    dueño (mkstemp), en la carpeta temporal del sistema (nunca en backups/), y se borra
+    siempre en el finally, también si el comando falla. Entrega la ruta del archivo.
+    """
+    descriptor, ruta = tempfile.mkstemp(prefix='mysql_opciones_', suffix='.cnf')
+    try:
+        # Entre comillas dobles, MySQL interpreta \\ y \" como escapes.
+        valor = (db_password or '').replace('\\', '\\\\').replace('"', '\\"')
+        with os.fdopen(descriptor, 'w', encoding='utf-8') as archivo:
+            archivo.write(f'[client]\npassword="{valor}"\n')
+        yield ruta
+    finally:
+        try:
+            os.remove(ruta)
+        except FileNotFoundError:
+            pass  # Ya no está: no queda nada que limpiar.
 
 def generar_respaldo_mysql():
     """
@@ -41,18 +67,18 @@ def generar_respaldo_mysql():
 
     # IMPORTANTE: --no-tablespaces evita el error de permisos en PythonAnywhere
     # --set-gtid-purged=OFF evita problemas de metadatos al restaurar
-    dump_cmd = [
-        'mysqldump',
-        f'-h{db_host}',
-        f'-u{db_user}',
-        f'--password={db_password}',
-        '--no-tablespaces',
-        '--set-gtid-purged=OFF',
-        db_name
-    ]
-
+    # La contraseña va en el archivo temporal de opciones, que debe ser el primer argumento (04-03, D1).
     try:
-        with open(filepath, 'w') as f:
+        with archivo_opciones_mysql(db_password) as opciones, open(filepath, 'w') as f:
+            dump_cmd = [
+                'mysqldump',
+                f'--defaults-extra-file={opciones}',
+                f'-h{db_host}',
+                f'-u{db_user}',
+                '--no-tablespaces',
+                '--set-gtid-purged=OFF',
+                db_name
+            ]
             # Ejecutamos el comando y enviamos la salida (stdout) al archivo
             subprocess.run(dump_cmd, stdout=f, stderr=subprocess.PIPE, check=True)
     except subprocess.CalledProcessError as e:
@@ -108,19 +134,19 @@ def restaurar_bd_mysql(ruta_archivo_sql):
     db_host = db_config['HOST']
 
     # 3. Construir comando de restauración
-    # Estructura: mysql -h host -u user --password=pass nombre_bd
+    # Estructura: mysql --defaults-extra-file=<opciones> -h host -u user nombre_bd
+    # La contraseña va en el archivo temporal de opciones, nunca en los argumentos (04-03, D1).
     # Nota: No pasamos el archivo aquí, lo pasaremos vía 'stdin' (entrada estándar)
-    restore_cmd = [
-        'mysql',
-        f'-h{db_host}',
-        f'-u{db_user}',
-        f'--password={db_password}',
-        db_name
-    ]
-
     try:
         # Abrimos el archivo SQL en modo lectura
-        with open(ruta_archivo_sql, 'r') as f:
+        with archivo_opciones_mysql(db_password) as opciones, open(ruta_archivo_sql, 'r') as f:
+            restore_cmd = [
+                'mysql',
+                f'--defaults-extra-file={opciones}',
+                f'-h{db_host}',
+                f'-u{db_user}',
+                db_name
+            ]
             # Ejecutamos 'mysql' inyectándole el contenido del archivo como si escribiéramos en la consola
             # Esto evita el uso de 'shell=True' y es más seguro contra inyecciones
             subprocess.run(restore_cmd, stdin=f, check=True)

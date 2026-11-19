@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 from django.conf import settings
+from django.core.management.utils import get_random_secret_key
 from django.test import SimpleTestCase, override_settings
 
 DOMINIO_PRODUCCION = 'manzagrafica.pythonanywhere.com'
@@ -33,6 +34,8 @@ def cargar_configuracion(**variables):
         'DJANGO_SETTINGS_MODULE': 'PedidosApp.settings',
         'SEGURIDAD_PRODUCCION': 'False',
         'ALLOWED_HOSTS': 'localhost,127.0.0.1',
+        # Clave válida para la regla de la 04-03 (D2): estas pruebas no dependen de la del .env local.
+        'SECRET_KEY': get_random_secret_key(),
     })
     entorno.update(variables)
     return subprocess.run(
