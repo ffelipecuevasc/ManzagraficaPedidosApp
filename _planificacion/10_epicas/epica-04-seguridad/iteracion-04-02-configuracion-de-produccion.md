@@ -1,7 +1,7 @@
 # Iteración 04-02 · Configuración de producción
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **Escalón 1 implementado, pendiente de despliegue; escalón 2 pendiente** (2026-11-19, [bitacora-04-02](../../99_bitacora/epica-04-seguridad/bitacora-04-02.md)). **Etiquetas (decisión del desarrollador, 2026-11-19):** `v4.3-configuracion-produccion` (HSTS 3600) y `v4.4-hsts-semana` (HSTS 604800). **Retroceso:** `v14.2-duplicar-items`. Se avisa al cliente antes del despliegue. Antes: Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md)); D1 a D6 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md)). Queda abierta solo la etiqueta y la fecha del despliegue.
+- **Estado:** **Escalón 1 desplegado y verificado (pendiente solo `sessionid` con `Secure` en el navegador); escalón 2 implementado, pendiente de despliegue** (2026-11-19, [bitacora-04-02](../../99_bitacora/epica-04-seguridad/bitacora-04-02.md), [bitacora-04-02-escalon-2](../../99_bitacora/epica-04-seguridad/bitacora-04-02-escalon-2.md)). ~~Escalón 1 implementado, pendiente de despliegue; escalón 2 pendiente~~. **Etiquetas (decisión del desarrollador, 2026-11-19):** `v4.3-configuracion-produccion` (HSTS 3600) y `v4.4-hsts-semana` (HSTS 604800). **Retroceso:** `v14.2-duplicar-items`. Se avisa al cliente antes del despliegue. Antes: Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-02-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-02-redaccion.md)); D1 a D6 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-02-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-02-cierre.md)). Queda abierta solo la etiqueta y la fecha del despliegue.
 - **Subfase del plan:** 4.2 «Configuración de producción» (`plan-de-trabajo.md:400-408`).
 - **Depende de:** Épica 02 (Terminada). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia de la 03-05 (desde el lunes 2026-11-23 a las 23:48:12)**~~ **superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar**; no se despliega en el mismo despliegue que la 04-01 (RDA-007). Orden (decisión del 2026-11-17; desde el 2026-11-18 la 14-01 va antes): 14-01, 04-01, **04-10**, 04-02 (dos escalones, el mismo día), 04-03 y siguientes.
 - **RDA relacionadas:** RDA-004 (PythonAnywhere, plan gratuito), RDA-007 (un despliegue, un propósito; la etiqueta marca lo que está en producción).
@@ -133,11 +133,29 @@ Detalle en [bitacora-04-02](../../99_bitacora/epica-04-seguridad/bitacora-04-02.
 - **Pruebas:** `pedidos/tests/test_seguridad_produccion.py`, 11 pruebas (9 fallaban antes del cambio).
 - **`.env.example`: no editado.** La configuración de permisos de Claude Code bloquea leerlo; el desarrollador agrega las líneas de la bitácora.
 
-## Escalón 2 (pendiente; se hace en otro prompt tras comprobar el escalón 1)
+## Despliegue y verificación del escalón 1 (2026-11-19)
+
+Hora de Chile; la consola de PythonAnywhere marca UTC (Chile = UTC−3). «Pegado» quiere decir que la salida se pegó en la conversación; «dicho», que lo dijo el desarrollador y el agente no lo comprobó.
+
+| Paso | Resultado | Fuente |
+| :--- | :-------- | :----- |
+| Respaldo previo | `respaldo_19-11-2026_11-13-02.sql`, `VÁLIDO`, 19 de 19, SHA-256 `d239d9dd…898a` | Pegado |
+| Etiqueta | `v4.3-configuracion-produccion` sobre `c62a92e`; `git diff` de `v14.2-duplicar-items` a `v4.3` solo con `settings.py` (+38) | Pegado |
+| `.env` del servidor | `SEGURIDAD_PRODUCCION=True` y `CSRF_TRUSTED_ORIGINS=https://manzagrafica.pythonanywhere.com` | Pegado |
+| 1 · `check --deploy` | Antes: W004, W008, W012, W016. Con el código nuevo, **antes del Reload**: solo W005 y W021. **No se repitió después del Reload** | Pegado |
+| Reload | uWSGI reinicia a las 11:23:50 y queda listo a las 11:24:07, sin errores. Se había dicho 11:25: **vale el registro** | Pegado (`server.log`) |
+| 2 · «Force HTTPS» | Activado en la pestaña Web | Dicho |
+| 3 · `curl.exe` (11:26) | HTTP: **302** a `https://`, que hace el proxy de PythonAnywhere (la iteración esperaba el 301 de Django; `SECURE_SSL_REDIRECT` no se probó por separado en producción, solo en las pruebas automáticas). HTTPS: 200 sin bucle, `Strict-Transport-Security: max-age=3600`, `csrftoken` con `Secure` | Pegado |
+| 4 · Ventana privada | Pedido, pago, respaldo y «Reabrir Pedido» sin 403 | Dicho |
+| 5 · Registros | `grep` de «csrf» y «forbidden» en `server.log` y `error.log`: sin resultados | Pegado |
+| No verificado | `sessionid` con `Secure` en el navegador (solo lo cubren las pruebas automáticas); se revisa en el escalón 2 | — |
+
+## Escalón 2 (implementado el 2026-11-19, pendiente de despliegue)
 
 - **Cuándo:** el mismo día, con las verificaciones 1 a 5 del escalón 1 correctas (D6, RDA-021).
 - **Cambio exacto:** en `PedidosApp/settings.py`, `SECURE_HSTS_SECONDS = 3600` pasa a `SECURE_HSTS_SECONDS = 604800` y el comentario «escalón 1: una hora» pasa a «escalón 2: una semana». Nada más.
 - **Prueba que cambia:** en `test_seguridad_produccion.py`, `assertEqual(datos['SECURE_HSTS_SECONDS'], 3600)` pasa a `604800` y la cabecera esperada pasa a `'max-age=604800'`. Se cambia primero la prueba (falla) y después el valor.
 - **Sin cambios en el `.env`** del servidor.
 - **Etiqueta:** `v4.4-hsts-semana`; retroceso: `v4.3-configuracion-produccion` (o `v14.2-duplicar-items` si el problema viene del escalón 1).
-- **Verificación:** se repiten los pasos 1, 3 (ahora `max-age=604800`) y 5.
+- **Verificación:** se repiten los pasos 1, 3 (ahora `max-age=604800`) y 5, y se revisa en DevTools que `sessionid` lleve `Secure`.
+- **Hecho (2026-11-19):** prueba primero (2 fallos con 3600), valor cambiado y comentario actualizado; pasos de despliegue en [bitacora-04-02-escalon-2](../../99_bitacora/epica-04-seguridad/bitacora-04-02-escalon-2.md). AUD-01-012 se cierra al verificar este escalón.

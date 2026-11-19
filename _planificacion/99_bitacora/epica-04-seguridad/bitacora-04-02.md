@@ -2,7 +2,8 @@
 
 - **Fecha:** 2026-11-19
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** En revisión · escalón 1 implementado, pendiente de despliegue; escalón 2 pendiente
+- **Estado final:** ~~En revisión · escalón 1 implementado, pendiente de despliegue; escalón 2 pendiente~~ **Escalón 1 desplegado y verificado el 2026-11-19** (`v4.3-configuracion-produccion`, `c62a92e`; pendiente solo `sessionid` con `Secure` en el navegador). Detalle del despliegue en la iteración, sección «Despliegue y verificación del escalón 1». El escalón 2 sigue en [bitacora-04-02-escalon-2](bitacora-04-02-escalon-2.md).
+- **Nota:** `.env.example` lo editó el desarrollador (commit `c62a92e`).
 
 ## Resumen
 
@@ -41,8 +42,8 @@ Se implementó el escalón 1 de la 04-02 (D1 a D5): variable `SEGURIDAD_PRODUCCI
 
 - [x] Arranque con el dominio de producción y la variable apagada falla con mensaje claro (prueba en proceso hijo).
 - [x] Suite en verde con los mismos 4 fallos esperados.
-- [ ] `check --deploy` en producción solo con W005 y W021: no verificado (producción).
-- [ ] Redirección sin bucle, cookies `Secure` y HSTS 3600 en producción: no verificado.
+- [x] `check --deploy` en producción solo con W005 y W021 (pegado; leído con el código nuevo **antes** del Reload, no se repitió después).
+- [x] Redirección sin bucle (302 del proxy de PythonAnywhere), `csrftoken` con `Secure` y HSTS 3600 en producción (pegado, 11:26). `sessionid` con `Secure`: no verificado en el navegador.
 - [ ] Escalón 2 (604800): pendiente.
 
 ## Decisiones tomadas

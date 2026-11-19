@@ -85,10 +85,10 @@ if SEGURIDAD_PRODUCCION:
     # orígenes de confianza, señal de que el proxy ya entrega el esquema https (inferido; un
     # bucle de redirecciones en producción lo desmentiría: retroceso.md).
     SECURE_SSL_REDIRECT = True
-    # HSTS escalonado (D1), escalón 1: una hora. El escalón 2 lo sube a 604800 en otro
-    # despliegue. Sin includeSubDomains ni preload: el dominio es de PythonAnywhere, por eso
+    # HSTS escalonado (D1), escalón 2: una semana (el escalón 1, de una hora, se verificó en
+    # producción el 2026-11-19). Sin includeSubDomains ni preload: el dominio es de PythonAnywhere, por eso
     # check --deploy muestra W005 y W021, aceptadas y sin silenciar (decisión del 2026-11-17).
-    SECURE_HSTS_SECONDS = 3600
+    SECURE_HSTS_SECONDS = 604800
 
 # Application definition
 

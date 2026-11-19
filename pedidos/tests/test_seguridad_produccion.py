@@ -74,8 +74,8 @@ class ValoresPorEntornoTests(SimpleTestCase):
         self.assertTrue(datos['SESSION_COOKIE_SECURE'])
         self.assertTrue(datos['CSRF_COOKIE_SECURE'])
         self.assertTrue(datos['SECURE_SSL_REDIRECT'])
-        # Escalón 1 de HSTS (D1): una hora, sin subdominios ni preload.
-        self.assertEqual(datos['SECURE_HSTS_SECONDS'], 3600)
+        # Escalón 2 de HSTS (D1): una semana, sin subdominios ni preload.
+        self.assertEqual(datos['SECURE_HSTS_SECONDS'], 604800)
         self.assertFalse(datos['SECURE_HSTS_INCLUDE_SUBDOMAINS'])
         self.assertFalse(datos['SECURE_HSTS_PRELOAD'])
 
@@ -122,4 +122,4 @@ class RedireccionHttpsTests(SimpleTestCase):
     def test_peticion_https_no_redirige_y_lleva_hsts(self):
         respuesta = self.client.get('/accounts/login/', secure=True)
         self.assertEqual(respuesta.status_code, 200)
-        self.assertEqual(respuesta['Strict-Transport-Security'], 'max-age=3600')
+        self.assertEqual(respuesta['Strict-Transport-Security'], 'max-age=604800')
