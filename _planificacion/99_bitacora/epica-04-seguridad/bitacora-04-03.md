@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-11-19
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** Implementada, pendiente de despliegue. Etiqueta prevista `v4.5-credenciales`, sin fecha fija (RDA-021); retroceso `v4.4-hsts-semana`.
+- **Estado final:** ~~Implementada, pendiente de despliegue.~~ **Implementada, pendiente de ensayo y despliegue** (2026-11-19; el ensayo está pendiente de ejecutar por el desarrollador). Etiqueta prevista `v4.5-credenciales`, sin fecha fija (RDA-021); retroceso `v4.4-hsts-semana`.
 - **Regla de la iteración:** ningún valor de clave o contraseña, actual o del historial, aparece en este documento ni en las salidas que vio el agente.
 
 ## Resumen
@@ -49,7 +49,7 @@ La iteración esperaba «solo W009» (paso 1) y «sin advertencias» (verificaci
 
 `PENDIENTE_DESARROLLADOR`: el registro por rol, sin nombres, lo entrega el desarrollador. Lo único registrado hasta hoy: el cliente tiene acceso al panel (recargó la aplicación dos veces el 2026-10-27).
 
-## Ensayo en la réplica (paso 5): propuesta, sin ejecutar
+## Ensayo en la réplica (paso 5): propuesta original (aprobada el 2026-11-19, ver la sección siguiente)
 
 **Problema.** La aplicación llama a `mysqldump` y `mysql` del equipo, que no están instalados (no se instala nada). El cliente está en el contenedor `manzagrafica-mysql`, y el archivo de opciones se crea en la carpeta temporal del equipo, que el contenedor no ve. Además, `replica-local.md` dice que en la réplica no se usan «Respaldar BD» ni «Restaurar».
 
@@ -64,6 +64,115 @@ La iteración esperaba «solo W009» (paso 1) y «sin advertencias» (verificaci
 Esto no usa los botones de la web; **sí es una excepción a la regla de la réplica** en lo que importa (escribe un volcado con datos y reemplaza la base con su propio contenido), por eso se pide consulta. El respaldo desde la web queda para la verificación en producción (paso 3). La restauración no se prueba en producción.
 
 **Alternativa:** montar una carpeta del equipo en el contenedor desde `compose.yaml` y apuntar `TMPDIR` a ella. Exige editar el compose (configuración, consulta previa) y traducir rutas de Windows a las del contenedor igual: no la recomiendo.
+
+## Ensayo en la réplica: aprobado e implementado el puente (2026-11-19)
+
+Consulta previa aprobada el 2026-11-19: (a) el script puente fuera del repositorio y (b) una excepción única en `replica-local.md`. No se monta ninguna carpeta en `compose.yaml`. **Ensayo: pendiente de ejecutar por el desarrollador.** El agente solo comprobó que el script compila (`py_compile`); no lo ejecutó.
+
+- **Script:** `C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-03\puente_ensayo_04_03.py` (fuera del repo, carpeta temporal de la sesión del agente: si se borra antes del ensayo, se pide de nuevo).
+- **Se niega a correr** (código 2) si no se ejecuta desde la raíz del repo, si `--carpeta` está dentro del repo o no existe, si hay `DATABASE_URL` en la sesión, si `DB_NAME` no es `manzagrafica_replica`, si el host no es local o si el contenedor no está corriendo.
+- **Hace:** conteo de tablas y filas → respaldo con la función real (puente: `docker cp` del archivo de opciones a `/tmp` del contenedor, `chmod 600`, `docker exec -i`, borrado en `finally`) → línea de cierre → volcado de seguridad nativo (`MYSQL_PWD` dentro del contenedor, sin contraseña en argumentos) → restauración del mismo volcado con la función real → conteo después → archivos residuales. Mientras corre cada comando, muestrea los procesos del equipo y del contenedor y cuenta los que llevan contraseña en argumentos.
+- **Volcados:** en `<carpeta>\ensayo-04-03_<fecha>\backups\` y `seguridad_nativo.sql`, nunca en `backups/` del repo. Una subcarpeta nueva para que la rotación de 5 de la app no borre otros volcados.
+- **Límite:** prueba el comportamiento de MySQL con el archivo de opciones dentro del contenedor (mismo `mysql:8.0.46`), no el cliente de PythonAnywhere; eso lo cubre la verificación en producción.
+
+### Paso a paso del ensayo (PowerShell 7)
+
+Todo en **una sola ventana** de PowerShell 7. Si cierras la ventana a la mitad, vuelve a empezar desde el paso 1.
+
+**Paso 1. Ubícate en el proyecto y activa el entorno virtual.**
+
+```powershell
+cd "D:\Trabajo\Proyectos PYTHON\Proyectos Personales\Pedidos Manzagrafica\PedidosApp"
+.\.venv\Scripts\Activate.ps1
+```
+
+Debe verse `(.venv)` al inicio de la línea. Si no aparece, no sigas: revisa que exista la carpeta `.venv`.
+
+**Paso 2. Comprueba que el contenedor está arriba.**
+
+```powershell
+docker compose up -d
+docker inspect -f "{{.State.Running}}" manzagrafica-mysql
+```
+
+Debe responder `true`. Si dice `false` o da error: abre Docker Desktop, espera a que diga «Engine running» y repite. Si sigue sin subir, mira `docker compose logs db --tail 30` y detente. **Nunca** uses `docker compose down -v` ni `docker volume rm`: borran la base.
+
+**Paso 3. Apunta la sesión a la réplica y comprueba la paridad.**
+
+```powershell
+$env:DB_NAME = "manzagrafica_replica"
+python scripts\diagnostico\paridad_replica.py
+$LASTEXITCODE
+```
+
+`$LASTEXITCODE` debe ser `0` (paridad, con o sin diferencias aceptadas). Si es `1`, no sigas: anota la fila que sale «No» y avísame.
+
+**Paso 4. Elige la carpeta de volcados, fuera del repositorio.**
+
+```powershell
+$carpeta = "<tu carpeta de respaldos descargados, fuera del repo>"
+Test-Path $carpeta
+```
+
+Debe responder `True`. Si dice `False`, créala con `New-Item -ItemType Directory $carpeta` o corrige la ruta.
+
+**Paso 5. Ejecuta el ensayo.**
+
+```powershell
+python "C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-03\puente_ensayo_04_03.py" --carpeta $carpeta
+$LASTEXITCODE
+```
+
+Tarda lo que tarde un respaldo y una restauración de la réplica (minutos). No cierres la ventana mientras corre.
+
+**Paso 6. Lee los conteos.** Debe verse algo así, con tus números:
+
+| Línea | Qué debe decir |
+| :---- | :------------- |
+| `Carpeta del ensayo: …` | Una ruta dentro de tu carpeta, **anótala** (la usas en el paso 8). |
+| `[1] Antes: N tablas, F filas` | Cualquier número. |
+| `[2] Respaldo de la app: … línea de cierre: sí` | `sí`. |
+| `[3] Volcado de seguridad nativo: … línea de cierre: sí` | `sí`. |
+| `[4] Restauración del mismo volcado: terminó sin error` | Esa frase. |
+| `[5] Después: N tablas, F filas; tablas con conteo distinto: 0` | Mismos N y F que en `[1]`, y `0`. |
+| `[6] … procesos del ensayo vistos: X` | X de 1 o más (si es 0, el ensayo fue tan rápido que no probó nada: repite el paso 5). |
+| `con contraseña en argumentos: equipo 0, contenedor 0` | `0` y `0`. |
+| `[7] Archivos de opciones residuales: equipo 0, contenedor 0` | `0` y `0`. |
+| `RESULTADO: CUMPLE` y `$LASTEXITCODE` = `0` | **Éxito.** |
+
+Pégame esas líneas tal como salen (son solo conteos).
+
+**Paso 7. Si falla.**
+
+- `NO SE EJECUTA: …` (código 2): no tocó nada. Corrige lo que dice (casi siempre falta el paso 3 o el 2) y repite el paso 5.
+- `[2]` con `NO`, o se corta antes de `[4]`: la base **no** se restauró. Pégame la salida.
+- Error **durante** `[4]` (traza de Python después de `[3]`): la réplica puede haber quedado a medias. Restaura el volcado nativo con `replica-local.md`, sección 5, usando como ruta `<Carpeta del ensayo>\seguridad_nativo.sql`, y después repite el paso 3.
+- `[5]` con conteos distintos, o `[6]`/`[7]` con algo distinto de 0: el ensayo **no cumple**; no despliegues. Pégame la salida.
+- `[7]` con residuales: bórralos con `docker exec manzagrafica-mysql sh -c "rm -f /tmp/mysql_opciones_*"` (contenedor) o `Remove-Item "$env:TEMP\mysql_opciones_*"` (equipo).
+
+**Paso 8. Limpieza (siempre, cumpla o no).**
+
+```powershell
+Remove-Item Env:DB_NAME
+Remove-Item -Recurse -Force "<Carpeta del ensayo que anotaste en el paso 6>"
+Remove-Item -Recurse -Force "C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-03"
+docker compose stop
+```
+
+- Borra la carpeta del ensayo **solo si salió `CUMPLE`**: tiene volcados con datos reales. Si falló, consérvala hasta resolverlo.
+- Comprueba que no quedó la variable: `$env:DB_NAME` no debe mostrar nada.
+
+### Orden de despliegue de `v4.5-credenciales`
+
+1. Medir la clave de producción (comando de abajo y `despliegue.md`, 3.1 bis): largo ≥ 50, distintos ≥ 5, `False`. Si no, cambiarla en el `.env` del servidor y volver a medir.
+2. Pegar el texto propuesto en `.env.example` (lo edita el desarrollador) y hacer el commit **antes** de crear la etiqueta.
+3. Respaldo previo en producción `VÁLIDO` (`respaldo.md`).
+4. Ensayo en la réplica con `RESULTADO: CUMPLE` (pasos de arriba).
+5. Etiqueta anotada `v4.5-credenciales` y `git push` de la etiqueta.
+6. En el servidor: checkout de la etiqueta (`despliegue.md`, 3.2) y `git describe` → `v4.5-credenciales`.
+7. `check --deploy` **antes** del Reload: solo W005 y W021. Si sale `ImproperlyConfigured`, no recargues: corrige la clave o vuelve al checkout de `v4.4-hsts-semana` (el worker sigue con el código anterior).
+8. Reload y verificaciones del mismo día: la aplicación arranca, un respaldo desde la web se descarga completo y sale `VÁLIDO`, `server.log` sin errores de `mysqldump`, `ls /tmp/mysql_opciones_* 2>/dev/null | wc -l` → `0`.
+9. Retroceso: `retroceso.md`, caso 1, a `v4.4-hsts-semana` (sin migraciones). Si solo falla el arranque por la clave, se corrige el `.env` y se recarga.
 
 ## Comandos de medición de la clave (condición previa del Reload)
 

@@ -324,6 +324,107 @@ grep "^2026-11-05 15:" $L | grep "ruta=/pedidos/nuevo/" | sed 's/#012/\n/g'
 - Si la pantalla era un formulario con un aviso de ítem, el usuario **no perdió lo escrito**: sigue en pantalla y puede guardar de nuevo.
 - Nunca copies a la evidencia el texto completo de una línea: puede traer datos de clientes. Anota el tipo de error y la hora.
 
+### 3.10 Despliegue de la 04-03 (`v4.5-credenciales`): ensayo y orden
+
+**Estado (2026-11-19): implementada, pendiente de ensayo y despliegue. El ensayo está pendiente de ejecutar por el desarrollador.** El script puente vive fuera del repo: `C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-03\puente_ensayo_04_03.py`. Detalle en `bitacora-04-03.md`; excepción en `replica-local.md`, sección 8.
+
+#### Orden de despliegue
+
+1. Medir la clave de producción (3.1 bis): largo ≥ 50, distintos ≥ 5, `django-insecure False`. Si no, cambiarla en el `.env` del servidor y volver a medir.
+2. Pegar el texto propuesto en `.env.example` (lo edita el desarrollador; está en `bitacora-04-03.md`) y hacer el commit **antes** de crear la etiqueta.
+3. Respaldo previo en producción `VÁLIDO` (`respaldo.md`).
+4. Ensayo en la réplica con `RESULTADO: CUMPLE` (pasos siguientes).
+5. Etiqueta anotada `v4.5-credenciales` y `git push` de la etiqueta.
+6. En el servidor: checkout de la etiqueta (3.2) y `git describe` → `v4.5-credenciales`.
+7. `check --deploy` **antes** del Reload: solo W005 y W021. Si sale `ImproperlyConfigured`, no recargues: corrige la clave o vuelve al checkout de `v4.4-hsts-semana` (el worker sigue con el código anterior).
+8. Reload y verificaciones del mismo día: la aplicación arranca, un respaldo desde la web se descarga completo y sale `VÁLIDO`, `server.log` sin errores de `mysqldump`, `ls /tmp/mysql_opciones_* 2>/dev/null | wc -l` → `0`.
+9. Retroceso: `retroceso.md`, caso 1, a `v4.4-hsts-semana` (sin migraciones). Si solo falla el arranque por la clave, se corrige el `.env` y se recarga.
+
+#### Ensayo en la réplica, paso a paso (PowerShell 7, en tu equipo)
+
+Todo en **una sola ventana** de PowerShell 7. Si cierras la ventana a la mitad, vuelve a empezar desde el paso 1.
+
+**Paso 1. Ubícate en el proyecto y activa el entorno virtual.**
+
+```powershell
+cd "D:\Trabajo\Proyectos PYTHON\Proyectos Personales\Pedidos Manzagrafica\PedidosApp"
+.\.venv\Scripts\Activate.ps1
+```
+
+Debe verse `(.venv)` al inicio de la línea. Si no aparece, no sigas: revisa que exista la carpeta `.venv`.
+
+**Paso 2. Comprueba que el contenedor está arriba.**
+
+```powershell
+docker compose up -d
+docker inspect -f "{{.State.Running}}" manzagrafica-mysql
+```
+
+Debe responder `true`. Si dice `false` o da error: abre Docker Desktop, espera a que diga «Engine running» y repite. Si sigue sin subir, mira `docker compose logs db --tail 30` y detente. **Nunca** uses `docker compose down -v` ni `docker volume rm`: borran la base.
+
+**Paso 3. Apunta la sesión a la réplica y comprueba la paridad.**
+
+```powershell
+$env:DB_NAME = "manzagrafica_replica"
+python scripts\diagnostico\paridad_replica.py
+$LASTEXITCODE
+```
+
+`$LASTEXITCODE` debe ser `0` (paridad, con o sin diferencias aceptadas). Si es `1`, no sigas: anota la fila que sale «No».
+
+**Paso 4. Elige la carpeta de volcados, fuera del repositorio.**
+
+```powershell
+$carpeta = "<tu carpeta de respaldos descargados, fuera del repo>"
+Test-Path $carpeta
+```
+
+Debe responder `True`. Si dice `False`, créala con `New-Item -ItemType Directory $carpeta` o corrige la ruta.
+
+**Paso 5. Ejecuta el ensayo.**
+
+```powershell
+python "C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-03\puente_ensayo_04_03.py" --carpeta $carpeta
+$LASTEXITCODE
+```
+
+Tarda lo que tarde un respaldo y una restauración de la réplica (minutos). No cierres la ventana mientras corre.
+
+**Paso 6. Lee los conteos.**
+
+| Línea | Qué debe decir |
+| :---- | :------------- |
+| `Carpeta del ensayo: …` | Una ruta dentro de tu carpeta, **anótala** (la usas en el paso 8). |
+| `[1] Antes: N tablas, F filas` | Cualquier número. |
+| `[2] Respaldo de la app: … línea de cierre: sí` | `sí`. |
+| `[3] Volcado de seguridad nativo: … línea de cierre: sí` | `sí`. |
+| `[4] Restauración del mismo volcado: terminó sin error` | Esa frase. |
+| `[5] Después: N tablas, F filas; tablas con conteo distinto: 0` | Mismos N y F que en `[1]`, y `0`. |
+| `[6] … procesos del ensayo vistos: X` | X de 1 o más (si es 0, fue tan rápido que no probó nada: repite el paso 5). |
+| `con contraseña en argumentos: equipo 0, contenedor 0` | `0` y `0`. |
+| `[7] Archivos de opciones residuales: equipo 0, contenedor 0` | `0` y `0`. |
+| `RESULTADO: CUMPLE` y `$LASTEXITCODE` = `0` | **Éxito.** |
+
+**Paso 7. Si falla.**
+
+- `NO SE EJECUTA: …` (código 2): no tocó nada. Corrige lo que dice (casi siempre falta el paso 2 o el 3) y repite el paso 5.
+- `[2]` con `NO`, o se corta antes de `[4]`: la base **no** se restauró. Guarda la salida.
+- Error **durante** `[4]` (traza de Python después de `[3]`): la réplica puede haber quedado a medias. Restaura el volcado nativo con `replica-local.md`, sección 5, usando como ruta `<Carpeta del ensayo>\seguridad_nativo.sql`, y repite el paso 3.
+- `[5]` con conteos distintos, o `[6]` o `[7]` con algo distinto de 0: el ensayo **no cumple**; no despliegues.
+- Residuales en `[7]`: bórralos con `docker exec manzagrafica-mysql sh -c "rm -f /tmp/mysql_opciones_*"` (contenedor) o `Remove-Item "$env:TEMP\mysql_opciones_*"` (equipo).
+
+**Paso 8. Limpieza (siempre, cumpla o no).**
+
+```powershell
+Remove-Item Env:DB_NAME
+Remove-Item -Recurse -Force "<Carpeta del ensayo que anotaste en el paso 6>"
+Remove-Item -Recurse -Force "C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-03"
+docker compose stop
+```
+
+- Borra la carpeta del ensayo **solo si salió `CUMPLE`**: tiene volcados con datos reales. Si falló, consérvala hasta resolverlo.
+- Comprueba que no quedó la variable: `$env:DB_NAME` no debe mostrar nada.
+
 ## 4. Primer uso: despliegue de la 00-04 (`v0.1-higiene`)
 
 El paso a paso exacto, con las salidas que hay que anotar, está en `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-05.md`, parte B. Resume lo propio de este despliegue (punto 8 de la lista):
@@ -349,4 +450,4 @@ El paso a paso exacto, con las salidas que hay que anotar, está en `_planificac
 | 2026-11-19 01:32 (Reload a las 01:32:05, uWSGI arriba a las 01:32:12 y listo a las 01:32:39, según `server.log`; el desarrollador no informó la hora) | `v14.2-duplicar-items` | `068be10` | 14-02 (Reabrir Pedido copia los ítems y pide la fecha de entrega, AUD-05-012; partida y retroceso `v4.2-confirmar-eliminar-pedido`); sin migraciones, `pip` ni `collectstatic` (`git diff --stat` de `requirements.txt`, migraciones, `settings.py` y estáticos vacío); checkout confirmado con `git describe` | `e13a10a0…022bd` (`respaldo_19-11-2026_01-29-31.sql`, `VÁLIDO`, 19 de 19) | Correcto, sin retroceso. Día 0 (dicho por el desarrollador, pedidos de prueba ya borrados): fecha vacía al abrir, la de hoy rechazada, con fecha desde mañana el nuevo trae los dos ítems con sus precios, el mismo total, sin pagos y el autor correcto. Un solo evento «Pedido duplicado» solo con identificadores (captura). `error.log` y `server.log` pegados sin errores nuevos desde el Reload. Pruebas previas: 316, `OK (expected failures=4)` (en local). Hallazgos nuevos: AUD-05-017 a AUD-05-019. **Desde aquí, el destino de retroceso del despliegue siguiente es `v14.2-duplicar-items`** |
 | 2026-11-19 11:24 (uWSGI reinicia a las 11:23:50 y queda listo a las 11:24:07, según `server.log`; se había dicho 11:25, vale el registro) | `v4.3-configuracion-produccion` | `c62a92e` | 04-02, escalón 1 (HSTS 3600, cookies seguras, `SECURE_SSL_REDIRECT`, `CSRF_TRUSTED_ORIGINS`, arranque que falla; partida y retroceso `v14.2-duplicar-items`); sin migraciones, `pip` ni `collectstatic` (`git diff` solo con `settings.py`, +38); `.env` editado antes del código (`SEGURIDAD_PRODUCCION=True`, `CSRF_TRUSTED_ORIGINS`) | `d239d9dd…898a` (`respaldo_19-11-2026_11-13-02.sql`, `VÁLIDO`, 19 de 19) | Correcto, sin retroceso. `check --deploy` con el código nuevo antes del Reload: solo W005 y W021 (no se repitió después). «Force HTTPS» activo (dicho). `curl.exe` a las 11:26: HTTP 302 a `https://` (del proxy), HTTPS 200 sin bucle con `max-age=3600` y `csrftoken` `Secure`. Ventana privada sin 403 en pedido, pago, respaldo y «Reabrir Pedido» (dicho); sin «csrf» ni «forbidden» en `server.log` ni `error.log`. **No verificado:** `sessionid` `Secure` en el navegador. Pruebas previas: 327, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente (`v4.4-hsts-semana`) es `v4.3-configuracion-produccion`** |
 | 2026-11-19 12:10 («Starting» a las 12:10:01 y listo a las 12:10:08, según `server.log`; se citó 11:25, que es la hora del escalón 1: vale el registro) | `v4.4-hsts-semana` | `854cd74` | 04-02, escalón 2 (HSTS 604800; partida y retroceso `v4.3-configuracion-produccion`); sin migraciones, `pip` ni `collectstatic` (`git diff` de `v4.3` a `v4.4`: `settings.py`, la prueba y documentos); `.env` sin cambios; `git describe` en el servidor da `v4.4-hsts-semana` | `b7d320f6…ba11c` (`respaldo_19-11-2026_12-07-14.sql`, `VÁLIDO`, 19 de 19, 1.542.750 bytes) | Correcto, sin retroceso. `check --deploy` después del Reload: solo W005 y W021 (esperadas, sin silenciar). `curl.exe` (15:13 UTC): HTTPS 200 con `max-age=604800` y `csrftoken` `Secure`; HTTP 302 a HTTPS y luego 200, sin bucle. DevTools (captura): `sessionid` HttpOnly, Secure, Lax; `csrftoken` Secure, Lax. Ventana privada sin 403 (dicho); sin «csrf» ni «forbidden» en los registros. Hallazgo nuevo: AUD-05-020 (cookies `_ga` de un dominio de Tailwind). **HSTS de una semana ya emitido: un retroceso no lo borra de los navegadores hasta 7 días.** Pruebas previas: 327, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente es `v4.4-hsts-semana`** |
-| **Implementada, pendiente de despliegue** (sin fecha fija; se despliega el día en que quede ensayada, con verificación el mismo día, RDA-021) | `v4.5-credenciales` (prevista) | por fijar | 04-03 (contraseña de MySQL en un archivo temporal de opciones y `SECRET_KEY` obligatoria; partida y retroceso `v4.4-hsts-semana`); sin migraciones, `pip` ni `collectstatic`; cambia `settings.py` y `utils.py` | Pendiente: obligatorio, normal (cambia cómo se generan y restauran los respaldos) | Pendiente. **Antes:** ensayo en la réplica (04-03, paso 5), medición de la clave del `.env` del servidor (3.1 bis) y `check --deploy` tras el checkout sin `ImproperlyConfigured`. **Después del Reload:** arranca; `check --deploy` solo W005 y W021; un respaldo desde la web se descarga completo y sale `VÁLIDO`; `server.log` sin errores de `mysqldump`; `ls /tmp/mysql_opciones_* 2>/dev/null \| wc -l` → `0`. **Retroceso:** `retroceso.md`, caso 1, a `v4.4-hsts-semana`; si solo falla el arranque por la clave, se corrige el `.env` y se recarga |
+| **Implementada, pendiente de ensayo y despliegue** (ensayo pendiente de ejecutar por el desarrollador, 3.10; sin fecha fija; se despliega el día en que quede ensayada, con verificación el mismo día, RDA-021) | `v4.5-credenciales` (prevista) | por fijar | 04-03 (contraseña de MySQL en un archivo temporal de opciones y `SECRET_KEY` obligatoria; partida y retroceso `v4.4-hsts-semana`); sin migraciones, `pip` ni `collectstatic`; cambia `settings.py` y `utils.py` | Pendiente: obligatorio, normal (cambia cómo se generan y restauran los respaldos) | Pendiente. **Antes:** ensayo en la réplica (04-03, paso 5), medición de la clave del `.env` del servidor (3.1 bis) y `check --deploy` tras el checkout sin `ImproperlyConfigured`. **Después del Reload:** arranca; `check --deploy` solo W005 y W021; un respaldo desde la web se descarga completo y sale `VÁLIDO`; `server.log` sin errores de `mysqldump`; `ls /tmp/mysql_opciones_* 2>/dev/null \| wc -l` → `0`. **Retroceso:** `retroceso.md`, caso 1, a `v4.4-hsts-semana`; si solo falla el arranque por la clave, se corrige el `.env` y se recarga |

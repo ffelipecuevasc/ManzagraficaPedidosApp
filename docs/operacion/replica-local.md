@@ -202,6 +202,11 @@ python manage.py runserver
 - Desde la 00-04, `runserver` responde en `127.0.0.1` y `localhost` sin tocar `settings.py` (AUD-02-022). Antes de la 00-04 respondía 400 y había que editar `settings.py` a mano; ya no hace falta.
 - Inicia sesión con **tu propia cuenta de producción**: la réplica trae los usuarios de producción. No crees usuarios nuevos en la réplica.
 - **No uses en la réplica «Respaldar BD» ni «Restaurar»**: escriben volcados con datos reales en `backups/` del repositorio y modifican la base.
+- **Excepción única y acotada (04-03, aprobada por el desarrollador el 2026-11-19):**
+  - **Motivo:** la 04-03 cambia cómo la app pasa la contraseña a `mysqldump` y `mysql` (archivo temporal de opciones) y exige ensayar un respaldo y una restauración reales antes de desplegar. El equipo no tiene el cliente de MySQL y no se instala.
+  - **Alcance:** una sola corrida (o sus repeticiones hasta que cumpla) del script puente de la 04-03, que llama a las funciones `generar_respaldo_mysql()` y `restaurar_bd_mysql()` sin pasar por los botones de la web. Solo sobre `manzagrafica_replica` (`DB_NAME` solo en la sesión; el script se niega con otra base). Volcados fuera de `backups/` del repo, en una carpeta de volcados del desarrollador. Volcado de seguridad nativo antes de restaurar, y se restaura el mismo volcado recién generado (los datos no cambian). Lo ejecuta el desarrollador.
+  - **Vigencia:** termina cuando el ensayo de la 04-03 sale `CUMPLE`. Cualquier otro uso sigue prohibido; la 04-04, si necesita ensayar la restauración, pide su propia excepción.
+  - **Procedimiento:** `despliegue.md`, sección 3.10.
 - Al terminar, detén `runserver` (Ctrl+C) y ejecuta `docker compose stop`.
 
 ## 9. Refrescar la réplica
