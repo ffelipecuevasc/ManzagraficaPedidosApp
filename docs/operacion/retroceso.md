@@ -111,6 +111,8 @@ Una migración de Clase 3 no tiene retroceso seguro sin respaldo: por eso está 
    Esperado: `Código: 0` y ningún mensaje `ERROR`. Si aparece `ERROR`, no reintentes a ciegas: anota el mensaje y la línea, y vuelve a intentarlo solo una vez después de revisarlos.
 
    Alternativa sin consola, si la aplicación responde: «Restaurar» en la aplicación. Crea antes un volcado de emergencia, que cuenta en la rotación de 5 (`respaldo.md`, sección 1).
+
+   **Desde `v4.6-restauracion` (04-04, implementada, pendiente de ensayo y despliegue):** la alternativa pide escribir `RESTAURAR` y rechaza un volcado que no tenga la estructura de esta aplicación o que pese más de 20 MB (`respaldo.md`, sección 1); en ese caso, usa la consola (este paso). El volcado de emergencia se llama `emergencia_DD-MM-AAAA_HH-MM-SS.sql`, queda fuera de la rotación de 5 y solo se conserva el último. **Si la restauración falla a la mitad**, el mensaje de la pantalla da el nombre de ese respaldo de emergencia: es el estado justo anterior a la restauración. Para volver a él, restáuralo con el comando de este paso (`<ruta del volcado>` = `"$PROYECTO"/backups/emergencia_….sql`) y anota su SHA-256 antes. En `server.log` quedan dos líneas: «Restauración iniciada» (usuario, archivo y respaldo de emergencia) y «Restauración terminada: resultado=correcta» o «resultado=fallida».
 7. **[PA · Bash]** `python manage.py showmigrations pedidos`: las migraciones deben coincidir con las de la etiqueta del paso 3.
 8. **[PA · Panel]** **Reload** y verifica las tres pantallas y el registro de errores (`despliegue.md`, paso 3.7).
 9. **Avisa al equipo** que puede volver a registrar, y **qué debe volver a ingresar**: todo lo hecho desde la fecha y hora del respaldo.

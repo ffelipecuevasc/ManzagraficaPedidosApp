@@ -425,6 +425,142 @@ docker compose stop
 - Borra la carpeta del ensayo **solo si salió `CUMPLE`**: tiene volcados con datos reales. Si falló, consérvala hasta resolverlo.
 - Comprueba que no quedó la variable: `$env:DB_NAME` no debe mostrar nada.
 
+### 3.11 Despliegue de la 04-04 (`v4.6-restauracion`): ensayo y orden
+
+**Estado (2026-11-19): implementada, pendiente de ensayo y despliegue. El ensayo y la revisión del formato D2 están pendientes de ejecutar por el desarrollador.** Sin fecha fija: se despliega el día en que quede ensayada, con verificación el mismo día (RDA-021). Retroceso: `v4.5-credenciales`. Scripts fuera del repo, en `C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-04\`: `revisar_volcado_d2.py` (formato D2) y `puente_ensayo_04_04.py` (ensayo). Excepción en `replica-local.md`, sección 8.
+
+#### Orden de despliegue
+
+1. **Formato D2 con un respaldo real de producción** (paso 6 de abajo): `RESULTADO: CUMPLE D2`. Si una regla da `False`, **no despliegues**: la aplicación rechazaría sus propios respaldos.
+2. **Ensayo en la réplica** con `RESULTADO: CUMPLE` (pasos de abajo, con el respaldo del paso 0).
+3. **Respaldo previo en producción** `VÁLIDO` (`respaldo.md`) y, sobre ese mismo archivo, `revisar_volcado_d2.py` → `CUMPLE D2`.
+4. Etiqueta anotada `v4.6-restauracion` y `git push` de la etiqueta.
+5. En el servidor: checkout de la etiqueta (3.2) y `git describe` → `v4.6-restauracion`. Sin migraciones, `pip` ni `collectstatic` (comprueba con `git diff --stat v4.5-credenciales v4.6-restauracion`: código en `utils.py`, `views.py`, `restaurar_bd.html` y `respaldar_bd.html`).
+6. `check --deploy` **antes** del Reload: solo W005 y W021.
+7. Reload y verificaciones del mismo día:
+   - «Restaurar» carga y muestra el campo «Para confirmar, escribe RESTAURAR».
+   - Sube un `.sql` vacío creado en tu equipo (`New-Item vacio.sql`), escribe `RESTAURAR` y confirma: debe salir «El archivo no es un respaldo válido de esta aplicación (o supera los 20 MB). No se tocó la base.» y **no** debe aparecer un `emergencia_` nuevo en «Respaldar BD» ni en `ls "$PROYECTO"/backups/`.
+   - Un respaldo desde la web («Generar Nuevo Respaldo BD») se descarga completo y sale `VÁLIDO`.
+   - `server.log` y `error.log` sin errores nuevos desde el Reload.
+   - **No se ejecuta una restauración real en producción:** la cubre el ensayo.
+8. Retroceso: `retroceso.md`, caso 1, a `v4.5-credenciales` (sin migraciones). Un `emergencia_` que haya quedado no estorba al código anterior: lo rota como cualquier `.sql`.
+
+#### Ensayo en la réplica y formato D2, paso a paso (PowerShell 7, en tu equipo)
+
+Todo en **una sola ventana** de PowerShell 7. Si la cierras a la mitad, vuelve a empezar desde el paso 1. **Nunca** uses `docker compose down -v` ni `docker volume rm`: borran la base.
+
+**Paso 1. Ubícate en el proyecto y activa el entorno virtual.**
+
+```powershell
+cd "D:\Trabajo\Proyectos PYTHON\Proyectos Personales\Pedidos Manzagrafica\PedidosApp"
+.\.venv\Scripts\Activate.ps1
+```
+
+Debe verse `(.venv)` al inicio de la línea. Si no, no sigas.
+
+**Paso 2. Comprueba que el contenedor está arriba.**
+
+```powershell
+docker compose up -d
+docker inspect -f "{{.State.Running}}" manzagrafica-mysql
+```
+
+Debe responder `true`. Si no: abre Docker Desktop, espera «Engine running» y repite; si sigue sin subir, mira `docker compose logs db --tail 30` y detente.
+
+**Paso 3. Apunta la sesión a la réplica y comprueba la paridad.**
+
+```powershell
+$env:DB_NAME = "manzagrafica_replica"
+python scripts\diagnostico\paridad_replica.py
+$LASTEXITCODE
+```
+
+Debe dar `0`. Si da `1`, no sigas: anota la fila que sale «No».
+
+**Paso 4. Elige la carpeta de volcados, fuera del repositorio.**
+
+```powershell
+$carpeta = "<tu carpeta de respaldos descargados, fuera del repo>"
+Test-Path $carpeta
+```
+
+Debe dar `True`. Si da `False`, créala con `New-Item -ItemType Directory $carpeta` o corrige la ruta.
+
+**Paso 5 (paso 0 de la iteración). Guarda un respaldo de la réplica y verifícalo.** Se genera dentro del contenedor (la contraseña va por `MYSQL_PWD`, no en los argumentos) y se copia a tu carpeta:
+
+```powershell
+docker exec manzagrafica-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --no-tablespaces --set-gtid-purged=OFF manzagrafica_replica > /tmp/replica_paso0.sql'
+docker cp manzagrafica-mysql:/tmp/replica_paso0.sql "$carpeta\replica_paso0_04-04.sql"
+docker exec manzagrafica-mysql rm -f /tmp/replica_paso0.sql
+python scripts\verificar_respaldo.py "$carpeta\replica_paso0_04-04.sql"
+```
+
+El último comando debe terminar en `VÁLIDO` (19 de 19). Si dice `NO VÁLIDO` o un comando da error, no sigas.
+
+**Paso 6. Formato D2 sobre respaldos reales.** Primero el de la réplica del paso 5 y después un respaldo real de producción que ya tengas descargado y verificado (por ejemplo, el del despliegue de la 04-03):
+
+```powershell
+$d2 = "C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-04\revisar_volcado_d2.py"
+python $d2 "$carpeta\replica_paso0_04-04.sql"
+$LASTEXITCODE
+python $d2 "<ruta de un respaldo de producción, por ejemplo respaldo_19-11-2026_14-13-28.sql>"
+$LASTEXITCODE
+```
+
+Cada uno imprime ocho reglas con `True` o `False`, termina en `RESULTADO: CUMPLE D2` y `$LASTEXITCODE` = `0`. **Si alguna regla da `False`, detente y pégame las ocho líneas** (no traen datos): la validación habría que ajustarla antes de desplegar.
+
+**Paso 7. Ejecuta el ensayo.**
+
+```powershell
+python "C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-04\puente_ensayo_04_04.py" --carpeta $carpeta --respaldo-paso0 "$carpeta\replica_paso0_04-04.sql"
+$LASTEXITCODE
+```
+
+Tarda lo que tardan dos respaldos y una restauración de la réplica (minutos). No cierres la ventana.
+
+**Paso 8. Lee los conteos.**
+
+| Línea | Qué debe decir |
+| :---- | :------------- |
+| `[0] Respaldo del paso 0: existe y cumple D2` | Esa frase. |
+| `Carpeta del ensayo: …` | **Anótala** (la usas en el paso 10). |
+| `[1] Antes: N tablas, F filas` | Cualquier número. |
+| `[2] Volcado A: … cumple D2: sí` | `sí`. |
+| `[3] Volcado de seguridad nativo: … cumple D2: sí` | `sí`. |
+| `[4] Volcado inválido rechazado sin respaldo ni restauración: sí` | `sí`. |
+| `[5] Sin RESTAURAR, rechazado sin tocar nada: sí` | `sí`. |
+| `[6] Restauración con RESTAURAR: correcta sí, X s` | `sí`; anota los segundos. |
+| `Respaldo emergencia_: 1 archivo(s), cumple D2: sí; mensaje lo nombra: sí` | `1`, `sí`, `sí`. |
+| `Subida borrada de backups/tmp: sí` | `sí`. |
+| `[7] … «Restauración iniciada» 1, «resultado=correcta» 1` | `1` y `1`. |
+| `[8] Después: … tablas con conteo distinto: 1 (esperado 1: eventos +1, esperado +1)` | `1` y `+1` (solo el evento de la restauración). |
+| `[9] … procesos del ensayo vistos: X; con contraseña en argumentos: equipo 0, contenedor 0` | X de 1 o más; `0` y `0`. |
+| `Archivos de opciones residuales: equipo 0, contenedor 0` | `0` y `0`. |
+| `RESULTADO: CUMPLE` y `$LASTEXITCODE` = `0` | **Éxito.** Pégame las líneas (son solo conteos). |
+
+**Paso 9. Si falla.**
+
+- `NO SE EJECUTA: …` (código 2): no tocó nada. Corrige lo que dice y repite el paso 7.
+- Se corta en `[2]` o `[3]`: la base **no** se restauró. Pégame la salida.
+- `[4]` o `[5]` con `NO`: la validación no funciona como se espera; no despliegues. Pégame la salida.
+- Error o `NO` en `[6]` (traza de Python después de `[5]`): la réplica puede haber quedado a medias. Restaura `<Carpeta del ensayo>\seguridad_nativo.sql` con `replica-local.md`, sección 5, y repite el paso 3. Si eso también falla, usa `replica_paso0_04-04.sql`.
+- `[8]` con otro conteo distinto, o `[9]` con algo distinto de 0: el ensayo **no cumple**; no despliegues.
+- Residuales: `docker exec manzagrafica-mysql sh -c "rm -f /tmp/mysql_opciones_*"` (contenedor) o `Remove-Item "$env:TEMP\mysql_opciones_*"` (equipo).
+
+**Paso 10. Limpieza (siempre, cumpla o no).**
+
+```powershell
+Remove-Item Env:DB_NAME
+Remove-Item -Recurse -Force "<Carpeta del ensayo que anotaste en el paso 8>"
+Remove-Item -Force "$carpeta\replica_paso0_04-04.sql"
+Remove-Item -Recurse -Force "C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\4b08cb32-a4fd-45ef-92e8-7e874083185f\scratchpad\ensayo-04-04"
+docker compose stop
+```
+
+- Borra la carpeta del ensayo y el respaldo del paso 0 **solo si salió `CUMPLE`**: tienen datos reales. Si falló, consérvalos hasta resolverlo.
+- Si todavía existe la carpeta del ensayo de la 04-03 (no se informó su borrado), bórrala también.
+- `$env:DB_NAME` no debe mostrar nada.
+
 ## 4. Primer uso: despliegue de la 00-04 (`v0.1-higiene`)
 
 El paso a paso exacto, con las salidas que hay que anotar, está en `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-05.md`, parte B. Resume lo propio de este despliegue (punto 8 de la lista):
@@ -451,3 +587,4 @@ El paso a paso exacto, con las salidas que hay que anotar, está en `_planificac
 | 2026-11-19 11:24 (uWSGI reinicia a las 11:23:50 y queda listo a las 11:24:07, según `server.log`; se había dicho 11:25, vale el registro) | `v4.3-configuracion-produccion` | `c62a92e` | 04-02, escalón 1 (HSTS 3600, cookies seguras, `SECURE_SSL_REDIRECT`, `CSRF_TRUSTED_ORIGINS`, arranque que falla; partida y retroceso `v14.2-duplicar-items`); sin migraciones, `pip` ni `collectstatic` (`git diff` solo con `settings.py`, +38); `.env` editado antes del código (`SEGURIDAD_PRODUCCION=True`, `CSRF_TRUSTED_ORIGINS`) | `d239d9dd…898a` (`respaldo_19-11-2026_11-13-02.sql`, `VÁLIDO`, 19 de 19) | Correcto, sin retroceso. `check --deploy` con el código nuevo antes del Reload: solo W005 y W021 (no se repitió después). «Force HTTPS» activo (dicho). `curl.exe` a las 11:26: HTTP 302 a `https://` (del proxy), HTTPS 200 sin bucle con `max-age=3600` y `csrftoken` `Secure`. Ventana privada sin 403 en pedido, pago, respaldo y «Reabrir Pedido» (dicho); sin «csrf» ni «forbidden» en `server.log` ni `error.log`. **No verificado:** `sessionid` `Secure` en el navegador. Pruebas previas: 327, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente (`v4.4-hsts-semana`) es `v4.3-configuracion-produccion`** |
 | 2026-11-19 12:10 («Starting» a las 12:10:01 y listo a las 12:10:08, según `server.log`; se citó 11:25, que es la hora del escalón 1: vale el registro) | `v4.4-hsts-semana` | `854cd74` | 04-02, escalón 2 (HSTS 604800; partida y retroceso `v4.3-configuracion-produccion`); sin migraciones, `pip` ni `collectstatic` (`git diff` de `v4.3` a `v4.4`: `settings.py`, la prueba y documentos); `.env` sin cambios; `git describe` en el servidor da `v4.4-hsts-semana` | `b7d320f6…ba11c` (`respaldo_19-11-2026_12-07-14.sql`, `VÁLIDO`, 19 de 19, 1.542.750 bytes) | Correcto, sin retroceso. `check --deploy` después del Reload: solo W005 y W021 (esperadas, sin silenciar). `curl.exe` (15:13 UTC): HTTPS 200 con `max-age=604800` y `csrftoken` `Secure`; HTTP 302 a HTTPS y luego 200, sin bucle. DevTools (captura): `sessionid` HttpOnly, Secure, Lax; `csrftoken` Secure, Lax. Ventana privada sin 403 (dicho); sin «csrf» ni «forbidden» en los registros. Hallazgo nuevo: AUD-05-020 (cookies `_ga` de un dominio de Tailwind). **HSTS de una semana ya emitido: un retroceso no lo borra de los navegadores hasta 7 días.** Pruebas previas: 327, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente es `v4.4-hsts-semana`** |
 | 2026-11-19 14:11 («Starting uWSGI» a las 14:11:27, hora de Chile; 17:11:24 UTC, según `server.log`; se dijo 14:12, vale el registro) | `v4.5-credenciales` | `81e0ebf` | 04-03 (contraseña de MySQL en un archivo temporal de opciones y `SECRET_KEY` obligatoria; partida y retroceso `v4.4-hsts-semana`); sin migraciones, `pip` ni `collectstatic` (diff `v4.4…v4.5`: código solo `utils.py` y `settings.py`); `.env.example` editado por el desarrollador en `81e0ebf` | `0d93d4eb…9740` (`respaldo_19-11-2026_14-06-52.sql`, `VÁLIDO`, 19 de 19, 1.545.575 bytes) | Correcto, sin retroceso. **Antes:** clave de producción con largo 61, 25 distintos y sin `django-insecure-`; ensayo en la réplica `CUMPLE` (4999 filas antes y después, 0 procesos con contraseña, 0 residuales); `git describe` = `v4.5-credenciales`; `check --deploy` a las 14:10, solo W005 y W021. **Después:** `check --deploy` solo W005 y W021; respaldo desde la web a las 14:13 (`respaldo_19-11-2026_14-13-28.sql`, `VÁLIDO`, 19 de 19, 1.545.818 bytes, `6a5af0bb…df87`; descarga dicha); `server.log` y `error.log` sin `mysqldump`, `mysql_opciones`, `Traceback` ni `OSError` del 2026-11-19; `ls /tmp/mysql_opciones_*` en la consola → 0 (no mide el `/tmp` del worker). **No verificado:** permisos del archivo temporal. Restauración en producción no probada por diseño (la cubre el ensayo). Pruebas previas: 342, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente es `v4.5-credenciales`** |
+| **Implementada, pendiente de ensayo y despliegue** (ensayo y formato D2 pendientes de ejecutar por el desarrollador, 3.11; sin fecha fija, RDA-021) | `v4.6-restauracion` (prevista) | por fijar | 04-04 (restauración endurecida: tope de 20 MB, estructura D2, `RESTAURAR`, constancia en `server.log`, `emergencia_` fuera de la rotación, sin `.sql` vacío ni subida huérfana; partida y retroceso `v4.5-credenciales`); sin migraciones, `pip` ni `collectstatic`; cambia `utils.py`, `views.py`, `restaurar_bd.html` y `respaldar_bd.html` | Pendiente: obligatorio (cambia la restauración y el respaldo de emergencia); además, D2 sobre ese archivo | Pendiente. **Antes:** D2 con un respaldo real de producción, ensayo `CUMPLE`, `check --deploy` tras el checkout. **Después del Reload:** campo `RESTAURAR` visible; `.sql` vacío rechazado sin `emergencia_` nuevo; respaldo desde la web `VÁLIDO`; registros sin errores nuevos. Sin restauración real en producción. **Retroceso:** `retroceso.md`, caso 1, a `v4.5-credenciales` |

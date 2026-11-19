@@ -93,6 +93,47 @@ TEXTO_IMAGEN = 'Vuelve a elegir la imagen de referencia: el navegador no la cons
 TEXTO_PAGINA_500 = 'Si el problema sigue, avísale al administrador y cuéntale en qué pantalla estabas y a qué hora.'
 
 
+# Volcado mínimo que cumple la estructura de D2 de la 04-04: cabecera, las dos tablas propias
+# y la línea de cierre. No trae datos.
+VOLCADO_VALIDO = (
+    b'-- MySQL dump 10.13  Distrib 8.0.46, for Linux (x86_64)\n'
+    b'--\n-- Host: 127.0.0.1    Database: base_de_prueba\n\n'
+    b'/*!40101 SET NAMES utf8mb4 */;\n'
+    b'DROP TABLE IF EXISTS `django_migrations`;\n'
+    b'CREATE TABLE `django_migrations` (\n  `id` bigint NOT NULL AUTO_INCREMENT\n);\n'
+    b'DROP TABLE IF EXISTS `pedidos_pedido`;\n'
+    b'CREATE TABLE `pedidos_pedido` (\n  `id` bigint NOT NULL AUTO_INCREMENT\n);\n'
+    b'\n-- Dump completed on 2026-11-19 14:13:28\n'
+)
+
+
+def volcado_subido(nombre='ficticio.sql', contenido=VOLCADO_VALIDO):
+    """Archivo subido para `restaurar_bd`; por defecto, un volcado válido (04-04, D2)."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    return SimpleUploadedFile(nombre, contenido)
+
+
+def datos_restaurar(archivo=None, confirmacion='RESTAURAR'):
+    """POST de `restaurar_bd` con el archivo y la confirmación escrita (04-04, D3)."""
+    return {'archivo_sql': archivo if archivo is not None else volcado_subido(),
+            'confirmacion': confirmacion}
+
+
+def respaldo_de_emergencia(carpeta, contenido=VOLCADO_VALIDO):
+    """`side_effect` para reemplazar `generar_respaldo_mysql`: escribe un respaldo `emergencia_`
+    con ese contenido en `<carpeta>/backups/` y devuelve su ruta, como la función real."""
+    import os
+
+    def generar(*args, **kwargs):
+        destino = os.path.join(carpeta, 'backups')
+        os.makedirs(destino, exist_ok=True)
+        ruta = os.path.join(destino, 'emergencia_01-01-2026_00-00-00.sql')
+        with open(ruta, 'wb') as archivo:
+            archivo.write(contenido)
+        return ruta
+    return generar
+
+
 def token_de(respuesta):
     """Token de envío único de un formulario (03-04): el campo oculto `token_envio`, o '' si no hay."""
     coincidencia = re.search(r'name="token_envio" value="([^"]+)"', respuesta.content.decode())

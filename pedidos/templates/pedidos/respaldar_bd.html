@@ -99,6 +99,9 @@
                                 <div class="flex items-center gap-2">
                                     <span class="material-icons-round text-slate-400 text-sm">description</span>
                                     {{ backup.nombre }}
+                                    {% if backup.emergencia %}
+                                    <span class="font-sans text-xs font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300" title="Respaldo automático previo a la última restauración; no entra en la rotación de 5">Emergencia</span>
+                                    {% endif %}
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-slate-600 dark:text-slate-400">

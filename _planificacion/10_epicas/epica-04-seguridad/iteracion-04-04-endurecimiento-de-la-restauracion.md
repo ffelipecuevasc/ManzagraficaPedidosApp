@@ -1,7 +1,7 @@
 # Iteración 04-04 · Endurecimiento de la restauración
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-04-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-04-redaccion.md)); D1 a D6 resueltas por el desarrollador el mismo día ([bitacora-04-04-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-04-cierre.md)).
+- **Estado:** **Implementada, pendiente de ensayo y despliegue (2026-11-19)** ([bitacora-04-04](../../99_bitacora/epica-04-seguridad/bitacora-04-04.md)). Etiqueta prevista `v4.6-restauracion`, sin fecha fija: se despliega el día en que quede ensayada, con verificación el mismo día (RDA-021); retroceso `v4.5-credenciales`. **Pendientes de ejecutar por el desarrollador:** la revisión del formato D2 sobre respaldos reales y el ensayo en la réplica (`despliegue.md`, 3.11; excepción en `replica-local.md`, sección 8). D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR` (no bloquea). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-04-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-04-redaccion.md)); D1 a D6 resueltas por el desarrollador el mismo día ([bitacora-04-04-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-04-cierre.md)).
 - **Subfase del plan:** 4.4 «Restauración endurecida» (`definicion-epica-04.md`, alcance 4).
 - **Depende de:** 04-03 (archivo temporal de opciones, D1, en `generar_respaldo_mysql` y `restaurar_bd_mysql`) y 04-01 (`generar_respaldo_bd` solo POST). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 (y su subida de HSTS) → 04-03 → **04-04**.
 - **RDA relacionadas:** RDA-007, RDA-009 (tareas lentas fuera de la petición), RDA-013 (errores en `server.log`, eventos en MySQL), RDA-019 (captura fuera del `atomic`).
@@ -110,15 +110,28 @@ Suite con los mismos fallos esperados que deje la 04-01 (4).
 - **Restaurar reemplaza la base de la réplica**, que es una copia de producción con datos reales. Un volcado de prueba mal armado deja la réplica inservible hasta refrescarla (`docs/operacion/replica-local.md`), y ese refresco depende de un respaldo descargado por el desarrollador.
 - Por eso el ensayo usa **un respaldo generado por la propia réplica** (restaurar sobre sí misma) y, antes, un respaldo de la réplica guardado por el desarrollador.
 - **Nunca contra producción.** `settings.py:142-145` solo protege la base de **pruebas**; la vista no sabe a qué base apunta. El ensayo se hace con el `.env` local (sin `DATABASE_URL`).
-- El ensayo puede exigir el cliente de MySQL instalado en el equipo (la 01-09 no tenía `mysqldump`).
+- ~~El ensayo puede exigir el cliente de MySQL instalado en el equipo (la 01-09 no tenía `mysqldump`).~~ Superado el 2026-11-19: el ensayo usa el puente al contenedor (`despliegue.md`, 3.11), sin instalar nada.
+- ~~`settings.py:142-145`~~ La protección de la base de pruebas está hacia `settings.py:199` (corregido el 2026-11-19).
 - Los volcados son datos personales: no se abren ni se copian a la documentación (`AGENTS.md`, sección 6); la bitácora anota solo tamaños, tiempos y conteos.
 
+## Implementación (2026-11-19)
+
+**Correcciones a la redacción (avisos del desarrollador del 2026-11-19):** las referencias de línea de «Qué hay hoy» son del 2026-11-17 y quedaron obsoletas: `restaurar_bd` empieza en `views.py:1286` antes del cambio (no en `:1240`); la protección de la base de pruebas está hacia `settings.py:199` (no en `:142-145`); `utils.py` cambió con la 04-03 (archivo temporal de opciones). «El ensayo puede exigir el cliente de MySQL instalado» queda **superado** por el puente al contenedor de la 04-03, ampliado aquí. La comparación con `RESTAURAR` **repite el criterio** de `ELIMINAR` (`views.py:396`: `strip()` y coincidencia exacta) sin extraer una función compartida (no se propone: son dos líneas).
+
+- `pedidos/utils.py`: `TOPE_VOLCADO_BYTES` (20 MB, D1); `revisar_volcado()` devuelve `{regla: True/False}` con las ocho reglas de D2 y `volcado_valido()` (lectura por líneas, sin cargar el archivo entero); `generar_respaldo_mysql(prefijo='respaldo')` borra el `.sql` ante **cualquier** fallo y vuelve a lanzar (punto 5); con `prefijo='emergencia'` borra los `emergencia_` anteriores (D5); `limpiar_backups_antiguos` deja fuera los `emergencia_`. Usa `archivo_opciones_mysql()` de la 04-03 sin cambios.
+- `pedidos/views.py` (`restaurar_bd`): orden archivo → extensión sin mayúsculas → `RESTAURAR` → tope → guardar → D2 → emergencia → D2 de la emergencia → línea `INFO` antes → restaurar → línea `INFO` después (correcta o fallida) → evento con usuario nulo si ya no existe → `finally` que borra la subida. Textos fijos `TEXTO_VOLCADO_INVALIDO` y `TEXTO_CONFIRMACION`. El mensaje de éxito nombra el respaldo de emergencia (D5). `respaldar_bd` marca los `emergencia_`.
+- `restaurar_bd.html`: campo `confirmacion` con etiqueta y ayuda (mismas clases que el de la 04-10) y `reportValidity()` antes del aviso SweetAlert. El recorrido de mensajes (AUD-05-004) **no se tocó** (D6). `respaldar_bd.html`: etiqueta «Emergencia» (D5; no estaba en la lista de archivos de la redacción, pero D5 lo pide).
+- Pruebas: `test_restauracion_endurecida.py` (33) y ayudas `VOLCADO_VALIDO`, `volcado_subido`, `datos_restaurar` y `respaldo_de_emergencia`; las pruebas existentes de restauración envían un volcado válido y `RESTAURAR`.
+
 ## Verificación en producción (la hace el desarrollador; **no verificado** hasta entonces)
+
+0. **Antes (orden de `despliegue.md`, 3.11):** formato D2 `CUMPLE` sobre un respaldo real de producción, ensayo `CUMPLE`, respaldo previo `VÁLIDO` y `CUMPLE D2`, `check --deploy` tras el checkout con solo W005 y W021.
 
 1. Respaldo previo al despliegue, descargado y verificado (`respaldo.md`).
 2. Tras el Reload, `restaurar_bd` carga y muestra el campo de confirmación; un archivo no válido (por ejemplo, un `.sql` vacío creado en el equipo) se rechaza con el mensaje fijo **sin** crear respaldo de emergencia.
 3. **No se ejecuta una restauración real en producción** para validar la iteración: el camino completo se valida en la réplica.
 4. `server.log` sin errores nuevos.
+5. (Agregado el 2026-11-19) Un respaldo desde la web sale `VÁLIDO`: `generar_respaldo_mysql` cambió (prefijo y borrado ante cualquier fallo).
 
 ## Plan de retroceso
 

@@ -49,13 +49,12 @@ class MensajesDeErrorSeVenTests(MensajesBase):
         self.assertContains(mala_extension, 'El archivo debe tener extensión .sql')
 
     def test_el_error_de_la_restauracion_fallida_se_ve_sin_detalles_tecnicos(self):
-        archivo = SimpleUploadedFile('ficticio.sql', b'-- volcado ficticio\n')
         with tempfile.TemporaryDirectory() as carpeta, \
                 mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
-                mock.patch.object(views, 'generar_respaldo_mysql', return_value=os.path.join(carpeta, 'respaldo_x.sql')), \
+                mock.patch.object(views, 'generar_respaldo_mysql', side_effect=ayudas.respaldo_de_emergencia(carpeta)), \
                 mock.patch.object(views, 'restaurar_bd_mysql', side_effect=RuntimeError(TEXTO_TECNICO)), \
                 self.assertLogs('pedidos.views', 'ERROR'):
-            respuesta = self.client.post('/base_datos/restaurar_bd/', {'archivo_sql': archivo}, follow=True)
+            respuesta = self.client.post('/base_datos/restaurar_bd/', ayudas.datos_restaurar(), follow=True)
 
         self.assertContains(respuesta, 'La restauración falló.')
         self.assertNotContains(respuesta, 'secreta')
@@ -63,12 +62,11 @@ class MensajesDeErrorSeVenTests(MensajesBase):
         self.assertNotContains(respuesta, 'backups/')  # decisión 9-A
 
     def test_la_restauracion_exitosa_dibuja_su_tarjeta_una_sola_vez(self):
-        archivo = SimpleUploadedFile('ficticio.sql', b'-- volcado ficticio\n')
         with tempfile.TemporaryDirectory() as carpeta, \
                 mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
-                mock.patch.object(views, 'generar_respaldo_mysql', return_value=os.path.join(carpeta, 'respaldo_x.sql')), \
+                mock.patch.object(views, 'generar_respaldo_mysql', side_effect=ayudas.respaldo_de_emergencia(carpeta)), \
                 mock.patch.object(views, 'restaurar_bd_mysql'):
-            respuesta = self.client.post('/base_datos/restaurar_bd/', {'archivo_sql': archivo}, follow=True)
+            respuesta = self.client.post('/base_datos/restaurar_bd/', ayudas.datos_restaurar(), follow=True)
 
         self.assertContains(respuesta, BASE_EXITO, count=1)
 

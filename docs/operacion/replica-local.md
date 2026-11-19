@@ -208,6 +208,11 @@ python manage.py runserver
   - **Vigencia:** termina cuando el ensayo de la 04-03 sale `CUMPLE`. Cualquier otro uso sigue prohibido; la 04-04, si necesita ensayar la restauración, pide su propia excepción.
   - **Procedimiento:** `despliegue.md`, sección 3.10.
   - **Usada el 2026-11-19:** el ensayo salió `CUMPLE` (dicho y pegado por el desarrollador). **La excepción quedó agotada**: desde aquí vuelve a regir la regla completa. El borrado de la carpeta del ensayo (volcados con datos reales) no fue informado.
+- **Excepción única y acotada (04-04, aprobada por el desarrollador el 2026-11-19):**
+  - **Motivo:** la 04-04 cambia la vista `restaurar_bd` (validación del volcado, confirmación `RESTAURAR`, respaldo `emergencia_`, constancia en el registro) y su criterio de término exige ensayar en la réplica que un volcado propio se restaura y uno inválido se rechaza sin tocar la base. El equipo no tiene el cliente de MySQL y no se instala.
+  - **Alcance:** una sola corrida (o sus repeticiones hasta que cumpla) del script puente de la 04-04, que llama a la vista real `restaurar_bd` con el cliente de pruebas de Django (no por el navegador), con un superusuario de la réplica. Tres casos: volcado inválido, sin `RESTAURAR` y restauración real del volcado recién generado por la propia réplica (los datos no cambian, salvo el evento de la restauración). Solo sobre `manzagrafica_replica` (`DB_NAME` solo en la sesión; el script se niega con otra base). **Obligatorios antes:** el respaldo de la réplica del paso 0 (el script lo exige por argumento y comprueba su estructura) y el volcado de seguridad nativo que hace el propio script. Volcados fuera de `backups/` del repo. Lo ejecuta el desarrollador.
+  - **Vigencia:** termina cuando el ensayo de la 04-04 sale `CUMPLE`. Cualquier otro uso sigue prohibido.
+  - **Procedimiento:** `despliegue.md`, sección 3.11. **Estado (2026-11-19): pendiente de ejecutar por el desarrollador.**
 - Al terminar, detén `runserver` (Ctrl+C) y ejecuta `docker compose stop`.
 
 ## 9. Refrescar la réplica

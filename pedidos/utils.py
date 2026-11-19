@@ -4,7 +4,9 @@ from .models import HistorialBD, Pedido, Cliente, Cotizacion, Producto
 from datetime import datetime
 from django.conf import settings
 from contextlib import contextmanager
+import codecs
 import glob
+import re
 import logging
 import subprocess
 import os
@@ -36,11 +38,106 @@ def archivo_opciones_mysql(db_password):
         except FileNotFoundError:
             pass  # Ya no está: no queda nada que limpiar.
 
-def generar_respaldo_mysql():
+# ==========================================
+# VALIDACIÓN DE VOLCADOS (iteración 04-04, D1 y D2)
+# ==========================================
+
+# D1: tope de 20 MB para un volcado a restaurar, más de diez veces el respaldo medido
+# (1.545.818 bytes el 2026-11-19). Se revisa si la base crece.
+TOPE_VOLCADO_BYTES = 20 * 1024 * 1024
+
+PREFIJO_EMERGENCIA = 'emergencia_'
+
+# D2: sentencias que un volcado de esta aplicación nunca trae (mysqldump sin --databases).
+# Se buscan al inicio de una línea, también dentro de un comentario condicional /*!NNNNN ... */.
+# Los datos van en INSERT de una sola línea, así que una palabra dentro de un texto no cuenta.
+_SENTENCIA_PROHIBIDA = re.compile(
+    rb'^\s*(?:/\*!\d*\s*)?(?:CREATE\s+DATABASE|DROP\s+DATABASE|USE\s|GRANT\s|CREATE\s+USER)',
+    re.IGNORECASE,
+)
+_TABLAS_OBLIGATORIAS = {
+    'tabla_pedidos_pedido': b'CREATE TABLE `pedidos_pedido`',
+    'tabla_django_migrations': b'CREATE TABLE `django_migrations`',
+}
+
+
+def revisar_volcado(ruta):
+    """
+    Revisa un volcado contra las reglas de D2 sin devolver nada de su contenido.
+
+    Devuelve un diccionario {regla: True/False}. Sobre el tope (D1) no se lee el archivo y
+    las reglas de contenido quedan en False. Se lee línea por línea (no se carga entero).
+    """
+    tamano = os.path.getsize(ruta)
+    reglas = {
+        'no_vacio': tamano > 0,
+        'dentro_del_tope': tamano <= TOPE_VOLCADO_BYTES,
+        'texto_utf8': False,
+        'cabecera_mysql_dump': False,
+        'linea_de_cierre': False,
+        'tabla_pedidos_pedido': False,
+        'tabla_django_migrations': False,
+        'sin_sentencias_prohibidas': False,
+    }
+    if not reglas['no_vacio'] or not reglas['dentro_del_tope']:
+        return reglas
+
+    decodificador = codecs.getincrementaldecoder('utf-8')()
+    utf8 = True
+    primera = ultima = None
+    tablas = dict.fromkeys(_TABLAS_OBLIGATORIAS, False)
+    prohibida = False
+    with open(ruta, 'rb') as archivo:
+        for linea in archivo:
+            if utf8:
+                try:
+                    decodificador.decode(linea)
+                except UnicodeDecodeError:
+                    utf8 = False
+            if linea.strip():
+                if primera is None:
+                    primera = linea
+                ultima = linea
+            for regla, marca in _TABLAS_OBLIGATORIAS.items():
+                if not tablas[regla] and linea.startswith(marca):
+                    tablas[regla] = True
+            if not prohibida and _SENTENCIA_PROHIBIDA.match(linea):
+                prohibida = True
+    if utf8:
+        try:
+            decodificador.decode(b'', final=True)
+        except UnicodeDecodeError:
+            utf8 = False
+
+    reglas.update(tablas)
+    reglas['texto_utf8'] = utf8
+    reglas['cabecera_mysql_dump'] = primera is not None and primera.startswith(b'-- MySQL dump')
+    reglas['linea_de_cierre'] = ultima is not None and ultima.startswith(b'-- Dump completed')
+    reglas['sin_sentencias_prohibidas'] = not prohibida
+    return reglas
+
+
+def volcado_valido(ruta):
+    """True si el volcado cumple todas las reglas de D2 (la misma función valida la subida y el
+    respaldo de emergencia)."""
+    return all(revisar_volcado(ruta).values())
+
+
+def _borrar_si_existe(ruta):
+    try:
+        os.remove(ruta)
+    except FileNotFoundError:
+        pass  # Nunca llegó a crearse: no queda nada que limpiar.
+
+
+def generar_respaldo_mysql(prefijo='respaldo'):
     """
     Genera un respaldo .sql de la base de datos MySQL configurada en 'default'.
     Guarda el archivo en la carpeta 'backups/' y mantiene solo los 5 más recientes.
     Retorna la ruta absoluta del archivo generado.
+
+    Con prefijo='emergencia' (04-04, D5) es el respaldo previo a restaurar: queda fuera de la
+    rotación por cantidad y se conserva solo el último.
     """
     # 1. Obtener configuración de la BD
     db_config = settings.DATABASES['default']
@@ -53,7 +150,7 @@ def generar_respaldo_mysql():
     # 2. Definir rutas y nombre de archivo
     backup_dir = os.path.join(settings.BASE_DIR, 'backups')
     timestamp = datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
-    filename = f"respaldo_{timestamp}.sql"
+    filename = f"{prefijo}_{timestamp}.sql"
     filepath = os.path.join(backup_dir, filename)
 
     # Asegurar que el directorio exista (redundancia de seguridad)
@@ -83,13 +180,27 @@ def generar_respaldo_mysql():
             subprocess.run(dump_cmd, stdout=f, stderr=subprocess.PIPE, check=True)
     except subprocess.CalledProcessError as e:
         # Si falla (ej: contraseña incorrecta), borramos el archivo vacío y lanzamos error
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        raise Exception(f"Error al generar respaldo MySQL: {e.stderr.decode()}")
+        _borrar_si_existe(filepath)
+        raise Exception(f"Error al generar respaldo MySQL: {e.stderr.decode()}") from e
+    except Exception:
+        # 04-04, punto 5: ante cualquier otro fallo (sin mysqldump, disco) tampoco queda un .sql
+        # vacío que la rotación cuente entre los cinco. La excepción sigue su curso.
+        _borrar_si_existe(filepath)
+        raise
 
     # 4. POLÍTICA DE ROTACIÓN (PASO 3 del Plan)
     # Limpiar backups antiguos, mantener solo los 5 más recientes
     limpiar_backups_antiguos(backup_dir, mantener=5)
+
+    # D5: del respaldo de emergencia se conserva solo el último.
+    if filename.startswith(PREFIJO_EMERGENCIA):
+        for anterior in glob.glob(os.path.join(backup_dir, f'{PREFIJO_EMERGENCIA}*.sql')):
+            if os.path.basename(anterior) != filename:
+                try:
+                    os.remove(anterior)
+                    logger.info("Respaldo de emergencia anterior eliminado: %s", anterior)
+                except OSError:
+                    logger.warning("Error al borrar el respaldo de emergencia %s", anterior, exc_info=True)
 
     return filepath
 
@@ -98,9 +209,11 @@ def limpiar_backups_antiguos(directorio, mantener=5):
     Busca archivos .sql en el directorio, los ordena por fecha
     y borra los más viejos para dejar solo la cantidad 'mantener'.
     """
-    # Patrón para encontrar solo archivos SQL
+    # Patrón para encontrar solo archivos SQL. El de emergencia queda fuera de la rotación por
+    # cantidad (04-04, D5: excepción mínima que la 06-03 hereda al rediseñar la rotación).
     pattern = os.path.join(directorio, "*.sql")
-    lista_backups = glob.glob(pattern)
+    lista_backups = [ruta for ruta in glob.glob(pattern)
+                     if not os.path.basename(ruta).startswith(PREFIJO_EMERGENCIA)]
 
     # Ordenar por fecha de modificación (del más viejo al más nuevo)
     lista_backups.sort(key=os.path.getmtime)

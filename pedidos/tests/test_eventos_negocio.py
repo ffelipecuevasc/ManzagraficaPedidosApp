@@ -154,8 +154,8 @@ class EventosBaseDeDatosTests(EventosNegocioBase):
                 mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
                 mock.patch.object(views, 'generar_respaldo_mysql') as respaldo, \
                 mock.patch.object(views, 'restaurar_bd_mysql') as restaurar:
-            archivo = SimpleUploadedFile('ficticio.sql', b'-- volcado ficticio\n')
-            self.ejecutar('post', '/base_datos/restaurar_bd/', {'archivo_sql': archivo})
+            respaldo.side_effect = ayudas.respaldo_de_emergencia(carpeta)  # 04-04: respaldo previo válido
+            self.ejecutar('post', '/base_datos/restaurar_bd/', ayudas.datos_restaurar())
         respaldo.assert_called_once()
         restaurar.assert_called_once()
         self.assertUnEvento('restauracion_ejecutada', 'base_de_datos', None)
@@ -163,10 +163,9 @@ class EventosBaseDeDatosTests(EventosNegocioBase):
     def test_restauracion_fallida_no_deja_evento(self):
         with tempfile.TemporaryDirectory() as carpeta, \
                 mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
-                mock.patch.object(views, 'generar_respaldo_mysql'), \
+                mock.patch.object(views, 'generar_respaldo_mysql', side_effect=ayudas.respaldo_de_emergencia(carpeta)), \
                 mock.patch.object(views, 'restaurar_bd_mysql', side_effect=RuntimeError('mysql falló')):
-            archivo = SimpleUploadedFile('ficticio.sql', b'-- volcado ficticio\n')
-            self.ejecutar('post', '/base_datos/restaurar_bd/', {'archivo_sql': archivo})
+            self.ejecutar('post', '/base_datos/restaurar_bd/', ayudas.datos_restaurar())
         self.assertFalse(RegistroEvento.objects.exists())
 
 

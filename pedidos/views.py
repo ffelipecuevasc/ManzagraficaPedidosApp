@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, login_not_required, user_passes_test
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
@@ -14,7 +15,8 @@ from .models import Pedido, Cliente, Cotizacion, Producto, ItemPedido, ItemCotiz
 from .forms import PedidoForm, ClienteForm, CotizacionForm, ProductoForm, PagoForm, ConversionCotizacionForm, ReabrirPedidoForm
 from .eventos import registrar_evento
 from . import envio_unico
-from .utils import generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias
+from .utils import (generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias,
+                    volcado_valido, TOPE_VOLCADO_BYTES, PREFIJO_EMERGENCIA)
 from datetime import timedelta, datetime
 from PedidosApp import settings
 import json
@@ -23,6 +25,11 @@ from decimal import Decimal, InvalidOperation
 import os
 
 logger = logging.getLogger(__name__)
+
+# Restauración endurecida (04-04): textos fijos, sin detalles técnicos.
+TEXTO_VOLCADO_INVALIDO = ('El archivo no es un respaldo válido de esta aplicación (o supera los 20 MB). '
+                          'No se tocó la base.')
+TEXTO_CONFIRMACION = 'Para restaurar, escribe RESTAURAR en el campo de confirmación. No se tocó la base.'
 
 # Fallos de un ítem que el servidor devuelve al formulario en vez de la página 500 (03-04, decisión 3-B).
 # Son las cinco causas medidas en las pruebas: producto inexistente, JSON inválido, clave ausente y
@@ -1248,7 +1255,9 @@ def respaldar_bd(request):
                     lista_backups.append({
                         'nombre': entry.name,
                         'fecha': fecha_mod,
-                        'size_mb': round(stats.st_size / (1024 * 1024), 2)  # Peso en MB
+                        'size_mb': round(stats.st_size / (1024 * 1024), 2),  # Peso en MB
+                        # 04-04, D5: el respaldo previo a restaurar se marca en la tabla.
+                        'emergencia': entry.name.startswith(PREFIJO_EMERGENCIA),
                     })
 
     # 3. Ordenar: El más reciente primero
@@ -1297,14 +1306,26 @@ def restaurar_bd(request):
 
         archivo = request.FILES['archivo_sql']
 
-        # 2. Validar extensión
-        if not archivo.name.endswith('.sql'):
+        # 2. Validar extensión, sin distinguir mayúsculas (04-04, punto 1)
+        if not archivo.name.lower().endswith('.sql'):
             messages.error(request, "Error: El archivo debe tener extensión .sql")
             return redirect('restaurar_bd')
 
+        # 3. Confirmación escrita, verificada por el servidor (04-04, D3). Mismo criterio que
+        # ELIMINAR en eliminar_pedido (04-10): strip() y coincidencia exacta, con mayúsculas.
+        if request.POST.get('confirmacion', '').strip() != 'RESTAURAR':
+            messages.error(request, TEXTO_CONFIRMACION)
+            return redirect('restaurar_bd')
+
+        # 4. Tope de tamaño (D1), antes de guardar nada en el disco.
+        if archivo.size > TOPE_VOLCADO_BYTES:
+            messages.error(request, TEXTO_VOLCADO_INVALIDO)
+            return redirect('restaurar_bd')
+
         respaldo_previo = None  # nombre del respaldo de emergencia, si llega a generarse
+        ruta_absoluta = None
         try:
-            # 3. Guardar el archivo temporalmente en 'backups/tmp/'
+            # 5. Guardar el archivo temporalmente en 'backups/tmp/'
             # (Usamos FileSystemStorage para manejar la subida de forma segura)
             ruta_tmp = os.path.join(settings.BASE_DIR, 'backups', 'tmp')
             if not os.path.exists(ruta_tmp):
@@ -1314,17 +1335,26 @@ def restaurar_bd(request):
             nombre_archivo = fs.save(archivo.name, archivo)
             ruta_absoluta = fs.path(nombre_archivo)
 
+            # 6. Estructura del volcado (D2), antes del respaldo de emergencia.
+            if not volcado_valido(ruta_absoluta):
+                messages.error(request, TEXTO_VOLCADO_INVALIDO)
+                return redirect('restaurar_bd')
+
             # ====================================================
             # EL AIRBAG: Respaldo de Emergencia Automático
             # ====================================================
             try:
-                respaldo_previo = os.path.basename(generar_respaldo_mysql())  # Si esto falla, NO restauramos
+                ruta_emergencia = generar_respaldo_mysql(prefijo='emergencia')  # Si esto falla, NO restauramos
+                # Punto 2: un respaldo vacío o incompleto vale lo mismo que uno fallido.
+                if not volcado_valido(ruta_emergencia):
+                    os.remove(ruta_emergencia)  # inservible: no debe pasar por el último de emergencia
+                    raise ValueError('El respaldo de emergencia no cumple la estructura de un volcado (D2)')
+                respaldo_previo = os.path.basename(ruta_emergencia)
             except Exception:
                 # Si no podemos hacer el respaldo de seguridad, ABORTAMOS la misión.
                 # Es mejor no restaurar que restaurar sin red de seguridad.
                 logger.exception('Error al crear el respaldo de seguridad previo a restaurar',
                                  extra={'request': request})
-                if os.path.exists(ruta_absoluta): os.remove(ruta_absoluta)  # Limpieza
                 messages.error(request, 'Operación cancelada: no se pudo crear el respaldo de seguridad '
                                         'previo, así que la base no se tocó.')
                 return redirect('restaurar_bd')
@@ -1332,17 +1362,24 @@ def restaurar_bd(request):
             # ====================================================
             # LA RESTAURACIÓN: El momento de la verdad
             # ====================================================
-            restaurar_bd_mysql(ruta_absoluta)
-            # Después de restaurar: la restauración reemplaza la tabla de eventos.
-            registrar_evento('restauracion_ejecutada', request.user, 'base_de_datos', None,
+            # D4: constancia en server.log antes, que sobrevive al reemplazo de la tabla de eventos.
+            logger.info('Restauración iniciada: usuario=%s archivo=%s emergencia=%s',
+                        request.user.username, archivo.name, respaldo_previo, extra={'request': request})
+            try:
+                restaurar_bd_mysql(ruta_absoluta)
+            except Exception:
+                logger.info('Restauración terminada: resultado=fallida', extra={'request': request})
+                raise
+            logger.info('Restauración terminada: resultado=correcta', extra={'request': request})
+            # Después de restaurar: la restauración reemplaza la tabla de eventos. Si el volcado no
+            # trae al usuario que restauró, el evento va con usuario nulo (D4).
+            autor = request.user if User.objects.filter(pk=request.user.pk).exists() else None
+            registrar_evento('restauracion_ejecutada', autor, 'base_de_datos', None,
                              'Base de datos restaurada desde un archivo .sql, con respaldo previo')
 
             # Si llegamos aquí, es porque salió bien
-            messages.success(request, f"¡Éxito! La base de datos fue restaurada con el archivo: {archivo.name}")
-
-            # Limpieza: Borrar el archivo que subimos para restaurar
-            if os.path.exists(ruta_absoluta):
-                os.remove(ruta_absoluta)
+            messages.success(request, f"¡Éxito! La base de datos fue restaurada con el archivo: {archivo.name}. "
+                                      f"Respaldo de seguridad previo: {respaldo_previo}.")
 
         except Exception:
             # El detalle técnico (salida de mysql, rutas) va solo a server.log.
@@ -1353,6 +1390,14 @@ def restaurar_bd(request):
                 # Solo el nombre del archivo: la carpeta del servidor no se menciona (03-04, decisión 9-A).
                 mensaje += f' El respaldo de seguridad previo es {respaldo_previo}.'
             messages.error(request, mensaje)
+        finally:
+            # Punto 6: la subida se borra siempre, también si la restauración falla.
+            if ruta_absoluta and os.path.exists(ruta_absoluta):
+                try:
+                    os.remove(ruta_absoluta)
+                except OSError:
+                    logger.warning('No se pudo borrar el archivo subido para restaurar', exc_info=True,
+                                   extra={'request': request})
 
         return redirect('restaurar_bd')
 

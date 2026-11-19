@@ -18,7 +18,7 @@ from django.test import TestCase
 
 from pedidos import views
 
-from . import factorias
+from . import ayudas, factorias
 
 TEXTO_TECNICO = 'detalle-tecnico /ruta/secreta mysqldump: error 1045'
 
@@ -53,12 +53,12 @@ class CapturasRespaldoTests(CapturasBase):
                          ['No se pudo generar el respaldo. El detalle quedó en el registro del servidor.'])
 
     def restaurar(self, carpeta, **parches):
-        archivo = SimpleUploadedFile('ficticio.sql', b'-- volcado ficticio\n')
+        # Volcado válido y confirmación escrita (04-04, D2 y D3).
         with mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
                 mock.patch.object(views, 'generar_respaldo_mysql', **parches.get('respaldo', {})), \
                 mock.patch.object(views, 'restaurar_bd_mysql', **parches.get('restaurar', {})), \
                 self.assertLogs('pedidos.views', 'ERROR') as registros:
-            respuesta = self.client.post('/base_datos/restaurar_bd/', {'archivo_sql': archivo})
+            respuesta = self.client.post('/base_datos/restaurar_bd/', ayudas.datos_restaurar())
         self.assertRedirects(respuesta, '/base_datos/restaurar_bd/', fetch_redirect_response=False)
         return respuesta, registros
 
@@ -72,14 +72,14 @@ class CapturasRespaldoTests(CapturasBase):
 
     def test_restauracion_fallida_nombra_el_respaldo_previo(self):
         with tempfile.TemporaryDirectory() as carpeta:
-            ruta = os.path.join(carpeta, 'backups', 'respaldo_01-01-2026_00-00-00.sql')
-            respuesta, registros = self.restaurar(carpeta, respaldo={'return_value': ruta},
+            emergencia = ayudas.respaldo_de_emergencia(carpeta)  # 04-04: un respaldo previo válido
+            respuesta, registros = self.restaurar(carpeta, respaldo={'side_effect': emergencia},
                                                   restaurar={'side_effect': RuntimeError(TEXTO_TECNICO)})
         self.assertErrorRegistrado(registros, 'restauración')
         self.assertEqual(self.mensajes(respuesta), [
             'La restauración falló. La base puede haber quedado restaurada en parte: revisa el registro '
             'del servidor antes de seguir. El respaldo de seguridad previo es '
-            'respaldo_01-01-2026_00-00-00.sql.'])
+            'emergencia_01-01-2026_00-00-00.sql.'])
 
     def test_restauracion_fallida_antes_del_respaldo_previo_no_nombra_archivo(self):
         with tempfile.TemporaryDirectory() as carpeta, \
