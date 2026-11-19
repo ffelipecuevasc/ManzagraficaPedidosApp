@@ -207,6 +207,7 @@ python manage.py runserver
   - **Alcance:** una sola corrida (o sus repeticiones hasta que cumpla) del script puente de la 04-03, que llama a las funciones `generar_respaldo_mysql()` y `restaurar_bd_mysql()` sin pasar por los botones de la web. Solo sobre `manzagrafica_replica` (`DB_NAME` solo en la sesión; el script se niega con otra base). Volcados fuera de `backups/` del repo, en una carpeta de volcados del desarrollador. Volcado de seguridad nativo antes de restaurar, y se restaura el mismo volcado recién generado (los datos no cambian). Lo ejecuta el desarrollador.
   - **Vigencia:** termina cuando el ensayo de la 04-03 sale `CUMPLE`. Cualquier otro uso sigue prohibido; la 04-04, si necesita ensayar la restauración, pide su propia excepción.
   - **Procedimiento:** `despliegue.md`, sección 3.10.
+  - **Usada el 2026-11-19:** el ensayo salió `CUMPLE` (dicho y pegado por el desarrollador). **La excepción quedó agotada**: desde aquí vuelve a regir la regla completa. El borrado de la carpeta del ensayo (volcados con datos reales) no fue informado.
 - Al terminar, detén `runserver` (Ctrl+C) y ejecuta `docker compose stop`.
 
 ## 9. Refrescar la réplica

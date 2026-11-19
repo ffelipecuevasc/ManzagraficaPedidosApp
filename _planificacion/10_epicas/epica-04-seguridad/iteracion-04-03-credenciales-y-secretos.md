@@ -1,7 +1,7 @@
 # Iteración 04-03 · Credenciales y secretos
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **Implementada, pendiente de ensayo y despliegue (2026-11-19).** Ensayo en la réplica: script puente creado fuera del repo (consulta previa aprobada el 2026-11-19), **pendiente de ejecutar por el desarrollador** (`despliegue.md`, 3.10; excepción en `replica-local.md`, sección 8). Orden de despliegue en `despliegue.md`, 3.10. D5 sigue `PENDIENTE_DESARROLLADOR`. ~~Implementada, pendiente de despliegue (2026-11-19)~~ ([bitacora-04-03](../../99_bitacora/epica-04-seguridad/bitacora-04-03.md)). Etiqueta prevista `v4.5-credenciales`, sin fecha fija: se despliega el día en que quede ensayada, con verificación el mismo día (RDA-021); retroceso `v4.4-hsts-semana`. **Faltan:** el ensayo en la réplica (paso 5, pendiente de la consulta previa del puente al contenedor), la comprobación de la clave de producción (condición previa del Reload) y el registro por rol de D5 (`PENDIENTE_DESARROLLADOR`). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-03-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-03-redaccion.md)); D1 a D5 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-03-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-03-cierre.md)).
+- **Estado:** **Completada y verificada en producción (2026-11-19)** con `v4.5-credenciales` (`81e0ebf`), Reload con «Starting uWSGI» a las 14:11:27 (hora de Chile) según `server.log`; detalle en «Despliegue y verificación». **Salvedad:** D5 (registro por rol del acceso al panel) sigue `PENDIENTE_DESARROLLADOR`; es el único criterio de término sin cumplir. Retroceso vigente desde aquí: `v4.5-credenciales`. ~~Implementada, pendiente de ensayo y despliegue (2026-11-19).~~ Ensayo en la réplica: script puente creado fuera del repo (consulta previa aprobada el 2026-11-19), ~~pendiente de ejecutar por el desarrollador~~ **realizado: `CUMPLE`** (`despliegue.md`, 3.10; excepción en `replica-local.md`, sección 8). Orden de despliegue en `despliegue.md`, 3.10. D5 sigue `PENDIENTE_DESARROLLADOR`. ~~Implementada, pendiente de despliegue (2026-11-19)~~ ([bitacora-04-03](../../99_bitacora/epica-04-seguridad/bitacora-04-03.md)). Etiqueta prevista `v4.5-credenciales`, sin fecha fija: se despliega el día en que quede ensayada, con verificación el mismo día (RDA-021); retroceso `v4.4-hsts-semana`. **Faltan:** el ensayo en la réplica (paso 5, pendiente de la consulta previa del puente al contenedor), la comprobación de la clave de producción (condición previa del Reload) y el registro por rol de D5 (`PENDIENTE_DESARROLLADOR`). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-03-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-03-redaccion.md)); D1 a D5 **resueltas el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-03-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-03-cierre.md)).
 - **Subfase del plan:** 4.3 «Credenciales y secretos» (`plan-de-trabajo.md`, sección 4.3).
 - **Depende de:** 04-02 (usa su variable `SEGURIDAD_PRODUCCION`, D3, y su regla de arranque, D5). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 (con su subida de HSTS) → **04-03**.
 - **RDA relacionadas:** RDA-004 (PythonAnywhere, servidor compartido), RDA-007, RDA-013 (errores con `logging`, nunca con la salida de los comandos al usuario).
@@ -105,6 +105,23 @@ Que la contraseña de la base no aparezca en los argumentos de ningún proceso, 
 1. `.env` del servidor con `SECRET_KEY` válida para la regla de D2 **antes** del Reload (el agente no ve el `.env`). Después del checkout y antes del Reload, `check --deploy` no debe fallar con `ImproperlyConfigured`.
 2. Tras el Reload, la aplicación arranca; `check --deploy` con solo W005 y W021.
 3. Un respaldo desde la web se descarga completo; `server.log` sin errores de `mysqldump`; no queda ningún archivo de opciones (`ls /tmp/mysql_opciones_* 2>/dev/null | wc -l` → `0`).
+
+## Despliegue y verificación (2026-11-19, datos pegados o dichos por el desarrollador)
+
+| Paso | Resultado | Fuente |
+| :--- | :-------- | :----- |
+| Clave de producción medida | Largo 61, 25 distintos, sin `django-insecure-`: cumple D2 | Pegado |
+| Ensayo en la réplica | `RESULTADO: CUMPLE`: 4999 filas antes y después, 0 tablas con conteo distinto, 0 procesos con contraseña en argumentos, 0 residuales en equipo y contenedor. Borrado de la carpeta del ensayo: **no informado** | Pegado |
+| Respaldo previo | `respaldo_19-11-2026_14-06-52.sql`, `VÁLIDO`, 19 de 19, 1.545.575 bytes, SHA-256 `0d93d4eb…9740` | Pegado |
+| `.env.example` | Editado por el desarrollador (`81e0ebf`) | Commit |
+| Etiqueta | `v4.5-credenciales` sobre `81e0ebf`, subida; diff `v4.4…v4.5`: código solo `utils.py` y `settings.py`, sin `requirements.txt`, migraciones ni estáticos | Pegado |
+| Servidor | `git describe` = `v4.5-credenciales`; `check --deploy` antes y después del Reload: solo W005 y W021 | Pegado |
+| Reload | «Starting uWSGI» a las 14:11:27 (Chile; 17:11:24 UTC), después del `check --deploy` de las 14:10. Se dijo 14:12: vale el registro | Pegado |
+| Respaldo desde la web (2 min después) | `respaldo_19-11-2026_14-13-28.sql`, `VÁLIDO`, 19 de 19, 1.545.818 bytes, SHA-256 `6a5af0bb…df87` (archivo verificado, pegado; la descarga, dicha) | Pegado / dicho |
+| Registros | `grep` de `mysqldump`, `mysql_opciones`, `Traceback` y `OSError` en `server.log` y `error.log`: ninguna línea del 2026-11-19; los últimos `OSError: write error` son del 2026-11-18 | Pegado |
+| Archivos de opciones | `ls /tmp/mysql_opciones_*` en la consola: 0. **No mide el `/tmp` del worker** | Pegado |
+
+**No verificado:** los permisos del archivo temporal en PythonAnywhere (se infiere `0600` por `mkstemp`). La restauración en producción no se prueba por diseño: la cubre el ensayo en la réplica.
 
 ## Plan de retroceso
 

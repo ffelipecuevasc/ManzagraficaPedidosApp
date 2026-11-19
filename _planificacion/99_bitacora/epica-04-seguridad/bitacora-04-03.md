@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-11-19
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** ~~Implementada, pendiente de despliegue.~~ **Implementada, pendiente de ensayo y despliegue** (2026-11-19; el ensayo está pendiente de ejecutar por el desarrollador). Etiqueta prevista `v4.5-credenciales`, sin fecha fija (RDA-021); retroceso `v4.4-hsts-semana`.
+- **Estado final:** ~~Implementada, pendiente de despliegue.~~ ~~Implementada, pendiente de ensayo y despliegue~~ **Completada y verificada en producción (2026-11-19)** con `v4.5-credenciales` (`81e0ebf`). Ensayo realizado (`CUMPLE`). D5 sigue `PENDIENTE_DESARROLLADOR`. Detalle en la sección «Cierre». Etiqueta prevista `v4.5-credenciales`, sin fecha fija (RDA-021); retroceso `v4.4-hsts-semana`.
 - **Regla de la iteración:** ningún valor de clave o contraseña, actual o del historial, aparece en este documento ni en las salidas que vio el agente.
 
 ## Resumen
@@ -205,3 +205,20 @@ SECRET_KEY=
 - `mkstemp` en Windows no aplica permisos POSIX; en PythonAnywhere (Linux) el archivo nace con `0600` (documentado por Python, no medido en el servidor).
 - No se vio el `.env` local ni el del servidor, ni el archivo WSGI del servidor (si definiera `SECRET_KEY`, ganaría al `.env`; por eso `check --deploy` antes del Reload).
 - Archivo huérfano si el worker muere entre crear y borrar: riesgo residual aceptado en la iteración.
+
+## Cierre (2026-11-19): despliegue y verificación
+
+Datos pegados o dichos por el desarrollador; el agente no vio el servidor. Hora de Chile = UTC−3.
+
+- **Clave de producción:** largo 61, 25 distintos, sin `django-insecure-` (pegado). Cumple D2.
+- **Ensayo en la réplica:** `RESULTADO: CUMPLE`; 4999 filas antes y después; 0 tablas con conteo distinto; 0 procesos con contraseña en argumentos; 0 residuales en equipo y contenedor (pegado). Con esto se cumple lo que quedó pendiente en «Riesgos y lo que no se vio»: MySQL acepta `--defaults-extra-file` primero y el escapado. **El borrado de la carpeta del ensayo no fue informado.** La excepción de `replica-local.md` queda usada y agotada.
+- **Respaldo previo:** `respaldo_19-11-2026_14-06-52.sql`, `VÁLIDO`, 19 de 19, 1.545.575 bytes, SHA-256 `0d93d4eb…9740` (pegado).
+- **`.env.example`:** lo editó el desarrollador (`81e0ebf`). Etiqueta `v4.5-credenciales` sobre `81e0ebf`, subida; diff `v4.4…v4.5`: código solo `utils.py` y `settings.py`, sin `requirements.txt`, migraciones ni estáticos (pegado).
+- **Servidor:** `git describe` = `v4.5-credenciales`; `check --deploy` antes (14:10) y después del Reload: solo W005 y W021 (pegado).
+- **Reload:** «Starting uWSGI» a las 14:11:27 (17:11:24 UTC) según `server.log`. **Contradicción menor:** se dijo 14:12; vale el registro.
+- **Respaldo desde la web**, 2 minutos después: `respaldo_19-11-2026_14-13-28.sql`, `VÁLIDO`, 19 de 19, 1.545.818 bytes, SHA-256 `6a5af0bb…df87` (archivo verificado y pegado; la descarga completa, dicha).
+- **Registros:** `grep` de `mysqldump|mysql_opciones|Traceback|OSError` en `server.log` y `error.log`, sin líneas del 2026-11-19; los últimos `OSError: write error` son del 2026-11-18 (pegado). Anotado en AUD-04-004, que sigue Abierto.
+- **Archivos de opciones:** `ls /tmp/mysql_opciones_*` en la consola → 0 (pegado). **No mide el `/tmp` del worker**, que puede ser otro.
+- **No verificado:** los permisos del archivo temporal en PythonAnywhere. La restauración en producción no se prueba por diseño: la cubre el ensayo.
+- **Hallazgos:** AUD-02-010 en lo que toca a la aplicación (clave obligatoria y fuerte, verificada) y la contraseña en argumentos (plan 4.3), resueltos y verificados; lo publicado en el historial queda como riesgo aceptado (D3, D4). AUD-04-002 sigue abierto hasta D5 y la 13-02.
+- **Retroceso vigente:** `v4.5-credenciales`.
