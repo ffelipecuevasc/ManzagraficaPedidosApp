@@ -377,12 +377,38 @@ def editar_pedido(request, pk):
 
 @login_required
 def eliminar_pedido(request, pk):
-    pedido = get_object_or_404(Pedido, pk=pk)
+    # 04-10: con pagos, se informa cuántos y cuánto suman y se exige escribir ELIMINAR.
+    # El agregado va en la misma consulta del pedido (sin consulta adicional).
+    con_pagos = Pedido.objects.annotate(
+        cantidad_pagos=Count('pagos'),
+        total_pagos=Coalesce(Sum('pagos__monto'), Value(0)),
+    )
+    error = None
     if request.method == 'POST':
-        pedido.delete()
-        registrar_evento('pedido_eliminado', request.user, 'pedido', pk, f'Pedido #{pk} eliminado')
-        return redirect('lista_pedidos')
-    return render(request, 'pedidos/pedido_confirm_delete.html', {'pedido': pedido})
+        vistos = request.POST.get('pagos_vistos')
+        confirmacion = request.POST.get('confirmacion', '').strip()
+        with transaction.atomic():
+            # Recuento, comprobación y borrado en el mismo atomic (regla 8.3).
+            pedido = get_object_or_404(con_pagos, pk=pk)
+            cantidad = pedido.cantidad_pagos
+            if (vistos is not None or cantidad > 0) and vistos != str(cantidad):
+                error = 'cambio'
+            elif cantidad > 0 and confirmacion != 'ELIMINAR':
+                error = 'confirmacion'
+            else:
+                pedido.delete()
+                if cantidad:
+                    detalle = f'con {cantidad} pago' + ('s' if cantidad != 1 else '')
+                else:
+                    detalle = 'sin pagos'
+                # Solo la cantidad, nunca el monto (models.py, RegistroEvento).
+                registrar_evento('pedido_eliminado', request.user, 'pedido', pk,
+                                 f'Pedido #{pk} eliminado, {detalle}')
+        if error is None:
+            return redirect('lista_pedidos')
+    else:
+        pedido = get_object_or_404(con_pagos, pk=pk)
+    return render(request, 'pedidos/pedido_confirm_delete.html', {'pedido': pedido, 'error': error})
 
 @login_required
 def detalle_pedido(request, pk):

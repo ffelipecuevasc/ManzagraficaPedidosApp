@@ -34,7 +34,7 @@
 | 04-07 | [Sanitización del HTML enriquecido y revisión de inyección SQL](iteracion-04-07-sanitizacion-html-e-inyeccion-sql.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | Nueva (Auditoría 03) |
 | 04-08 | [Protección del acceso y límites de entrada](iteracion-04-08-proteccion-del-acceso-y-limites-de-entrada.md) (Pendiente, redactada, decisiones resueltas D1 a D5, 2026-11-17) | Nueva (Auditoría 03) |
 | 04-09 | [Política de seguridad de contenido en observación](iteracion-04-09-politica-de-contenido-en-observacion.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17) | Nueva (reorganización 2026-10-27) |
-| 04-10 | [Confirmación reforzada al eliminar un pedido con pagos](iteracion-04-10-confirmacion-reforzada-al-eliminar-un-pedido-con-pagos.md) (Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17; sin migración) | Nueva (decisión del desarrollador, 2026-11-17) |
+| 04-10 | [Confirmación reforzada al eliminar un pedido con pagos](iteracion-04-10-confirmacion-reforzada-al-eliminar-un-pedido-con-pagos.md) (~~Pendiente, redactada, decisiones resueltas D1 a D4, 2026-11-17~~ **Implementada, pendiente de revisión manual y despliegue, 2026-11-18**, [bitacora-04-10](../../99_bitacora/epica-04-seguridad/bitacora-04-10.md); sin migración) | Nueva (decisión del desarrollador, 2026-11-17) |
 
 ## Para la redacción de 04-01
 
