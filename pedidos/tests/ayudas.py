@@ -30,13 +30,13 @@ def items_json(*items):
 
 
 def cambiar_estado(client, pedido, estado):
-    # Escribe con GET hoy (AUD-01-003); la 04-01 lo cambia a POST.
-    return client.get(f'/pedido/{pedido.pk}/cambiar/{estado}/')
+    # Solo POST desde la 04-01 (AUD-02-006); antes escribía con GET.
+    return client.post(f'/pedido/{pedido.pk}/cambiar/{estado}/')
 
 
 def duplicar(client, pedido):
-    # Escribe con GET hoy (AUD-01-003); la 04-01 lo cambia a POST.
-    return client.get(f'/pedido/duplicar/{pedido.pk}/')
+    # Solo POST desde la 04-01 (AUD-02-006); antes escribía con GET.
+    return client.post(f'/pedido/duplicar/{pedido.pk}/')
 
 
 def congelar_hora(momento=MEDIODIA):

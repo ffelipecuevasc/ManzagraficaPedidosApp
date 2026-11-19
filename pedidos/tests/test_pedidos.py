@@ -312,7 +312,8 @@ class CambiarEstadoTests(FlujoBase):
         self.assertEqual(self.tipos_de_evento(), [])
 
     def test_pedido_inexistente_responde_404(self):
-        self.assertEqual(self.client.get('/pedido/999999/cambiar/TERMINADO/').status_code, 404)
+        # Solo POST desde la 04-01: con GET respondería 405 antes de buscar el pedido.
+        self.assertEqual(self.client.post('/pedido/999999/cambiar/TERMINADO/').status_code, 404)
 
     def test_no_toca_el_estado_de_pago(self):
         pedido = crear_pedido(valor_venta=10_000, estado_pago='PARCIAL')
@@ -366,7 +367,8 @@ class DuplicarPedidoTests(FlujoBase):
 
         self.assertEqual(nuevo.estado, 'PENDIENTE')
         self.assertEqual(nuevo.estado_pago, 'PENDIENTE')  # valor por defecto del modelo
-        self.assertIsNone(nuevo.creado_por)  # ni el original ni el usuario que duplica
+        # Desde la 04-01 (AUD-02-028) el autor es quien duplica, no el autor del original.
+        self.assertEqual(nuevo.creado_por, self.usuario)
         self.assertFalse(nuevo.pagos.exists())
         # PENDIENTE_CLIENTE: ¿al duplicar se deben copiar los ítems? Hoy no se copian.
         self.assertFalse(nuevo.items.exists())

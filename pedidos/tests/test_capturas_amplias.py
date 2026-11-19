@@ -46,7 +46,7 @@ class CapturasRespaldoTests(CapturasBase):
     def test_generar_respaldo_fallido_registra_y_muestra_texto_fijo(self):
         with mock.patch.object(views, 'generar_respaldo_mysql', side_effect=RuntimeError(TEXTO_TECNICO)), \
                 self.assertLogs('pedidos.views', 'ERROR') as registros:
-            respuesta = self.client.get('/base_datos/respaldar_bd/accion/')
+            respuesta = self.client.post('/base_datos/respaldar_bd/accion/')  # solo POST (04-01)
         self.assertRedirects(respuesta, '/base_datos/respaldar_bd/', fetch_redirect_response=False)
         self.assertErrorRegistrado(registros, 'respaldo')
         self.assertEqual(self.mensajes(respuesta),

@@ -390,6 +390,7 @@ def detalle_pedido(request, pk):
     return render(request, 'pedidos/pedido_detail.html', {'pedido': pedido})
 
 @login_required
+@require_POST  # Solo POST con CSRF (04-01, AUD-02-006); más interno para que un anónimo vaya al acceso.
 def cambiar_estado_pedido(request, pk, nuevo_estado):
     pedido = get_object_or_404(Pedido, pk=pk)
 
@@ -479,6 +480,7 @@ def lista_pedidos(request):
     return render(request, 'pedidos/pedido_list.html', context)
 
 @login_required
+@require_POST  # Solo POST con CSRF (04-01, AUD-02-006).
 def duplicar_pedido(request, pk):
     # 1. Obtener el pedido original
     original = get_object_or_404(Pedido, pk=pk)
@@ -491,7 +493,8 @@ def duplicar_pedido(request, pk):
         valor_venta=original.valor_venta,
         estado='PENDIENTE',  # IMPORTANTE: Nace pendiente
         fecha_entrega=original.fecha_entrega,  # Mantenemos fecha ref, usuario editará si quiere
-        imagen_referencia=original.imagen_referencia  # Mantenemos la imagen si tenía
+        imagen_referencia=original.imagen_referencia,  # Mantenemos la imagen si tenía
+        creado_por=request.user,  # El autor es quien duplica (04-01, AUD-02-028)
     )
 
     # 3. Guardar el nuevo registro (esto genera fecha_solicitud actual automática)
@@ -1218,6 +1221,7 @@ def respaldar_bd(request):
 
 @login_required
 @user_passes_test(es_superusuario)
+@require_POST  # Solo POST con CSRF (04-01, AUD-02-006 y AUD-03-002); el más interno, después del permiso.
 def generar_respaldo_bd(request):
     """
     Acción: Genera el .sql y fuerza la descarga.

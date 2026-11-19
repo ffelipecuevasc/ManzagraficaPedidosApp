@@ -65,22 +65,22 @@ class EventosPedidoTests(EventosNegocioBase):
         self.assertFalse(Pedido.objects.exists())
         self.assertUnEvento('pedido_eliminado', 'pedido', pedido.pk)
 
-    def test_pedido_estado_cambiado_por_get(self):
-        # La ruta escribe con GET (se corrige en 04-01); el evento se registra igual.
+    def test_pedido_estado_cambiado(self):
+        # Solo POST desde la 04-01 (AUD-02-006).
         pedido = factorias.crear_pedido()
-        self.ejecutar('get', f'/pedido/{pedido.pk}/cambiar/EN_PROCESO/')
+        self.ejecutar('post', f'/pedido/{pedido.pk}/cambiar/EN_PROCESO/')
         evento = self.assertUnEvento('pedido_estado_cambiado', 'pedido', pedido.pk)
         self.assertEqual(evento.resumen, f'Pedido #{pedido.pk}: PENDIENTE -> EN_PROCESO')
 
     def test_estado_igual_o_invalido_no_deja_evento(self):
         pedido = factorias.crear_pedido()
-        self.ejecutar('get', f'/pedido/{pedido.pk}/cambiar/PENDIENTE/')
-        self.ejecutar('get', f'/pedido/{pedido.pk}/cambiar/INVENTADO/')
+        self.ejecutar('post', f'/pedido/{pedido.pk}/cambiar/PENDIENTE/')
+        self.ejecutar('post', f'/pedido/{pedido.pk}/cambiar/INVENTADO/')
         self.assertFalse(RegistroEvento.objects.exists())
 
     def test_pedido_duplicado(self):
         original = factorias.crear_pedido()
-        self.ejecutar('get', f'/pedido/duplicar/{original.pk}/')
+        self.ejecutar('post', f'/pedido/duplicar/{original.pk}/')
         nuevo = Pedido.objects.exclude(pk=original.pk).get()
         evento = self.assertUnEvento('pedido_duplicado', 'pedido', nuevo.pk)
         self.assertIn(f'#{original.pk}', evento.resumen)
@@ -143,7 +143,7 @@ class EventosBaseDeDatosTests(EventosNegocioBase):
             with open(ruta, 'w', encoding='utf-8') as archivo:
                 archivo.write('-- volcado ficticio\n')
             with mock.patch.object(views, 'generar_respaldo_mysql', return_value=ruta):
-                respuesta = self.ejecutar('get', '/base_datos/respaldar_bd/accion/')
+                respuesta = self.ejecutar('post', '/base_datos/respaldar_bd/accion/')
             self.assertEqual(respuesta.status_code, 200)
         evento = self.assertUnEvento('respaldo_generado', 'respaldo', None)
         self.assertEqual(evento.resumen, 'Respaldo respaldo_prueba.sql generado')

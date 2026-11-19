@@ -354,11 +354,15 @@ function initDetailModals() {
     const btnConfirmar = document.getElementById('modal-btn-confirmar');
     const btnCancelar = document.getElementById('modal-btn-cancelar');
 
+    // El disparador está dentro de un formulario POST (04-01, AUD-02-006): «Confirmar» envía ese
+    // formulario en vez de navegar con GET. Sin JavaScript, el formulario se envía directo.
+    let formularioPendiente = null;
+
     const triggers = document.querySelectorAll('[data-confirm="true"]');
     triggers.forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            const url = this.getAttribute('data-url');
+            formularioPendiente = this.closest('form');
             const tipo = this.getAttribute('data-type');
 
             if (tipo === 'CLONAR') {
@@ -367,13 +371,27 @@ function initDetailModals() {
                 btnConfirmar.className = "inline-flex w-full justify-center rounded-lg bg-primary hover:bg-yellow-400 px-3 py-2 text-sm font-bold text-black shadow-sm sm:ml-3 sm:w-auto transition-colors uppercase tracking-wide";
             }
 
-            btnConfirmar.href = url;
             modal.classList.remove('hidden');
         });
     });
 
     function closeModal() {
         modal.classList.add('hidden');
+        formularioPendiente = null;
+    }
+
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', function () {
+            const formulario = formularioPendiente;
+            closeModal();
+            if (!formulario) return;
+            // requestSubmit dispara el evento `submit`, así que `data-bloquear-envio` bloquea el botón.
+            if (typeof formulario.requestSubmit === 'function') {
+                formulario.requestSubmit();
+            } else {
+                formulario.submit();
+            }
+        });
     }
 
     if (btnCancelar) {
@@ -860,6 +878,15 @@ function initBloqueoEnvio() {
                     botones().forEach(desbloquearBoton);
                 }
             }, 0);
+            // Una respuesta de descarga no navega y `pageshow` no llega: con `data-desbloquear-ms`
+            // los botones vuelven a estar disponibles tras ese tiempo (04-01, respaldo).
+            const espera = parseInt(form.getAttribute('data-desbloquear-ms'), 10);
+            if (espera > 0) {
+                setTimeout(function () {
+                    enviando = false;
+                    botones().forEach(desbloquearBoton);
+                }, espera);
+            }
         });
 
         window.addEventListener('pageshow', function () {

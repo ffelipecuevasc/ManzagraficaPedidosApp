@@ -6,7 +6,8 @@ describe su comentario (`AUD-…`, qué falla hoy y qué iteración lo corrige).
 informa `unexpected successes` y la iteración que corrige quita las dos marcas.
 
 Numeración (decisión D3 del desarrollador, 2026-10-27): R1 a R15, R18, R19 y R20. Ya no llevan
-marcas: R20 (retirada en la 03-01), R3 (03-02) y R1, R2, R4, R10, R11, R12, R13 y R18 (03-03).
+marcas: R20 (retirada en la 03-01), R3 (03-02), R1, R2, R4, R10, R11, R12, R13 y R18 (03-03) y
+R6a, R6b, R6c, R7 y R19 (04-01). Siguen marcadas R8, R9, R14 y R15.
 R16 está reservado para AUD-02-021 y R17 está libre. R6 son tres pruebas. R5 no se escribió: el
 defecto no se reprodujo como estaba descrito (ver su sección).
 
@@ -194,8 +195,7 @@ class ItemsTodoONadaTests(RegresionBase):
 class EscrituraPorGetTests(RegresionBase):
     # Estas pruebas usan GET a propósito, sin pasar por `ayudas`: afirman que GET se rechaza.
 
-    @tag('regresion')
-    @expectedFailure  # R6a · AUD-02-006: cambiar_estado escribe con GET y redirige (302). Lo corrige la 04-01.
+    @tag('regresion')  # R6a · AUD-02-006: cambiar_estado escribía con GET. Corregido en la 04-01.
     def test_r6_cambiar_estado_rechaza_get(self):
         pedido = crear_pedido(estado='PENDIENTE')
 
@@ -204,8 +204,7 @@ class EscrituraPorGetTests(RegresionBase):
         pedido.refresh_from_db()
         self.assertEqual((respuesta.status_code, pedido.estado), (405, 'PENDIENTE'))
 
-    @tag('regresion')
-    @expectedFailure  # R6b · AUD-02-006: duplicar_pedido crea un pedido con GET y redirige (302). Lo corrige la 04-01.
+    @tag('regresion')  # R6b · AUD-02-006: duplicar_pedido creaba un pedido con GET. Corregido en la 04-01.
     def test_r6_duplicar_pedido_rechaza_get(self):
         pedido = crear_pedido()
 
@@ -213,8 +212,7 @@ class EscrituraPorGetTests(RegresionBase):
 
         self.assertEqual((respuesta.status_code, Pedido.objects.count()), (405, 1))
 
-    @tag('regresion')
-    @expectedFailure  # R6c · AUD-02-006: generar_respaldo_bd genera el respaldo con GET (200). Lo corrige la 04-01.
+    @tag('regresion')  # R6c · AUD-02-006: generar_respaldo_bd generaba el respaldo con GET. Corregido en la 04-01.
     def test_r6_generar_respaldo_rechaza_get(self):
         self.client.force_login(crear_superusuario())
         # Nunca se ejecuta mysqldump: se reemplaza la función donde la busca la vista.
@@ -235,8 +233,7 @@ class EscrituraPorGetTests(RegresionBase):
 # R7 · Eliminar pago sin plantilla de confirmación (AUD-02-002)
 # ---------------------------------------------------------------------------
 class EliminarPagoTests(RegresionBase):
-    @tag('regresion')
-    @expectedFailure  # R7 · AUD-02-002: falta pedidos/pago_confirm_delete.html y responde 500. Lo corrige la 04-01.
+    @tag('regresion')  # R7 · AUD-02-002: faltaba pago_confirm_delete.html (500). Corregido en la 04-01 (P1).
     def test_r7_confirmacion_de_eliminar_pago_responde_200(self):
         pago = crear_pago(crear_pedido(valor_venta=10_000), monto=4_000)
 
@@ -401,13 +398,11 @@ class PorcentajePagadoTests(TestCase):
 # R19 · Pedido duplicado sin autor (AUD-02-028)
 # ---------------------------------------------------------------------------
 class DuplicarPedidoTests(RegresionBase):
-    @tag('regresion')
-    @expectedFailure  # R19 · AUD-02-028: el duplicado queda con creado_por nulo. Lo corrige la 04-01 (decisión del 2026-11-04).
+    @tag('regresion')  # R19 · AUD-02-028: el duplicado quedaba con creado_por nulo. Corregido en la 04-01.
     def test_r19_duplicado_queda_con_el_usuario_que_duplica(self):
         original = crear_pedido(creado_por=crear_usuario())
 
-        # Escribe con GET hoy; pasa por la ayuda para que la 04-01 cambie una sola línea.
-        ayudas.duplicar(self.client, original)
+        ayudas.duplicar(self.client, original)  # POST desde la 04-01
 
         duplicado = Pedido.objects.exclude(pk=original.pk).get()
         self.assertEqual(duplicado.creado_por, self.usuario)

@@ -269,15 +269,21 @@ class PkInexistenteTests(TestCase):
     CON_404 = (
         f'/{PK_INEXISTENTE}/', f'/cotizaciones/detalle/{PK_INEXISTENTE}/',
         f'/productos/{PK_INEXISTENTE}/', f'/pagos/detalle/{PK_INEXISTENTE}/',
-        f'/pedido/{PK_INEXISTENTE}/cambiar/PENDIENTE/',  # GET: declara la ruta actual (04-01)
         f'/cotizaciones/{PK_INEXISTENTE}/pdf/',
+    )
+    # Solo POST desde la 04-01: con GET, `@require_POST` responde 405 antes de buscar el objeto,
+    # así que el 404 se prueba con POST.
+    SOLO_POST_404 = (
+        f'/pedido/{PK_INEXISTENTE}/cambiar/PENDIENTE/',
+        f'/pedido/duplicar/{PK_INEXISTENTE}/',
     )
     # Vistas que tenían @transaccion_segura: el decorador capturaba el Http404 y respondía 500
     # (AUD-02-029). La 03-01 lo retiró (RDA-019) y ahora responden 404. R20
-    # (test_regresiones.PkInexistenteTests) usa estas mismas rutas. eliminar_pago queda fuera (R7).
+    # (test_regresiones.PkInexistenteTests) usa estas mismas rutas. Desde la 04-01, eliminar_pago
+    # entra con GET (su confirmación existe, P1) y duplicar pasa a SOLO_POST_404.
     DECORADOR_RETIRADO = (
         f'/pedido/editar/{PK_INEXISTENTE}/', f'/pedido/eliminar/{PK_INEXISTENTE}/',
-        f'/pedido/duplicar/{PK_INEXISTENTE}/',  # GET: declara la ruta actual (04-01)
+        f'/pagos/eliminar/{PK_INEXISTENTE}/',
         f'/clientes/editar/{PK_INEXISTENTE}/', f'/clientes/eliminar/{PK_INEXISTENTE}/',
         f'/cotizaciones/editar/{PK_INEXISTENTE}/', f'/cotizaciones/eliminar/{PK_INEXISTENTE}/',
         f'/cotizaciones/convertir/{PK_INEXISTENTE}/',
@@ -298,9 +304,14 @@ class PkInexistenteTests(TestCase):
             with self.subTest(ruta=ruta):
                 self.assertEqual(self.client.get(ruta).status_code, 404)
 
-    def test_cubre_todas_las_rutas_con_pk_salvo_eliminar_pago(self):
-        con_pk = {ruta for _, ruta in rutas_de_pedidos()
-                  if '/1/' in ruta and 'eliminar_pago' not in ruta and not ruta.startswith('/pagos/eliminar/')}
-        probadas = {r.replace(str(PK_INEXISTENTE), '1') for r in self.CON_404 + self.DECORADOR_RETIRADO}
+    def test_vistas_solo_post_responden_404_con_post(self):
+        for ruta in self.SOLO_POST_404:
+            with self.subTest(ruta=ruta):
+                self.assertEqual(self.client.post(ruta).status_code, 404)
+
+    def test_cubre_todas_las_rutas_con_pk(self):
+        con_pk = {ruta for _, ruta in rutas_de_pedidos() if '/1/' in ruta}
+        probadas = {r.replace(str(PK_INEXISTENTE), '1')
+                    for r in self.CON_404 + self.SOLO_POST_404 + self.DECORADOR_RETIRADO}
 
         self.assertEqual(con_pk, probadas)

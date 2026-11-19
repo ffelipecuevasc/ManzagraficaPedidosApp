@@ -1,7 +1,7 @@
 # Iteración 04-01 · Mutaciones solo por POST
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-01-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-01-redaccion.md)) con las decisiones (a) y (b) del desarrollador del 2026-11-17. P1 y P2 **resueltos el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-01-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-01-cierre.md)): P1, se crea `pago_confirm_delete.html` y R7 queda como está; P2, el panel queda en la 06-01. Etiqueta `v4.1-mutaciones-post` fijada el 2026-11-17; ~~la fecha se fija al cerrar la vigilancia de la 03-05~~ (superado el 2026-11-18, RDA-021: la fija el desarrollador, después de la 14-01).
+- **Estado:** **Implementada, pendiente de revisión manual y despliegue** (2026-11-18; [bitacora-04-01](../../99_bitacora/epica-04-seguridad/bitacora-04-01.md)). No está Terminada: faltan la revisión manual en la réplica, el despliegue y el día 0. Antes: Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-01-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-01-redaccion.md)) con las decisiones (a) y (b) del desarrollador del 2026-11-17. P1 y P2 **resueltos el 2026-11-17** por el desarrollador (dicho por él; [bitacora-04-01-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-01-cierre.md)): P1, se crea `pago_confirm_delete.html` y R7 queda como está; P2, el panel queda en la 06-01. Etiqueta `v4.1-mutaciones-post` fijada el 2026-11-17; ~~la fecha se fija al cerrar la vigilancia de la 03-05~~ (superado el 2026-11-18, RDA-021: la fija el desarrollador, después de la 14-01).
 - **Subfase del plan:** 4.1 «Mutaciones solo por POST» (`plan-de-trabajo.md`, FASE 4).
 - **Depende de:** Épica 02 (Terminada). Se redactó en paralelo a la vigilancia de la 03-05; ~~**ni se ejecuta en local ni se despliega hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17) (desde el lunes 2026-11-23 a las 23:48:12, nota del 2026-11-17 en `definicion-epica-04.md`)~~ **superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar y puede ejecutarse. Se despliega después de la 14-01** (arreglo urgente de pagos, RDA-022, que va antes; **esta iteración no suma AUD-05-010 ni AUD-05-011**, decisión del desarrollador del 2026-11-18).
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-013 (errores con `logging`), RDA-019 (errores de vista los maneja Django; la captura va fuera del `atomic`).
@@ -129,6 +129,42 @@ Se revisaron las 41 rutas de `pedidos/urls.py` y todas las escrituras de `views.
 - `check` sin errores y `makemigrations --check --dry-run` sin cambios.
 - Revisión manual hecha en escritorio y 360 px.
 - **Después del despliegue (lo hace el desarrollador):** un respaldo generado desde la web en producción llega al equipo (criterio de la épica); AUD-03-002 pasa a Resuelto solo con esa comprobación.
+
+## Ejecución (2026-11-18; detalle en la bitácora)
+
+| Criterio de término | Estado |
+| :------------------ | :----- |
+| Suite en verde con `expected failures=4` (R8, R9, R14, R15); número real | **Cumplido:** 282 pruebas, `OK (expected failures=4)` (línea base: 273, `OK (expected failures=9)`) |
+| R6a, R6b, R6c, R7 (sin cambios en su afirmación) y R19 sin `@expectedFailure` y en verde | **Cumplido** |
+| Ninguna de las cuatro vistas escribe con GET; sin `href` a cambiar estado, duplicar ni generar respaldo; eliminar pago lleva a una confirmación que responde 200 | **Cumplido** (pruebas y búsqueda en `pedidos/templates`) |
+| `respaldar_bd.html` sin `location.reload` | **Cumplido** |
+| En la réplica, un respaldo de más de 2 s llega completo al equipo | **Pendiente del desarrollador** (el agente no tiene la réplica) |
+| `check` sin errores y `makemigrations --check --dry-run` sin cambios | **Cumplido** |
+| Revisión manual en escritorio, a 360 px y con teclado | **Pendiente del desarrollador** |
+| Después del despliegue: respaldo real desde la web en producción llega al equipo (cierra AUD-03-002) | **Pendiente del desarrollador** |
+
+**Decisiones de la ejecución:**
+- **Respaldo:** el botón se bloquea («Generando…») y se **desbloquea a los 10 s** (`data-desbloquear-ms="10000"`, atributo nuevo y genérico de `initBloqueoEnvio`). Motivo en la bitácora.
+- **`PkInexistenteTests`:** cambiar estado y duplicar pasan a `SOLO_POST_404` (se prueban con POST); `eliminar_pago` entra en la lista de GET (responde 404) y deja de ser excepción. La lista de R20 sigue con 12 rutas.
+- **`test_errores.test_regresion_eliminar_pago_deja_tipo_y_traza`:** retirada.
+- **`test_pedidos.test_lo_que_no_se_copia`:** su afirmación `creado_por` nulo pasa a `creado_por` = quien duplica (AUD-02-028); lo que se copia no cambia.
+- **Botón «Confirmar» del modal:** pasa de `<a href="#">` a `<button type="button">`; envía el formulario con `requestSubmit()`.
+
+## Despliegue paso a paso (lo hace el desarrollador; RDA-007 y RDA-021)
+
+1. **[PC · réplica]** Revisión manual en escritorio, a 360 px y con teclado: (a) «Iniciar Pedido» y «Terminar pedido» cambian el estado y bloquean el botón; (b) «Reabrir Pedido» abre el modal, «Cancelar» lo cierra sin crear nada, «Confirmar» crea el duplicado con su usuario como autor; foco visible en los botones del modal; (c) eliminar un pago desde el detalle y desde la lista: confirmación, «Cancelar» y «Sí, Eliminar»; (d) «Generar Nuevo Respaldo BD» con un `mysqldump` de más de 2 s: el archivo llega completo, el botón muestra «Generando…» y se reactiva a los 10 s, la página no se recarga sola.
+2. **[PC]** Commit **solo de la 04-01** en `main` (la 04-10 va en otro commit, después). Lista de `despliegue.md`, sección 2: `python manage.py test pedidos` → 282 pruebas, `OK (expected failures=4)`; `check --deploy` con las advertencias conocidas; `makemigrations --check --dry-run` → `No changes detected`.
+3. **[PC]** Etiqueta anotada: `git tag -a v4.1-mutaciones-post -m "Iteración 04-01: mutaciones solo por POST"`, `git push origin v4.1-mutaciones-post`, `git ls-remote --tags origin v4.1-mutaciones-post`.
+4. **[PC]** `git diff --stat v14.1-pagos v4.1-mutaciones-post -- requirements.txt pedidos/migrations PedidosApp/settings.py` **sin salida**. `git diff --stat v14.1-pagos v4.1-mutaciones-post -- pedidos/static` **debe mostrar solo** `pedidos/static/pedidos/js/index.js`.
+5. **[Cliente]** Aviso antes del despliegue y pedido de **Ctrl+F5** después (cambia `index.js` y su URL no lleva versión; con el archivo viejo, «Confirmar» y los enlaces de pestañas abiertas darían 405).
+6. **[PA]** `despliegue.md`, sección 3: `git fetch origin --tags`, `git checkout v4.1-mutaciones-post`, `git describe --tags` = `v4.1-mutaciones-post`. **Sin `pip` ni `migrate`. Con `python manage.py collectstatic --noinput`** (1 archivo: `index.js`). `python manage.py check` y **Reload**; se anota la hora de `Starting uWSGI`.
+7. **[Navegador, ventana privada, tras Ctrl+F5]** Día 0: pantallas de `despliegue.md`, 3.7; en un pedido de prueba, iniciar y terminar (cambio de estado), reabrir con el modal (el duplicado queda con el usuario), registrar un pago de prueba y eliminarlo por la confirmación; `GET` directo a `/pedido/<pk>/cambiar/EN_PROCESO/` responde 405 sin cambiar nada; **generar un respaldo desde la web y comprobar que llega completo al equipo** (cierra AUD-03-002). Borrar los datos de prueba (pedido original y duplicado).
+8. **[PA]** `server.log` desde el reinicio efectivo: sin `nivel=ERROR` nuevos.
+9. Fila en `despliegue.md`, sección 5, y cierre de la iteración.
+
+**Retroceso (RDA-021):** `retroceso.md`, caso 1 (sin migraciones): **[PA]** `git checkout v14.1-pagos`, `git describe --tags` = `v14.1-pagos`, **`python manage.py collectstatic --noinput`** (vuelve el `index.js` anterior), `check`, **Reload** y las pantallas de 3.7; Ctrl+F5 en el navegador del cliente. Disparadores: cualquier 500 en detalle de pedido, pagos o respaldos; un botón de cambiar estado, reabrir o eliminar pago que no funciona; el respaldo que no descarga.
+
+**Después:** la 04-10 se ejecuta en local (sin empezar) y se despliega justo después, en commit separado, con retroceso a `v4.1-mutaciones-post`.
 
 ## Riesgos
 

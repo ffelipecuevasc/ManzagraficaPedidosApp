@@ -15,12 +15,18 @@
                 </p>
             </div>
 
-            <a href="{% url 'generar_respaldo_bd' %}"
-               onclick="setTimeout(function(){ location.reload(); }, 2000);"
-               class="bg-primary hover:bg-yellow-400 text-black font-bold py-2.5 px-6 rounded-lg shadow-sm inline-flex items-center justify-center transition-colors text-sm">
-                <span class="material-icons-round mr-2 text-lg">cloud_download</span>
-                Generar Nuevo Respaldo BD
-            </a>
+            {# Generar un respaldo ejecuta un proceso: formulario POST con CSRF (04-01, AUD-02-006). #}
+            {# Sin recarga automática (AUD-03-002): la respuesta es una descarga y la página no navega. #}
+            {# El botón se desbloquea a los 10 s porque, con descarga, `pageshow` no llega (bitácora 04-01). #}
+            <form method="post" action="{% url 'generar_respaldo_bd' %}"
+                  data-bloquear-envio="Generando…" data-desbloquear-ms="10000">
+                {% csrf_token %}
+                <button type="submit"
+                        class="w-full bg-primary hover:bg-yellow-400 text-black font-bold py-2.5 px-6 rounded-lg shadow-sm inline-flex items-center justify-center transition-colors text-sm">
+                    <span class="material-icons-round mr-2 text-lg">cloud_download</span>
+                    Generar Nuevo Respaldo BD
+                </button>
+            </form>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

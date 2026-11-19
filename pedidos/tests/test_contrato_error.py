@@ -33,7 +33,7 @@ class MensajesDeErrorSeVenTests(MensajesBase):
     def test_el_error_del_respaldo_se_ve_en_la_pantalla_de_respaldos(self):
         with mock.patch.object(views, 'generar_respaldo_mysql', side_effect=RuntimeError(TEXTO_TECNICO)), \
                 self.assertLogs('pedidos.views', 'ERROR'):
-            respuesta = self.client.get('/base_datos/respaldar_bd/accion/', follow=True)
+            respuesta = self.client.post('/base_datos/respaldar_bd/accion/', follow=True)  # solo POST (04-01)
 
         self.assertContains(respuesta, 'No se pudo generar el respaldo. El detalle quedó en el registro del servidor.')
         self.assertContains(respuesta, 'role="alert"')

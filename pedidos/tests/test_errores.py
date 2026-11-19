@@ -10,7 +10,7 @@ from django.conf import settings
 from django.test import TestCase, override_settings
 
 from . import ayudas
-from .factorias import crear_cliente, crear_pago, crear_usuario
+from .factorias import crear_cliente, crear_usuario
 from .test_registro import formatear_como_error_log
 
 
@@ -79,19 +79,10 @@ class ErroresSinMiddlewareTests(TestCase):
         self.assertIn('editar_cliente', linea)
         self.assertIn('RuntimeError: fallo forzado en la vista', linea)
 
-    def test_regresion_eliminar_pago_deja_tipo_y_traza(self):
-        # Caso real del 2026-10-22 (AUD-02-002, la plantilla se corrige en 04-01). Esta prueba
-        # no fija el defecto: comprueba que, mientras exista, deja su causa completa en el registro.
-        pago = crear_pago()
-        with self.assertLogs('django.request', 'ERROR') as capturado:
-            respuesta = self.client.get(f'/pagos/eliminar/{pago.pk}/')
-        self.assertEqual(respuesta.status_code, 500)
-        linea = formatear_como_error_log(capturado.records[0])
-        self.assertIn(f'metodo=GET ruta=/pagos/eliminar/{pago.pk}/', linea)
-        self.assertIn('excepcion=TemplateDoesNotExist', linea)
-        self.assertIn('eliminar_pago', linea)
-        self.assertIn('Traceback (most recent call last):', linea)
-        self.assertIn('TemplateDoesNotExist: pedidos/pago_confirm_delete.html', linea)
+    # Retirada en la 04-01: `test_regresion_eliminar_pago_deja_tipo_y_traza` afirmaba el 500 de
+    # AUD-02-002 «mientras exista». Con `pago_confirm_delete.html` (P1) el GET responde 200 y ya
+    # no hay error que registrar. La traza completa en el registro la siguen cubriendo las demás
+    # pruebas de este archivo (fallo forzado en la vista).
 
     def test_pagina_500_sin_detalles_tecnicos(self):
         with mock.patch('pedidos.views.Paginator', side_effect=RuntimeError('detalle-secreto-de-la-excepcion')):
