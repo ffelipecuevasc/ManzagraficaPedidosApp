@@ -354,3 +354,33 @@ La lista blanca es exactamente lo que ofrece la barra del editor: `p`, `br`, `b`
 - La Épica 10 crece; su definición se actualiza al redactarla. Ninguna de estas iteraciones está redactada.
 - ~~El destino de AUD-05-023 (contar cotizaciones en la columna) no se fijó: `PENDIENTE_DESARROLLADOR`.~~ **Actualización 2026-11-20 (decisión del desarrollador):** AUD-05-023 va a la **Épica 14, tema Clientes, dentro del arreglo mínimo** (punto 1), junto a las etiquetas «Registrados» y «Con pedidos»: la lista muestra también las cotizaciones.
 - **«Mejor coincidencia» (aclarado por el desarrollador, 2026-11-20):** es el nombre provisional del **tercer nivel** de la propuesta de búsqueda, después de «mínima» (Épica 14) y «en vivo» (Épica 10). Depende de normalizar antes los teléfonos (punto 3). Su alcance se define al redactar esa iteración.
+
+## RDA-024 · La Épica 14 pasa a ser «Mantenimiento: errores y mejoras puntuales»
+
+- **Fecha:** 2026-11-20
+- **Estado:** Aceptada (decisión del desarrollador, dicha por él)
+- **Enmienda a:** RDA-022 (solo el alcance de la Épica 14; la tabla de gravedades, «abierta siempre» y la numeración siguen vigentes)
+
+**Contexto:** el 2026-11-20 el cliente pidió, a través del desarrollador, dos cambios acotados: que la cotización y su PDF muestren el RUT del cliente, y que la numeración de las cotizaciones parta en 1000. No son fallas (no hay hallazgo AUD ni gravedad), así que no caben en la RDA-022, que define la Épica 14 solo para fallas, arreglos urgentes y el respaldo fuera del servidor. Tampoco son las «funciones reales» de la Épica 10 (RDA-023), que esperan a las Épicas 07 y 08. Faltaba un lugar para los pedidos pequeños que se pueden entregar ya.
+
+**Decisión:**
+
+1. **La Épica 14 se llama «Mantenimiento: errores y mejoras puntuales».** Además de lo que fija la RDA-022, recibe **mejoras puntuales**.
+2. **Criterio de mejora puntual** (las cuatro condiciones a la vez):
+   - es un pedido acotado del cliente o del dueño del negocio;
+   - cabe en **una iteración y un despliegue** (RDA-007);
+   - no exige rediseño de pantallas ni de flujos;
+   - no depende de las Épicas 07 (arquitectura) u 08 (frontend).
+
+   Lo que no cumpla alguna condición va a la **Épica 10** o a una épica propia, con su RDA si cambia una regla del negocio (`AGENTS.md`, sección 1).
+3. **La Épica 10 queda sin cambios.**
+4. **La carpeta `epica-14-mantenimiento` no se renombra** (en `10_epicas` ni en `99_bitacora`): el nombre corto sigue siendo correcto y renombrarla rompería los enlaces de bitácoras ya entregadas.
+5. **Numeración:** las mejoras puntuales siguen la numeración de la épica (RDA-014 y RDA-022, punto 4: el 14-03 no se reasigna). La primera es la **14-04** ([iteracion-14-04](../10_epicas/epica-14-mantenimiento/iteracion-14-04-rut-del-cliente-y-folio-de-cotizacion.md)): RUT del cliente y folio de cotización.
+
+**Alternativas consideradas:** llevar el pedido a la Épica 10 (descartada: espera a las Épicas 07 y 08 y el cliente lo necesita ya); crear una épica nueva solo para mejoras (descartada: duplica el mecanismo de «abierta siempre» de la Épica 14).
+
+**Consecuencias:**
+
+- Cada mejora puntual que agrega un dato del negocio necesita la decisión del desarrollador o del cliente registrada en su iteración; si cambia una regla vigente, además una RDA.
+- Una mejora puntual compite en el orden de despliegue con las iteraciones del plan: su posición la fija el desarrollador en el registro.
+- `_planificacion/README.md` (protegido) menciona la Épica 14: si describe la épica solo como fallas, se entrega una propuesta de texto al desarrollador (bitácora de la 14-04).
