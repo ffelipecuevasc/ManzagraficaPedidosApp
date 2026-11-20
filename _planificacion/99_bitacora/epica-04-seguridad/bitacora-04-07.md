@@ -170,11 +170,12 @@ Fines de línea: `sed -i` dejó en LF algunos archivos que estaban en CRLF en la
 - Detalle de un pedido, una cotización y un producto con formato: sin 500.
 - Guardado sin cambios de un producto o pedido que no está entre los 15: sin 500.
 - PDF de una cotización: sin 500.
+- **Revisión manual en la réplica (3.14 A, paso 1), antes del despliegue; corregido el 2026-11-20:** pedido, cotización con su PDF y producto con formato, en escritorio y a 360 px, correctos; el pedido 56 sin imagen y sin 500. En su consola, `python manage.py test pedidos`: 411 pruebas, `OK (expected failures=3)`. El agente no vio la pantalla ni esa salida.
 
 ### No consta
 
 - Si se guardó una copia de las imágenes de los pedidos 46 y 56 (sigue abierto: rescate de esas imágenes).
-- La revisión manual en la réplica a 360 px (3.14 A, paso 1).
+- ~~La revisión manual en la réplica a 360 px (3.14 A, paso 1).~~ Corregido el 2026-11-20: sí se hizo; ver «Dicho por el desarrollador».
 - `DESDE_CL` no se mostró ni se validó en la consola; el filtro funcionó igual. Por eso el paso 6 de 3.14 ahora lo calcula, lo muestra y lo valida.
 
 ### Observación sin causa conocida
