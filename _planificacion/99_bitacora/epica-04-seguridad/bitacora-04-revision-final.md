@@ -50,8 +50,8 @@ Cada despliegue es un propósito, con etiqueta anotada antes (RDA-007) [V]. **Na
 | 4 | 04-02, escalón 2 (HSTS 604800), ~~tras **3 días** de observación sin 403 de CSRF ni bucles~~ el mismo día, tras comprobar el escalón 1 (RDA-021) | `v4.4-hsts-semana` **[fijada y desplegada, `854cd74`, verificada el 2026-11-19]** | escalón 1 | — |
 | 5 | 04-03 | `v4.5-credenciales` **[fijada y desplegada, `81e0ebf`, verificada el 2026-11-19]** | 04-02 (su variable y su regla de arranque) | Respaldo previo; ensayo de respaldo y restauración en la réplica |
 | 6 | 04-04 | `v4.6-restauracion` **[fijada y desplegada, `58d7c3d`, verificada el 2026-11-19]** | 04-03 y 04-01 | Respaldo previo |
-| 7 | 04-05 | `v4.7-correcciones-config` (prevista; siguiente, sin fecha) | 04-02 y 04-04 (mismos archivos) | Respaldo de rutina |
-| 8 | 04-06 | `v4.8-historial-clientes` | 04-01 y 04-05 | Respaldo previo; `migrate` (`0008`) |
+| 7 | 04-05 | `v4.7-correcciones-config` **[fijada y desplegada, `7187d03`, verificada el 2026-11-19]** | 04-02 y 04-04 (mismos archivos) | Respaldo de rutina |
+| 8 | 04-06 | `v4.8-historial-clientes` (prevista; siguiente, sin fecha) | 04-01 y 04-05 | Respaldo previo; `migrate` (`0008`) |
 | 9 | 04-07 | `v4.9-sanitizacion-html` | — (comparte `pedido_detail.html` con la 04-01 y `forms.py` con la 04-08) | **Instalar `nh3` en la consola antes** |
 | 10 | 04-08 | `v4.10-acceso-limites` | 04-04 (chequeo temprano en `restaurar_bd`), 04-06 (numeración), 04-02 y 04-05 (`settings.py`) | Respaldo previo; `migrate` (`0009`); variables opcionales |
 | 11 | 04-09 | `v4.11-csp-observacion` | 04-02 | — |

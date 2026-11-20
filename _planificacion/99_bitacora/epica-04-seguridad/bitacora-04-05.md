@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-11-19
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** Implementada, pendiente de despliegue. Etiqueta prevista `v4.7-correcciones-config`, sin fecha fija (RDA-021); retroceso `v4.6-restauracion`. La revisión manual en la réplica (escritorio y 360 px) está **pendiente de ejecutar por el desarrollador**.
+- **Estado final:** **Completada y verificada en producción (2026-11-19, 23:06 Chile = 2026-11-20 02:06 UTC)** con `v4.7-correcciones-config` (`7187d03`); retroceso vigente `v4.7-correcciones-config` (previo `v4.6-restauracion`). Detalle en «Despliegue y verificación en producción», al final. ~~Implementada, pendiente de despliegue. Etiqueta prevista `v4.7-correcciones-config`, sin fecha fija (RDA-021); retroceso `v4.6-restauracion`. La revisión manual en la réplica (escritorio y 360 px) está pendiente de ejecutar por el desarrollador.~~
 - **Regla:** ningún valor de clave, ningún contenido de volcado y ningún nombre de persona en este documento.
 
 ## Resumen
@@ -87,3 +87,23 @@ Es el texto de `despliegue.md`, sección 3.12 A: proyecto y `.venv`; contenedor 
 - **Sin `TruncMonth`** (Épica 06), sin `MEDIA_ROOT` con `Path` y sin estilos de AUD-05-008 parte (1) (Épica 08): fuera.
 - No se vio: el `.env`, el contenido de `backups/` (ni su listado posterior), el servidor y las pantallas en un navegador.
 - D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR`.
+
+## Despliegue y verificación en producción (2026-11-19, datos pegados o dichos por el desarrollador)
+
+Horas: consola en UTC; `server.log` en hora de Chile (UTC−3). Ningún nombre ni dato de cliente.
+
+| Paso | Resultado |
+| :--- | :-------- |
+| Réplica (3.12 A) | 379 pruebas, `OK (expected failures=4)`. `backups/` real: 1 archivo antes y después (cierra el «no verificado por el agente» de arriba). Paridad sin diferencias no aceptadas. Pantallas en escritorio y a 360 px: dicho. |
+| Paso 1, respaldo previo | Con `v4.6` activo, antes del checkout: `respaldo_19-11-2026_23-00-20.sql`, `VÁLIDO` 19 de 19, `CUMPLE D2`, 1.549.306 bytes, SHA-256 `607db45f…9b8a`. |
+| Paso 2, etiqueta | `v4.7-correcciones-config` sobre `7187d03`; diff `v4.6…v4.7`: código solo `settings.py`, `views.py` y `urls.py`; sin `requirements.txt`, migraciones ni estáticos. |
+| Pasos 3 y 4 | Checkout a las 02:06 UTC; `check --deploy` antes del Reload: solo W005 y W021. |
+| Paso 5, Reload | Un solo arranque de uWSGI tras el checkout: 23:06:46 Chile (02:06:44 UTC), Reload del desarrollador (dicho). El anterior: 17:41:57. |
+| Paso 6 | `check --deploy` después (02:15 UTC): solo W005 y W021. Panel, listas, detalle y PDF sin 500 (dicho). `error.log` sin errores nuevos tras el Reload; 3 coincidencias históricas (`TemplateDoesNotExist` de `pago_confirm_delete.html`, 2026-10-26, anterior a la 04-01). Último `OSError`: 2026-11-18 18:40:18; ninguno el 2026-11-19. Ese tramo de `error.log` no está en orden cronológico: se anota, sin concluir la causa. |
+| Paso 7, hibernación | Pendiente, observación posterior (AUD-01-016). |
+
+**Lección (corrige `despliegue.md`, 3.12 B, paso 6.3):** el `grep` por fecha al inicio de la línea no detecta las líneas de traza y `DESDE_CL` quedó sin definir en la consola, así que ese filtro no sirve como evidencia. El paso queda como: `server.log` desde el último `Starting uWSGI` con `awk` (solo hora y conteo) y `tail` de `error.log`, sin filtro por fecha.
+
+**Auditoría:** AUD-01-009, AUD-01-025, AUD-02-016 y AUD-05-008 parte (2), verificados en producción. AUD-01-016: puntos 1 y 2 verificados; el 3 (hibernación), observación posterior. AUD-04-004: dato de seguimiento, sigue Abierto (criterio de la 13-03).
+
+**No visto por el agente:** el servidor, los registros completos (solo lo pegado), las pantallas y el respaldo (solo su resultado).

@@ -1,7 +1,7 @@
 # Iteración 04-05 · Correcciones de configuración
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **Implementada, pendiente de despliegue (2026-11-19)** ([bitacora-04-05](../../99_bitacora/epica-04-seguridad/bitacora-04-05.md)). Etiqueta prevista `v4.7-correcciones-config`, sin fecha fija (RDA-021); retroceso `v4.6-restauracion`. **Pendiente del desarrollador:** la revisión manual en la réplica (`despliegue.md`, 3.12 A) y el despliegue (3.12 B). La hibernación (verificación 3) es observación posterior que no bloquea el cierre (decisión del 2026-11-19). D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR`. ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-05-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-05-cierre.md)).
+- **Estado:** **Completada y verificada en producción (2026-11-19, 23:06 Chile = 2026-11-20 02:06 UTC)** con `v4.7-correcciones-config` (`7187d03`); detalle en «Despliegue y verificación». Retroceso vigente desde aquí: `v4.7-correcciones-config` (el previo, `v4.6-restauracion`). AUD-01-016 queda con los puntos 1 y 2 verificados y la hibernación como observación posterior. ~~Implementada, pendiente de despliegue (2026-11-19)~~ ([bitacora-04-05](../../99_bitacora/epica-04-seguridad/bitacora-04-05.md)). ~~Etiqueta prevista `v4.7-correcciones-config`, sin fecha fija (RDA-021); retroceso `v4.6-restauracion`. Pendiente del desarrollador: la revisión manual en la réplica (`despliegue.md`, 3.12 A) y el despliegue (3.12 B).~~ La hibernación (verificación 3) es observación posterior que no bloquea el cierre (decisión del 2026-11-19). D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR`. ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-05-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-05-cierre.md)).
 - **Subfase del plan:** 4.5 «Correcciones de configuración» (`plan-de-trabajo.md`; `definicion-epica-04.md`, alcance 5).
 - **Depende de:** 04-02 (también edita `settings.py`: `SEGURIDAD_PRODUCCION`, HSTS, `CSRF_TRUSTED_ORIGINS`) y 04-04 (también edita `views.py` y `utils.py` en la restauración). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → **04-05**.
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito).
@@ -150,6 +150,25 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 2. Tras el Reload: acceso, panel, una lista y el PDF de una cotización responden como antes.
 3. Dejar hibernar la aplicación y volver a entrar: la primera petición responde sin error 500; `server.log` sin `OperationalError` ni «MySQL server has gone away» (que hoy no sabemos si ocurre: no verificado).
 4. `server.log` sin errores nuevos ~~durante tres días~~ **desde el reinicio efectivo, en la verificación del mismo día (RDA-021, 2026-11-18)**.
+
+## Despliegue y verificación (2026-11-19, datos pegados o dichos por el desarrollador)
+
+Horas: consola en UTC; `server.log` en hora de Chile (UTC−3).
+
+| Paso | Resultado |
+| :--- | :-------- |
+| Réplica (3.12 A) | 379 pruebas, `OK (expected failures=4)`; `backups/` real con 1 archivo antes y después de la suite; paridad sin diferencias no aceptadas; pantallas en escritorio y a 360 px sin 500 (dicho; el agente no las vio). |
+| Respaldo previo | Con `v4.6-restauracion` activo y **antes del checkout**: `respaldo_19-11-2026_23-00-20.sql`, `VÁLIDO` (19 de 19), `CUMPLE D2`, 1.549.306 bytes, SHA-256 `607db45f…9b8a`. Lección de la 04-04 aplicada. |
+| Etiqueta | `v4.7-correcciones-config` sobre `7187d03`; diff `v4.6…v4.7`: código solo `settings.py`, `views.py` y `urls.py`; sin `requirements.txt`, migraciones ni estáticos. |
+| Servidor, antes del Reload | Checkout a las 02:06 UTC (2026-11-20); `check --deploy` solo W005 y W021. |
+| Reload | **Un solo** arranque de uWSGI tras el checkout: 23:06:46 Chile (02:06:44 UTC), Reload del desarrollador (dicho). El anterior fue el de las 17:41:57 (04-04). |
+| Después del Reload | `check --deploy` (02:15 UTC) solo W005 y W021. Panel, listas, detalle y PDF sin error 500 (dicho). |
+| Registros | `error.log` sin errores nuevos tras el Reload. Las 3 coincidencias que aparecen son históricas: `TemplateDoesNotExist` de `pago_confirm_delete.html` del 2026-10-26, anterior a la 04-01. Último `OSError`: 2026-11-18 18:40:18; ninguno el 2026-11-19 (dato para AUD-04-004). Ese tramo del archivo no está en orden cronológico (observado; no se concluye la causa). |
+| Hibernación (punto 3) | No observada todavía: observación posterior, no bloquea el cierre (decisión del 2026-11-19). |
+
+**Lección:** el `grep` por fecha al inicio de la línea no detecta las líneas de traza (no empiezan con fecha) y `DESDE_CL` quedó sin definir en la consola. Por eso la revisión de registros de esta ventana descansa en la lectura de `error.log` pegada, no en ese filtro. `despliegue.md`, 3.12 B, paso 6.3, queda corregido: `server.log` desde el último `Starting uWSGI` (con `awk`) y `tail` de `error.log`, sin filtro por fecha.
+
+Criterio de término: cumplido (Clase 1 sin cambios, pruebas, auditoría y puntos 1, 2 y 4 de producción). El punto 3 queda como observación posterior.
 
 ## Plan de retroceso
 
