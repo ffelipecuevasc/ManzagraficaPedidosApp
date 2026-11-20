@@ -149,6 +149,48 @@ Fines de línea: `sed -i` dejó en LF algunos archivos que estaban en CRLF en la
 - **Si el Reload va antes de instalar `nh3`, el arranque no falla:** las pantallas de detalle y los formularios responden 500. Por eso `despliegue.md` 3.14 exige `pip show nh3` antes del Reload.
 - **El admin muestra el HTML guardado como texto escapado.** No se sanitiza al guardar desde el admin, porque no usa los formularios de la aplicación. Lo cubre el filtro al mostrar.
 
+## Cierre en producción (2026-11-20, hora de Chile)
+
+«Consola» quiere decir que el desarrollador pegó la salida y se vio. «Dicho» quiere decir que lo afirma el desarrollador, sin salida a la vista.
+
+### Consola
+
+| Paso (`despliegue.md` 3.14 B) | Resultado |
+| :---------------------------- | :-------- |
+| 1. Respaldo previo, con `v4.8` activo | `respaldo_20-11-2026_17-19-15.sql`, 1.553.051 bytes, 19 de 19, `CUMPLE D2` (código 0), SHA-256 `D217AAE663C8E6E54C83DCC0A64B89AD7065BFDECA2AE4454E26D7731C4ED10F`. `error.log` registra su rotación a las 20:19:17 UTC, antes del checkout (20:23 UTC) |
+| 2. Etiqueta | `v4.9-sanitizacion-html`, anotada, sobre `6b79f63`, publicada. Diff sin migraciones, `settings.py`, `views.py` ni estáticos |
+| 3. Checkout | Limpio desde `v4.8-historial-clientes` |
+| 4. Dependencia | `pip install -r`: 22 líneas «already satisfied»; `nh3` 0.3.8; `nh3.clean` → `<p>a</p>`; `pip freeze` = `requirements.txt` = 22 |
+| 5. Revisión | `migrate --plan` sin operaciones; `check --deploy` solo W005 y W021 |
+| 6. Reload | **Uno solo**: «Starting uWSGI» a las 17:27:05; seguía siendo el último a las 17:31 |
+| 7.4 Registros | Conteo de `Traceback`, `OperationalError`, «gone away» y `TemplateDoesNotExist` desde el arranque, **después del uso**: 0. `error.log` sin entradas posteriores al arranque |
+
+### Dicho por el desarrollador
+
+- Detalle de un pedido, una cotización y un producto con formato: sin 500.
+- Guardado sin cambios de un producto o pedido que no está entre los 15: sin 500.
+- PDF de una cotización: sin 500.
+
+### No consta
+
+- Si se guardó una copia de las imágenes de los pedidos 46 y 56 (sigue abierto: rescate de esas imágenes).
+- La revisión manual en la réplica a 360 px (3.14 A, paso 1).
+- `DESDE_CL` no se mostró ni se validó en la consola; el filtro funcionó igual. Por eso el paso 6 de 3.14 ahora lo calcula, lo muestra y lo valida.
+
+### Observación sin causa conocida
+
+En el `tail` de `error.log` apareció repetida una línea antigua (2026-10-24 15:36:18,282) dentro del bloque del 2026-10-23. Se anota tal cual, sin interpretar.
+
+### Ajustes a `despliegue.md` 3.14 y por qué
+
+- **`pip show nh3 | head -2` → `grep -E '^(Name|Version):'`.** `head` cierra la tubería después de dos líneas, mientras `pip` todavía escribe, y Python reclama con un `BrokenPipeError`. Es inofensivo, pero en un despliegue un error que no importa enseña a ignorar errores. `grep` lee toda la salida.
+- **Paso 7.2: los 15 pedidos con HTML fuera de la lista**, no solo el 46 y el 56. Guardar cualquiera de ellos hace que `nh3` borre ese formato para siempre. La lista es de la réplica del 2026-11-18: producción puede tener más.
+- **Paso 6: `DESDE_CL` calculado con `TZ=America/Santiago date -d '1 minute ago'`, mostrado y validado.** Si la variable queda vacía, el filtro de 3.6 no sirve como prueba de un solo Reload; mostrarla deja evidencia en la consola.
+
+### Resultado
+
+La 04-07 queda **Terminada · verificada en producción el 2026-11-20**. AUD-03-001: resuelto y verificado en producción (el uso en el navegador es dicho). **Retroceso vigente: `v4.9-sanitizacion-html`** (previo `v4.8-historial-clientes`, caso 1, sin migraciones).
+
 ## Mensaje de commit sugerido
 
 `Épica 4 - Iteración 04-07: sanitiza el HTML enriquecido con nh3 al guardar y al mostrar, guardia de SQL y notas de riesgos; sin desplegar`
