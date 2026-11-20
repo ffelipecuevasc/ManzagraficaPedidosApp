@@ -3,6 +3,7 @@ from datetime import timedelta
 from django import forms
 from django.utils import timezone
 from .models import Pedido, Cliente, Cotizacion, Producto, Pago
+from .sanitizar import sanitizar_html
 
 
 class ErroresAccesiblesMixin:
@@ -39,6 +40,10 @@ class CotizacionForm(ErroresAccesiblesMixin, forms.ModelForm):
             'fecha_emision': forms.DateInput(attrs={'type': 'date'}),
         }
 
+    def clean_detalles(self):
+        # HTML del editor: solo la lista blanca de la 04-07 (D1, al guardar).
+        return sanitizar_html(self.cleaned_data.get('detalles'))
+
 class PedidoForm(ErroresAccesiblesMixin, forms.ModelForm):
     # CAMPO VIRTUAL: No existe en el modelo Pedido, sirve para crear el Pago automáticamente
     abono_inicial = forms.IntegerField(
@@ -65,6 +70,10 @@ class PedidoForm(ErroresAccesiblesMixin, forms.ModelForm):
             'valor_venta': forms.NumberInput(attrs={'class': 'form-control'}),
             # 'estado' y 'prioridad' se eliminan de widgets porque ya no están en el form
         }
+
+    def clean_detalles_pedido(self):
+        # HTML del editor: solo la lista blanca de la 04-07 (D1, al guardar).
+        return sanitizar_html(self.cleaned_data.get('detalles_pedido'))
 
     def clean_abono_inicial(self):
         """Validar que el abono no sea mayor al total."""
@@ -181,3 +190,7 @@ class ProductoForm(ErroresAccesiblesMixin, forms.ModelForm):
             'valor_neto': 'Valor Neto (Sin IVA)',
             'unidad': 'Unidad de Medida',
         }
+
+    def clean_descripcion(self):
+        # HTML del editor (también la creación rápida): solo la lista blanca de la 04-07 (D1).
+        return sanitizar_html(self.cleaned_data.get('descripcion'))

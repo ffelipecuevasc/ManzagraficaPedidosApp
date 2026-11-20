@@ -1,5 +1,5 @@
 {% extends 'pedidos/base.html' %}
-{% load humanize %}
+{% load humanize html_seguro %}
 
 {% block title %}{{ producto.nombre }} - Detalle{% endblock %}
 
@@ -50,7 +50,7 @@
 
                     {% if producto.descripcion %}
                         <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-5 rounded-lg border border-slate-100 dark:border-neutral-800">
-                            {{ producto.descripcion|safe }}
+                            {{ producto.descripcion|html_seguro }}
                         </div>
                     {% else %}
                         <div class="text-center py-8 bg-slate-50 dark:bg-neutral-900/30 rounded-lg border border-dashed border-slate-300 dark:border-neutral-700">

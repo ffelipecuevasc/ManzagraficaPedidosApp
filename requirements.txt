@@ -7,6 +7,7 @@ Django==6.0.1
 django-widget-tweaks==1.5.1
 fonttools==4.61.1
 mysqlclient==2.2.7
+nh3==0.3.8
 pillow==12.1.0
 pycparser==3.0
 pydyf==0.12.1

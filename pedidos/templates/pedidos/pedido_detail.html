@@ -1,5 +1,5 @@
 {% extends 'pedidos/base.html' %}
-{% load humanize %}
+{% load humanize html_seguro %}
 
 {% block title %}Pedido #{{ pedido.id }} - Manza Gráfica{% endblock %}
 
@@ -120,7 +120,7 @@
                             Detalles del Pedido</h3>
 
                         <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-100 dark:border-neutral-800">
-                            {{ pedido.detalles_pedido|safe|default:"Sin especificaciones adicionales." }}
+                            {{ pedido.detalles_pedido|html_seguro|default:"Sin especificaciones adicionales." }}
                         </div>
                     </div>
                 </div>

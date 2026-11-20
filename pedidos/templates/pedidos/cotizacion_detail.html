@@ -1,5 +1,5 @@
 {% extends 'pedidos/base.html' %}
-{% load humanize %}
+{% load humanize html_seguro %}
 
 {% block title %}Cotización #{{ cotizacion.id }} - Manza Gráfica{% endblock %}
 
@@ -147,7 +147,7 @@
                     <div class="mb-8">
                         <label class="text-xs text-slate-500 uppercase mb-1 block">Descripción Técnica</label>
                         <div class="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-900/30 p-4 rounded-lg border border-slate-100 dark:border-neutral-800">
-                            {{ cotizacion.detalles|safe }}
+                            {{ cotizacion.detalles|html_seguro }}
                         </div>
                     </div>
 

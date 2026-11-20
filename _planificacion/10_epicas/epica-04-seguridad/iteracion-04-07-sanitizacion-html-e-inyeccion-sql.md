@@ -1,15 +1,17 @@
 # Iteración 04-07 · Sanitización del HTML enriquecido y revisión de inyección SQL
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-07-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-07-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-07-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-07-cierre.md)).
+- **Estado:** **En revisión, pendiente de despliegue** (2026-11-20). Se ejecutó en local sobre `main` = `4c35eae`. La etiqueta prevista es `v4.9-sanitizacion-html` y el retroceso es `v4.8-historial-clientes`. Detalle en [bitacora-04-07](../../99_bitacora/epica-04-seguridad/bitacora-04-07.md). Antes: ~~Pendiente (redactada, decisiones resueltas)~~. Redactada el 2026-11-17 ([bitacora-04-07-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-07-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-07-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-07-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 03); `definicion-epica-04.md`, alcance 7 y decisión de la épica sobre la 04-07.
 - **Depende de:** nada técnico de las anteriores; comparte `pedido_detail.html` con la 04-01 (otras líneas) y `forms.py` con la 04-08, y se desarrolla sobre lo que dejen. No toca `views.py`. Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → 04-05 → 04-06 → **04-07**.
 - **Es requisito de:** la Épica 09 (operadores, RDA-017) y la 08-07 (registro, sección 1).
-- **RDA relacionadas:** RDA-007; RDA-017 (exige la sanitización antes de los operadores); **RDA-020: propuesto; se escribe al ejecutar la 04-07** (D2; la última vigente es RDA-019; no se agrega a `decisiones.md` hasta entonces).
+- **RDA relacionadas:** RDA-007; RDA-017 (exige la sanitización antes de los operadores); ~~**RDA-020: propuesto; se escribe al ejecutar la 04-07** (D2; la última vigente es RDA-019; no se agrega a `decisiones.md` hasta entonces).~~ **RDA-020 Aceptada y escrita en `decisiones.md` el 2026-11-20.** Corrección: lo de «la última vigente es RDA-019» ya no era cierto, porque RDA-021, RDA-022 y RDA-023 existen desde el 2026-11-18. La RDA-020 tenía el número reservado.
 - **Hallazgos que cierra:** AUD-03-001.
 - **Cambio de esquema:** ninguno. **Sin operación sobre datos** (D4): el HTML ya guardado se revisa en la réplica, pero no se limpia.
 - **Respaldo previo al despliegue:** sí, el de rutina (no hay migración ni limpieza de datos).
-- **Archivos que tocará la ejecución:** `requirements.txt` (dependencia `nh3`; la consulta previa está respondida, ver D2), `pedidos/sanitizar.py` (nuevo), `pedidos/templatetags/` (paquete nuevo con el filtro `html_seguro`; **no existe hoy**, verificado), `pedidos/forms.py` (`clean_<campo>` de `PedidoForm`, `CotizacionForm` y `ProductoForm`), las tres plantillas de detalle, pruebas nuevas y `decisiones.md` (RDA-020, al ejecutar).
+- **Archivos que tocará la ejecución:** `requirements.txt` (dependencia `nh3`; la consulta previa está respondida, ver D2), `pedidos/sanitizar.py` (nuevo), `pedidos/templatetags/` (paquete nuevo con el filtro `html_seguro`; **no existe hoy**, verificado), `pedidos/forms.py` (`clean_<campo>` de `PedidoForm`, `CotizacionForm` y `ProductoForm`), las tres plantillas de detalle, pruebas nuevas y `decisiones.md` (RDA-020, al ejecutar). **Agregados el 2026-11-20:**
+- Las notas «documentado» en `docs/operacion/`: `riesgos-aceptados.md` (nuevo, aprobado por el desarrollador) y `respaldo.md`, sección 7.
+- `docs/operacion/despliegue.md`: sección 3.14 y la fila prevista en la sección 5.
 
 ## Objetivo
 
@@ -41,7 +43,7 @@ La imagen no existe, el navegador ejecuta `onerror` y ese JavaScript corre **con
 
 | Archivo y línea | Uso | Origen del dato |
 | :-------------- | :-- | :-------------- |
-| `pedido_detail.html:115` | `{{ pedido.detalles_pedido\|safe\|default:"…" }}` | Usuario (Summernote) |
+| `pedido_detail.html:115` (hoy `:123`, 2026-11-20) | `{{ pedido.detalles_pedido\|safe\|default:"…" }}` | Usuario (Summernote) |
 | `cotizacion_detail.html:150` | `{{ cotizacion.detalles\|safe }}` | Usuario (Summernote) |
 | `producto_detail.html:53` | `{{ producto.descripcion\|safe }}` | Usuario (Summernote), **también** por la creación rápida `api_crear_producto_rapido` (`views.py:1147`, usa `ProductoForm`) |
 
@@ -62,7 +64,7 @@ La imagen no existe, el navegador ejecuta `onerror` y ese JavaScript corre **con
 
 ### Inyección SQL
 
-- **Única consulta SQL directa de la aplicación:** `utils.py:155-162`, `SELECT SUM(data_length + index_length) FROM information_schema.TABLES WHERE table_schema = %s`, ejecutada con `cursor.execute(sql, [db_name])`: **parametrizada**, y el valor viene de `settings`, no del usuario.
+- **Única consulta SQL directa de la aplicación:** `utils.py:155-162` (hoy `utils.py:301`, 2026-11-20), `SELECT SUM(data_length + index_length) FROM information_schema.TABLES WHERE table_schema = %s`, ejecutada con `cursor.execute(sql, [db_name])`: **parametrizada**, y el valor viene de `settings`, no del usuario.
 - `test_entorno.py:10-12` ejecuta SQL fijo (pruebas, sin datos del usuario).
 - **Ninguno** de `.raw(`, `.extra(`, `RawSQL` en `pedidos/` (búsqueda). El resto pasa por el ORM, que siempre parametriza.
 - `restaurar_bd_mysql` pasa un archivo a `mysql` (`utils.py:121-126`): no es SQL armado con texto, es la restauración (04-04).
@@ -75,7 +77,7 @@ La imagen no existe, el navegador ejecuta `onerror` y ese JavaScript corre **con
 
 - **La definición dice «revisar en la réplica el HTML ya guardado en producción».** La réplica es una copia de producción a la fecha de su último refresco; la revisión vale para esa fecha, y lo escrito después solo se ve en producción (no verificado).
 - **Summernote viene de un CDN** (contra `AGENTS.md`, regla 8.17, «no se agregan recursos nuevos»; no es nuevo). Lo resuelve la 08-07, que depende de esta iteración; aquí no se toca.
-- **`|safe|default`** en `pedido_detail.html:115`: el orden no es un problema de seguridad, pero al sanitizar se revisa que un detalle vacío tras limpiar siga mostrando el texto por defecto.
+- **`|safe|default`** en `pedido_detail.html:115` (hoy `:123`): el orden no es un problema de seguridad, pero al sanitizar se revisa que un detalle vacío tras limpiar siga mostrando el texto por defecto.
 - **El filtro propio necesita un paquete que no existe** (`pedidos/templatetags/`): la redacción inicial lo daba por supuesto; se agrega a los archivos de la ejecución.
 
 ## Alcance
@@ -86,7 +88,10 @@ La imagen no existe, el navegador ejecuta `onerror` y ese JavaScript corre **con
 4. **Revisión de inyección SQL documentada** (sección anterior) y una **prueba-guardia** con el módulo `ast` (D4) que recorre `pedidos/*.py` (sin pruebas ni migraciones) y falla si encuentra `.raw(`, `.extra(`, `RawSQL(` o un `execute(` cuyo primer argumento sea un f-string, una concatenación o `%`/`.format`.
 5. **Revisión del HTML ya guardado en la réplica** (solo lectura, solo conteos, sin copiar contenidos): cuántos registros de cada campo traen etiquetas o atributos fuera de la lista blanca. **No se limpia nada** (D4): si hay contenido peligroso, se anota el conteo y se propone una limpieza aparte, con respaldo previo, como operación sobre datos. **El agente no ejecuta nada contra la base**: entrega la consulta (anexo) y la corre el desarrollador.
 6. **Registrar RDA-020 al ejecutar** (propuesto: «Sanitización del HTML enriquecido con `nh3`, al guardar y al mostrar»).
-7. **Fuera:** limpiar datos ya guardados (D4); sacar Summernote del CDN (08-07); política de contenido (04-09); otros campos de texto sin `|safe` (ya escapados); ampliar la lista blanca (si la revisión de la réplica muestra que hace falta, se detiene y se consulta).
+7. **Notas «documentado» en `docs/operacion/`** (decisión del 2026-11-17, confirmada el 2026-11-20). Son solo documentos y no agregan hechos nuevos:
+   - En `riesgos-aceptados.md`, archivo nuevo aprobado el 2026-11-20: AUD-04-003, AUD-02-030 y «eliminar una cotización sin evento».
+   - En `respaldo.md`, sección 7: AUD-02-023.
+8. **Fuera:** limpiar datos ya guardados (D4); sacar Summernote del CDN (08-07); política de contenido (04-09); otros campos de texto sin `|safe` (ya escapados); ampliar la lista blanca (si la revisión de la réplica muestra que hace falta, se detiene y se consulta).
 
 ## Decisiones (resueltas por el desarrollador, 2026-11-17)
 
@@ -174,13 +179,33 @@ La 04-09 activa CSP en modo **solo reporte**: no bloquea nada, así que **no** p
 - RDA-020 escrita en `decisiones.md` y `requirements.txt` con versión exacta.
 - AUD-03-001 resuelto en la auditoría; verificación de producción hecha.
 
+### Estado de los criterios (2026-11-20)
+
+«Consola» quiere decir que el desarrollador pegó la salida y se vio. «Dicho» quiere decir que lo afirma el desarrollador. «Agente» quiere decir que el agente lo ejecutó en local.
+
+| Criterio | Estado | Evidencia |
+| :------- | :----- | :-------- |
+| Paso 0: `nh3` en PythonAnywhere | Hecho (consola, 2026-11-20) | Venv de la web app, Python 3.13.1. `nh3` 0.3.8 desde una rueda precompilada de 837 kB, sin compilar. CPU 1,17 s (0,931 de usuario y 0,239 de sistema). Venv de 135 M a 137 M (`du`). `nh3.clean('<p>a</p><script>b</script>', tags={'p'})` devolvió `<p>a</p>`. |
+| Respaldo de la réplica | Hecho (consola) | `replica_antes_04-07.sql`: 1.537.213 bytes, 19 de 19, `CUMPLE D2`, SHA-256 `BE900C44…E8AC16`. |
+| Revisión de la réplica con conteos | Hecho (consola; refresco del 2026-11-18 14:26:45) | Ver la bitácora 04-07. 0 con `script`, eventos o `javascript:` en los tres campos. 15 pedidos con etiquetas fuera de la lista, 2 de ellos con `<img>` y `data:`. Cotizaciones y productos: todo en 0. |
+| Tabla de pruebas y guardia SQL en verde | Hecho (agente) | Antes de implementar fallaron las 30 esperadas (`FAILED (failures=30)`, 23 pruebas). Después: `test pedidos` dio 411 pruebas, `OK (expected failures=3)`. `check` sin problemas y `makemigrations --check --dry-run` → `No changes detected`. |
+| `requirements.txt` y RDA-020 | Hecho (agente) | `nh3==0.3.8`, en ASCII y LF, sin BOM. RDA-020 Aceptada en `decisiones.md`. |
+| Revisión manual a 360 px (paso 6) | **Pendiente (desarrollador)** | El agente no abrió un navegador. |
+| AUD-03-001 resuelto y verificación en producción | **Pendiente de despliegue** | Auditoría: «Corregido en código, pendiente de despliegue». Procedimiento en `despliegue.md`, 3.14. |
+
 ## Riesgos
 
-- **Perder formato visible:** con la lista exacta de la barra y sin atributos, lo que usara `div`, `span`, `style` o enlaces se verá sin ese formato. Mitigado con la revisión de la réplica antes de ejecutar; si hay conteos altos, se detiene y se consulta.
+- **Perder formato visible:** con la lista exacta de la barra y sin atributos, lo que usara `div`, `span`, `style` o enlaces se verá sin ese formato. Mitigado con la revisión de la réplica antes de ejecutar; si hay conteos altos, se detiene y se consulta. **Medido el 2026-11-20** en la réplica, al refresco del 2026-11-18. La consola la vio el desarrollador; ver el resultado del paso 2. **15 pedidos** traen etiquetas o atributos fuera de la lista. El desarrollador decidió que no son altos y la D3 no se reabre. Cuatro de ellos son recientes (del 26 de octubre al 6 de noviembre): el editor actual sí genera `div`, `span` y `style`, así que esos formatos se seguirán perdiendo al guardar.
+- **Imágenes incrustadas de los pedidos 46 y 56** (decisión del desarrollador, 2026-11-20). Los dos traen un `<img>` con `data:` de unos 250.000 y 819.000 caracteres:
+  - Desde el despliegue **dejan de mostrar** la imagen, porque el filtro al mostrar la quita.
+  - Si alguien **edita y guarda** uno de ellos, la D1 la **borra de la base**. Lo fija la prueba `test_guardar_elimina_una_imagen_incrustada`.
+  - Mitigación: el desarrollador guarda una copia de las dos imágenes desde producción y no edita esos pedidos.
+  - El rescate queda como pendiente sin destino en `registro-pendientes.md`: una operación sobre datos aparte, con respaldo previo.
+  - Que sean imágenes en base64 y que una «URL a una imagen» sea un `<a href>` es inferido y no está verificado.
 - **Dependencia nueva en un plan gratuito:** si la rueda no instala en PythonAnywhere, la iteración no se despliega; se comprueba en el paso 0, antes de escribir código.
 - **Sanitizar al guardar cambia lo que se guarda:** un usuario que pegue HTML verá menos formato que antes. Esperado.
 - **Datos peligrosos ya guardados siguen en la base (D4):** quedan neutralizados solo al mostrarse por la plantilla. Si algún día se leen por otra vía (una exportación, el admin con otro widget, una pantalla nueva), hay que pasar por el mismo filtro. Mitigado: queda dicho aquí y la limpieza se propone aparte si la revisión lo justifica.
-- **Doble sanitización (D1):** cuesta poco con textos cortos y es idempotente (prueba).
+- **Doble sanitización (D1):** cuesta poco con textos cortos y es idempotente (prueba). **Medido el 2026-11-20** en local, en Windows: un texto de 819.106 caracteres con una imagen incrustada tarda unos 10,6 ms de mediana (mínimo 10,4 y máximo 14,8, en 10 repeticiones). Sanitizar el resultado ya limpio tarda 0,07 ms. En PythonAnywhere no se midió.
 - **Guardia SQL con falsos positivos:** se ajusta a los casos de la tabla; un `execute` con SQL fijo y parámetros pasa.
-- **API de `nh3` inferida:** la firma de `nh3.clean` (`tags`, `attributes`, `clean_content_tags`) viene de mi conocimiento, no se leyó su documentación en esta redacción; se confirma al instalarla (paso 0) y con las pruebas.
+- **API de `nh3` inferida:** la firma de `nh3.clean` (`tags`, `attributes`, `clean_content_tags`) viene de mi conocimiento, no se leyó su documentación en esta redacción; se confirma al instalarla (paso 0) y con las pruebas. **Confirmado el 2026-11-20:** `tags=` se probó en el paso 0, en la consola del servidor. `attributes={}`, `clean_content_tags`, `strip_comments` y `link_rel=None` se probaron con `nh3` 0.3.8 en local: las pruebas de la función pasan.
 - **Un despliegue, un propósito (RDA-007):** va solo, después de la 04-06.

@@ -25,7 +25,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-017 | Dos roles sobre la tabla nativa de usuarios y borrado físico con doble confirmación | Aceptada |
 | RDA-018 | Proyección de pedidos con la biblioteca estándar de Python; sin aprendizaje automático | Aceptada |
 | RDA-019 | Se retira `@transaccion_segura`; los errores de vista los maneja Django y la atomicidad se declara donde se escribe | Aceptada |
-| RDA-020 | (Reservada) Sanitización del HTML enriquecido con `nh3`, al guardar y al mostrar; se escribe al ejecutar la 04-07 | Propuesta |
+| RDA-020 | Sanitización del HTML enriquecido con `nh3`, al guardar y al mostrar | Aceptada |
 | RDA-021 | Sin esperas de 3, 5 ni 7 días: cada despliegue se valida con el día 0 y el plan de retroceso | Aceptada |
 | RDA-022 | Las fallas se corrigen según su gravedad, y la Épica 14 pasa a ser «Mantenimiento», sin AWS | Aceptada |
 | RDA-023 | Lista de clientes: arreglo mínimo en la Épica 14, funciones reales y teléfonos internacionales en la Épica 10 ampliada | Aceptada |
@@ -259,6 +259,32 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 **Decisión:** se retira el decorador de las 17 vistas y se elimina `pedidos/decorators.py` (opción C de la iteración 03-01). Los errores de vista quedan en el manejo nativo de Django (página 500 de la 01-03 y una línea `django.request` con traza). La atomicidad no se agrega en un decorador: se declara con `transaction.atomic` explícito, con la captura **fuera** del bloque, donde se escribe (03-03), y pasa a los servicios en la 07-02 (RDA-015).
 **Alternativas consideradas:** dividir en `transaction.atomic` y un decorador de errores con nombre honesto (descartado: la mitad de errores repetía a Django, y envolver las 17 vistas adelantaba la 03-03 sin revisarlas una por una); un solo decorador con el orden correcto (descartado: juntaba dos responsabilidades y habría que deshacerlo en la 07-02).
 **Consecuencias:** un `pk` inexistente responde 404 en todas las vistas. El registrador de los errores de vista pasa de `pedidos.decorators` a `django.request`, y la vista se lee en la traza (`docs/operacion/despliegue.md`). La 03-01 no deja ninguna vista más protegida que antes: la atomicidad llega en la 03-03, donde también se cierra AUD-01-001.
+
+## RDA-020 · Sanitización del HTML enriquecido con `nh3`, al guardar y al mostrar
+
+- **Fecha:** 2026-11-20. La decisión se tomó el 2026-11-17 (D1 a D4 de la 04-07) y se escribió al ejecutar la iteración.
+- **Estado:** Aceptada (decisión del desarrollador, iteración 04-07)
+
+**Contexto:** tres plantillas de detalle imprimían con `|safe` el HTML que escribe el editor Summernote: `pedido.detalles_pedido`, `cotizacion.detalles` y `producto.descripcion` (AUD-03-001, XSS almacenado). La RDA-017 exige cerrar esto antes de que la Épica 09 agregue operadores. Django no trae un sanitizador.
+
+**Decisión:** se usa `nh3==0.3.8`. La función es una sola, `pedidos/sanitizar.py`, y su importación va dentro de la función (regla 8.9). Se aplica en dos momentos:
+- **Al guardar:** `clean_<campo>` en `PedidoForm`, `CotizacionForm` y `ProductoForm`. Esto cubre también la creación rápida de productos.
+- **Al mostrar:** el filtro `html_seguro` (`pedidos/templatetags/`) reemplaza a `|safe`.
+
+La lista blanca es exactamente lo que ofrece la barra del editor: `p`, `br`, `b`, `strong`, `i`, `em`, `ul`, `ol` y `li`, sin ningún atributo. `script` y `style` se eliminan junto con su contenido. Las demás etiquetas y los comentarios se eliminan, pero su texto se conserva. Los datos ya guardados no se limpian. La inyección SQL queda vigilada por una prueba-guardia con `ast`.
+
+**Alternativas consideradas:**
+- `bleach`: descartado porque sus autores lo declararon obsoleto (inferido de su anuncio, no revisado).
+- Un sanitizador propio con `html.parser`: descartado, porque ahí nacen los errores de seguridad.
+- Texto plano: descartado, porque cambia lo que ve el usuario.
+- Sanitizar en un solo momento: descartado. Solo al mostrar dejaría el HTML peligroso guardado. Solo al guardar no cubriría el admin, la duplicación, la conversión ni los datos anteriores.
+
+**Consecuencias:**
+- `nh3` es una dependencia nueva. Se instala desde una rueda precompilada: 837 kB, 1,17 s de CPU, y el entorno virtual pasa de 135 M a 137 M en el servidor (consola, 2026-11-20).
+- Un despliegue que cambie `requirements.txt` instala `nh3` **antes** del Reload.
+- Se pierde el formato de lo que use `div`, `span`, `style` o enlaces: 13 pedidos de la réplica, al refresco del 2026-11-18. Los pedidos 46 y 56 tienen una imagen incrustada: dejan de mostrarla y, si se editan y se guardan, se borra de la base. La decisión es del desarrollador, 2026-11-20.
+- Sanitizar unos 820.000 caracteres tarda unos 10,6 ms (medido en local, en Windows, no en el servidor).
+- Cualquier pantalla o exportación nueva que muestre estos campos como HTML tiene que usar `html_seguro`.
 
 ## RDA-021 · Sin esperas de 3, 5 ni 7 días: cada despliegue se valida con el día 0 y el plan de retroceso
 
