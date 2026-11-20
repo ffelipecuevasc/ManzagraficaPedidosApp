@@ -1,7 +1,7 @@
 # Iteración 04-05 · Correcciones de configuración
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-05-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-05-cierre.md)).
+- **Estado:** **Implementada, pendiente de despliegue (2026-11-19)** ([bitacora-04-05](../../99_bitacora/epica-04-seguridad/bitacora-04-05.md)). Etiqueta prevista `v4.7-correcciones-config`, sin fecha fija (RDA-021); retroceso `v4.6-restauracion`. **Pendiente del desarrollador:** la revisión manual en la réplica (`despliegue.md`, 3.12 A) y el despliegue (3.12 B). La hibernación (verificación 3) es observación posterior que no bloquea el cierre (decisión del 2026-11-19). D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR`. ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-05-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-05-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-05-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-05-cierre.md)).
 - **Subfase del plan:** 4.5 «Correcciones de configuración» (`plan-de-trabajo.md`; `definicion-epica-04.md`, alcance 5).
 - **Depende de:** 04-02 (también edita `settings.py`: `SEGURIDAD_PRODUCCION`, HSTS, `CSRF_TRUSTED_ORIGINS`) y 04-04 (también edita `views.py` y `utils.py` en la restauración). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → **04-05**.
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito).
@@ -80,7 +80,7 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 3. `BASE_DIR` una sola vez, con sus comentarios ordenados.
 4. `TEMPLATES['DIRS']` vacío (`[]`) hasta la 08-02 (D1), sin la coma suelta.
 5. Importaciones: `F` una vez y sin `HttpResponseForbidden` (`views.py`); sin la importación redundante de `urls.py:2`.
-6. Código comentado de `utils.py:25`.
+6. ~~Código comentado de `utils.py:25`.~~ **Retirado el 2026-11-19** (decisión del desarrollador): la línea ya no existe en `main`.
 7. **Coordinación con la 04-02:** la 04-05 se desarrolla **sobre** la 04-02 ya integrada en `main` y no toca sus bloques (`SEGURIDAD_PRODUCCION`, HSTS, cookies, `CSRF_TRUSTED_ORIGINS`, regla de arranque). Si la 04-02 no está integrada al empezar, se espera.
 8. **Fuera:** modo estricto de `sql_mode` (Épica 06, D4), `TruncMonth` (Épica 06), `MEDIA_ROOT` con `Path`, AUD-05-008 parte (1) (Épica 08), crear contenido en `templates/` (Épica 08, 08-02), traducir comentarios de plantilla de Django.
 
@@ -123,8 +123,29 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 | 2 · Salud de la conexión | Con una `DATABASE_URL` de ejemplo (sin credenciales reales) en el entorno de un subproceso, la configuración resultante trae `CONN_HEALTH_CHECKS=True` y `CONN_MAX_AGE=60`; sin ella, la configuración local no cambia. No hay prueba automática de la reconexión tras hibernar: se observa en producción. |
 | 3 a 6 | Sin prueba propia: los cubre la suite completa y la tabla de Clase 1. |
 
+## Implementación (2026-11-19)
+
+**Decisiones del desarrollador del 2026-11-19 (dichas por él):** consulta previa aprobada para `settings.py`, solo para `conn_health_checks`, `BASE_DIR`, `DIRS` y la coma suelta, sin tocar los bloques de la 04-02; D2 cubre **nueve** pruebas, no seis; el punto 6 del alcance queda **retirado** (la línea `db_port` de `utils.py` ya no existe); la verificación 3 (hibernación) es observación posterior que no bloquea el cierre, y los puntos 1 y 2 se verifican el mismo día.
+
+**Correcciones a la redacción:**
+
+- Líneas al 2026-11-19: import en `views.py:21` (no `:19`); `DIRS` en `settings.py:141` (no `:84`); `conn_max_age` en `:191` (no `:130-136`); `TruncMonth` usado en `views.py:611`.
+- Las pruebas que parchaban `views.settings.BASE_DIR` eran **nueve** en siete archivos: las seis de la redacción (con `test_contrato_error.py:53` y `:66`) más `test_eventos_negocio.py:165`, `test_regresiones.py:257` y `test_restauracion_endurecida.py:168` (este último, en un ciclo de parches de la 04-04). Verificado con `grep`.
+- **El orden del paso 2 no era posible:** con el import viejo, `override_settings` cambia `django.conf.settings` pero `views.py` seguía leyendo el módulo, así que las pruebas habrían usado el `backups/` real. Se cambió primero el import (las pruebas con `mock.patch.object` siguen funcionando sobre `django.conf.settings`, suite en verde) y después las nueve pruebas.
+- La comprobación con `python -c` choca con `AGENTS.md`, sección 5: se hizo con un script en la carpeta temporal del agente.
+- `utils.py:151` lee `BASE_DIR` de `django.conf.settings`: con `override_settings` también usa la carpeta temporal, que es lo buscado.
+
+**Cambios:**
+
+- `pedidos/views.py`: `from django.conf import settings`; `F` una vez; sin `HttpResponseForbidden`.
+- `pedidos/urls.py`: sin `from .views import respaldar_bd, generar_respaldo_bd`.
+- `PedidosApp/settings.py`: `BASE_DIR` una vez con sus comentarios ordenados; `DIRS: []` (D1) sin la coma suelta; `conn_health_checks=True` con `conn_max_age=60` (D3). Bloques de la 04-02 y `archivo_opciones_mysql()` de la 04-03 sin tocar.
+- Pruebas: las nueve pasan a `self.settings(BASE_DIR=...)` (D2); `test_dinero.py` pierde las importaciones `mock` y `views` que quedaron sin uso; nueva `test_configuracion.py` (4 pruebas: `views.settings is django.conf.settings`, `DIRS` vacío, salud de la conexión con `DATABASE_URL` de ejemplo y local sin cambios). Las dos de `DIRS` y de salud se vieron fallar antes del cambio.
+- Resultados antes y después: tabla en la bitácora.
+
 ## Verificación en producción (la hace el desarrollador; **no verificado** hasta entonces)
 
+0. Orden y comandos: `despliegue.md`, 3.12 B (respaldo **antes** del checkout, `check --deploy` antes del Reload, **un solo** Reload confirmado con `Starting uWSGI`).
 1. Respaldo previo (`respaldo.md`).
 2. Tras el Reload: acceso, panel, una lista y el PDF de una cotización responden como antes.
 3. Dejar hibernar la aplicación y volver a entrar: la primera petición responde sin error 500; `server.log` sin `OperationalError` ni «MySQL server has gone away» (que hoy no sabemos si ocurre: no verificado).
@@ -139,7 +160,7 @@ Las demás importaciones de `views.py`, `utils.py`, `models.py`, `forms.py`, `ad
 - Tabla de Clase 1 con los mismos resultados antes y después, copiada en la bitácora.
 - Pruebas en verde, salvo los fallos esperados heredados.
 - Auditoría actualizada (incluida la remisión de AUD-05-008 a AUD-01-009 y la nota de H3).
-- Verificación de producción hecha (puntos 1 a 3).
+- Verificación de producción hecha (puntos 1 ~~a 3~~ y 2, y el 4 el mismo día; el 3 es observación posterior, decisión del 2026-11-19).
 
 ## Riesgos
 

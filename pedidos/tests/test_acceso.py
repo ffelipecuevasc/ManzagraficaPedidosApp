@@ -70,9 +70,9 @@ class CarpetaTemporalMixin:
         carpeta = tempfile.TemporaryDirectory()
         self.addCleanup(carpeta.cleanup)
         self.carpeta = carpeta.name
-        parche = mock.patch.object(views.settings, 'BASE_DIR', carpeta.name)
-        parche.start()
-        self.addCleanup(parche.stop)
+        parche = self.settings(BASE_DIR=carpeta.name)  # 04-05, D2
+        parche.enable()
+        self.addCleanup(parche.disable)
 
 
 # ---------------------------------------------------------------------------

@@ -254,9 +254,9 @@ class BordesDeHoraChileTests(RegresionBase):
         # El panel lista los .sql de BASE_DIR/backups: carpeta temporal vacía.
         carpeta = tempfile.TemporaryDirectory()
         self.addCleanup(carpeta.cleanup)
-        parche = mock.patch.object(views.settings, 'BASE_DIR', carpeta.name)
-        parche.start()
-        self.addCleanup(parche.stop)
+        parche = self.settings(BASE_DIR=carpeta.name)  # 04-05, D2
+        parche.enable()
+        self.addCleanup(parche.disable)
 
     @tag('regresion')
     @expectedFailure  # R8 · AUD-02-003: a las 22:00 de Chile el panel usa el día UTC (el 16). Lo corrige la 06-01.

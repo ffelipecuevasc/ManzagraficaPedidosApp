@@ -4,9 +4,9 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
-from django.db.models import Q, Count, Sum, F, ProtectedError, F, Value, IntegerField
+from django.db.models import Q, Count, Sum, F, ProtectedError, Value, IntegerField
 from django.db.models.functions import TruncMonth, Coalesce
-from django.http import JsonResponse, FileResponse, HttpResponseForbidden, HttpResponse
+from django.http import JsonResponse, FileResponse, HttpResponse
 from django.views.decorators.http import require_POST, require_safe, require_http_methods
 from django.utils import timezone
 from django.template.loader import render_to_string
@@ -18,7 +18,7 @@ from . import envio_unico
 from .utils import (generar_respaldo_mysql, restaurar_bd_mysql, registrar_metricas_diarias,
                     volcado_valido, TOPE_VOLCADO_BYTES, PREFIJO_EMERGENCIA)
 from datetime import timedelta, datetime
-from PedidosApp import settings
+from django.conf import settings
 import json
 import logging
 from decimal import Decimal, InvalidOperation

@@ -561,6 +561,106 @@ docker compose stop
 - Si todavía existe la carpeta del ensayo de la 04-03 (no se informó su borrado), bórrala también.
 - `$env:DB_NAME` no debe mostrar nada.
 
+### 3.12 Despliegue de la 04-05 (`v4.7-correcciones-config`): revisión manual y orden
+
+La 04-05 no cambia datos ni pantallas: cambia cómo se lee la configuración (`django.conf.settings`), agrega `conn_health_checks=True` (solo con `DATABASE_URL`, es decir, en producción), deja `TEMPLATES['DIRS']` vacío y limpia importaciones. Sin migraciones, `pip` ni `collectstatic`. Retroceso: `v4.6-restauracion`.
+
+#### A. Revisión manual en la réplica (PowerShell 7, en tu PC, antes de etiquetar)
+
+Todo en **una sola ventana**. **Nunca** `docker compose down -v` ni `docker volume rm`.
+
+**Paso 1. Proyecto y entorno virtual.**
+
+```powershell
+cd "D:\Trabajo\Proyectos PYTHON\Proyectos Personales\Pedidos Manzagrafica\PedidosApp"
+.\.venv\Scripts\Activate.ps1
+git status --short
+```
+
+Debe verse `(.venv)` al inicio de la línea. `git status` muestra los archivos de la 04-05 sin confirmar (o nada, si ya hiciste el commit). Si no ves `(.venv)`, no sigas.
+
+**Paso 2. Contenedor arriba.**
+
+```powershell
+docker compose up -d
+docker inspect -f "{{.State.Running}}" manzagrafica-mysql
+```
+
+Debe responder `true`. Si no: abre Docker Desktop, espera «Engine running» y repite; si sigue, `docker compose logs db --tail 30` y detente.
+
+**Paso 3. Réplica y paridad.**
+
+```powershell
+$env:DB_NAME = "manzagrafica_replica"
+python scripts\diagnostico\paridad_replica.py
+$LASTEXITCODE
+```
+
+Debe dar `0`. Si da `1`, no sigas (`replica-local.md`, sección 7).
+
+**Paso 4. Arrancar la aplicación.**
+
+```powershell
+python manage.py runserver
+```
+
+Debe terminar en `Starting development server at http://127.0.0.1:8000/`. Si sale un error (`ImproperlyConfigured`, `OperationalError` o `TemplateDoesNotExist`), pégalo y detente: es justo lo que esta revisión busca.
+
+**Paso 5. Pantallas, en el navegador (escritorio).** Inicia sesión en `http://127.0.0.1:8000/` con un superusuario de la réplica y abre, una por una:
+
+| Pantalla | Dirección | Qué debe verse |
+| :------- | :-------- | :------------- |
+| Panel | `/` | Igual que antes: tarjetas, tablas y la fecha del último respaldo de tu `backups/` local. |
+| Lista | `/pedidos/lista/` | La tabla de pedidos con su paginación. |
+| Detalle | Clic en un pedido de la lista (`/<número>/`) | Datos, ítems y pagos del pedido. |
+| Respaldos | `/base_datos/respaldar_bd/` | La lista de respaldos (nombre, fecha y tamaño). **No pulses «Generar respaldo».** |
+| Restaurar | `/base_datos/restaurar_bd/` | El formulario con el campo `RESTAURAR`. **Solo carga: no subas ningún archivo.** |
+| PDF de cotización | `/cotizaciones/lista/` → una cotización → botón del PDF (`/cotizaciones/<número>/pdf/`) | El PDF se abre o se descarga con el formato de siempre. |
+
+Ninguna debe dar error 500 ni «TemplateDoesNotExist». En la ventana de `runserver` cada pantalla debe dar `200` (o `302` al iniciar sesión).
+
+**Paso 6. Las mismas pantallas a 360 px.** En el navegador, `F12` → icono de dispositivo (`Ctrl+Shift+M`) → ancho `360`. Recorre las cinco primeras: sin barra horizontal de la página y con los botones visibles. El PDF no se revisa a 360 px.
+
+**Paso 7. Si algo falla.**
+
+- Error 500 o `TemplateDoesNotExist`: copia las últimas 30 líneas de la ventana de `runserver` (sin datos de clientes) y detente. **No despliegues.**
+- Una pantalla se ve distinta de `v4.6-restauracion`: para comparar, detén `runserver` (`Ctrl+C`), `git stash`, vuelve a arrancar y mira la misma pantalla; después `Ctrl+C` y `git stash pop`. Si la diferencia es de la 04-05, no despliegues.
+- El PDF falla: anota el mensaje; WeasyPrint no cambia en esta iteración, así que avisa antes de seguir.
+
+**Paso 8. Limpieza (siempre).**
+
+```powershell
+# Ctrl+C en la ventana de runserver
+Remove-Item Env:DB_NAME
+$env:DB_NAME
+docker compose stop
+```
+
+`$env:DB_NAME` no debe mostrar nada.
+
+#### B. Orden del despliegue (en este orden, sin saltar pasos)
+
+1. **Respaldo de producción ANTES del checkout** (lección de la 04-04: el respaldo `17-40-30` se tomó con el código nuevo ya activo). Genera y descarga el respaldo desde la web con `v4.6-restauracion` todavía activo (`respaldo.md`, sección 2). En tu PC:
+
+   ```powershell
+   python scripts\verificar_respaldo.py "<ruta del respaldo descargado>"
+   python "C:\Users\ffeli\AppData\Local\Temp\claude\ffeca7695322248c\f2f9a3a5-9ccf-4bf1-97a7-8cd78d581188\scratchpad\despliegue-04-05\revisar_volcado_d2.py" "<ruta del respaldo descargado>"
+   $LASTEXITCODE
+   Get-FileHash "<ruta del respaldo descargado>" -Algorithm SHA256
+   ```
+
+   Debe dar `VÁLIDO` (19 de 19), `RESULTADO: CUMPLE D2` y `0`. Anota nombre, tamaño y SHA-256. Si algo no cumple, no sigas. (Si la carpeta temporal del agente ya no existe, pídele de nuevo `revisar_volcado_d2.py`.)
+2. **Etiqueta** anotada `v4.7-correcciones-config` sobre el commit de la 04-05 y `git push` de la etiqueta (sección 1). Antes, en el PC: `git diff --stat v4.6-restauracion v4.7-correcciones-config` debe mostrar solo `PedidosApp/settings.py`, `pedidos/views.py`, `pedidos/urls.py`, pruebas y documentos; **sin** `requirements.txt`, `pedidos/migrations/` ni `pedidos/static/`.
+3. **Checkout** en el servidor (3.2): `git fetch origin --tags`, `git checkout v4.7-correcciones-config` y `git describe` → `v4.7-correcciones-config`. Sin migraciones, `pip` ni `collectstatic`.
+4. **`check --deploy` antes del Reload** (3.7): solo `W005` y `W021`. Si sale `ImproperlyConfigured` u otra advertencia, **no recargues**: vuelve al checkout de `v4.6-restauracion` (el worker sigue con el código anterior).
+5. **UN solo Reload.** Pulsa Reload **una vez** y confirma el reinicio con el comando «Detectar reinicios de uWSGI» (3.6), con `DESDE_CL` igual a la hora de Chile de un minuto antes del clic. Debe imprimir **una** línea `Starting uWSGI`; anota su hora. **No repitas el Reload** aunque la pantalla tarde: si no aparece la línea tras dos minutos, vuelve a correr el comando, no el Reload. Si después de cinco minutos sigue sin aparecer, detente y avisa.
+6. **Verificaciones del mismo día (RDA-021):**
+   1. El respaldo del paso 1 quedó como respaldo previo (ya verificado).
+   2. Acceso, panel, una lista y el PDF de una cotización responden como antes, sin 500.
+   3. `server.log` y `error.log` sin `Traceback`, `OperationalError`, «MySQL server has gone away» ni `TemplateDoesNotExist` desde la hora de `Starting uWSGI`.
+7. **Observación posterior (no bloquea el cierre, decisión del 2026-11-19):** después de una hibernación, la primera petición responde sin 500 y `server.log` no muestra `OperationalError` ni «gone away». AUD-01-016 queda «corregido en código, pendiente de verificar en producción» hasta esa observación.
+8. **Retroceso:** `retroceso.md`, caso 1, a `v4.6-restauracion` (sin migraciones; no hay datos que deshacer).
+
 ## 4. Primer uso: despliegue de la 00-04 (`v0.1-higiene`)
 
 El paso a paso exacto, con las salidas que hay que anotar, está en `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-05.md`, parte B. Resume lo propio de este despliegue (punto 8 de la lista):
@@ -588,3 +688,4 @@ El paso a paso exacto, con las salidas que hay que anotar, está en `_planificac
 | 2026-11-19 12:10 («Starting» a las 12:10:01 y listo a las 12:10:08, según `server.log`; se citó 11:25, que es la hora del escalón 1: vale el registro) | `v4.4-hsts-semana` | `854cd74` | 04-02, escalón 2 (HSTS 604800; partida y retroceso `v4.3-configuracion-produccion`); sin migraciones, `pip` ni `collectstatic` (`git diff` de `v4.3` a `v4.4`: `settings.py`, la prueba y documentos); `.env` sin cambios; `git describe` en el servidor da `v4.4-hsts-semana` | `b7d320f6…ba11c` (`respaldo_19-11-2026_12-07-14.sql`, `VÁLIDO`, 19 de 19, 1.542.750 bytes) | Correcto, sin retroceso. `check --deploy` después del Reload: solo W005 y W021 (esperadas, sin silenciar). `curl.exe` (15:13 UTC): HTTPS 200 con `max-age=604800` y `csrftoken` `Secure`; HTTP 302 a HTTPS y luego 200, sin bucle. DevTools (captura): `sessionid` HttpOnly, Secure, Lax; `csrftoken` Secure, Lax. Ventana privada sin 403 (dicho); sin «csrf» ni «forbidden» en los registros. Hallazgo nuevo: AUD-05-020 (cookies `_ga` de un dominio de Tailwind). **HSTS de una semana ya emitido: un retroceso no lo borra de los navegadores hasta 7 días.** Pruebas previas: 327, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente es `v4.4-hsts-semana`** |
 | 2026-11-19 14:11 («Starting uWSGI» a las 14:11:27, hora de Chile; 17:11:24 UTC, según `server.log`; se dijo 14:12, vale el registro) | `v4.5-credenciales` | `81e0ebf` | 04-03 (contraseña de MySQL en un archivo temporal de opciones y `SECRET_KEY` obligatoria; partida y retroceso `v4.4-hsts-semana`); sin migraciones, `pip` ni `collectstatic` (diff `v4.4…v4.5`: código solo `utils.py` y `settings.py`); `.env.example` editado por el desarrollador en `81e0ebf` | `0d93d4eb…9740` (`respaldo_19-11-2026_14-06-52.sql`, `VÁLIDO`, 19 de 19, 1.545.575 bytes) | Correcto, sin retroceso. **Antes:** clave de producción con largo 61, 25 distintos y sin `django-insecure-`; ensayo en la réplica `CUMPLE` (4999 filas antes y después, 0 procesos con contraseña, 0 residuales); `git describe` = `v4.5-credenciales`; `check --deploy` a las 14:10, solo W005 y W021. **Después:** `check --deploy` solo W005 y W021; respaldo desde la web a las 14:13 (`respaldo_19-11-2026_14-13-28.sql`, `VÁLIDO`, 19 de 19, 1.545.818 bytes, `6a5af0bb…df87`; descarga dicha); `server.log` y `error.log` sin `mysqldump`, `mysql_opciones`, `Traceback` ni `OSError` del 2026-11-19; `ls /tmp/mysql_opciones_*` en la consola → 0 (no mide el `/tmp` del worker). **No verificado:** permisos del archivo temporal. Restauración en producción no probada por diseño (la cubre el ensayo). Pruebas previas: 342, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente es `v4.5-credenciales`** |
 | 2026-11-19 17:22 (checkout a las 20:21 UTC; arranques de uWSGI a las 17:22:49, 17:29:34 y 17:41:57, hora de Chile, según `server.log`: los tres son Reloads pulsados por el desarrollador, que repitió el Reload creyendo que los anteriores no se habían ejecutado (dicho); ninguno de origen desconocido) | `v4.6-restauracion` | `58d7c3d` | 04-04 (restauración endurecida: tope de 20 MB, estructura D2, `RESTAURAR`, constancia en `server.log`, `emergencia_` fuera de la rotación, sin `.sql` vacío ni subida huérfana; partida y retroceso `v4.5-credenciales`); sin migraciones, `pip` ni `collectstatic` (diff `v4.5…v4.6`: código solo `utils.py`, `views.py`, `restaurar_bd.html` y `respaldar_bd.html`; sin `requirements.txt`, migraciones ni estáticos) | **Último respaldo con `v4.5`:** `respaldo_19-11-2026_14-13-28.sql` (`6a5af0bb…df87`, `VÁLIDO`, `CUMPLE D2`). **Salvedad:** `respaldo_19-11-2026_17-40-30.sql` (`457a9e8a…998b`, `VÁLIDO`, `CUMPLE D2`, 1.547.705 bytes) se generó con `v4.6` ya activo (después del Reload de las 17:22:49): **no es un respaldo previo con el código anterior** | Correcto, sin retroceso. **Antes:** D2 `CUMPLE` sobre la réplica y sobre `respaldo_19-11-2026_14-13-28.sql`; ensayo en la réplica `CUMPLE` (restauración 6,2 s; inválido y sin `RESTAURAR` rechazados; 1 `emergencia_` con D2; subida borrada; 4999 → 5000 filas, solo eventos +1; 0 contraseñas en argumentos; 0 residuales); pantalla en escritorio y a 360 px revisada (dicho); `git describe` = `v4.6-restauracion`; `check --deploy` solo W005 y W021; `emergencia_` en `backups/`: 0. **Después:** `check --deploy` solo W005 y W021; `vacio.sql` (0 bytes) con `RESTAURAR` rechazado con el mensaje fijo (dicho), `emergencia_` sigue en 0 y sin «Restauración» en `server.log`; respaldo desde la web `respaldo_19-11-2026_17-48-17.sql` (`b804277d…b622`, `VÁLIDO`, 19 de 19, `CUMPLE D2`, 1.547.831 bytes); registros del día sin `Traceback`, `OSError`, `mysqldump` ni `mysql_opciones`; `/tmp/mysql_opciones_*` → 0 (consola, no el `/tmp` del worker). Sin restauración real en producción, por diseño. Pruebas previas: 375, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente (`v4.7-correcciones-config`) es `v4.6-restauracion`** |
+| **Implementada, pendiente de despliegue** (revisión manual en la réplica pendiente del desarrollador, 3.12 A; sin fecha fija, RDA-021) | `v4.7-correcciones-config` (prevista) | por fijar | 04-05 (correcciones de configuración: `django.conf.settings` en `views.py`, `conn_health_checks=True` con `conn_max_age=60`, `BASE_DIR` una vez, `DIRS` vacío, importaciones; partida y retroceso `v4.6-restauracion`); sin migraciones, `pip` ni `collectstatic`; cambia `settings.py`, `views.py`, `urls.py` y pruebas | Pendiente: de rutina, **antes del checkout**, `VÁLIDO` y `CUMPLE D2` (3.12 B, paso 1) | Pendiente. **Antes:** `check --deploy` tras el checkout, solo W005 y W021. **Un solo Reload**, confirmado con `Starting uWSGI`. **Después:** acceso, panel, lista y PDF sin 500; registros sin errores nuevos. Hibernación: observación posterior (AUD-01-016). Pruebas previas: 379, `OK (expected failures=4)` (en local). **Retroceso:** `retroceso.md`, caso 1, a `v4.6-restauracion` |

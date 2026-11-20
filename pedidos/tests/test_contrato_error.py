@@ -50,7 +50,7 @@ class MensajesDeErrorSeVenTests(MensajesBase):
 
     def test_el_error_de_la_restauracion_fallida_se_ve_sin_detalles_tecnicos(self):
         with tempfile.TemporaryDirectory() as carpeta, \
-                mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
+                self.settings(BASE_DIR=carpeta), \
                 mock.patch.object(views, 'generar_respaldo_mysql', side_effect=ayudas.respaldo_de_emergencia(carpeta)), \
                 mock.patch.object(views, 'restaurar_bd_mysql', side_effect=RuntimeError(TEXTO_TECNICO)), \
                 self.assertLogs('pedidos.views', 'ERROR'):
@@ -63,7 +63,7 @@ class MensajesDeErrorSeVenTests(MensajesBase):
 
     def test_la_restauracion_exitosa_dibuja_su_tarjeta_una_sola_vez(self):
         with tempfile.TemporaryDirectory() as carpeta, \
-                mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
+                self.settings(BASE_DIR=carpeta), \
                 mock.patch.object(views, 'generar_respaldo_mysql', side_effect=ayudas.respaldo_de_emergencia(carpeta)), \
                 mock.patch.object(views, 'restaurar_bd_mysql'):
             respuesta = self.client.post('/base_datos/restaurar_bd/', ayudas.datos_restaurar(), follow=True)

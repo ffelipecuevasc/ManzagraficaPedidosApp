@@ -8,13 +8,11 @@ import tempfile
 from collections import Counter
 from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
-from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
 
-from pedidos import views
 from pedidos.forms import PedidoForm
 from pedidos.models import HistorialBD, Pago, Pedido
 
@@ -291,9 +289,9 @@ class ConjuntoConocidoMixin:
         # una carpeta temporal vacía para no depender de los archivos del equipo.
         carpeta = tempfile.TemporaryDirectory()
         self.addCleanup(carpeta.cleanup)
-        parche = mock.patch.object(views.settings, 'BASE_DIR', carpeta.name)
-        parche.start()
-        self.addCleanup(parche.stop)
+        parche = self.settings(BASE_DIR=carpeta.name)  # 04-05, D2
+        parche.enable()
+        self.addCleanup(parche.disable)
 
     def get(self, ruta):
         with congelar_hora():

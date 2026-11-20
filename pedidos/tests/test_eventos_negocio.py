@@ -151,7 +151,7 @@ class EventosBaseDeDatosTests(EventosNegocioBase):
     def test_restauracion_simulada_con_su_usuario(self):
         # Sin ejecutar mysql: se simulan el respaldo previo y la restauración.
         with tempfile.TemporaryDirectory() as carpeta, \
-                mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
+                self.settings(BASE_DIR=carpeta), \
                 mock.patch.object(views, 'generar_respaldo_mysql') as respaldo, \
                 mock.patch.object(views, 'restaurar_bd_mysql') as restaurar:
             respaldo.side_effect = ayudas.respaldo_de_emergencia(carpeta)  # 04-04: respaldo previo válido
@@ -162,7 +162,7 @@ class EventosBaseDeDatosTests(EventosNegocioBase):
 
     def test_restauracion_fallida_no_deja_evento(self):
         with tempfile.TemporaryDirectory() as carpeta, \
-                mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
+                self.settings(BASE_DIR=carpeta), \
                 mock.patch.object(views, 'generar_respaldo_mysql', side_effect=ayudas.respaldo_de_emergencia(carpeta)), \
                 mock.patch.object(views, 'restaurar_bd_mysql', side_effect=RuntimeError('mysql falló')):
             self.ejecutar('post', '/base_datos/restaurar_bd/', ayudas.datos_restaurar())

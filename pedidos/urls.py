@@ -1,5 +1,4 @@
 from django.urls import path
-from .views import respaldar_bd, generar_respaldo_bd
 from . import views
 
 urlpatterns = [

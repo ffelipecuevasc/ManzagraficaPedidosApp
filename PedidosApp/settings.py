@@ -16,18 +16,12 @@ from dotenv import load_dotenv
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
-# Cargar variables de entorno desde el archivo .env
-# 1. Primero definimos la Ruta Base (El mapa)
+# Ruta base del proyecto (una sola vez, 04-05, AUD-02-016). Las rutas se construyen así: BASE_DIR / 'subcarpeta'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 2. Luego construimos la ruta al archivo .env
+# Variables de entorno desde el archivo .env de la raíz del proyecto.
 env_path = BASE_DIR / '.env'
-
-# 3. Finalmente cargamos el archivo usando esa ruta exacta
 load_dotenv(env_path)
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -138,8 +132,8 @@ ROOT_URLCONF = "PedidosApp.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates']
-        ,
+        # Vacío hasta la 08-02 (04-05, D1): las plantillas viven en pedidos/templates (APP_DIRS).
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -189,6 +183,9 @@ if DATABASE_URL:
     DATABASES['default'] = dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=60,
+        # Revisa la conexión persistente antes de reutilizarla, por si MySQL la cerró
+        # durante la hibernación (04-05, D3, AUD-01-016).
+        conn_health_checks=True,
         ssl_require=False
     )
 

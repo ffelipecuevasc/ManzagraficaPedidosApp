@@ -164,9 +164,11 @@ class RestaurarVistaBase(TestCase):
         self.client.force_login(self.usuario)
         self.carpeta = tempfile.mkdtemp()
         self.addCleanup(lambda: __import__('shutil').rmtree(self.carpeta, ignore_errors=True))
+        ajuste = self.settings(BASE_DIR=self.carpeta)  # 04-05, D2
+        ajuste.enable()
+        self.addCleanup(ajuste.disable)
         for objetivo, nombre, opciones in (
-                (views.settings, 'BASE_DIR', {'new': self.carpeta}),
-                (views, 'generar_respaldo_mysql', {'side_effect': ayudas.respaldo_de_emergencia(self.carpeta)}),
+                (views,'generar_respaldo_mysql', {'side_effect': ayudas.respaldo_de_emergencia(self.carpeta)}),
                 (views, 'restaurar_bd_mysql', {})):
             parche = mock.patch.object(objetivo, nombre, **opciones)
             simulado = parche.start()

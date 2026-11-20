@@ -54,7 +54,7 @@ class CapturasRespaldoTests(CapturasBase):
 
     def restaurar(self, carpeta, **parches):
         # Volcado válido y confirmación escrita (04-04, D2 y D3).
-        with mock.patch.object(views.settings, 'BASE_DIR', carpeta), \
+        with self.settings(BASE_DIR=carpeta), \
                 mock.patch.object(views, 'generar_respaldo_mysql', **parches.get('respaldo', {})), \
                 mock.patch.object(views, 'restaurar_bd_mysql', **parches.get('restaurar', {})), \
                 self.assertLogs('pedidos.views', 'ERROR') as registros:
