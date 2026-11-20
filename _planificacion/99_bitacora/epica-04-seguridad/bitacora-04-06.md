@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-11-19/20
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** Implementada, pendiente de despliegue. Etiqueta prevista `v4.8-historial-clientes`, sin fecha fija (RDA-021); retroceso `v4.7-correcciones-config`. **Pendiente del desarrollador:** respaldo de la réplica, `SHOW CREATE TABLE` antes y después, `migrate` en la réplica y revisión manual (`despliegue.md`, 3.13 A); después, el despliegue (3.13 B).
+- **Estado final:** **Completada y verificada en producción (2026-11-20, Reload 10:22:07 hora de Chile)**: `v4.8-historial-clientes` (`8f4e396`), `0008` aplicada. Retroceso vigente `v4.8-historial-clientes` (previo `v4.7-correcciones-config`). Ver «Cierre en producción». ~~Implementada, pendiente de despliegue. Etiqueta prevista `v4.8-historial-clientes`, sin fecha fija (RDA-021); retroceso `v4.7-correcciones-config`. Pendiente del desarrollador: respaldo de la réplica, `SHOW CREATE TABLE` antes y después, `migrate` en la réplica y revisión manual (`despliegue.md`, 3.13 A); después, el despliegue (3.13 B).~~
 - **Regla:** solo conteos; ningún nombre, teléfono ni monto de clientes.
 
 ## Resumen
@@ -82,3 +82,24 @@ Nota: la base local por defecto (sin `DB_NAME`) muestra `0007` sin aplicar; no s
 - `mysql.W002` (modo estricto) aparece en `migrate --plan`: conocido, AUD-02-020, Épica 06.
 - No se vio: el navegador, el `.env`, los respaldos y el servidor.
 - D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR`.
+
+## Cierre en producción (2026-11-20, hora de Chile; cierre documental, solo documentos)
+
+**Verificado en consola (salidas pegadas por el desarrollador):**
+
+- Respaldo previo `respaldo_20-11-2026_10-16-37.sql`: 1.549.877 bytes, 19 de 19 tablas, `CUMPLE D2`, SHA-256 `524C32FC27EFD0ECF451E342941BA0B34D2EAA6470E555ED4B14D51123AB09FE`.
+- Etiqueta anotada `v4.8-historial-clientes` sobre `8f4e396`, publicada.
+- Servidor: `migrate --plan` solo `0008`; `check --deploy` solo W005 y W021; `migrate` OK, `[X] 0008`.
+- **Un solo Reload:** `Starting uWSGI` 10:22:07, único hasta las 10:54. Conteo de `Traceback`, `OperationalError`, «gone away» y `TemplateDoesNotExist` desde el arranque: **0**, a las 10:27, **antes** del uso en navegador.
+
+**Dicho por el desarrollador (no visto):** panel y `/clientes/lista/` sin 500; la confirmación de eliminar un cliente con pedidos muestra la advertencia; no se pulsó eliminar. **No hay conteo de errores posterior al uso.**
+
+**Réplica:** durante la revisión se borró por accidente un cliente sin historial (825 → 824 clientes; sin nombre). No afecta producción. La revisión manual de 3.13 A (`SHOW CREATE TABLE` y 360 px) no se informó en detalle.
+
+**Auditoría:** AUD-02-001 pasa a «Resuelto · verificado en producción (2026-11-20)».
+
+**Correcciones a `despliegue.md`:** 3.13 A, paso 5, citaba un «script de conteos» que no existe en el repositorio: ahora usa `SELECT COUNT(*)` por tabla. 3.13 B, paso 6: advierte que `DESDE_CL` lleva la fecha real y que sin «`DESDE_CL válido`» la consulta no sirve.
+
+**Hallazgos de la lista de clientes y sus destinos:** registrados en `auditoria-tecnica.md` (AUD-05-021 a AUD-05-024) y en RDA-023 (`decisiones.md`), decididos por el desarrollador el 2026-11-20.
+
+**Siguen abiertos:** D5 de la 04-03 (`PENDIENTE_DESARROLLADOR`), AUD-01-016 punto 3 (observación tras una hibernación) y renovar la web app antes del 2026-12-13.

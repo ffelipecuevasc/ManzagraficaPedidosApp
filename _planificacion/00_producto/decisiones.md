@@ -28,6 +28,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-020 | (Reservada) Sanitización del HTML enriquecido con `nh3`, al guardar y al mostrar; se escribe al ejecutar la 04-07 | Propuesta |
 | RDA-021 | Sin esperas de 3, 5 ni 7 días: cada despliegue se valida con el día 0 y el plan de retroceso | Aceptada |
 | RDA-022 | Las fallas se corrigen según su gravedad, y la Épica 14 pasa a ser «Mantenimiento», sin AWS | Aceptada |
+| RDA-023 | Lista de clientes: arreglo mínimo en la Épica 14, funciones reales y teléfonos internacionales en la Épica 10 ampliada | Aceptada |
 
 ---
 
@@ -301,3 +302,28 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 - ~~La carpeta `10_epicas/epica-14-nube-aws/` conserva su nombre: moverla exige consulta previa (`AGENTS.md`, sección 6). Renombrarla (propuesta: `epica-14-mantenimiento`): `PENDIENTE_DESARROLLADOR`.~~ **Actualización 2026-11-18 (aprobado por el desarrollador):** las carpetas se renombraron a `epica-14-mantenimiento` en `10_epicas` y `99_bitacora` con `git mv`; `_planificacion/README.md`, sección 2.2, ya usa ese nombre.
 - Cada falla crítica agrega un despliegue y retrasa el resto del plan lo que dure su arreglo. Con la RDA-021, cada despliegue se valida con el día 0 y el plan de retroceso, sin vigilancia posterior.
 - Las fallas ya asignadas a otras épicas (por ejemplo AUD-05-001 y AUD-05-005 a AUD-05-008, a la Épica 08) se quedan donde están; si deben pasar a la Épica 14: `PENDIENTE_DESARROLLADOR`. Tampoco está decidido cuándo se ejecutan las iteraciones de Media y Baja de la Épica 14 (entre épicas, al cerrar cada una o al final del plan), ni si una falla Alta se numera en la Épica 14 o en la de su tema.
+
+## RDA-023 · Lista de clientes: arreglo mínimo en la Épica 14, funciones reales y teléfonos internacionales en la Épica 10 ampliada
+
+- **Fecha:** 2026-11-20
+- **Estado:** Aceptada (decisión del desarrollador, dicha por él)
+
+**Contexto:** en el día 0 de la 04-06 (`v4.8-historial-clientes`), el desarrollador revisó `/clientes/lista/` y encontró AUD-05-021 a AUD-05-024: «Filtros» y «Exportar» no hacen nada; la búsqueda solo corre al enviar y no tiene ayuda; la columna de pedidos no cuenta cotizaciones; «Clientes Activos» cuenta a quien tiene al menos un pedido de cualquier fecha, y las tres tarjetas se calculan sobre el listado filtrado. Además pidió cambiar cómo se ingresan y guardan los teléfonos.
+
+**Decisión:**
+
+1. **Arreglo mínimo → Épica 14, tema Clientes** (fallas Baja, RDA-022): las tarjetas pasan a «Registrados» y «Con pedidos», calculadas sobre **todos** los clientes (no sobre el filtro); los botones «Filtros» y «Exportar» dejan de parecer funciones disponibles (inertes) mientras no existan; la búsqueda muestra una ayuda de uso.
+2. **Funciones reales → Épica 10 ampliada, tema Clientes**, después de la 06-06 y de las Épicas 07 y 08: búsqueda en vivo; filtros «con historial», «sin historial» y «con saldo pendiente»; orden por nombre o por más pedidos; exportar.
+3. **Teléfonos → iteración propia de la Épica 10, antes de «mejor coincidencia»:** en el formulario, un selector de país y un cuadro para el número; en la base, **una sola columna** en formato internacional sin espacios (`+56912345678`). Cambia la regla vigente de formato de teléfono y exige migrar los ~824 teléfonos existentes; los que no se puedan interpretar pasan a revisión manual (lista con conteos, sin datos personales en la documentación).
+4. **Preguntas al cliente** (`PENDIENTE_CLIENTE`, registro, sección 2): qué filtrar, qué exportar, quién puede exportar y qué significa «cliente activo».
+
+**Verificado en el código (2026-11-20):** `Cliente.telefono` es `CharField(max_length=20)` (`models.py:10`): `+56912345678` ocupa 12 caracteres y el máximo internacional (E.164, 15 dígitos más `+`) ocupa 16, así que **no hace falta cambiar el largo** (lo que sería Clase 3). `Pedido` no guarda el teléfono: lo lee del cliente. `Pedido` sí guarda fecha: `fecha_solicitud` (`DateTimeField`, editable, por defecto la hora actual) y `fecha_entrega` (`DateField`, opcional); no tiene fecha de creación automática.
+
+**Alternativas consideradas:** hacer todo en la Épica 14 o todo en la Épica 10 (descartadas por el desarrollador: el arreglo mínimo va antes y las funciones nuevas esperan a la arquitectura y al frontend).
+
+**Consecuencias:**
+
+- No existe en el repositorio una regla llamada «CLI-01». La regla de formato vigente está en `AGENTS.md`, regla 7.1 (`+56 9 XXXX XXXX`, para mostrar) y en el texto de ayuda «Formato WhatsApp» del campo. `AGENTS.md` es protegido: el cambio de la regla 7.1, si corresponde, lo hace el desarrollador (`PENDIENTE_DESARROLLADOR`).
+- La conversión de los teléfonos reescribe datos de ~824 filas: no cambia el esquema, pero exige respaldo previo, ensayo en la réplica y conteos antes y después; la forma (migración de datos o comando de gestión) se decide al redactar la iteración.
+- La Épica 10 crece; su definición se actualiza al redactarla. Ninguna de estas iteraciones está redactada.
+- El destino de AUD-05-023 (contar cotizaciones en la columna) no se fijó: `PENDIENTE_DESARROLLADOR`.

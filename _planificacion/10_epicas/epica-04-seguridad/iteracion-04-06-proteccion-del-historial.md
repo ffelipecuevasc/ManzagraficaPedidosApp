@@ -1,7 +1,7 @@
 # Iteración 04-06 · Protección del historial ante borrados en cascada
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **Implementada, pendiente de despliegue (2026-11-20)** ([bitacora-04-06](../../99_bitacora/epica-04-seguridad/bitacora-04-06.md)). Etiqueta prevista `v4.8-historial-clientes`, sin fecha fija (RDA-021); retroceso `v4.7-correcciones-config`. `0008` creada, Clase 1 confirmada (`sqlmigrate`: `(no-op)`). **Pendiente del desarrollador:** respaldo de la réplica, `SHOW CREATE TABLE` antes y después, `migrate` en la réplica y revisión manual (`despliegue.md`, 3.13 A), y el despliegue (3.13 B). D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR`. ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-06-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-06-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-06-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-06-cierre.md)).
+- **Estado:** **Completada y verificada en producción (2026-11-20, Reload 10:22:07 hora de Chile)**: `v4.8-historial-clientes` (`8f4e396`), con `0008` aplicada. **Retroceso vigente: `v4.8-historial-clientes`** (el previo es `v4.7-correcciones-config`). Detalle en «Cierre en producción» y en [bitacora-04-06](../../99_bitacora/epica-04-seguridad/bitacora-04-06.md). ~~Implementada, pendiente de despliegue (2026-11-20). Etiqueta prevista `v4.8-historial-clientes`, sin fecha fija (RDA-021); retroceso `v4.7-correcciones-config`. `0008` creada, Clase 1 confirmada (`sqlmigrate`: `(no-op)`). Pendiente del desarrollador: respaldo de la réplica, `SHOW CREATE TABLE` antes y después, `migrate` en la réplica y revisión manual (`despliegue.md`, 3.13 A), y el despliegue (3.13 B).~~ D5 de la 04-03 sigue `PENDIENTE_DESARROLLADOR`. ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-06-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-06-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-06-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-06-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 02); `definicion-epica-04.md`, alcance 6.
 - **Depende de:** 04-01 (puede tocar `eliminar_cliente` al exigir POST; la 04-06 parte de lo que deje). Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → 04-02 → 04-03 → 04-04 → 04-05 → **04-06**.
 - **RDA relacionadas:** RDA-007; RDA-017 (borrado físico con doble confirmación, **para usuarios**, Épica 09; ver «Contradicciones»).
@@ -149,8 +149,22 @@ Fallos esperados: uno menos que los que deje la 04-05 (R14 sale de la lista; tra
 4. `server.log` sin errores nuevos.
 - **No verificado:** cuántos clientes de producción tienen historial ni si existen clientes sin pedidos ni cotizaciones (se puede contar en la réplica, solo conteos).
 
+### Cierre en producción (2026-11-20, hora de Chile)
+
+| Punto | Resultado | Fuente |
+| :---- | :-------- | :----- |
+| 1. Respaldo previo | `respaldo_20-11-2026_10-16-37.sql`: 1.549.877 bytes, 19 de 19 tablas, `CUMPLE D2`, SHA-256 `524C32FC27EFD0ECF451E342941BA0B34D2EAA6470E555ED4B14D51123AB09FE` | Consola (pegado por el desarrollador) |
+| Etiqueta | `v4.8-historial-clientes`, anotada, sobre `8f4e396`, publicada | Consola |
+| 2. Migración | `migrate --plan`: solo `0008`; `check --deploy`: solo W005 y W021; `migrate` OK y `[X] 0008` | Consola |
+| Reload | **Uno solo**: `Starting uWSGI` 10:22:07, único hasta las 10:54 | Consola (`server.log`) |
+| 4. Registros | `Traceback`, `OperationalError`, «gone away» y `TemplateDoesNotExist` desde el arranque: **0**, contado a las 10:27, **antes** del uso en navegador. **No hay conteo posterior al uso** | Consola |
+| 3. Pantallas | Panel y `/clientes/lista/` sin 500; la confirmación de eliminar un cliente con pedidos muestra la advertencia de D2; no se pulsó eliminar | Dicho por el desarrollador |
+
+**Salvedades:** la revisión manual de 3.13 A (`SHOW CREATE TABLE` antes y después y las pantallas a 360 px en la réplica) no se informó al agente; durante el trabajo en la réplica se borró por accidente un cliente sin historial (825 → 824, sin nombre; no afecta producción). El criterio de término «revisión manual en la réplica hecha» queda **sin evidencia informada**; la iteración se cierra por decisión del desarrollador (2026-11-20).
+
 ## Plan de retroceso
 
+- **Desde el 2026-11-20**, `v4.8-historial-clientes` es la versión estable vigente y el destino de retroceso del despliegue siguiente. Para deshacer la propia 04-06:
 - **Vigente (decisión del desarrollador, 2026-11-19):** `retroceso.md`, caso 1: volver a `v4.7-correcciones-config` y Reload. La `0008` es Clase 1 (`sqlmigrate` sin SQL): MySQL no cambió y el código anterior la ignora. `python manage.py migrate pedidos 0007` es **opcional**, solo si estorba (caso 2, que rige también para Clase 1), y en ese caso **antes** de volver el código. Si los datos se dañaran, el respaldo previo y el caso 3. Paso a paso: `despliegue.md`, 3.13 B, paso 8.
 - ~~`retroceso.md`, caso 2: `python manage.py migrate pedidos 0007` y luego volver a la etiqueta anterior y Reload. Orden: primero revertir la migración, después el código (el código viejo no conoce `0008`).~~
 

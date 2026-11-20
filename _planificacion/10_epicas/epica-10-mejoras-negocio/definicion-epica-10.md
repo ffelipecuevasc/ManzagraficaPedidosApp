@@ -61,3 +61,4 @@ Las mejoras las idea y elige **el desarrollador**, sin una entrevista previa con
 ## Notas
 
 - **2026-10-27:** creada a pedido del desarrollador. Las ideas A a I son propuestas del asistente; el desarrollador puede descartarlas o agregar otras en 10-01.
+- **2026-11-20 (decisión del desarrollador, RDA-023):** la épica se amplía con el **tema Clientes**, después de la 06-06 y de las Épicas 07 y 08: búsqueda en vivo; filtros con o sin historial y con saldo pendiente; orden por nombre o por más pedidos; exportar (AUD-05-021, AUD-05-022). Y una **iteración propia de teléfonos** (selector de país y número; una columna en formato internacional `+56912345678`; migración de ~824 teléfonos, los no interpretables a revisión manual), antes de «mejor coincidencia» (nombre que no aparece en esta definición: `PENDIENTE_DESARROLLADOR` a qué se refiere). Sin redactar.

@@ -70,3 +70,4 @@ Ninguno: la épica queda abierta. Cada iteración trae sus propios criterios de 
 
 - **2026-10-27:** creada a pedido del desarrollador, que pidió sacar de la Épica 06 todo lo de S3 y reunir lo de AWS al final del plan.
 - **2026-11-18:** RDA-022. La épica pasa a «Mantenimiento», abierta siempre; AWS sale a `producto.md`; la 14-01 pasa a ser el arreglo urgente de pagos ([bitacora-04-replanificacion](../../99_bitacora/epica-04-seguridad/bitacora-04-replanificacion.md)).
+- **2026-11-20 (decisión del desarrollador, RDA-023):** **tema Clientes**, arreglo mínimo de `/clientes/lista/`: tarjetas «Registrados» y «Con pedidos» sobre todos los clientes, botones «Filtros» y «Exportar» inertes y ayuda de búsqueda (AUD-05-021, AUD-05-022, AUD-05-024). Sin número ni redacción.
