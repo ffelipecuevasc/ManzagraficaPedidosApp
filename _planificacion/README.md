@@ -109,7 +109,7 @@ Una subcarpeta por épica, con el mismo nombre que la carpeta de la épica en `1
 - Las auditorías se agregan al final y nunca se borran ni se reescriben.
 - **Antes de agregar una auditoría, busca el último número usado en el archivo y suma uno.** Los IDs de hallazgo tienen el formato `AUD-NN-MMM` (auditoría y correlativo) y nunca se reutilizan.
 - Un hallazgo se cierra indicando dónde: «Resuelto en XX-YY» o «Resuelto en RDA-XXX», con la evidencia mínima. «Riesgo aceptado» solo si el desarrollador lo aceptó y consta dónde.
-- Severidad: **Crítica** (rechazo o pérdida silenciosa de datos comerciales en producción; se corrige con un arreglo urgente de despliegue propio, antes de cualquier otra iteración, RDA-022), Alta (bloquea la publicación o afecta al usuario o al negocio), Media (afecta calidad o rendimiento) y Baja (mejora). Las fallas Alta se corrigen en la siguiente iteración; las Media y Baja, en la Épica 14, agrupadas por tema.
+- Las fallas Alta se corrigen en la siguiente iteración; las Media y Baja, en la Épica 14, agrupadas por tema. La Épica 14 recibe también las mejoras puntuales que cumplen el criterio de la RDA-024: un pedido acotado del cliente o del dueño, que cabe en una iteración y un despliegue, sin rediseño y sin depender de las Épicas 07 u 08.
 
 ### 5.4 Bitácoras
 
