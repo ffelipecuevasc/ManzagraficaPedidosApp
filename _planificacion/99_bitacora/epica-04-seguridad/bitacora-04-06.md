@@ -68,15 +68,16 @@ Sin `ALTER`, `DROP` ni `ADD CONSTRAINT`: **Clase 1**. `migrate pedidos --plan` e
 | `check` | Sin problemas | Sin problemas |
 | `makemigrations --check --dry-run` | `No changes detected` | `No changes detected` (con la `0008` creada) |
 | `showmigrations pedidos`, réplica | Hasta `0007` `[X]` | `0008` `[ ]`: **no aplicada** (decisión del desarrollador) |
-| Conteos, réplica | clientes 825, pedidos 992, ítems de pedido 999, pagos 1198, cotizaciones 33, ítems de cotización 65; clientes con historial 793, sin historial 32 | Pendiente: tras el `migrate` del desarrollador (deben ser iguales) |
-| `SHOW CREATE TABLE` | Pendiente (desarrollador, 3.13 A paso 3) | Pendiente (paso 5; mismo hash) |
-| Revisión manual (escritorio y 360 px) | — | Pendiente (desarrollador, 3.13 A pasos 7 y 8) |
+| Conteos, réplica | clientes 825, pedidos 992, ítems de pedido 999, pagos 1198, cotizaciones 33, ítems de cotización 65; clientes con historial 793, sin historial 32 | Tras el `migrate` del desarrollador (visto en consola): 824, 992, 999, 1198, 33 y 65; clientes bajó por el borrado accidental, el resto igual |
+| `SHOW CREATE TABLE` | SHA-256 `0830026E…7E3F`, 2324 bytes, 2 `CREATE TABLE` (consola) | Mismo SHA-256 y 2324 bytes (consola): **Clase 1 confirmada en MySQL** |
+| `migrate`, réplica | — | OK y `[X] 0008` (consola, desarrollador) |
+| Revisión manual (escritorio y 360 px) | — | Pruebas A a D correctas y evento `cliente_eliminado` registrado (dicho por el desarrollador) |
 
 Nota: la base local por defecto (sin `DB_NAME`) muestra `0007` sin aplicar; no se tocó. Todo se hizo sobre la réplica.
 
 ## Riesgos y lo que no se vio
 
-- `migrate` no se ensayó en la réplica: la Clase 1 descansa en `sqlmigrate` hasta que el desarrollador compare `SHOW CREATE TABLE`.
+- ~~`migrate` no se ensayó en la réplica: la Clase 1 descansa en `sqlmigrate` hasta que el desarrollador compare `SHOW CREATE TABLE`.~~ Superado el 2026-11-20: el desarrollador migró la réplica y el hash de `SHOW CREATE TABLE` no cambió (ver «Cierre en producción»).
 - Un cliente con historial ya no se puede borrar ni archivar (efecto buscado; archivar sería funcionalidad nueva).
 - El admin cambia su comportamiento al borrar clientes (inferido de Django; se revisa en 3.13 A).
 - `mysql.W002` (modo estricto) aparece en `migrate --plan`: conocido, AUD-02-020, Épica 06.
@@ -94,7 +95,11 @@ Nota: la base local por defecto (sin `DB_NAME`) muestra `0007` sin aplicar; no s
 
 **Dicho por el desarrollador (no visto):** panel y `/clientes/lista/` sin 500; la confirmación de eliminar un cliente con pedidos muestra la advertencia; no se pulsó eliminar. **No hay conteo de errores posterior al uso.**
 
-**Réplica:** durante la revisión se borró por accidente un cliente sin historial (825 → 824 clientes; sin nombre). No afecta producción. La revisión manual de 3.13 A (`SHOW CREATE TABLE` y 360 px) no se informó en detalle.
+**Réplica:** durante la revisión se borró por accidente un cliente sin historial (825 → 824 clientes; sin nombre). No afecta producción. **Revisión manual de 3.13 A, cumplida** (corrección del 2026-11-20): visto en consola, `sqlmigrate` `(no-op)` en las dos operaciones, `migrate` OK y `[X] 0008`, SHA-256 de `SHOW CREATE TABLE` igual antes y después (`0830026E…7E3F`, 2324 y 2324 bytes, 2 `CREATE TABLE`) y conteos 824, 992, 999, 1198, 33 y 65; dicho por el desarrollador, pruebas A a D en escritorio y a 360 px correctas y el evento `cliente_eliminado` registrado.
+
+**Respaldo antes del checkout (corrección del 2026-11-20, visto en consola):** `error.log` registra la rotación de respaldos a las 10:16:41 (13:16:41 UTC); a las 10:20 `git describe --tags` decía `v4.7-correcciones-config`; el checkout a `v4.8` fue a las 10:21. El respaldo se tomó con `v4.7` activo, como exige 3.13 B, paso 1.
+
+**AUD-05-023 (decisión del desarrollador, 2026-11-20):** Épica 14, tema Clientes, dentro del arreglo mínimo; la lista mostrará también las cotizaciones.
 
 **Auditoría:** AUD-02-001 pasa a «Resuelto · verificado en producción (2026-11-20)».
 

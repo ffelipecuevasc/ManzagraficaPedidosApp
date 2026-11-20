@@ -312,7 +312,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 
 **Decisión:**
 
-1. **Arreglo mínimo → Épica 14, tema Clientes** (fallas Baja, RDA-022): las tarjetas pasan a «Registrados» y «Con pedidos», calculadas sobre **todos** los clientes (no sobre el filtro); los botones «Filtros» y «Exportar» dejan de parecer funciones disponibles (inertes) mientras no existan; la búsqueda muestra una ayuda de uso.
+1. **Arreglo mínimo → Épica 14, tema Clientes** (fallas Baja, RDA-022): las tarjetas pasan a «Registrados» y «Con pedidos», calculadas sobre **todos** los clientes (no sobre el filtro); los botones «Filtros» y «Exportar» dejan de parecer funciones disponibles (inertes) mientras no existan; la búsqueda muestra una ayuda de uso; la lista muestra también las cotizaciones de cada cliente (AUD-05-023, actualización del 2026-11-20).
 2. **Funciones reales → Épica 10 ampliada, tema Clientes**, después de la 06-06 y de las Épicas 07 y 08: búsqueda en vivo; filtros «con historial», «sin historial» y «con saldo pendiente»; orden por nombre o por más pedidos; exportar.
 3. **Teléfonos → iteración propia de la Épica 10, antes de «mejor coincidencia»:** en el formulario, un selector de país y un cuadro para el número; en la base, **una sola columna** en formato internacional sin espacios (`+56912345678`). Cambia la regla vigente de formato de teléfono y exige migrar los ~824 teléfonos existentes; los que no se puedan interpretar pasan a revisión manual (lista con conteos, sin datos personales en la documentación).
 4. **Preguntas al cliente** (`PENDIENTE_CLIENTE`, registro, sección 2): qué filtrar, qué exportar, quién puede exportar y qué significa «cliente activo».
@@ -323,7 +323,8 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 
 **Consecuencias:**
 
-- No existe en el repositorio una regla llamada «CLI-01». La regla de formato vigente está en `AGENTS.md`, regla 7.1 (`+56 9 XXXX XXXX`, para mostrar) y en el texto de ayuda «Formato WhatsApp» del campo. `AGENTS.md` es protegido: el cambio de la regla 7.1, si corresponde, lo hace el desarrollador (`PENDIENTE_DESARROLLADOR`).
+- La regla de formato vigente está en `AGENTS.md`, regla 7.1 (`+56 9 XXXX XXXX`, para mostrar) y en el texto de ayuda «Formato WhatsApp» del campo. `AGENTS.md` es protegido: el desarrollador edita la regla 7.1 cuando llegue la iteración de teléfonos.
 - La conversión de los teléfonos reescribe datos de ~824 filas: no cambia el esquema, pero exige respaldo previo, ensayo en la réplica y conteos antes y después; la forma (migración de datos o comando de gestión) se decide al redactar la iteración.
 - La Épica 10 crece; su definición se actualiza al redactarla. Ninguna de estas iteraciones está redactada.
-- El destino de AUD-05-023 (contar cotizaciones en la columna) no se fijó: `PENDIENTE_DESARROLLADOR`.
+- ~~El destino de AUD-05-023 (contar cotizaciones en la columna) no se fijó: `PENDIENTE_DESARROLLADOR`.~~ **Actualización 2026-11-20 (decisión del desarrollador):** AUD-05-023 va a la **Épica 14, tema Clientes, dentro del arreglo mínimo** (punto 1), junto a las etiquetas «Registrados» y «Con pedidos»: la lista muestra también las cotizaciones.
+- **«Mejor coincidencia» (aclarado por el desarrollador, 2026-11-20):** es el nombre provisional del **tercer nivel** de la propuesta de búsqueda, después de «mínima» (Épica 14) y «en vivo» (Épica 10). Depende de normalizar antes los teléfonos (punto 3). Su alcance se define al redactar esa iteración.

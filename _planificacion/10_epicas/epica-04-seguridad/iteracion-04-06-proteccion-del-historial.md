@@ -154,13 +154,16 @@ Fallos esperados: uno menos que los que deje la 04-05 (R14 sale de la lista; tra
 | Punto | Resultado | Fuente |
 | :---- | :-------- | :----- |
 | 1. Respaldo previo | `respaldo_20-11-2026_10-16-37.sql`: 1.549.877 bytes, 19 de 19 tablas, `CUMPLE D2`, SHA-256 `524C32FC27EFD0ECF451E342941BA0B34D2EAA6470E555ED4B14D51123AB09FE` | Consola (pegado por el desarrollador) |
+| Respaldo antes del checkout | `error.log` registra la rotación de respaldos a las 10:16:41 (13:16:41 UTC); a las 10:20 `git describe --tags` en el servidor decía `v4.7-correcciones-config`; el checkout a `v4.8` fue a las 10:21. **El respaldo se tomó con `v4.7` activo**, como exige 3.13 B, paso 1 | Consola |
+| Réplica (3.13 A) | `sqlmigrate`: `(no-op)` en las dos operaciones; `migrate` OK y `[X] 0008`; SHA-256 de `SHOW CREATE TABLE` igual antes y después (`0830026E…7E3F`), 2324 bytes en ambos, 2 `CREATE TABLE`; conteos finales 824 clientes, 992 pedidos, 999 ítems de pedido, 1198 pagos, 33 cotizaciones y 65 ítems de cotización | Consola |
+| Réplica (3.13 A), navegador | Pruebas A a D en escritorio y a 360 px, correctas; el evento `cliente_eliminado` quedó registrado | Dicho por el desarrollador |
 | Etiqueta | `v4.8-historial-clientes`, anotada, sobre `8f4e396`, publicada | Consola |
 | 2. Migración | `migrate --plan`: solo `0008`; `check --deploy`: solo W005 y W021; `migrate` OK y `[X] 0008` | Consola |
 | Reload | **Uno solo**: `Starting uWSGI` 10:22:07, único hasta las 10:54 | Consola (`server.log`) |
 | 4. Registros | `Traceback`, `OperationalError`, «gone away» y `TemplateDoesNotExist` desde el arranque: **0**, contado a las 10:27, **antes** del uso en navegador. **No hay conteo posterior al uso** | Consola |
 | 3. Pantallas | Panel y `/clientes/lista/` sin 500; la confirmación de eliminar un cliente con pedidos muestra la advertencia de D2; no se pulsó eliminar | Dicho por el desarrollador |
 
-**Salvedades:** la revisión manual de 3.13 A (`SHOW CREATE TABLE` antes y después y las pantallas a 360 px en la réplica) no se informó al agente; durante el trabajo en la réplica se borró por accidente un cliente sin historial (825 → 824, sin nombre; no afecta producción). El criterio de término «revisión manual en la réplica hecha» queda **sin evidencia informada**; la iteración se cierra por decisión del desarrollador (2026-11-20).
+**Salvedad:** en la réplica, clientes bajó de 825 a 824 por un borrado accidental de un cliente sin historial (sin nombre; solo réplica, no afecta producción). Los otros cinco conteos coinciden con los anteriores a `migrate`. El criterio de término «revisión manual en la réplica hecha» queda **cumplido**: la estructura, la migración y los conteos se vieron en consola; las pruebas en el navegador y el evento son dichos por el desarrollador.
 
 ## Plan de retroceso
 
