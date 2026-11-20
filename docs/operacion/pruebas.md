@@ -99,7 +99,7 @@ class EliminarPagoTests(TestCase):
 
 ### 7.1 Regresiones declaradas (iteración 02-04)
 
-En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=9`** (19 hasta la 03-01, que retiró R20; 18 hasta la 03-02, que retiró R3; 17 hasta la 03-03, que retiró R1, R2, R4, R10, R11, R12, R13 y R18). Cada prueba afirma el comportamiento correcto y hoy falla por el defecto indicado. El despliegue (`despliegue.md`, paso 1) acepta solo este número.
+En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=3`** (R8, R9 y R15, desde la 04-06, que retiró R14; 4 desde la 04-01, que retiró R6a, R6b, R6c, R7 y R19; ~~`expected failures=9`~~ quedó sin actualizar en la 04-01; 19 hasta la 03-01, que retiró R20; 18 hasta la 03-02, que retiró R3; 17 hasta la 03-03, que retiró R1, R2, R4, R10, R11, R12, R13 y R18). Cada prueba afirma el comportamiento correcto y hoy falla por el defecto indicado. El despliegue (`despliegue.md`, paso 1) acepta solo este número.
 
 | # | Prueba | Hallazgo | Por qué falla hoy | La vuelve verde |
 | :- | :----- | :------- | :---------------- | :-------------- |
@@ -109,7 +109,7 @@ En `pedidos/tests/test_regresiones.py`. **Valor vigente: `expected failures=9`**
 | R7 | `EliminarPagoTests.test_r7_confirmacion_de_eliminar_pago_responde_200` | AUD-02-002 | Falta la plantilla de confirmación: 500 | 04-01 |
 | R8 | `BordesDeHoraChileTests.test_r8_panel_y_chequeo_diario_usan_el_dia_de_chile` | AUD-02-003 | A las 22:00 de Chile un pedido de hoy cuenta como crítico, y el panel escribe una segunda fila de métricas | 06-01 |
 | R9 | `BordesDeHoraChileTests.test_r9_ingresos_del_mes_usan_el_mes_de_chile` | AUD-02-003 | El 31 a las 22:00 de Chile, «ingresos del mes» da 0 (usa noviembre) | 06-01 |
-| R14 | `HistorialClienteTests.test_r14_eliminar_cliente_con_pedidos_se_rechaza` | AUD-02-001 | No lanza `ProtectedError`: borra en cascada | 04-06 |
+| R14 | `HistorialClienteTests.test_r14_eliminar_cliente_con_pedidos_se_rechaza` | AUD-02-001 | No lanza `ProtectedError`: borra en cascada | 04-06 (**retirada el 2026-11-20**: `PROTECT`, sin marcas) |
 | R15 | `PorcentajePagadoTests.test_r15_porcentaje_pagado_con_enteros` | AUD-02-025 | Da 28 en vez de 29 (`float`) | 06-05, junto con AUD-02-015 (decisión del 2026-10-26; numeración anterior a RDA-014) |
 | R19 | `DuplicarPedidoTests.test_r19_duplicado_queda_con_el_usuario_que_duplica` | AUD-02-028 | `creado_por` queda nulo | 04-01 (decisión del 2026-11-04: la 04-01 reescribe `duplicar_pedido`) |
 

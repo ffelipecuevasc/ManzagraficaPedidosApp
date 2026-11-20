@@ -670,6 +670,118 @@ docker compose stop
 7. **Observación posterior (no bloquea el cierre, decisión del 2026-11-19):** después de una hibernación, la primera petición responde sin 500 y `server.log` no muestra `OperationalError` ni «gone away». AUD-01-016 queda «corregido en código, pendiente de verificar en producción» hasta esa observación.
 8. **Retroceso:** `retroceso.md`, caso 1, a `v4.6-restauracion` (sin migraciones; no hay datos que deshacer).
 
+### 3.13 Despliegue de la 04-06 (`v4.8-historial-clientes`): réplica, migración y orden
+
+La 04-06 cambia `Pedido.cliente` y `Cotizacion.cliente` de `CASCADE` a `PROTECT`: un cliente con pedidos o cotizaciones ya no se puede borrar (ni desde la aplicación ni desde el admin) y la pantalla dice por qué. **Trae la migración `0008_proteger_historial_cliente`, Clase 1:** `sqlmigrate` da solo `(no-op)` (2026-11-20, bitácora 04-06), es decir, MySQL no cambia ninguna tabla. Sin `pip` ni `collectstatic`. Retroceso: `v4.7-correcciones-config`.
+
+Desde la 04-06 el script del formato D2 está versionado: `scripts\diagnostico\revisar_volcado_d2.py` (ya no se usa la copia de la carpeta temporal del agente).
+
+#### A. Réplica: respaldo, migración y revisión manual (PowerShell 7, en tu PC, antes de etiquetar)
+
+Todo en **una sola ventana**. **Nunca** `docker compose down -v` ni `docker volume rm`.
+
+**Paso 1. Proyecto, entorno y contenedor.** Igual que 3.12 A, pasos 1 a 3: `cd` al proyecto, `.\.venv\Scripts\Activate.ps1`, `docker compose up -d`, `$env:DB_NAME = "manzagrafica_replica"` y `python scripts\diagnostico\paridad_replica.py` → `0`. Si algo no da lo esperado, no sigas.
+
+**Paso 2. Respaldo de la réplica (obligatorio antes de `migrate`).**
+
+```powershell
+$carpeta = "<tu carpeta de respaldos descargados, fuera del repo>"
+docker exec manzagrafica-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --no-tablespaces --set-gtid-purged=OFF manzagrafica_replica > /tmp/replica_04-06.sql'
+docker cp manzagrafica-mysql:/tmp/replica_04-06.sql "$carpeta\replica_antes_04-06.sql"
+docker exec manzagrafica-mysql rm -f /tmp/replica_04-06.sql
+python scripts\verificar_respaldo.py "$carpeta\replica_antes_04-06.sql"
+python scripts\diagnostico\revisar_volcado_d2.py "$carpeta\replica_antes_04-06.sql"
+```
+
+Debe dar `VÁLIDO` (19 de 19) y `RESULTADO: CUMPLE D2`. Si no, no sigas.
+
+**Paso 3. Estructura de las tablas ANTES.** Guarda la salida en tu carpeta (no en el repo):
+
+```powershell
+docker exec manzagrafica-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot manzagrafica_replica -e "SHOW CREATE TABLE pedidos_pedido\G SHOW CREATE TABLE pedidos_cotizacion\G"' > "$carpeta\estructura_antes_04-06.txt"
+(Get-FileHash "$carpeta\estructura_antes_04-06.txt").Hash
+```
+
+Anota el hash.
+
+**Paso 4. Plan y migración.**
+
+```powershell
+python manage.py migrate pedidos --plan
+python manage.py sqlmigrate pedidos 0008
+python manage.py migrate pedidos
+python manage.py showmigrations pedidos
+```
+
+- `--plan` debe listar **solo** `pedidos.0008_proteger_historial_cliente` con dos `Alter field cliente`.
+- `sqlmigrate` debe mostrar solo `-- (no-op)` dos veces. **Si aparece `ALTER`, `DROP` o `ADD CONSTRAINT`, no ejecutes `migrate`** y avisa.
+- `showmigrations` debe dejar `[X] 0008_proteger_historial_cliente`. (La advertencia `mysql.W002` de modo estricto es conocida, AUD-02-020; no bloquea.)
+
+**Paso 5. Estructura DESPUÉS y conteos.** Repite el paso 3 cambiando `antes` por `despues` y compara:
+
+```powershell
+(Get-FileHash "$carpeta\estructura_despues_04-06.txt").Hash
+```
+
+Debe ser **igual** al hash del paso 3. Si cambia, avisa: la migración no fue Clase 1. Pídele al agente el script de conteos (o el número de clientes, pedidos, ítems, pagos, cotizaciones e ítems de cotización desde el admin): deben ser iguales que antes de migrar.
+
+**Paso 6. Arrancar la aplicación.** `python manage.py runserver` → `Starting development server at http://127.0.0.1:8000/`. Inicia sesión con un superusuario de la réplica.
+
+**Paso 7. Las tres pruebas en el navegador (escritorio).**
+
+| Prueba | Cómo | Qué debe verse |
+| :----- | :--- | :------------- |
+| Cliente con historial | `/clientes/lista/` → un cliente que tenga pedidos → «Eliminar». En la confirmación, pulsa «Sí, Eliminar». | Antes de pulsar: la advertencia «Solo se puede eliminar un cliente sin pedidos ni cotizaciones» y el botón visible. Después: la misma pantalla con el recuadro «No se eliminó: No se puede eliminar este cliente porque tiene pedidos o cotizaciones registrados. Para conservar su historial, no está permitido borrarlo.» El cliente sigue en la lista y sus pedidos siguen en `/pedidos/lista/`. En `runserver`, `200`, no `500`. |
+| Cliente de prueba sin historial | Crea un cliente `Prueba 04-06` en `/clientes/nuevo/` y elimínalo. | Vuelves a la lista y el cliente ya no está. |
+| Admin | `/acceso-manzagrafica-admin/` → Clientes → el mismo cliente con historial → «Eliminar». | El admin dice que no se puede borrar porque hay objetos protegidos (pedidos o cotizaciones) y **no ofrece confirmar**. No borres nada más desde el admin. |
+
+**Paso 8. A 360 px.** `F12` → `Ctrl+Shift+M` → ancho `360`. Repite la confirmación y el rechazo del cliente con historial: el recuadro de error y los botones se ven completos, sin barra horizontal de la página.
+
+**Paso 9. Si algo falla.**
+
+- Error 500 al rechazar: copia las últimas 30 líneas de `runserver` (sin datos de clientes) y detente. **No despliegues.**
+- El cliente con historial se borró: detente de inmediato y restaura la réplica desde `replica_antes_04-06.sql` (`replica-local.md`); avisa al agente.
+- El admin ofrece borrar en cascada: la migración no está aplicada; vuelve al paso 4.
+
+**Paso 10. Limpieza (siempre).** `Ctrl+C` en `runserver`, `Remove-Item Env:DB_NAME`, `$env:DB_NAME` (vacío) y `docker compose stop`. La réplica queda con `0008` aplicada; para volverla atrás: `python manage.py migrate pedidos 0007` con `DB_NAME` de la réplica.
+
+#### B. Orden del despliegue (en este orden, sin saltar pasos)
+
+1. **Respaldo de producción ANTES del checkout**, con `v4.7-correcciones-config` todavía activo (`respaldo.md`, sección 2). En tu PC:
+
+   ```powershell
+   python scripts\verificar_respaldo.py "<ruta del respaldo descargado>"
+   python scripts\diagnostico\revisar_volcado_d2.py "<ruta del respaldo descargado>"
+   $LASTEXITCODE
+   Get-FileHash "<ruta del respaldo descargado>" -Algorithm SHA256
+   ```
+
+   Debe dar `VÁLIDO` (19 de 19), `RESULTADO: CUMPLE D2` y `0`. Anota nombre, tamaño y SHA-256. **Con migración, este respaldo es obligatorio:** si algo no cumple, no sigas.
+2. **Etiqueta** anotada `v4.8-historial-clientes` sobre el commit de la 04-06 y `git push` de la etiqueta (sección 1). Antes, en el PC: `git diff --stat v4.7-correcciones-config v4.8-historial-clientes` debe mostrar `pedidos/models.py`, `pedidos/views.py`, `pedidos/migrations/0008_proteger_historial_cliente.py`, `cliente_confirm_delete.html`, `scripts/diagnostico/revisar_volcado_d2.py`, pruebas y documentos; **sin** `requirements.txt`, `settings.py` ni `pedidos/static/`.
+3. **Checkout** en el servidor (3.2): `git fetch origin --tags`, `git checkout v4.8-historial-clientes` y `git describe` → `v4.8-historial-clientes`.
+4. **Plan y revisión, antes de migrar** (3.4 y 3.7):
+
+   ```bash
+   python manage.py migrate --plan
+   python manage.py check --deploy
+   ```
+
+   `--plan` debe listar **solo** `pedidos.0008_proteger_historial_cliente`. `check --deploy`: solo W005 y W021. Si sale otra migración, otra advertencia o un error, **no migres ni recargues**: vuelve al checkout de `v4.7-correcciones-config`.
+5. **Migración, después del checkout y antes del Reload** (3.4):
+
+   ```bash
+   python manage.py migrate
+   python manage.py showmigrations pedidos
+   ```
+
+   Debe terminar en `Applying pedidos.0008_proteger_historial_cliente... OK` y dejar `[X] 0008_proteger_historial_cliente`. Si falla, detente y sigue el paso 8.
+6. **UN solo Reload**, confirmado con el comando «Detectar reinicios de uWSGI» (3.6) con `DESDE_CL` definido en esa misma consola (hora de Chile de un minuto antes del clic): **una** línea `Starting uWSGI`; anota su hora. No repitas el Reload.
+7. **Verificaciones del mismo día (RDA-021):**
+   1. Acceso, panel y `/clientes/lista/` sin 500.
+   2. Abre la confirmación de eliminar de un cliente **con historial** y comprueba que dice «Solo se puede eliminar un cliente sin pedidos ni cotizaciones». **No pulses «Sí, Eliminar»:** el rechazo ya se probó en la réplica.
+   3. Registros **desde el último `Starting uWSGI`, sin filtro por fecha**: el `awk` sobre `server.log` y el `tail -n 80` de `error.log` de 3.12 B, paso 6.3. Debe dar la hora de tu Reload y `coincidencias desde el arranque: 0`, y `error.log` sin entradas nuevas tras la hora UTC del arranque.
+8. **Retroceso** (decisión del desarrollador, 2026-11-19): `retroceso.md`, caso 1, a `v4.7-correcciones-config` y Reload. **No hace falta revertir la `0008`:** es Clase 1 y MySQL no cambió; el código anterior la ignora. `python manage.py migrate pedidos 0007` es **opcional**, solo si estorba (caso 2, que rige también para Clase 1), y siempre **antes** de volver el código. Si los datos se dañaran, caso 3 con el respaldo del paso 1.
+
 ## 4. Primer uso: despliegue de la 00-04 (`v0.1-higiene`)
 
 El paso a paso exacto, con las salidas que hay que anotar, está en `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-05.md`, parte B. Resume lo propio de este despliegue (punto 8 de la lista):
@@ -698,3 +810,4 @@ El paso a paso exacto, con las salidas que hay que anotar, está en `_planificac
 | 2026-11-19 14:11 («Starting uWSGI» a las 14:11:27, hora de Chile; 17:11:24 UTC, según `server.log`; se dijo 14:12, vale el registro) | `v4.5-credenciales` | `81e0ebf` | 04-03 (contraseña de MySQL en un archivo temporal de opciones y `SECRET_KEY` obligatoria; partida y retroceso `v4.4-hsts-semana`); sin migraciones, `pip` ni `collectstatic` (diff `v4.4…v4.5`: código solo `utils.py` y `settings.py`); `.env.example` editado por el desarrollador en `81e0ebf` | `0d93d4eb…9740` (`respaldo_19-11-2026_14-06-52.sql`, `VÁLIDO`, 19 de 19, 1.545.575 bytes) | Correcto, sin retroceso. **Antes:** clave de producción con largo 61, 25 distintos y sin `django-insecure-`; ensayo en la réplica `CUMPLE` (4999 filas antes y después, 0 procesos con contraseña, 0 residuales); `git describe` = `v4.5-credenciales`; `check --deploy` a las 14:10, solo W005 y W021. **Después:** `check --deploy` solo W005 y W021; respaldo desde la web a las 14:13 (`respaldo_19-11-2026_14-13-28.sql`, `VÁLIDO`, 19 de 19, 1.545.818 bytes, `6a5af0bb…df87`; descarga dicha); `server.log` y `error.log` sin `mysqldump`, `mysql_opciones`, `Traceback` ni `OSError` del 2026-11-19; `ls /tmp/mysql_opciones_*` en la consola → 0 (no mide el `/tmp` del worker). **No verificado:** permisos del archivo temporal. Restauración en producción no probada por diseño (la cubre el ensayo). Pruebas previas: 342, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente es `v4.5-credenciales`** |
 | 2026-11-19 17:22 (checkout a las 20:21 UTC; arranques de uWSGI a las 17:22:49, 17:29:34 y 17:41:57, hora de Chile, según `server.log`: los tres son Reloads pulsados por el desarrollador, que repitió el Reload creyendo que los anteriores no se habían ejecutado (dicho); ninguno de origen desconocido) | `v4.6-restauracion` | `58d7c3d` | 04-04 (restauración endurecida: tope de 20 MB, estructura D2, `RESTAURAR`, constancia en `server.log`, `emergencia_` fuera de la rotación, sin `.sql` vacío ni subida huérfana; partida y retroceso `v4.5-credenciales`); sin migraciones, `pip` ni `collectstatic` (diff `v4.5…v4.6`: código solo `utils.py`, `views.py`, `restaurar_bd.html` y `respaldar_bd.html`; sin `requirements.txt`, migraciones ni estáticos) | **Último respaldo con `v4.5`:** `respaldo_19-11-2026_14-13-28.sql` (`6a5af0bb…df87`, `VÁLIDO`, `CUMPLE D2`). **Salvedad:** `respaldo_19-11-2026_17-40-30.sql` (`457a9e8a…998b`, `VÁLIDO`, `CUMPLE D2`, 1.547.705 bytes) se generó con `v4.6` ya activo (después del Reload de las 17:22:49): **no es un respaldo previo con el código anterior** | Correcto, sin retroceso. **Antes:** D2 `CUMPLE` sobre la réplica y sobre `respaldo_19-11-2026_14-13-28.sql`; ensayo en la réplica `CUMPLE` (restauración 6,2 s; inválido y sin `RESTAURAR` rechazados; 1 `emergencia_` con D2; subida borrada; 4999 → 5000 filas, solo eventos +1; 0 contraseñas en argumentos; 0 residuales); pantalla en escritorio y a 360 px revisada (dicho); `git describe` = `v4.6-restauracion`; `check --deploy` solo W005 y W021; `emergencia_` en `backups/`: 0. **Después:** `check --deploy` solo W005 y W021; `vacio.sql` (0 bytes) con `RESTAURAR` rechazado con el mensaje fijo (dicho), `emergencia_` sigue en 0 y sin «Restauración» en `server.log`; respaldo desde la web `respaldo_19-11-2026_17-48-17.sql` (`b804277d…b622`, `VÁLIDO`, 19 de 19, `CUMPLE D2`, 1.547.831 bytes); registros del día sin `Traceback`, `OSError`, `mysqldump` ni `mysql_opciones`; `/tmp/mysql_opciones_*` → 0 (consola, no el `/tmp` del worker). Sin restauración real en producción, por diseño. Pruebas previas: 375, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente (`v4.7-correcciones-config`) es `v4.6-restauracion`** |
 | 2026-11-19 23:06 (checkout a las 02:06 UTC del 2026-11-20; un solo arranque de uWSGI a las 23:06:46, hora de Chile, 02:06:44 UTC, según `server.log`: Reload del desarrollador (dicho); el arranque anterior fue el de las 17:41:57) | `v4.7-correcciones-config` | `7187d03` | 04-05 (correcciones de configuración: `django.conf.settings` en `views.py`, `conn_health_checks=True` con `conn_max_age=60`, `BASE_DIR` una vez, `DIRS` vacío, importaciones; partida y retroceso `v4.6-restauracion`); sin migraciones, `pip` ni `collectstatic` (diff `v4.6…v4.7`: código solo `settings.py`, `views.py` y `urls.py`; sin `requirements.txt`, migraciones ni estáticos) | `607db45f…9b8a` (`respaldo_19-11-2026_23-00-20.sql`, `VÁLIDO`, 19 de 19, `CUMPLE D2`, 1.549.306 bytes; tomado con `v4.6` activo, **antes del checkout**) | Correcto, sin retroceso. **Antes:** réplica con 379 pruebas, `OK (expected failures=4)`; `backups/` real con 1 archivo antes y después; paridad sin diferencias no aceptadas; pantallas en escritorio y a 360 px (dicho); `check --deploy` tras el checkout, solo W005 y W021. **Después:** `check --deploy` (02:15 UTC) solo W005 y W021; panel, listas, detalle y PDF sin 500 (dicho); `error.log` sin errores nuevos tras el Reload (3 coincidencias históricas de `TemplateDoesNotExist`, del 2026-10-26, anteriores a la 04-01; último `OSError` el 2026-11-18 18:40:18, ninguno el 2026-11-19). **Lección:** el `grep` por fecha no detecta trazas y `DESDE_CL` quedó sin definir; 3.12 B, paso 6.3, corregido. Hibernación: observación posterior (AUD-01-016). Pruebas previas: 379, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente (`v4.8-historial-clientes`) es `v4.7-correcciones-config`** |
+| **Implementada, pendiente de despliegue** (revisión manual y `migrate` en la réplica pendientes del desarrollador, 3.13 A; sin fecha fija, RDA-021) | `v4.8-historial-clientes` (prevista) | por fijar | 04-06 (protección del historial: `Pedido.cliente` y `Cotizacion.cliente` a `PROTECT`, rechazo con mensaje en `eliminar_cliente`, advertencia en la confirmación; script D2 versionado como excepción a «un despliegue, un propósito»; partida y retroceso `v4.7-correcciones-config`); **con migración `0008`, Clase 1** (`sqlmigrate`: `(no-op)`), sin `pip` ni `collectstatic` | Pendiente: **obligatorio**, antes del checkout, `VÁLIDO` y `CUMPLE D2` (3.13 B, paso 1) | Pendiente. **Antes:** `migrate --plan` solo `0008`; `check --deploy` solo W005 y W021. `migrate` después del checkout y antes del Reload; `showmigrations` con `[X] 0008`. **Un solo Reload**, confirmado con `Starting uWSGI`. **Después:** confirmación de un cliente con historial con la advertencia, sin borrar; registros desde el último `Starting`. Pruebas previas: 388, `OK (expected failures=3)` (en local). **Retroceso:** `retroceso.md`, caso 1, a `v4.7-correcciones-config`; `migrate pedidos 0007` opcional (caso 2) |

@@ -50,6 +50,8 @@ Necesitas:
 
 ## 3. Caso 2 · Con migraciones de Clase 2
 
+**Este caso rige también para las migraciones de Clase 1** (aclarado el 2026-11-19, decisión del desarrollador, con la 04-06): una de Clase 1 solo cambia metadatos de Django (por ejemplo, `on_delete` o `choices`) y `sqlmigrate` no muestra SQL, así que MySQL no cambió. Basta con volver el código (caso 1) y recargar; revertirla con `migrate pedidos <anterior>` es **opcional**, solo si estorba, y con el mismo orden de abajo (primero revertir, después el código).
+
 Una migración de Clase 2 solo agrega: tablas nuevas, columnas que admiten nulo e índices. El código anterior no las conoce y las ignora, así que **basta con volver el código (caso 1)**. Las filas que Django guardó en la tabla `django_migrations` para esas migraciones no molestan al código anterior.
 
 **Revierte la migración solo si estorba**, por ejemplo si una tabla nueva ocupa disco que hace falta o si el próximo despliegue necesita partir de cero. En ese caso el orden importa:

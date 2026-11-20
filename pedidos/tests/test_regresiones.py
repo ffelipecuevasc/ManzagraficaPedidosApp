@@ -7,7 +7,7 @@ informa `unexpected successes` y la iteración que corrige quita las dos marcas.
 
 Numeración (decisión D3 del desarrollador, 2026-10-27): R1 a R15, R18, R19 y R20. Ya no llevan
 marcas: R20 (retirada en la 03-01), R3 (03-02), R1, R2, R4, R10, R11, R12, R13 y R18 (03-03) y
-R6a, R6b, R6c, R7 y R19 (04-01). Siguen marcadas R8, R9, R14 y R15.
+R6a, R6b, R6c, R7 y R19 (04-01) y R14 (04-06). Siguen marcadas R8, R9 y R15.
 R16 está reservado para AUD-02-021 y R17 está libre. R6 son tres pruebas. R5 no se escribió: el
 defecto no se reprodujo como estaba descrito (ver su sección).
 
@@ -370,8 +370,7 @@ class ConvertirCotizacionTests(RegresionBase):
 # R14 · Borrado en cascada del historial de un cliente (AUD-02-001)
 # ---------------------------------------------------------------------------
 class HistorialClienteTests(TestCase):
-    @tag('regresion')
-    @expectedFailure  # R14 · AUD-02-001: on_delete=CASCADE borra pedidos, ítems, pagos y cotizaciones. Lo corrige la 04-06.
+    # R14 · AUD-02-001: corregida en la 04-06 (on_delete=PROTECT en Pedido.cliente y Cotizacion.cliente).
     def test_r14_eliminar_cliente_con_pedidos_se_rechaza(self):
         cliente = crear_cliente()
         pedido = crear_pedido(cliente=cliente, valor_venta=10_000)

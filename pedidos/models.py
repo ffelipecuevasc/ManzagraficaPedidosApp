@@ -34,7 +34,7 @@ class Pedido(models.Model):
         ('ENTREGADO', 'Entregado'),
     ]
 
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, verbose_name="Cliente")
+    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, verbose_name="Cliente")
 
     # --- TUS CAMPOS ORIGINALES RESTAURADOS ---
     resumen_pedido = models.CharField(max_length=150, verbose_name="Resumen del Pedido")
@@ -161,7 +161,7 @@ class Cotizacion(models.Model):
     ]
 
     # Relaciones y Datos Básicos
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
     resumen = models.CharField(max_length=100, help_text="Título corto del trabajo")
     detalles = models.TextField(help_text="Detalles técnicos (Summernote)")
 

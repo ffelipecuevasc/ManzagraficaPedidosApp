@@ -739,11 +739,20 @@ def editar_cliente(request, pk):
 @login_required
 def eliminar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
+    error = None
     if request.method == 'POST':
-        cliente.delete()
-        registrar_evento('cliente_eliminado', request.user, 'cliente', pk, f'Cliente #{pk} eliminado')
-        return redirect('lista_clientes')
-    return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente})
+        # 04-06: Pedido.cliente y Cotizacion.cliente son PROTECT. delete() abre y revierte su
+        # propia transacción; el ProtectedError se captura fuera de ella (AGENTS.md, regla 8.3).
+        # El rechazo no registra evento (D3): no cambió ningún dato.
+        try:
+            cliente.delete()
+        except ProtectedError:
+            error = ('No se puede eliminar este cliente porque tiene pedidos o cotizaciones registrados. '
+                     'Para conservar su historial, no está permitido borrarlo.')
+        else:
+            registrar_evento('cliente_eliminado', request.user, 'cliente', pk, f'Cliente #{pk} eliminado')
+            return redirect('lista_clientes')
+    return render(request, 'pedidos/cliente_confirm_delete.html', {'cliente': cliente, 'error': error})
 
 @login_required
 @require_POST
