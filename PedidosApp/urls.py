@@ -16,12 +16,19 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from pedidos.forms import FormularioAcceso
+
 urlpatterns = [
     path("acceso-manzagrafica-admin/", admin.site.urls),
+    # 04-08: acceso con límite de intentos y, si ya hay sesión, redirección al panel. Va antes
+    # de accounts/ para que reemplace la ruta 'login' de django.contrib.auth.urls.
+    path('accounts/login/', auth_views.LoginView.as_view(
+        authentication_form=FormularioAcceso, redirect_authenticated_user=True), name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('pedidos.urls')),
 ]

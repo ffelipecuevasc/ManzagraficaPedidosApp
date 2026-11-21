@@ -70,7 +70,18 @@
         <div class="p-8">
             <h2 class="text-xl font-semibold text-slate-800 dark:text-white mb-6 text-center">Bienvenido</h2>
 
-            {% if form.errors %}
+            {% if form.bloqueado %}
+                {# 04-08: mismo mensaje exista o no el usuario; sin animación para que se lea con calma. #}
+                <div class="mb-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r flex items-center" role="alert">
+                    <div class="flex-shrink-0">
+                        <span class="material-icons-round text-red-500 text-2xl" aria-hidden="true">lock_clock</span>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700 dark:text-red-400 font-bold">Acceso bloqueado por 15 minutos</p>
+                        <p class="text-xs text-red-600 dark:text-red-300 mt-0.5">{{ form.non_field_errors.0 }}</p>
+                    </div>
+                </div>
+            {% elif form.errors %}
                 <div class="mb-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r flex items-center animate-pulse">
                     <div class="flex-shrink-0">
                         <span class="material-icons-round text-red-500 text-2xl">gpp_bad</span>

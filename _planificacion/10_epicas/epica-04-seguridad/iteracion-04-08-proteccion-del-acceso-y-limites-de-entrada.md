@@ -1,7 +1,7 @@
 # Iteración 04-08 · Protección del acceso y límites de entrada
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-08-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-08-redaccion.md)); D1 a D5 resueltas por el desarrollador el mismo día ([bitacora-04-08-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-08-cierre.md)).
+- **Estado:** **En revisión, pendiente de despliegue (2026-11-21).** Etiqueta prevista `v4.10-acceso-limites`; retroceso `v4.9-sanitizacion-html`. Falta la revisión manual en la réplica (paso 6, la hace el desarrollador), el texto de `.env.example` (lo pega el desarrollador) y el despliegue con la medición de la dirección (`despliegue.md` 3.15). Ejecución: sección «Ejecución (2026-11-21)» al final y [bitacora-04-08](../../99_bitacora/epica-04-seguridad/bitacora-04-08.md). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-08-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-08-redaccion.md)); D1 a D5 resueltas por el desarrollador el mismo día ([bitacora-04-08-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-08-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 03); `definicion-epica-04.md`, alcance 8 y decisión de la épica sobre la 04-08.
 - **Depende de:** la 04-04 (tope de 20 MB de la restauración, que esta iteración coordina) y las que editan `settings.py` (04-02, 04-03, 04-05): la 04-08 parte de lo que dejen. Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → … → 04-07 → **04-08**.
 - **Es requisito de:** la Épica 09 (precondición: «más cuentas, más superficie para fuerza bruta»; registro, fila 09-01).
@@ -234,3 +234,30 @@ Todas vacían la caché en `setUp` (la caché local persiste entre pruebas) y fi
 - **Chequeo de `CONTENT_LENGTH`:** una cabecera ausente o falsa no es un tope duro; la validación de la imagen y el tope de 20 MB siguen aplicando después.
 - **Rechazos de tamaño poco amables:** Django responde 400 sin pantalla propia cuando se excede `DATA_UPLOAD_MAX_MEMORY_SIZE`; con el valor actual no lo alcanza un uso normal.
 - **Un despliegue, un propósito (RDA-007):** va solo, después de la 04-07.
+
+## Ejecución (2026-11-21)
+
+«Consola»: el desarrollador pegó la salida y se vio. «Dicho»: lo afirma el desarrollador. «Agente»: lo ejecutó el agente en local. Detalle en [bitacora-04-08](../../99_bitacora/epica-04-seguridad/bitacora-04-08.md).
+
+### Evidencia previa (paso 2)
+
+- **Alcance de la medición:** la réplica es la del refresco del **2026-11-18**; **los días posteriores (del 2026-11-18 al 2026-11-21) no están medidos**.
+- **Fallos por ventana de 15 minutos (consola, réplica):** 1 evento `acceso_fallido` en total, del 2026-10-26 01:12:58 UTC, de un usuario existente; máximo por ventana: 1. **No activa la regla de detención** (umbral: 4). La consulta usada no devuelve `resumen` (solo conteos y una marca de usuario desconocido), para no mostrar nombres. Con un solo evento, el límite de 5 no se calibra con datos: se mantiene la decisión D2.
+- **Archivo más grande de `media/referencias/` (dicho, panel de PythonAnywhere, producción con `v4.9-sanitizacion-html`):** 2 archivos; el mayor pesa 624.912 bytes (≈ 0,6 MB), muy por debajo de 5 MB. **No activa la regla de detención.** Diferencia con la línea base del 2026-10-20 (11 archivos en `media/`): esta cifra es solo de `referencias/`; no se investigó.
+- **Respaldo de la réplica (consola):** `replica_antes_04-08.sql`, 1.537.213 bytes, 19 de 19, `CUMPLE D2`, SHA-256 `E88572C477C739AB6C6E3FFC77321485035BA5EAC8CFF33B0CDF3F65BC64BE17`. Paridad: 0 diferencias no aceptadas (Python 3.13.0 frente a 3.13.1, aceptada).
+
+### Cambio sobre D5: el chequeo temprano va en un middleware (decisión del desarrollador, 2026-11-21)
+
+El diseño ponía el chequeo de `CONTENT_LENGTH` en las vistas. **No sirve ahí:** `CsrfViewMiddleware` lee `request.POST` en su `process_view` (`django/middleware/csrf.py:368`) antes de llegar a la vista, y con eso Django ya recibió el cuerpo entero, archivo incluido. El desarrollador eligió un middleware, `pedidos.limite_acceso.LimiteCuerpoMiddleware`, al final de `MIDDLEWARE`: su código corre antes que cualquier `process_view`, ya con sesión y mensajes. Revisa solo los POST a `crear_pedido`, `editar_pedido` (imagen 5 MB + 2,5 MB) y `restaurar_bd` (20 MB + 1 MB); responde con un mensaje y una redirección a la misma ruta, sin leer el cuerpo. **Por eso `pedidos/views.py` no se tocó.** No verificado: si el proxy o uWSGI de PythonAnywhere cortan la conexión al responder sin leer un cuerpo grande (el navegador podría mostrar un error de conexión en vez del mensaje).
+
+### Estado de los criterios (2026-11-21)
+
+| Criterio | Estado | Evidencia |
+| :------- | :----- | :-------- |
+| Tabla de pruebas en verde | Hecho (agente) | Antes de implementar: 35 pruebas nuevas, `FAILED (failures=6, errors=23)`; las 6 que pasaban ya se cumplían antes del cambio (los dos 2,5 MB, que son el defecto de Django; imagen del tope exacto; `.sql` de 3 MB; cuerpo justo en el tope; rutas no revisadas; GET sin sesión). Después: `test pedidos` → 446 pruebas, `OK (expected failures=3)`. `check` sin problemas; `makemigrations --check --dry-run` → `No changes detected`. |
+| `sqlmigrate pedidos 0009` sin SQL, después de la `0008` | Hecho (agente, contra la réplica) | `-- (no-op)`. Dependencia: `0008_proteger_historial_cliente`. Aplicada en la réplica (`[X] 0009_acceso_bloqueado`). |
+| Evidencia previa sin activar la regla de detención | Hecho (consola y dicho) | Ver arriba. Réplica hasta el 2026-11-18. |
+| Revisión manual en la réplica (paso 6) | **No consta** | El agente no abrió un navegador. Pasos en `despliegue.md` 3.15 A. |
+| Verificación 3 de producción y valor de proxies | **Pendiente** (despliegue) | `despliegue.md` 3.15 C. La parte (c), falsificar `X-Forwarded-For`, queda cubierta por la prueba `FalsificacionTests` y no se repite en producción (diferencia con la verificación 3). |
+| AUD-03-004 y procedimiento de desbloqueo | Hecho en documentos (agente) | AUD-03-004 «Corregido en código, pendiente de verificar en producción»; [desbloqueo-de-acceso](../../../docs/operacion/desbloqueo-de-acceso.md). |
+| `.env.example` | **Pendiente (desarrollador)** | Una regla de permisos impide al agente leerlo; el texto está en la bitácora. |

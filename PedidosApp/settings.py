@@ -125,6 +125,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # 04-08 (D5): rechaza el POST demasiado grande a crear_pedido, editar_pedido y restaurar_bd
+    # sin leer el cuerpo. Va al final a propósito: su código corre antes de cualquier
+    # process_view (CsrfViewMiddleware lee request.POST en el suyo) y ya tiene sesión y mensajes.
+    "pedidos.limite_acceso.LimiteCuerpoMiddleware",
 ]
 
 ROOT_URLCONF = "PedidosApp.urls"
@@ -256,6 +260,54 @@ USE_THOUSAND_SEPARATOR = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# LÍMITES DE SUBIDA (iteración 04-08, D5)
+# ------------------------------------------------------
+# Valores explícitos, iguales al defecto de Django (sin cambio de comportamiento).
+# DATA_UPLOAD_MAX_MEMORY_SIZE cuenta solo los campos de texto, no los archivos: no frena el .sql
+# de la restauración. FILE_UPLOAD_MAX_MEMORY_SIZE NO es un tope: decide si un archivo queda en
+# memoria o va a un archivo temporal. Los topes reales son la validación de la imagen (5 MB),
+# el de la restauración (20 MB, 04-04) y el chequeo temprano de pedidos.limite_acceso.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2_621_440
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2_621_440
+
+# LÍMITE DE INTENTOS DE ACCESO (iteración 04-08, D1 a D3)
+# ------------------------------------------------------
+# Caché local de un solo proceso (hay un worker): recargar la web app borra los contadores y
+# desbloquea a todos. El alias 'acceso' es dedicado para que otros usos no expulsen sus claves;
+# 'default' queda igual que el defecto de Django.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+    'acceso': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'limite-acceso',
+        'OPTIONS': {'MAX_ENTRIES': 2000},
+    },
+}
+
+
+def _entero_no_negativo(nombre, defecto):
+    """Lee una variable entera opcional; un valor inválido detiene el arranque con un mensaje claro."""
+    crudo = (os.getenv(nombre) or '').strip()
+    if not crudo:
+        return defecto
+    try:
+        valor = int(crudo)
+    except ValueError:
+        valor = -1
+    if valor < 0:
+        raise ImproperlyConfigured(f'{nombre} debe ser un número entero igual o mayor que 0 (ver .env.example).')
+    return valor
+
+
+# Cantidad de proxies de confianza delante de la web app (D3). Con 0, se usa REMOTE_ADDR; el
+# valor de producción se mide (despliegue.md 3.15), no se supone.
+ACCESO_PROXIES_CONFIABLES = _entero_no_negativo('ACCESO_PROXIES_CONFIABLES', 0)
+# Fallos por dirección antes del bloqueo (defecto 20). 0 apaga solo ese contador: es el
+# interruptor de emergencia si una dirección mal medida bloqueara a todos.
+ACCESO_FALLOS_POR_DIRECCION = _entero_no_negativo('ACCESO_FALLOS_POR_DIRECCION', 20)
 
 # REGISTRO (iteración 01-02, RDA-013)
 # Todo va a stderr. En PythonAnywhere, stderr termina en server.log (hora de Chile, con la

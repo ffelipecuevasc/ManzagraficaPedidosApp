@@ -1,9 +1,38 @@
 from datetime import timedelta
 
 from django import forms
+from django.contrib.admin.forms import AdminAuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm
+from django.core.files.uploadedfile import UploadedFile
 from django.utils import timezone
+from . import limite_acceso
 from .models import Pedido, Cliente, Cotizacion, Producto, Pago
 from .sanitizar import sanitizar_html
+
+
+class LimiteAccesoMixin:
+    """Revisa el bloqueo ANTES de autenticar (04-08, D1 y D2).
+
+    Si el usuario o la dirección están bloqueados, corta sin llamar a `authenticate()`: así el
+    intento no emite `user_login_failed` ni escribe otra fila de evento. El mensaje es el mismo
+    exista o no el usuario. `bloqueado` lo usa la plantilla para mostrar la rama del bloqueo.
+    """
+
+    bloqueado = False
+
+    def clean(self):
+        if self.request is not None and limite_acceso.esta_bloqueado(self.request, self.cleaned_data.get('username')):
+            self.bloqueado = True
+            raise forms.ValidationError(limite_acceso.TEXTO_BLOQUEO, code='bloqueado')
+        return super().clean()
+
+
+class FormularioAcceso(LimiteAccesoMixin, AuthenticationForm):
+    """Acceso de `accounts/login/`."""
+
+
+class FormularioAccesoAdmin(LimiteAccesoMixin, AdminAuthenticationForm):
+    """Acceso del admin de Django (`admin.site.login_form`); comparte los contadores."""
 
 
 class ErroresAccesiblesMixin:
@@ -74,6 +103,14 @@ class PedidoForm(ErroresAccesiblesMixin, forms.ModelForm):
     def clean_detalles_pedido(self):
         # HTML del editor: solo la lista blanca de la 04-07 (D1, al guardar).
         return sanitizar_html(self.cleaned_data.get('detalles_pedido'))
+
+    def clean_imagen_referencia(self):
+        # 04-08 (D5): tope de 5 MB. Solo se mide una imagen recién subida, no la ya guardada.
+        imagen = self.cleaned_data.get('imagen_referencia')
+        if isinstance(imagen, UploadedFile) and imagen.size > limite_acceso.TOPE_IMAGEN_BYTES:
+            raise forms.ValidationError(
+                'La imagen de referencia supera los 5 MB. Elige una imagen más liviana.', code='imagen_grande')
+        return imagen
 
     def clean_abono_inicial(self):
         """Validar que el abono no sea mayor al total."""

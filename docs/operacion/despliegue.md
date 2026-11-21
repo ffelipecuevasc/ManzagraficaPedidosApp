@@ -834,6 +834,86 @@ La 04-07 limpia el HTML del editor con `nh3`, en dos momentos: al guardar y al m
    4. Revisa los registros desde el último `Starting uWSGI`, sin filtro por fecha: el `awk` sobre `server.log` y el `tail -n 80` de `error.log` (3.12 B, paso 6.3). Debe dar `coincidencias desde el arranque: 0`. Cuéntalo **después** de usar las pantallas.
 8. **Retroceso:** `retroceso.md`, caso 1 (sin migraciones). Vuelve a `v4.8-historial-clientes` y haz Reload. **`nh3` puede quedarse instalado**, porque el código anterior no lo usa. Si el único problema es que falta `nh3` (500 en detalles y formularios), basta con instalarlo (paso 4) y recargar; no hace falta retroceder.
 
+### 3.15 Despliegue de la 04-08 (`v4.10-acceso-limites`): migración, variables y medición de la dirección
+
+La 04-08 limita los intentos de acceso (5 por usuario y 20 por conexión en 15 minutos, bloqueo de 15) en `accounts/login/` y en el admin, deja un evento `acceso_bloqueado` por bloqueo, redirige al panel si ya hay sesión, limita la imagen de referencia a 5 MB y rechaza sin leerlo un POST demasiado grande a crear o editar pedidos y a restaurar. **Trae la migración `0009_acceso_bloqueado`, Clase 1:** `sqlmigrate` da solo `-- (no-op)` (agente, 2026-11-21, contra la réplica). Toca `settings.py` (caché, límites de subida, un middleware nuevo y dos variables) y `urls.py`. Sin `pip` ni `collectstatic`. Retroceso: `v4.9-sanitizacion-html`.
+
+**El riesgo principal:** si la aplicación ve a todos con la misma dirección (la del proxy de PythonAnywhere), 20 errores de cualquiera bloquean a todos. Por eso el despliegue entra con el contador por conexión **en modo medición** y la dirección se mide (C) antes de dejar los valores finales. Esa medición necesita **un segundo Reload, de ajuste**: el despliegue tiene un solo Reload (B.6) y el ajuste otro (C.4), cada uno confirmado con `DESDE_CL`.
+
+Las dos variables nuevas del `.env` (ninguna es obligatoria; un valor que no sea un entero ≥ 0 detiene el arranque con `ImproperlyConfigured`):
+
+| Variable | Sin definir | Para qué |
+| :------- | :---------- | :------- |
+| `ACCESO_PROXIES_CONFIABLES` | `0`: usa `REMOTE_ADDR` | Cuántos proxies propios hay delante. Con `1`, toma el último valor de `X-Forwarded-For`. **Se mide (C), no se supone.** |
+| `ACCESO_FALLOS_POR_DIRECCION` | `20` | Fallos por conexión antes del bloqueo. `0` apaga solo ese contador: es el interruptor de emergencia ([desbloqueo-de-acceso](desbloqueo-de-acceso.md)). |
+
+#### A. Antes (en tu PC)
+
+1. Réplica (la del refresco del 2026-11-18, con la `0009` ya aplicada por el agente el 2026-11-21 después del respaldo `replica_antes_04-08.sql`). Igual que 3.13 A, pasos 1 y 6: entorno, `docker compose up -d`, `$env:DB_NAME = "manzagrafica_replica"`, paridad `0`, `runserver`. Revisión manual del paso 6 de la iteración, en escritorio y a 360 px:
+   1. `/accounts/login/` con un usuario de la réplica y contraseña equivocada **5 veces**: la quinta todavía dice «Credenciales incorrectas»; la sexta, con la contraseña **correcta**, dice «Acceso bloqueado por 15 minutos» y no entra.
+   2. Detén `runserver` (`Ctrl+C`) y vuelve a arrancarlo: equivale a recargar y desbloquea. Entra con la contraseña correcta.
+   3. Con sesión iniciada, abre `/accounts/login/`: te lleva al panel.
+   4. Cierra sesión y repite el punto 1 en `/acceso-manzagrafica-admin/`: el mensaje de bloqueo aparece arriba del formulario del admin.
+   5. Admin → Registro de eventos, filtro por tipo «Acceso bloqueado»: un evento por bloqueo, sin dirección ni nombre escrito.
+   6. Crear pedido con una imagen de referencia de menos de 5 MB: se guarda. Con una de más de 5 MB: el formulario dice «La imagen de referencia supera los 5 MB…» y no guarda.
+   7. Restaurar (`/base_datos/restaurar_bd/`) con un archivo `.sql` de más de 21 MB (puedes crear uno con `fsutil file createnew "$carpeta\grande.sql" 23000000`): vuelve al formulario con «El archivo supera el tamaño permitido y no se recibió. No se guardó nada.» **No** uses un respaldo real. Borra el archivo al terminar.
+   8. A 360 px (`F12`, `Ctrl+Shift+M`, ancho `360`): el recuadro del bloqueo se lee completo, sin barra horizontal.
+   9. Limpieza: `Ctrl+C`, `Remove-Item Env:DB_NAME`, `docker compose stop`. Para volver la réplica atrás: `python manage.py migrate pedidos 0008` con `DB_NAME` de la réplica.
+2. `python manage.py test pedidos` → `Ran 446 tests`, `OK (expected failures=3)`.
+3. `.env.example`: pega el texto de la bitácora 04-08 (el agente no pudo leer ni editar ese archivo) y haz el commit **antes** de la etiqueta.
+
+#### B. Orden del despliegue
+
+1. **Respaldo de producción ANTES del checkout**, con `v4.9-sanitizacion-html` todavía activo, igual que en 3.13 B, paso 1: `VÁLIDO` (19 de 19), `RESULTADO: CUMPLE D2` y `0`. Anota el nombre, el tamaño y el SHA-256. **Con migración, es obligatorio:** si algo no cumple, no sigas.
+2. **Etiqueta** anotada `v4.10-acceso-limites` sobre el commit de la 04-08 y `git push` de la etiqueta (sección 1). Antes, en el PC, `git diff --stat v4.9-sanitizacion-html v4.10-acceso-limites` debe mostrar `PedidosApp/settings.py`, `PedidosApp/urls.py`, `.env.example`, `pedidos/limite_acceso.py`, `pedidos/forms.py`, `pedidos/senales.py`, `pedidos/admin.py`, `pedidos/models.py`, `pedidos/migrations/0009_acceso_bloqueado.py`, `registration/login.html`, pruebas y documentos. **No** debe mostrar `requirements.txt`, `pedidos/views.py` ni `pedidos/static/`.
+3. **`.env` del servidor, antes del checkout** (3.1 bis, pestaña **Files**): agrega **solo** esta línea, de medición:
+
+   ```
+   ACCESO_FALLOS_POR_DIRECCION=3
+   ```
+
+   No agregues `ACCESO_PROXIES_CONFIABLES` todavía. El código anterior ignora la variable. Comprueba: `grep -c '^ACCESO_FALLOS_POR_DIRECCION=3$' .env` → `1`.
+4. **Checkout** (3.2): `git fetch origin --tags`, `git checkout v4.10-acceso-limites` y `git describe` → `v4.10-acceso-limites`.
+5. **Plan, revisión y migración, antes del Reload** (3.4 y 3.7):
+
+   ```bash
+   python manage.py migrate --plan
+   python manage.py check --deploy
+   python manage.py migrate
+   python manage.py showmigrations pedidos
+   ```
+
+   - `--plan` debe listar **solo** `pedidos.0009_acceso_bloqueado` con `Alter field tipo on registroevento`. Si lista otra cosa, **no migres**: vuelve al checkout de `v4.9-sanitizacion-html`.
+   - `check --deploy`: solo W005 y W021. Si sale `ImproperlyConfigured` (por ejemplo, una variable `ACCESO_` mal escrita), corrige el `.env` y repite; **no recargues** mientras tanto.
+   - `migrate` debe terminar en `Applying pedidos.0009_acceso_bloqueado... OK` y `showmigrations`, en `[X] 0009_acceso_bloqueado`.
+6. **UN solo Reload**, con `DESDE_CL` calculado, mostrado y validado en la misma consola justo antes (igual que 3.14 B, paso 6) y confirmado con «Detectar reinicios de uWSGI» (3.6): **una** línea `Starting uWSGI`. Anota su hora.
+7. **Verificaciones del mismo día (RDA-021):**
+   1. Entra con tu contraseña correcta: panel sin 500. Con la sesión abierta, `/accounts/login/` te lleva al panel.
+   2. Sube una imagen de referencia de menos de 5 MB a un pedido de prueba y otra de más de 5 MB: la primera se guarda; la segunda muestra el mensaje y no se guarda. **No** intentes restaurar archivos en producción.
+   3. Registros desde el último `Starting uWSGI`, sin filtro por fecha (3.12 B, paso 6.3): `coincidencias desde el arranque: 0`. Cuéntalo **después** de C.
+
+#### C. Medición de la dirección real (obligatoria, el mismo día, justo después de B; hazla cuando nadie más esté usando la aplicación)
+
+Con `ACCESO_PROXIES_CONFIABLES` sin definir, la aplicación usa `REMOTE_ADDR`. Esta prueba dice si `REMOTE_ADDR` es tu conexión o la del proxy. Usa **un nombre de usuario que no exista** (por ejemplo `medicion-0408`), nunca tu cuenta real.
+
+1. **Desde tu red (computador):** en `/accounts/login/`, `medicion-0408` con cualquier contraseña, **3 veces**. Al cuarto intento debe salir «Acceso bloqueado por 15 minutos». Si no sale, detente: el contador por conexión no está funcionando; avisa sin cambiar nada.
+2. **Desde otra red (teléfono con datos móviles, wifi apagado):** entra a `/accounts/login/` con tu usuario y contraseña correctos.
+   - **Entra:** `REMOTE_ADDR` es la dirección real de cada persona. Valor final: `ACCESO_PROXIES_CONFIABLES` sin definir (o `0`).
+   - **Dice «Acceso bloqueado»:** `REMOTE_ADDR` es la del proxy, la misma para todos. Valor final: `ACCESO_PROXIES_CONFIABLES=1`.
+   - Anota cuál de los dos pasó (es la evidencia que cierra la verificación 3 de la iteración).
+3. **Valores finales en el `.env`:** cambia `ACCESO_FALLOS_POR_DIRECCION=3` por `ACCESO_FALLOS_POR_DIRECCION=20` y, solo si en C.2 saliste bloqueado, agrega `ACCESO_PROXIES_CONFIABLES=1`. Comprueba con `grep -E '^ACCESO_' .env`.
+4. **Reload de ajuste** (uno, con `DESDE_CL` y 3.6; una línea `Starting uWSGI`). Borra además todos los contadores de la prueba.
+5. **Comprobación** (solo si pusiste `ACCESO_PROXIES_CONFIABLES=1`): repite C.1 con `medicion-0408` **20 veces** desde tu red (bloquea al intento 21) y luego C.2 desde el teléfono: **debe entrar**. Si sale bloqueado, `X-Forwarded-For` no trae lo esperado: pon `ACCESO_FALLOS_POR_DIRECCION=0`, Reload y avisa al agente. Tu red queda bloqueada 15 minutos: espera (sin otro Reload).
+6. **Falsificación de la cabecera:** la prueba automatizada `FalsificacionTests` comprueba que cambiar lo que el cliente escribe a la izquierda de `X-Forwarded-For` no evita el bloqueo. **No se repite en producción** (enviar cabeceras propias exige un cliente HTTP con token CSRF); queda como diferencia anotada respecto de la verificación 3 (c) de la iteración.
+7. Admin → Registro de eventos: hay eventos «Acceso bloqueado» de la medición (uno por bloqueo). Se quedan; se purgan con la retención de 365 días.
+
+#### D. Retroceso
+
+- **Si el bloqueo afecta a todos:** `ACCESO_FALLOS_POR_DIRECCION=0` en el `.env` y Reload. No hace falta volver el código ([desbloqueo-de-acceso](desbloqueo-de-acceso.md), punto 3).
+- **Si hay que volver el código:** `retroceso.md`, caso 2 (rige también para Clase 1), a `v4.9-sanitizacion-html`. La `0009` es Clase 1 y MySQL no cambió: revertirla es **opcional**. Si lo haces, **antes** de volver el código: `python manage.py migrate pedidos 0008` (debe decir `Unapplying pedidos.0009_acceso_bloqueado... OK`). Después, checkout de `v4.9-sanitizacion-html` y Reload. Las variables `ACCESO_` pueden quedarse: el código anterior las ignora.
+- Los eventos `acceso_bloqueado` ya escritos quedan en la tabla y el admin los muestra sin nombre legible del tipo. No dañan nada.
+- **Si los datos se dañaran** (no se espera: la iteración no escribe datos de negocio): caso 3 con el respaldo de B.1.
+
 ## 4. Primer uso: despliegue de la 00-04 (`v0.1-higiene`)
 
 El paso a paso exacto, con las salidas que hay que anotar, está en `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-05.md`, parte B. Resume lo propio de este despliegue (punto 8 de la lista):
@@ -864,3 +944,4 @@ El paso a paso exacto, con las salidas que hay que anotar, está en `_planificac
 | 2026-11-19 23:06 (checkout a las 02:06 UTC del 2026-11-20; un solo arranque de uWSGI a las 23:06:46, hora de Chile, 02:06:44 UTC, según `server.log`: Reload del desarrollador (dicho); el arranque anterior fue el de las 17:41:57) | `v4.7-correcciones-config` | `7187d03` | 04-05 (correcciones de configuración: `django.conf.settings` en `views.py`, `conn_health_checks=True` con `conn_max_age=60`, `BASE_DIR` una vez, `DIRS` vacío, importaciones; partida y retroceso `v4.6-restauracion`); sin migraciones, `pip` ni `collectstatic` (diff `v4.6…v4.7`: código solo `settings.py`, `views.py` y `urls.py`; sin `requirements.txt`, migraciones ni estáticos) | `607db45f…9b8a` (`respaldo_19-11-2026_23-00-20.sql`, `VÁLIDO`, 19 de 19, `CUMPLE D2`, 1.549.306 bytes; tomado con `v4.6` activo, **antes del checkout**) | Correcto, sin retroceso. **Antes:** réplica con 379 pruebas, `OK (expected failures=4)`; `backups/` real con 1 archivo antes y después; paridad sin diferencias no aceptadas; pantallas en escritorio y a 360 px (dicho); `check --deploy` tras el checkout, solo W005 y W021. **Después:** `check --deploy` (02:15 UTC) solo W005 y W021; panel, listas, detalle y PDF sin 500 (dicho); `error.log` sin errores nuevos tras el Reload (3 coincidencias históricas de `TemplateDoesNotExist`, del 2026-10-26, anteriores a la 04-01; último `OSError` el 2026-11-18 18:40:18, ninguno el 2026-11-19). **Lección:** el `grep` por fecha no detecta trazas y `DESDE_CL` quedó sin definir; 3.12 B, paso 6.3, corregido. Hibernación: observación posterior (AUD-01-016). Pruebas previas: 379, `OK (expected failures=4)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente (`v4.8-historial-clientes`) es `v4.7-correcciones-config`** |
 | 2026-11-20 10:22 (un solo arranque de uWSGI a las 10:22:07, hora de Chile, único hasta las 10:54 según `server.log`; Reload del desarrollador) | `v4.8-historial-clientes` | `8f4e396` | 04-06 (protección del historial: `Pedido.cliente` y `Cotizacion.cliente` a `PROTECT`, rechazo con mensaje en `eliminar_cliente`, advertencia en la confirmación; script D2 versionado como excepción a «un despliegue, un propósito»; partida y retroceso `v4.7-correcciones-config`); **con migración `0008`, Clase 1** (`sqlmigrate`: `(no-op)`), sin `pip` ni `collectstatic` | `524c32fc27ef…09fe` (`respaldo_20-11-2026_10-16-37.sql`, 1.549.877 bytes, 19 de 19, `CUMPLE D2`; tomado con `v4.7` activo, **antes del checkout**: rotación en `error.log` a las 10:16:41, `git describe --tags` = `v4.7-correcciones-config` a las 10:20, checkout a las 10:21, visto en consola) | Correcto, sin retroceso. **Antes:** `migrate --plan` solo `0008`; `check --deploy` solo W005 y W021. `migrate` OK, `[X] 0008`. **Después:** conteo de `Traceback`, `OperationalError`, «gone away» y `TemplateDoesNotExist` desde el arranque: 0 (a las 10:27, **antes** del uso en navegador). **Réplica (3.13 A, consola):** `SHOW CREATE TABLE` con el mismo SHA-256 antes y después (`0830026E…7E3F`, 2324 bytes), conteos 824, 992, 999, 1198, 33 y 65 (clientes 825 → 824 por un borrado accidental); pruebas A a D en escritorio y 360 px, dichas. Producción: panel y `/clientes/lista/` sin 500 y confirmación de un cliente con pedidos con la advertencia, sin pulsar eliminar (dicho por el desarrollador); **sin conteo de errores posterior al uso**. Pruebas previas: 388, `OK (expected failures=3)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente es `v4.8-historial-clientes`** (previo `v4.7-correcciones-config`; `migrate pedidos 0007` opcional, caso 2) |
 | 2026-11-20 17:27 (un solo arranque de uWSGI, «Starting uWSGI» a las 17:27:05, hora de Chile; seguía siendo el último a las 17:31; checkout a las 20:23 UTC, 17:23 hora de Chile) | `v4.9-sanitizacion-html` | `6b79f63` | 04-07 (sanitización del HTML enriquecido con `nh3` al guardar y al mostrar, RDA-020, AUD-03-001, y guardia de SQL; partida y retroceso `v4.8-historial-clientes`); **con `pip`** (`nh3==0.3.8`, ya instalado), sin migraciones ni `collectstatic` (diff `v4.8…v4.9` sin migraciones, `settings.py`, `views.py` ni estáticos). Procedimiento: 3.14 | `D217AAE663C8…ED10F` (`respaldo_20-11-2026_17-19-15.sql`, 1.553.051 bytes, 19 de 19, `CUMPLE D2`, código 0; tomado con `v4.8` activo, **antes del checkout**: rotación en `error.log` a las 20:19:17 UTC, checkout a las 20:23 UTC) | Correcto, sin retroceso. **Consola, antes del Reload:** checkout limpio desde `v4.8`; `pip install -r`: 22 líneas `Requirement already satisfied`; `nh3` 0.3.8; `nh3.clean` → `<p>a</p>`; `pip freeze` = `requirements.txt` = 22; `migrate --plan` sin operaciones; `check --deploy` solo W005 y W021. **Consola, después:** conteo de `Traceback`, `OperationalError`, «gone away» y `TemplateDoesNotExist` desde el arranque, **después del uso**: 0; `error.log` sin entradas posteriores al arranque. **Dicho por el desarrollador:** detalle de pedido, cotización y producto con formato, guardado sin cambios de un producto o pedido fuera de los 15, y PDF de cotización, sin 500. **No consta:** copia de las imágenes de los pedidos 46 y 56; `DESDE_CL` no se mostró ni validó (el filtro funcionó; paso 6 corregido). **Observación sin causa conocida:** en el `tail` de `error.log` apareció repetida una línea antigua (2026-10-24 15:36:18,282) dentro del bloque del 2026-10-23; no se interpreta. Pruebas previas: 411, `OK (expected failures=3)` (en local). **Desde aquí, el destino de retroceso del despliegue siguiente es `v4.9-sanitizacion-html`** (previo `v4.8-historial-clientes`) |
+| **Prevista** (sin fecha; sección 3.15) | `v4.10-acceso-limites` | por fijar (commit de la 04-08) | 04-08 (protección del acceso y límites de entrada, AUD-03-004; partida y retroceso `v4.9-sanitizacion-html`); **con migración `0009_acceso_bloqueado`, Clase 1** (`-- (no-op)`), sin `pip` ni `collectstatic`; `.env` con `ACCESO_FALLOS_POR_DIRECCION=3` para medir y luego valores finales (3.15 C, Reload de ajuste) | Obligatorio (hay migración): por tomar con `v4.9` activo | Por completar: hora del Reload del despliegue y del de ajuste, resultado de la medición de la dirección (C.2) y valor final de `ACCESO_PROXIES_CONFIABLES`. Pruebas previas: 446, `OK (expected failures=3)` (en local, agente) |

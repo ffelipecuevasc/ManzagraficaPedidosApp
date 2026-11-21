@@ -1,7 +1,11 @@
 from django.contrib import admin
 from django.utils import timezone
 
+from .forms import FormularioAccesoAdmin
 from .models import Cliente, Pedido, Cotizacion, Producto, RegistroEvento
+
+# 04-08: el acceso del admin revisa el mismo límite de intentos que accounts/login/.
+admin.site.login_form = FormularioAccesoAdmin
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):

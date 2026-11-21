@@ -7,6 +7,7 @@ import os
 import tempfile
 from unittest import mock
 
+from django.core.cache import caches
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
@@ -170,6 +171,11 @@ class EventosBaseDeDatosTests(EventosNegocioBase):
 
 
 class EventosAccesoTests(TestCase):
+    def setUp(self):
+        # 04-08: la caché del límite de intentos persiste entre pruebas; se vacía en cada una.
+        caches['acceso'].clear()
+        self.addCleanup(caches['acceso'].clear)
+
     def ejecutar_post(self, datos):
         with self.captureOnCommitCallbacks(execute=True):
             return self.client.post('/accounts/login/', datos)

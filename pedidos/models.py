@@ -262,6 +262,7 @@ class RegistroEvento(models.Model):
         ('producto_eliminado', 'Producto eliminado'),
         ('acceso_exitoso', 'Acceso exitoso'),
         ('acceso_fallido', 'Acceso fallido'),
+        ('acceso_bloqueado', 'Acceso bloqueado'),
         ('respaldo_generado', 'Respaldo generado'),
         ('restauracion_ejecutada', 'Restauración ejecutada'),
     ]
