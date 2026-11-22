@@ -15,6 +15,7 @@ import os
 from dotenv import load_dotenv
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.csp import CSP
 
 # Ruta base del proyecto (una sola vez, 04-05, AUD-02-016). Las rutas se construyen así: BASE_DIR / 'subcarpeta'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -119,6 +120,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # 04-09: política de contenido en observación. Solo actúa al responder; va junto a las
+    # demás cabeceras de seguridad.
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -308,6 +312,29 @@ ACCESO_PROXIES_CONFIABLES = _entero_no_negativo('ACCESO_PROXIES_CONFIABLES', 0)
 # Fallos por dirección antes del bloqueo (defecto 20). 0 apaga solo ese contador: es el
 # interruptor de emergencia si una dirección mal medida bloqueara a todos.
 ACCESO_FALLOS_POR_DIRECCION = _entero_no_negativo('ACCESO_FALLOS_POR_DIRECCION', 20)
+
+# POLÍTICA DE CONTENIDO EN OBSERVACIÓN (iteración 04-09, D1 a D4)
+# ------------------------------------------------------
+# Solo observa: el navegador anota en su consola lo que no cumple, sin bloquear nada. Es la
+# política final, solo 'self', para que cada recurso externo y cada pieza en línea aparezcan
+# como infracción (D1). Sin nonces (D2) y sin punto de recepción de reportes (D4).
+# Interruptor (D3): activo por defecto, también en local, e independiente de
+# SEGURIDAD_PRODUCCION. Solo el texto exacto 'False' lo apaga; cualquier otro valor lo deja
+# activo y nunca detiene el arranque. Apagado, la política queda vacía y no sale la cabecera.
+# SECURE_CSP, el modo que bloquea, no se define hasta la Épica 08 (08-08): hoy dejaría la
+# aplicación sin estilos ni formularios.
+CSP_OBSERVACION = os.getenv('CSP_OBSERVACION') != 'False'
+SECURE_CSP_REPORT_ONLY = {
+    'default-src': [CSP.SELF],
+    'script-src': [CSP.SELF],
+    'style-src': [CSP.SELF],
+    'img-src': [CSP.SELF, 'data:'],
+    'font-src': [CSP.SELF],
+    'connect-src': [CSP.SELF],
+    'object-src': [CSP.NONE],
+    'base-uri': [CSP.SELF],
+    'form-action': [CSP.SELF],
+} if CSP_OBSERVACION else {}
 
 # REGISTRO (iteración 01-02, RDA-013)
 # Todo va a stderr. En PythonAnywhere, stderr termina en server.log (hora de Chile, con la
