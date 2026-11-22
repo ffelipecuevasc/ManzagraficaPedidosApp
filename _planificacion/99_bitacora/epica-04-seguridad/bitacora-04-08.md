@@ -115,6 +115,12 @@ Vacías equivalen a no definidas (`settings.py` trata el texto vacío como ausen
 - **`definicion-epica-04.md`** sigue mostrando la 04-08 como «Pendiente» en su tabla: no se tocó (no estaba en el cierre pedido).
 - **`retroceso.md`:** no se editó; 3.15 D remite al caso 2, que ya rige para la Clase 1.
 
+## Corrección documental (2026-11-22)
+
+- **Hallazgo (del desarrollador, verificado por él en `LimiteAccesoMixin.clean` y `limite_acceso.py`):** el paso C.5 de `despliegue.md` 3.15 pedía 20 fallos con el mismo nombre (`medicion-0408`). El bloqueo por usuario corta al 5.º fallo antes de `authenticate()`, y un intento bloqueado no suma al contador por dirección: el mensaje de bloqueo saldría desde el 6.º sin haber probado ese contador.
+- **Corrección:** C.5 ahora usa 20 nombres inexistentes distintos (`medicion-0408-01` a `-20`); el 20.º todavía dice «Credenciales incorrectas» y el 21.º, «Acceso bloqueado por 15 minutos». El texto anterior quedó tachado.
+- **Revisado sin cambios:** C.1 (3 fallos con un nombre, por debajo de 5); la verificación 3 de la iteración (usa un límite por dirección de 3, también por debajo de 5); esta bitácora y el registro no traían la instrucción. Solo documentos: no se tocó código, pruebas, migraciones ni `.env.example`.
+
 ## Commit sugerido
 
 `Épica 4 - Iteración 04-08: límite de intentos con evento acceso_bloqueado (0009, Clase 1), imagen de 5 MB y chequeo temprano del cuerpo; sin desplegar` (150 caracteres)
