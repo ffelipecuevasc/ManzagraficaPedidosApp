@@ -1,7 +1,7 @@
 # Iteración 04-08 · Protección del acceso y límites de entrada
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **En revisión, pendiente de despliegue (2026-11-21).** Etiqueta prevista `v4.10-acceso-limites`; retroceso `v4.9-sanitizacion-html`. Falta la revisión manual en la réplica (paso 6, la hace el desarrollador), el texto de `.env.example` (lo pega el desarrollador) y el despliegue con la medición de la dirección (`despliegue.md` 3.15). Ejecución: sección «Ejecución (2026-11-21)» al final y [bitacora-04-08](../../99_bitacora/epica-04-seguridad/bitacora-04-08.md). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-08-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-08-redaccion.md)); D1 a D5 resueltas por el desarrollador el mismo día ([bitacora-04-08-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-08-cierre.md)).
+- **Estado:** **Terminada · verificada en producción el 2026-11-21** (`v4.10-acceso-limites` sobre `c995647`; Reload de despliegue con un solo «Starting uWSGI» a las 23:18:55 y Reload de ajuste con uno solo a las 23:36:31, hora de Chile). `REMOTE_ADDR` resultó ser la del proxy: valores finales `ACCESO_PROXIES_CONFIABLES=1` y `ACCESO_FALLOS_POR_DIRECCION=20`. Retroceso vigente: `v4.10-acceso-limites` (previo `v4.9-sanitizacion-html`). Cierre en la sección «Cierre en producción (2026-11-21)» al final y en [bitacora-04-08](../../99_bitacora/epica-04-seguridad/bitacora-04-08.md). Antes: ~~**En revisión, pendiente de despliegue (2026-11-21).** Etiqueta prevista `v4.10-acceso-limites`; retroceso `v4.9-sanitizacion-html`. Falta la revisión manual en la réplica (paso 6, la hace el desarrollador), el texto de `.env.example` (lo pega el desarrollador) y el despliegue con la medición de la dirección (`despliegue.md` 3.15).~~ Ejecución: sección «Ejecución (2026-11-21)» al final y [bitacora-04-08](../../99_bitacora/epica-04-seguridad/bitacora-04-08.md). ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-08-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-08-redaccion.md)); D1 a D5 resueltas por el desarrollador el mismo día ([bitacora-04-08-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-08-cierre.md)).
 - **Subfase del plan:** nueva (Auditoría 03); `definicion-epica-04.md`, alcance 8 y decisión de la épica sobre la 04-08.
 - **Depende de:** la 04-04 (tope de 20 MB de la restauración, que esta iteración coordina) y las que editan `settings.py` (04-02, 04-03, 04-05): la 04-08 parte de lo que dejen. Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → … → 04-07 → **04-08**.
 - **Es requisito de:** la Épica 09 (precondición: «más cuentas, más superficie para fuerza bruta»; registro, fila 09-01).
@@ -257,7 +257,45 @@ El diseño ponía el chequeo de `CONTENT_LENGTH` en las vistas. **No sirve ahí:
 | Tabla de pruebas en verde | Hecho (agente) | Antes de implementar: 35 pruebas nuevas, `FAILED (failures=6, errors=23)`; las 6 que pasaban ya se cumplían antes del cambio (los dos 2,5 MB, que son el defecto de Django; imagen del tope exacto; `.sql` de 3 MB; cuerpo justo en el tope; rutas no revisadas; GET sin sesión). Después: `test pedidos` → 446 pruebas, `OK (expected failures=3)`. `check` sin problemas; `makemigrations --check --dry-run` → `No changes detected`. |
 | `sqlmigrate pedidos 0009` sin SQL, después de la `0008` | Hecho (agente, contra la réplica) | `-- (no-op)`. Dependencia: `0008_proteger_historial_cliente`. Aplicada en la réplica (`[X] 0009_acceso_bloqueado`). |
 | Evidencia previa sin activar la regla de detención | Hecho (consola y dicho) | Ver arriba. Réplica hasta el 2026-11-18. |
-| Revisión manual en la réplica (paso 6) | **No consta** | El agente no abrió un navegador. Pasos en `despliegue.md` 3.15 A. |
-| Verificación 3 de producción y valor de proxies | **Pendiente** (despliegue) | `despliegue.md` 3.15 C. La parte (c), falsificar `X-Forwarded-For`, queda cubierta por la prueba `FalsificacionTests` y no se repite en producción (diferencia con la verificación 3). |
-| AUD-03-004 y procedimiento de desbloqueo | Hecho en documentos (agente) | AUD-03-004 «Corregido en código, pendiente de verificar en producción»; [desbloqueo-de-acceso](../../../docs/operacion/desbloqueo-de-acceso.md). |
-| `.env.example` | **Pendiente (desarrollador)** | Una regla de permisos impide al agente leerlo; el texto está en la bitácora. |
+| Revisión manual en la réplica (paso 6) | ~~**No consta**~~ **Hecho (dicho; actualizado el 2026-11-22)** | ~~El agente no abrió un navegador.~~ Dicho por el desarrollador: las 8 revisiones de `despliegue.md` 3.15 A en la réplica, en escritorio y a 360 px, y `test pedidos` con 446 pruebas, `OK (expected failures=3)`. El agente no vio la pantalla ni esa salida. |
+| Verificación 3 de producción y valor de proxies | ~~**Pendiente** (despliegue)~~ **Hecho (2026-11-21; dicho y pantalla)** | Ver «Cierre en producción». Valor fijado: `ACCESO_PROXIES_CONFIABLES=1`. La parte (c), falsificar `X-Forwarded-For`, **no consta en producción**: la cubre solo la prueba `FalsificacionTests` (diferencia con la verificación 3). |
+| AUD-03-004 y procedimiento de desbloqueo | ~~Hecho en documentos (agente)~~ **Hecho (2026-11-22)** | AUD-03-004 «Corregido y verificado en producción», con los dos puntos que no constan; [desbloqueo-de-acceso](../../../docs/operacion/desbloqueo-de-acceso.md). |
+| `.env.example` | ~~**Pendiente (desarrollador)**~~ **Hecho (desarrollador)** | Commits `095e9e8` y `c995647` (vistos en `git log`; el agente no leyó el archivo, por la regla de permisos). |
+
+## Cierre en producción (2026-11-21)
+
+Fechas y horas de Chile. «Consola»: salida pegada y vista. «Pantalla»: captura vista por el agente. «Dicho»: lo afirma el desarrollador. «No consta»: nadie lo comprobó.
+
+### Consola
+
+- Respaldo previo con `v4.9-sanitizacion-html` activo, **antes del checkout**: `respaldo_21-11-2026_22-54-42.sql`, 1.557.435 bytes, SHA-256 `0543243735D791B7404AA4B275E044748F24B3DE13E39AE26FAA8546141A35B5`, 19 de 19, `CUMPLE D2`, código 0.
+- Etiqueta anotada `v4.10-acceso-limites` sobre `c995647`, partida `v4.9-sanitizacion-html`. El `git diff` no muestra `requirements.txt`, `views.py` ni estáticos.
+- `migrate --plan`: solo `0009`. `check --deploy`: solo W005 y W021. `migrate` OK y `[X] 0009`.
+- Reload de despliegue: un solo «Starting uWSGI», a las 23:18:55. Reload de ajuste: uno solo, a las 23:36:31.
+- Errores desde las 23:18: 0. `error.log` sin entradas nuevas.
+- **Incidente sin efecto:** a las 23:12 el checkout se probó en una consola nueva sin el entorno virtual activo y `manage.py` dio `ModuleNotFoundError`. Se volvió a `v4.9-sanitizacion-html` sin migrar y sin Reload. Después se repitió con el entorno activo (inferido: `migrate` funcionó; el único arranque fue el de las 23:18:55). `despliegue.md` 3.15 B lo advierte ahora.
+
+### Pantalla (Registro de eventos del admin)
+
+- 2 «Acceso bloqueado», a las 23:30:03 y a las 23:40:29, ambos «Bloqueo de 15 minutos por dirección», sin usuario ni dirección.
+- 23 «Acceso fallido» de «usuario desconocido»: 3 de C.1 y 20 de C.5. El 21.º intento de C.5, ya bloqueado, no dejó evento.
+- «Respaldo generado» a las 22:54:43. Accesos exitosos a las 23:41:13 y a las 00:00:58 (del 2026-11-22).
+
+### Dicho por el desarrollador
+
+- En producción: panel sin 500; imagen de referencia de menos de 5 MB guardada y de más de 5 MB rechazada; `/accounts/login/` con sesión redirige, sin 500.
+- C.1, con el límite en 3: el 4.º intento salió bloqueado.
+- C.2, desde el teléfono con datos móviles y credenciales correctas: «Acceso bloqueado». **`REMOTE_ADDR` es la del proxy.**
+- Valores finales en el `.env`: `ACCESO_FALLOS_POR_DIRECCION=20` y `ACCESO_PROXIES_CONFIABLES=1`.
+- C.5, con 20 nombres distintos: el 20.º dijo «Credenciales incorrectas» y el 21.º salió bloqueado; el teléfono entró durante ese bloqueo y el admin del computador siguió bloqueado hasta vencer.
+
+### No consta
+
+- Falsificar `X-Forwarded-For` en producción (verificación 3 (c)): solo la prueba automatizada.
+- Si PythonAnywhere corta la conexión cuando la aplicación rechaza un cuerpo grande sin leerlo.
+- Verificación 4 de la iteración con un bloqueo **por usuario** de una cuenta real: los dos bloqueos fueron por dirección. Que el Reload desbloquea se infiere de C.5 (tras el Reload de las 23:36:31, la misma red volvió a ver «Credenciales incorrectas» antes de que venciera el bloqueo de las 23:30:03), no se probó aparte.
+- Hora del conteo de errores (si fue después del último acceso de las 00:00:58).
+
+### Observación
+
+Entre las 23:30:03 y el Reload de las 23:36:31, con el límite en 3 y `REMOTE_ADDR` del proxy, el bloqueo por dirección alcanzaba a **todas** las personas: es el riesgo que la medición buscaba. No consta que alguien más intentara entrar en ese lapso.

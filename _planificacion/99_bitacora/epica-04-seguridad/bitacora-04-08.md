@@ -2,9 +2,9 @@
 
 - **Fecha:** 2026-11-21
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** **En revisión, pendiente de despliegue.**
-  - Etiqueta prevista: `v4.10-acceso-limites`. Retroceso: `v4.9-sanitizacion-html`, que sigue siendo la versión estable vigente.
-  - Falta: la revisión manual en la réplica (paso 6), pegar el texto de `.env.example` y el despliegue con la medición de la dirección (`despliegue.md` 3.15).
+- **Estado final:** **Terminada · verificada en producción el 2026-11-21** (cierre documental del 2026-11-22; sección «Cierre en producción»).
+  - `v4.10-acceso-limites` sobre `c995647` es la versión estable vigente y el destino de retroceso (previo `v4.9-sanitizacion-html`).
+  - ~~**En revisión, pendiente de despliegue.** Etiqueta prevista: `v4.10-acceso-limites`. Retroceso: `v4.9-sanitizacion-html`, que sigue siendo la versión estable vigente. Falta: la revisión manual en la réplica (paso 6), pegar el texto de `.env.example` y el despliegue con la medición de la dirección (`despliegue.md` 3.15).~~
 - **Regla:** solo conteos, tiempos e identificadores. Ningún nombre de usuario, dirección IP, contenido ni monto.
 - **Marcas:** «Consola»: el desarrollador pegó la salida y se vio. «Dicho»: lo afirma el desarrollador. «Agente»: lo ejecutó el agente en local. «Inferido»: sin verificar.
 
@@ -73,9 +73,9 @@ Aplicada en la réplica con `migrate pedidos` (agente): `Applying pedidos.0009_a
 - [x] Tabla de pruebas en verde, incluido el bloqueo por N intentos y su evento (agente).
 - [x] `sqlmigrate pedidos 0009` copiado, sin SQL; `0009` después de la `0008` (agente).
 - [x] Evidencia previa sin activar la regla de detención (consola: fallos; dicho: archivo más grande). Réplica hasta el 2026-11-18.
-- [ ] Revisión manual en la réplica: **no consta**.
-- [ ] Verificación 3 de producción y valor de proxies: pendiente del despliegue (3.15 C).
-- [x] AUD-03-004 «Corregido en código, pendiente de verificar en producción» y procedimiento de desbloqueo escrito (agente).
+- [x] Revisión manual en la réplica: ~~**no consta**~~ hecha (dicho por el desarrollador, 8 revisiones en escritorio y a 360 px; actualizado el 2026-11-22).
+- [x] Verificación 3 de producción y valor de proxies: ~~pendiente del despliegue (3.15 C)~~ hecha el 2026-11-21 (dicho y pantalla); `ACCESO_PROXIES_CONFIABLES=1`. La parte (c) no consta en producción.
+- [x] AUD-03-004 ~~«Corregido en código, pendiente de verificar en producción»~~ «Corregido y verificado en producción» (2026-11-22, con los dos puntos que no constan) y procedimiento de desbloqueo escrito (agente).
 
 ## Decisiones tomadas
 
@@ -106,14 +106,14 @@ Vacías equivalen a no definidas (`settings.py` trata el texto vacío como ausen
 
 ## Pendientes y riesgos
 
-- **Revisión manual en la réplica (3.15 A):** no consta.
-- **Dirección real en producción:** no verificada. Si `REMOTE_ADDR` es el proxy y se deja `0`, 20 fallos de cualquiera bloquean a todos. Mitigación: medición 3.15 C e interruptor `ACCESO_FALLOS_POR_DIRECCION=0`.
+- ~~**Revisión manual en la réplica (3.15 A):** no consta.~~ Hecha (dicho, 2026-11-21).
+- **Dirección real en producción:** ~~no verificada. Si `REMOTE_ADDR` es el proxy y se deja `0`, 20 fallos de cualquiera bloquean a todos. Mitigación: medición 3.15 C e interruptor `ACCESO_FALLOS_POR_DIRECCION=0`.~~ **Medida el 2026-11-21:** `REMOTE_ADDR` es la del proxy y quedó `ACCESO_PROXIES_CONFIABLES=1`. Si un despliegue futuro perdiera esa variable del `.env`, 20 fallos de cualquiera bloquearían a todos; el interruptor sigue siendo `ACCESO_FALLOS_POR_DIRECCION=0`.
 - **Respuesta sin leer el cuerpo:** no verificado si el proxy o uWSGI de PythonAnywhere cortan la conexión con un cuerpo grande sin leer (el navegador podría mostrar un error de conexión en vez del mensaje). El rechazo ocurre igual.
 - **Contadores en memoria:** se pierden en cada recarga o reinicio; el límite frena, no impide.
 - **IPv6** (no verificado): un atacante con un bloque propio puede rotar de dirección; el contador por usuario sigue protegiendo.
 - **Un tercero que conozca un nombre de usuario** puede bloquearlo 15 minutos (aceptado en D2).
-- **`definicion-epica-04.md`** sigue mostrando la 04-08 como «Pendiente» en su tabla: no se tocó (no estaba en el cierre pedido).
-- **`retroceso.md`:** no se editó; 3.15 D remite al caso 2, que ya rige para la Clase 1.
+- ~~**`definicion-epica-04.md`** sigue mostrando la 04-08 como «Pendiente» en su tabla: no se tocó (no estaba en el cierre pedido).~~ Corregido el 2026-11-22: la tabla la marca Terminada.
+- **`retroceso.md`:** no se editó; 3.15 D remite al caso 2, que ya rige para la Clase 1. Revisado de nuevo el 2026-11-22: no lista etiquetas de destino (dice «la anterior a la desplegada»), así que no necesita cambio.
 
 ## Corrección documental (2026-11-22)
 
@@ -121,6 +121,21 @@ Vacías equivalen a no definidas (`settings.py` trata el texto vacío como ausen
 - **Corrección:** C.5 ahora usa 20 nombres inexistentes distintos (`medicion-0408-01` a `-20`); el 20.º todavía dice «Credenciales incorrectas» y el 21.º, «Acceso bloqueado por 15 minutos». El texto anterior quedó tachado.
 - **Revisado sin cambios:** C.1 (3 fallos con un nombre, por debajo de 5); la verificación 3 de la iteración (usa un límite por dirección de 3, también por debajo de 5); esta bitácora y el registro no traían la instrucción. Solo documentos: no se tocó código, pruebas, migraciones ni `.env.example`.
 
+## Cierre en producción (2026-11-21; cierre documental del 2026-11-22)
+
+Horas de Chile. Detalle completo en la iteración, sección «Cierre en producción», y en `despliegue.md`, sección 5.
+
+- **Consola:** respaldo previo con `v4.9` activo, antes del checkout: `respaldo_21-11-2026_22-54-42.sql`, 1.557.435 bytes, SHA-256 `0543243735D791B7404AA4B275E044748F24B3DE13E39AE26FAA8546141A35B5`, 19 de 19, `CUMPLE D2`, código 0. Etiqueta anotada sobre `c995647`, partida `v4.9-sanitizacion-html`; el diff no muestra `requirements.txt`, `views.py` ni estáticos. `migrate --plan` solo `0009`; `check --deploy` solo W005 y W021; `migrate` OK, `[X] 0009`. Reload de despliegue: un solo «Starting uWSGI» a las 23:18:55; Reload de ajuste: uno solo a las 23:36:31. Errores desde las 23:18: 0; `error.log` sin entradas nuevas.
+- **Incidente sin efecto (consola):** a las 23:12, checkout en una consola nueva sin el entorno virtual → `ModuleNotFoundError` en `manage.py`; vuelta a `v4.9-sanitizacion-html` sin migrar. `despliegue.md` 3.15 B.5 lo advierte ahora.
+- **Pantalla (Registro de eventos):** 2 «Acceso bloqueado» (23:30:03 y 23:40:29), ambos por dirección, sin usuario ni dirección; 23 «Acceso fallido» de usuario desconocido (3 + 20); el 21.º intento no dejó evento; «Respaldo generado» a las 22:54:43; accesos exitosos a las 23:41:13 y 00:00:58.
+- **Dicho:** revisión manual en la réplica (8 revisiones, escritorio y 360 px); 446 pruebas OK (expected failures=3); en producción, panel, imagen de menos y de más de 5 MB y redirección sin 500; con el límite en 3, el 4.º intento bloqueado; desde el teléfono con datos móviles, «Acceso bloqueado» (`REMOTE_ADDR` es la del proxy); valores finales `ACCESO_FALLOS_POR_DIRECCION=20` y `ACCESO_PROXIES_CONFIABLES=1`; con 20 nombres distintos, el 20.º «Credenciales incorrectas» y el 21.º bloqueado, el teléfono entró durante ese bloqueo y el admin siguió bloqueado hasta vencer.
+- **No consta:** falsificar `X-Forwarded-For` en producción (solo `FalsificacionTests`); si PythonAnywhere corta la conexión con un cuerpo grande sin leer; un bloqueo por usuario de una cuenta real (verificación 4); la hora del conteo de errores.
+- **Observación:** entre las 23:30:03 y las 23:36:31 el bloqueo por dirección alcanzaba a todos (límite 3 y dirección del proxy). No consta que alguien más intentara entrar.
+- **Ajustes de `despliegue.md` 3.15 (2026-11-22):** A.1.6 usa una imagen real de 5 a 7 MB; A.1.7 crea el archivo con `[IO.File]::Create(...)` y `SetLength()` (`fsutil` pide administrador); B.5 exige activar el entorno virtual en consola nueva; C.3 deja escrito que el `.env` final lleva ambas variables. Sección 5 con la fila real y el retroceso siguiente a `v4.10-acceso-limites`.
+- **Lo que sigue:** la 14-04 ya cumple sus dos condiciones (la `0009` está en `main` y la 04-08 está desplegada): ya puede ejecutarse y después desplegarse. No se empezó, igual que la 04-09.
+
 ## Commit sugerido
 
 `Épica 4 - Iteración 04-08: límite de intentos con evento acceso_bloqueado (0009, Clase 1), imagen de 5 MB y chequeo temprano del cuerpo; sin desplegar` (150 caracteres)
+
+Cierre (2026-11-22): `Épica 4 - Iteración 04-08: desplegada v4.10-acceso-limites el 2026-11-21 (proxies en 1); cierre documental, AUD-03-004 resuelto y ajustes de 3.15` (145 caracteres)
