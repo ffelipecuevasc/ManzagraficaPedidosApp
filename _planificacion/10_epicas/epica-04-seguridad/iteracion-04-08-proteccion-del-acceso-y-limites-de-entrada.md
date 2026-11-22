@@ -272,8 +272,8 @@ Fechas y horas de Chile. «Consola»: salida pegada y vista. «Pantalla»: captu
 - Etiqueta anotada `v4.10-acceso-limites` sobre `c995647`, partida `v4.9-sanitizacion-html`. El `git diff` no muestra `requirements.txt`, `views.py` ni estáticos.
 - `migrate --plan`: solo `0009`. `check --deploy`: solo W005 y W021. `migrate` OK y `[X] 0009`.
 - Reload de despliegue: un solo «Starting uWSGI», a las 23:18:55. Reload de ajuste: uno solo, a las 23:36:31.
-- Errores desde las 23:18: 0. `error.log` sin entradas nuevas.
-- **Incidente sin efecto:** a las 23:12 el checkout se probó en una consola nueva sin el entorno virtual activo y `manage.py` dio `ModuleNotFoundError`. Se volvió a `v4.9-sanitizacion-html` sin migrar y sin Reload. Después se repitió con el entorno activo (inferido: `migrate` funcionó; el único arranque fue el de las 23:18:55). `despliegue.md` 3.15 B lo advierte ahora.
+- Errores desde las 23:18: 0. `error.log` sin entradas nuevas. **Hora del conteo (consola, precisado el 2026-11-22):** a las 23:53 hora de Chile (02:53 UTC del 2026-11-22), después de C y del acceso de las 23:41:13, y **antes** del acceso de las 00:00:58, que el conteo no cubre.
+- **Incidente sin efecto:** a las 23:12 el checkout se probó en una consola nueva sin el entorno virtual activo y `manage.py` dio `ModuleNotFoundError`. Se volvió a `v4.9-sanitizacion-html` sin migrar y sin Reload. Después se repitió con el entorno activo ~~(inferido: `migrate` funcionó; el único arranque fue el de las 23:18:55)~~ **(consola, precisado el 2026-11-22: segundo checkout de `v4.10-acceso-limites` a las 02:17 UTC, 23:17 hora de Chile, con el prompt «(venv)», `which python` apuntando al entorno virtual y «modulos OK»; ya no es deducción)**. `despliegue.md` 3.15 B lo advierte ahora.
 
 ### Pantalla (Registro de eventos del admin)
 
@@ -294,7 +294,7 @@ Fechas y horas de Chile. «Consola»: salida pegada y vista. «Pantalla»: captu
 - Falsificar `X-Forwarded-For` en producción (verificación 3 (c)): solo la prueba automatizada.
 - Si PythonAnywhere corta la conexión cuando la aplicación rechaza un cuerpo grande sin leerlo.
 - Verificación 4 de la iteración con un bloqueo **por usuario** de una cuenta real: los dos bloqueos fueron por dirección. Que el Reload desbloquea se infiere de C.5 (tras el Reload de las 23:36:31, la misma red volvió a ver «Credenciales incorrectas» antes de que venciera el bloqueo de las 23:30:03), no se probó aparte.
-- Hora del conteo de errores (si fue después del último acceso de las 00:00:58).
+- ~~Hora del conteo de errores (si fue después del último acceso de las 00:00:58).~~ **Ya consta (consola, 2026-11-22):** a las 23:53, antes del acceso de las 00:00:58. Lo que **no consta** es un conteo posterior a ese acceso.
 
 ### Observación
 
