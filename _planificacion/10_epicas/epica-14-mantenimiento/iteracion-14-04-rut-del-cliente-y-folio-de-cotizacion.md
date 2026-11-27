@@ -9,7 +9,7 @@
 - **RDA relacionadas:** RDA-007 (un despliegue, un propósito), RDA-014 (numeración), RDA-021 (sin esperas), RDA-022 y RDA-024 (destino en la Épica 14).
 - **Cambio de esquema:** sí. Tabla nueva `SecuenciaFolio` y columnas nuevas `Cliente.rut` y `Cotizacion.folio`. Clasificación declarada: ver «Clasificación de las migraciones»; se confirma con `sqlmigrate` antes de aplicar.
 - **Respaldo previo al despliegue:** **obligatorio y verificado**, y respaldo posterior verificado (con 20 tablas).
-- **Etiqueta y retroceso:** etiqueta propuesta **`v14.3-rut-y-folio`** (`despliegue.md`, sección 1: fase 14, correlativo siguiente a `v14.2-duplicar-items`). Destino de retroceso: la etiqueta que deje la 04-08 (aún sin fijar).
+- **Etiqueta y retroceso:** etiqueta propuesta **`v14.3-rut-y-folio`** (`despliegue.md`, sección 1: fase 14, correlativo siguiente a `v14.2-duplicar-items`). Destino de retroceso: **`v4.11-csp-observacion`** (2026-11-27). Antes: ~~la etiqueta que deje la 04-08 (aún sin fijar).~~
 - **Archivos que tocará la ejecución:** `pedidos/models.py`, módulo nuevo `pedidos/validadores.py`, `pedidos/forms.py`, `pedidos/admin.py`, `pedidos/views.py` (crear, editar, listar, detalle, PDF, convertir y crear cliente rápido), migraciones `0010` a `0012`, plantillas `cotizacion_*.html`, `cotizacion_pdf.html` y de clientes, `pedidos/static/pedidos/js/index.js`, `scripts/verificar_respaldo.py` y sus pruebas, `docs/operacion/despliegue.md`, `docs/operacion/respaldo.md` y pruebas nuevas.
 
 ## Objetivo
@@ -99,7 +99,7 @@ No se despliega antes de la 04-07 (`v4.9-sanitizacion-html`) y la 04-08. Si la p
 5. Un solo Reload.
 6. Respaldo posterior verificado (20 tablas).
 7. Validación del día 0 (RDA-021): un cliente existente muestra el RUT ficticio y al editarlo se rechaza; una cotización nueva muestra el folio 1000 en pantalla y en el PDF (y en el nombre del archivo).
-8. Retroceso: `retroceso.md`, **con restauración del respaldo previo** (hay migraciones con datos y tabla nueva), y vuelta a la etiqueta de la 04-08.
+8. Retroceso: `retroceso.md`, **con restauración del respaldo previo** (hay migraciones con datos y tabla nueva), y vuelta a `v4.11-csp-observacion` (antes: ~~la etiqueta de la 04-08~~).
 
 Los datos de producción los entrega el desarrollador en `evidencia-14-04.md`.
 

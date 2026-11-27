@@ -2,7 +2,7 @@
 
 - **Fechas:** 2026-11-22 (código y pruebas) y 2026-11-27 (revisión manual y cierre documental)
 - **Agente:** Claude Code (Opus 5.5)
-- **Estado final:** **En revisión · pendiente de despliegue.** Etiqueta propuesta `v4.11-csp-observacion`; retroceso `v4.10-acceso-limites`; `despliegue.md` 3.16. Sin migraciones, `pip` ni `collectstatic`.
+- **Estado final:** **Terminada · verificada en producción el 2026-11-27** (`v4.11-csp-observacion`, `37527b9`). Antes: ~~En revisión · pendiente de despliegue.~~ Etiqueta propuesta `v4.11-csp-observacion`; retroceso `v4.10-acceso-limites`; `despliegue.md` 3.16. Sin migraciones, `pip` ni `collectstatic`.
 
 ## Resumen
 
@@ -66,6 +66,21 @@ AUD-05-025 (calendario en modo oscuro), AUD-05-026 (fecha de entrega vacía al e
 - Las páginas 404 y 500 propias de la aplicación en el navegador.
 - La cabecera a través del proxy de PythonAnywhere (verificación del despliegue).
 - Qué librería inyecta los 12 estilos sin origen.
+
+## Cierre en producción (2026-11-27, hora de Chile)
+
+| Fuente | Hecho |
+| :-- | :-- |
+| Dicho | Respaldo con `v4.10` activo: `VÁLIDO`, 19 de 19, `CUMPLE D2`, código 0; nombre, tamaño y SHA-256 no constan |
+| Consola | Rotación en `error.log` 10:51:08; checkout 10:52 (respaldo anterior: inferido) |
+| Consola | Antes: `HEAD` `c995647` (`v4.10-acceso-limites`), árbol limpio; `.env` con `ACCESO_FALLOS_POR_DIRECCION=20`, `ACCESO_PROXIES_CONFIABLES=1`, 0 líneas `CSP_OBSERVACION` |
+| Consola | Checkout `v4.11-csp-observacion` = `37527b9`, árbol limpio; `migrate --plan` sin operaciones; `check --deploy` solo W005 y W021; `DESDE_CL` válido |
+| Consola | 1 «Starting uWSGI» (10:54:00); conteo de errores a las 11:01:36: 0; `error.log` sin entradas posteriores al arranque |
+| Pantalla (captura) | `/accounts/login/` 200 con `Content-Security-Policy-Report-Only`, 9 directivas (`Date` 13:59:41 GMT); `Content-Security-Policy` ausente (inferido) |
+| Dicho | Sitio igual; mensajes `[Report Only]` en la consola |
+| No consta | `Strict-Transport-Security` y `X-Frame-Options` en producción; si el conteo fue después del uso |
+
+Retroceso del despliegue siguiente (14-04): `v4.11-csp-observacion`. Destino de los hallazgos (2026-11-27): AUD-05-025, 027, 028, 029 y 030 a la Épica 14, agrupados por tema; AUD-05-026 Media (propuesta), pendiente de comprobar en la réplica (si la fecha se pierde al guardar, pasa a Crítica, RDA-022).
 
 ## Archivos
 

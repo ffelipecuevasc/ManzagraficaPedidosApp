@@ -1,7 +1,7 @@
 # Iteración 04-09 · Política de seguridad de contenido en observación
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** **En revisión · pendiente de despliegue** (2026-11-27). Código en `main` (`6b6f590`): middleware, `CSP_OBSERVACION` y `SECURE_CSP_REPORT_ONLY` en `settings.py`, `.env.example` (pegado por el desarrollador) y `pedidos/tests/test_csp.py`; 461 pruebas, `OK (expected failures=3)`; revisión manual en la réplica hecha (sección «Ejecución y revisión manual»). Etiqueta propuesta `v4.11-csp-observacion`; retroceso `v4.10-acceso-limites`; procedimiento en `despliegue.md` 3.16. Bitácora: [bitacora-04-09](../../99_bitacora/epica-04-seguridad/bitacora-04-09.md). Antes: ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-09-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-09-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-09-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-09-cierre.md)).
+- **Estado:** **Terminada · verificada en producción el 2026-11-27** (`v4.11-csp-observacion`, `37527b9`; sección «Cierre en producción»). Antes: ~~En revisión · pendiente de despliegue (2026-11-27).~~ Código en `main` (`6b6f590`): middleware, `CSP_OBSERVACION` y `SECURE_CSP_REPORT_ONLY` en `settings.py`, `.env.example` (pegado por el desarrollador) y `pedidos/tests/test_csp.py`; 461 pruebas, `OK (expected failures=3)`; revisión manual en la réplica hecha (sección «Ejecución y revisión manual»). Etiqueta propuesta `v4.11-csp-observacion`; retroceso `v4.10-acceso-limites`; procedimiento en `despliegue.md` 3.16. Bitácora: [bitacora-04-09](../../99_bitacora/epica-04-seguridad/bitacora-04-09.md). Antes: ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-09-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-09-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-09-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-09-cierre.md)).
 - **Subfase del plan:** nueva (reorganización del 2026-10-27, RDA-014); `definicion-epica-04.md`, alcance 9 y decisión de la épica sobre la 04-09.
 - **Depende de:** la 04-02 (comparte `settings.py` y no repite ninguna de sus cabeceras) y, por orden de despliegue, de todas las anteriores. Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → … → 04-08 → **04-09**, la última de la Épica 04. **Decisión del desarrollador (2026-11-22, dicha por él; sin RDA): la 04-09 se despliega antes que la 14-04.** Retroceso de la 04-09: `v4.10-acceso-limites`. El retroceso de la 14-04 pasa a ser `v4.11-csp-observacion`, pero eso se ajusta en la Épica 14 (no se tocó aquí).
 - **Es requisito de:** la Épica 08 (precondición: «04-09 desplegada») y la 08-08, que reemplaza este modo por la política estricta (registro, fila 08-08).
@@ -335,7 +335,21 @@ AUD-05-025 (ícono de calendario en modo oscuro), AUD-05-026 (fecha de entrega v
 | :-- | :-- |
 | Pruebas de la cabecera en verde; resto sin cambios | Hecho (consola): 461, `OK (expected failures=3)` |
 | Revisión manual en la réplica con conteos y el sitio igual | Hecho (dicho) |
-| Verificación 2 de producción (cabecera presente, sitio igual) | **Pendiente** (despliegue, `despliegue.md` 3.16) |
-| «La política está activa en modo observación en producción» | **Pendiente** (despliegue) |
+| Verificación 2 de producción (cabecera presente, sitio igual) | Hecho (2026-11-27): cabecera con 9 directivas en `/accounts/login/` (captura); sitio igual y `[Report Only]` en la consola (dicho). Antes: ~~**Pendiente** (despliegue, `despliegue.md` 3.16)~~ |
+| «La política está activa en modo observación en producción» | Hecho (2026-11-27): `v4.11-csp-observacion` activa, 0 líneas `CSP_OBSERVACION` en el `.env` (consola), cabecera presente (captura). Antes: ~~**Pendiente** (despliegue)~~ |
+| `server.log`/`error.log` sin errores nuevos (verificación 3) | Hecho (consola): 0 coincidencias a las 11:01:36; no consta si fue después de usar las pantallas |
+
+## Cierre en producción (2026-11-27, hora de Chile)
+
+Procedimiento: `despliegue.md` 3.16; fila en la sección 5.
+
+- **Respaldo previo (dicho):** con `v4.10` activo; `VÁLIDO`, 19 de 19, `CUMPLE D2`, código 0. Nombre, tamaño y SHA-256: no constan. **Consola:** rotación en `error.log` a las 10:51:08 (13:51:08 UTC) y checkout a las 10:52 (13:52 UTC); que el respaldo fue anterior al checkout es inferido.
+- **Consola, antes del Reload:** `HEAD` en `v4.10-acceso-limites` (`c995647`), árbol limpio; `.env` con `ACCESO_FALLOS_POR_DIRECCION=20`, `ACCESO_PROXIES_CONFIABLES=1` y 0 líneas `CSP_OBSERVACION`; checkout de `v4.11-csp-observacion` = `37527b9`, árbol limpio; `migrate --plan` sin operaciones; `check --deploy` solo W005 y W021; `DESDE_CL` válido.
+- **Consola, después:** un solo «Starting uWSGI» a las 10:54:00; conteo a las 11:01:36: 0 coincidencias; `error.log` sin entradas posteriores al arranque.
+- **Pantalla (captura):** `/accounts/login/` 200 con `Content-Security-Policy-Report-Only` y las 9 directivas (`Date` 13:59:41 GMT). `Content-Security-Policy` ausente: inferido por el orden alfabético de Chrome. El proxy de PythonAnywhere entrega la cabecera.
+- **Dicho:** sitio igual y mensajes `[Report Only]` en la consola.
+- **No consta:** `Strict-Transport-Security` y `X-Frame-Options` en producción; si el conteo fue después de usar las pantallas.
+- **Pruebas previas (local):** 461, `OK (expected failures=3)`.
+- **Retroceso:** el destino del despliegue siguiente (14-04) es `v4.11-csp-observacion` (previo `v4.10-acceso-limites`).
 | `.env.example` con `CSP_OBSERVACION` sin valor real | Hecho (desarrollador, `6b6f590`; el agente no lo leyó por permisos) |
 | Página en `docs/operacion/` | Hecho: [politica-de-contenido](../../../docs/operacion/politica-de-contenido.md) |
