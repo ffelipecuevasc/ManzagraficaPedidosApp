@@ -1,9 +1,9 @@
 # Iteración 04-09 · Política de seguridad de contenido en observación
 
 - **Épica:** 04 · Seguridad y endurecimiento
-- **Estado:** Pendiente (redactada, decisiones resueltas). Redactada el 2026-11-17 ([bitacora-04-09-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-09-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-09-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-09-cierre.md)).
+- **Estado:** **En revisión · pendiente de despliegue** (2026-11-27). Código en `main` (`6b6f590`): middleware, `CSP_OBSERVACION` y `SECURE_CSP_REPORT_ONLY` en `settings.py`, `.env.example` (pegado por el desarrollador) y `pedidos/tests/test_csp.py`; 461 pruebas, `OK (expected failures=3)`; revisión manual en la réplica hecha (sección «Ejecución y revisión manual»). Etiqueta propuesta `v4.11-csp-observacion`; retroceso `v4.10-acceso-limites`; procedimiento en `despliegue.md` 3.16. Bitácora: [bitacora-04-09](../../99_bitacora/epica-04-seguridad/bitacora-04-09.md). Antes: ~~Pendiente (redactada, decisiones resueltas).~~ Redactada el 2026-11-17 ([bitacora-04-09-redaccion](../../99_bitacora/epica-04-seguridad/bitacora-04-09-redaccion.md)); D1 a D4 resueltas por el desarrollador el mismo día ([bitacora-04-09-cierre](../../99_bitacora/epica-04-seguridad/bitacora-04-09-cierre.md)).
 - **Subfase del plan:** nueva (reorganización del 2026-10-27, RDA-014); `definicion-epica-04.md`, alcance 9 y decisión de la épica sobre la 04-09.
-- **Depende de:** la 04-02 (comparte `settings.py` y no repite ninguna de sus cabeceras) y, por orden de despliegue, de todas las anteriores. Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → … → 04-08 → **04-09**, la última de la Épica 04.
+- **Depende de:** la 04-02 (comparte `settings.py` y no repite ninguna de sus cabeceras) y, por orden de despliegue, de todas las anteriores. Se redactó en paralelo a la vigilancia de la 03-05; ~~**su ejecución en local no empieza hasta cerrar esa vigilancia** (decisión del desarrollador, 2026-11-17). **No se despliega antes de cerrar la vigilancia (desde el lunes 2026-11-23 a las 23:48:12).**~~ **Superado el 2026-11-18 (RDA-021): no hay vigilancia que cerrar; la 14-01 se despliega antes de la 04-01 (RDA-022).** Orden de despliegue (RDA-007, un propósito cada uno): 04-01 → 04-10 → … → 04-08 → **04-09**, la última de la Épica 04. **Decisión del desarrollador (2026-11-22, dicha por él; sin RDA): la 04-09 se despliega antes que la 14-04.** Retroceso de la 04-09: `v4.10-acceso-limites`. El retroceso de la 14-04 pasa a ser `v4.11-csp-observacion`, pero eso se ajusta en la Épica 14 (no se tocó aquí).
 - **Es requisito de:** la Épica 08 (precondición: «04-09 desplegada») y la 08-08, que reemplaza este modo por la política estricta (registro, fila 08-08).
 - **RDA relacionadas:** RDA-007; RDA-016 (interfaz con plantillas del servidor). **Sin RDA nueva:** no hay dependencia ni decisión estructural.
 - **Hallazgos que cierra:** ninguno por sí sola (es observación). **Prepara** AUD-03-005 (librerías sin integridad, 08-07 y 08-08) y es la segunda capa de AUD-03-001 (04-07).
@@ -165,9 +165,9 @@ Un nonce es una marca aleatoria por respuesta que permite ejecutar **un script o
 | Pieza en línea | ¿Lo cubre un nonce? | Alternativa más sólida |
 | :------------- | :------------------ | :--------------------- |
 | 7 bloques `<script>` (sin variables de plantilla) | Sí | **Mover a archivos estáticos** (`index.js` u otros): se elimina el problema |
-| 2 bloques `<style>` | Sí | Mover a `index.css` |
+| 2 bloques `<style>` | Sí | ~~Mover a `index.css`~~ **Corregido el 2026-11-22:** el de `login.html` se puede mover a `index.css`; el de `trabajo_semanal.html:7-12` **usa `{{ nivel_presion }}`** en un `conic-gradient`, así que **no se pasa tal cual a `index.css`** (variable CSS fijada por un atributo, clases por tramos o nonce: decisión de la 08-08) |
 | 8 atributos `style="…"` con valores del servidor | **No** | Clases de CSS por tramos o `style-src-attr` aceptando el riesgo, decisión de la 08-08 |
-| Manejadores `onclick`/`onchange`/`onkeydown` (4 en plantillas, 3 generados por JavaScript) | **No** | Escuchas de eventos en `index.js` |
+| Manejadores `onclick`/`onchange`/`onkeydown` (~~4 en plantillas~~ **6: 3 en plantillas** (la 04-01 retiró el de `respaldar_bd.html`) **y 3 generados por JavaScript**, corregido el 2026-11-22) | **No** | Escuchas de eventos en `index.js` |
 | Estilos que inyectan las librerías (Tailwind del navegador, SweetAlert2) | No | Compilar Tailwind en local (08-05); SweetAlert2 autoalojado |
 
 Un nonce exigiría, además, agregar el procesador `csp` a `TEMPLATES` y un atributo en cada bloque (editar 8 plantillas que la 04-01, la 04-04 y la 04-07 también tocan) y **dejaría sin aparecer en el reporte** justo lo que se quiere listar. Y como la Épica 08 mueve las plantillas a parciales (08-03, 08-04) y compila Tailwind (08-05), conviene aplicar los nonces, y los que queden, una sola vez, ahí (la definición de la Épica 08 ya lo prevé en la 08-08).
@@ -263,3 +263,79 @@ Nota: las pruebas comprueban la **cabecera**; lo que el navegador anota o no blo
 - **Cambios en archivos de configuración:** `settings.py` y `.env.example` exigen consulta previa; `settings.py` también lo editan otras iteraciones de la épica (se parte de lo que dejen).
 - **Que alguien la «active» antes de la Épica 08:** pasar la política a `SECURE_CSP` hoy dejaría la aplicación sin estilos ni formularios; la prueba de «nunca bloquea» lo impide.
 - **Un despliegue, un propósito (RDA-007):** va solo, después de la 04-08.
+
+## Ejecución y revisión manual (2026-11-22 a 2026-11-27)
+
+«Consola»: salida vista por el agente. «Dicho»: lo afirma el desarrollador (informe de la revisión manual, pegado el 2026-11-27). «No consta»: nadie lo comprobó.
+
+### Ubicación en `main` tras la 04-08 (consola, 2026-11-22)
+
+Las líneas citadas arriba son del 2026-11-17. Las que se movieron: `MIDDLEWARE` en `settings.py:120-132` antes del cambio (ahora el de CSP en `:125`, justo después de `SecurityMiddleware`), procesadores de contexto en `:143-147` (sin `csp`); `login.html` jQuery `:158`, `index.js` `:159`, script contra el doble envío `:160-192`; `pedido_form.html:437-469`; `pago_form.html:145-156`; `restaurar_bd.html:67-100`; `pedido_detail.html:256` (`wa.me`); `index.js` con 897 líneas, manejadores generados en `:584`, `:585` y `:592`. El bloque de bloqueo de la 04-08 en `login.html` no agrega nada en línea.
+
+### Pruebas (consola, agente)
+
+- Línea base: `check` sin problemas; 446 pruebas, `OK (expected failures=3)`.
+- `pedidos/tests/test_csp.py` antes de implementar: 15 pruebas, `FAILED (failures=13, errors=1)` (contando subpruebas); pasaban las 6 que ya se cumplían sin el cambio.
+- Después: 461 pruebas, `OK (expected failures=3)`; `check` sin problemas; `makemigrations --check --dry-run` → `No changes detected`. Sin migraciones.
+- Interruptor (C2, decisión del desarrollador del 2026-11-22): solo el texto exacto `False` apaga; `false`, `0`, `no`, `FALSE`, ` False`, `True` y vacío dejan la política activa y el sitio arranca (prueba con proceso hijo).
+
+### Revisión manual en la réplica (dicho)
+
+18 de 18 pantallas, 24 páginas, en escritorio y a 360 px. Paridad «con diferencias aceptadas» (solo Python 3.13.0 frente a 3.13.1, aceptada en la 00-03). `.env` local sin `CSP_OBSERVACION` y con `DEBUG=True`.
+
+- **Pantalla (dicho):** en `/accounts/login/` llega `Content-Security-Policy-Report-Only` con las 9 directivas, no llega `Content-Security-Policy` y `X-Frame-Options` es `DENY`. En la pestaña Red, los scripts vienen de `cdn.tailwindcss.com`, `code.jquery.com` y `cdn.jsdelivr.net`, y las 3 fuentes de `fonts.gstatic.com`. Con `CSP_OBSERVACION=False` en la consola de PowerShell desaparecen todos los `[Report Only]`; al quitarla vuelven.
+- **Criterio de conteo:** cada página cuenta por separado; en la Tabla A, cada combinación de directiva y servidor cuenta una vez por página; en «En línea» y en la Tabla B, cada pieza distinta (por línea o por hash) una vez por página; los mensajes idénticos repetidos, una vez. La #16 (diálogo `data-confirm`) es una acción sobre una página ya contada.
+
+**Tabla A · infracciones por directiva y origen** (número de páginas, sin el admin)
+
+| Directiva | fonts.googleapis.com | fonts.gstatic.com | cdn.tailwindcss.com | cdn.jsdelivr.net | code.jquery.com | En línea | `data:` u otro |
+| :-- | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| script-src | 0 | 0 | 23 | 22 | 23 | 33 | 0 |
+| style-src | 23 | 0 | 0 | 22 | 0 | 154 | 0 |
+| font-src | 0 | 23 | 0 | 0 | 0 | 0 | 0 |
+| connect-src | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| img-src | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| otra | — | — | — | — | — | — | — |
+
+**Tabla B · en línea, por tipo**
+
+| Tipo | Total | Páginas |
+| :-- | :-: | :-- |
+| Script en línea | 29 | Todas las con sesión, el de la configuración de Tailwind (1 por página); además el acceso (2), los formularios de pedido (#5 y #6), de producto (#9b) y de pago (#11b), y restaurar (#15) |
+| Manejador en línea | 4 | #4 (1 mensaje), #5 (13), #6 (13), #11c (1) |
+| Estilo en línea de plantilla | 13 | #1 (1 bloque `<style>`), #2 (6 atributos `style`), #12b (3), #12c (2), #13 (1 bloque `<style>`) |
+| Estilo inyectado por el Tailwind del navegador | 92 | Las 23 páginas HTML, de 3 a 7 por página |
+| Estilo inyectado por SweetAlert2 | 37 | 22 páginas, 1 o 2 por página |
+| Estilo inyectado sin origen (probablemente Select2 o Summernote) | 12 | #5, #6, #7c, #9b (2 cada una), #10a, #11b, #12c, #15 (1 cada una) |
+| `eval` u otro | 0 | — |
+
+**Tabla C · funcionamiento (dicho):** nada se vio ni funcionó distinto por la política; ningún 500; a 360 px todo igual y sin mensajes distintos. Editor, selectores, creación rápida de cliente y producto, ítems, PDF (sin infracciones: el navegador lo abre como PDF), confirmaciones de SweetAlert2 y `data-confirm` (abiertas y canceladas) funcionan. Las fallas vistas en #11 y #12 se repiten idénticas con `CSP_OBSERVACION=False`: son anteriores (hallazgos, abajo).
+
+**Fuera del inventario:**
+- **#17, admin:** 0 infracciones (consola vacía).
+- **#18, 404 y 500:** no revisadas en la réplica (con `DEBUG=True`, Django muestra su propia página).
+
+**Aclaraciones:**
+- (a) Los **11 atributos `style` observados** (#2: 6, #12b: 3, #12c: 2) son los **8 del código** repetidos por bucles: en el panel, 2 en el código se renderizan 6 veces; en estadísticas de la base de datos, los puntos del gráfico. **No es discrepancia.**
+- (b) Los **manejadores de #5 y #6 son por instancia** (uno por fila de ítem: 13 mensajes). **El inventario conserva 6** (3 en plantillas y 3 generados por `index.js`). El «Recargar» de `500.html` quedó sin revisar (#18).
+
+**No consta:** las páginas 404 y 500 de la aplicación; las infracciones en producción (verificación 2, al desplegar); qué librería inyecta los 12 estilos sin origen.
+
+### Insumo para la 08-08 (inventario confirmado)
+
+7 scripts en línea (ninguno con variables de plantilla), 2 bloques `<style>` (el de `trabajo_semanal.html` con `{{ nivel_presion }}`), 8 atributos `style`, 6 manejadores en línea (3 en plantillas, 3 generados por `index.js`) y 5 servidores externos (`fonts.googleapis.com`, `fonts.gstatic.com`, `cdn.tailwindcss.com`, `cdn.jsdelivr.net`, `code.jquery.com`). Además: estilos inyectados por el Tailwind del navegador, SweetAlert2 y (probablemente) Select2 o Summernote. Sin `connect-src`, `img-src`, `data:` ni `eval` observados, así que la 08-08 puede evaluar quitar `data:` de `img-src`.
+
+### Hallazgos anteriores a la 04-09 (fuera de alcance, abiertos)
+
+AUD-05-025 (ícono de calendario en modo oscuro), AUD-05-026 (fecha de entrega vacía al editar un pedido), AUD-05-027 (`$ is not defined` en «Ingresar pago»; enlazado con la 08-08), AUD-05-028 (imprimir detalle de pago en blanco), AUD-05-029 y AUD-05-030 (gráficos SVG de estadísticas; causa probable común: localización de números). Del 027 al 030, comprobados con `CSP_OBSERVACION=False` (dicho). Detalle en `auditoria-tecnica.md`.
+
+### Criterios de término
+
+| Criterio | Estado |
+| :-- | :-- |
+| Pruebas de la cabecera en verde; resto sin cambios | Hecho (consola): 461, `OK (expected failures=3)` |
+| Revisión manual en la réplica con conteos y el sitio igual | Hecho (dicho) |
+| Verificación 2 de producción (cabecera presente, sitio igual) | **Pendiente** (despliegue, `despliegue.md` 3.16) |
+| «La política está activa en modo observación en producción» | **Pendiente** (despliegue) |
+| `.env.example` con `CSP_OBSERVACION` sin valor real | Hecho (desarrollador, `6b6f590`; el agente no lo leyó por permisos) |
+| Página en `docs/operacion/` | Hecho: [politica-de-contenido](../../../docs/operacion/politica-de-contenido.md) |
