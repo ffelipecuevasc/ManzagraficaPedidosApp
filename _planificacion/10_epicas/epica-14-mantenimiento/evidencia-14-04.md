@@ -4,7 +4,8 @@
 - **Pedido por:** Claude (chat de traspaso a la Épica 14), para que el desarrollador la complete y Claude Code la dé por registrada.
 - **Iteración:** [14-04](iteracion-14-04-rut-del-cliente-y-folio-de-cotizacion.md). Etiqueta propuesta `v14.3-rut-y-folio`; partida y **destino de retroceso `v4.11-csp-observacion`** (decisión del desarrollador, 2026-11-27, dicha por él; `v4.11` queda en `37527b9`).
 - **Criterios que dependen de esta evidencia:** los criterios 1 a 5 y 7 de la iteración que solo se pueden comprobar con datos reales (réplica y producción).
-- **Estado (2026-11-28, tras el despliegue):** **desplegada el 2026-11-28** (`v14.3-rut-y-folio`, `d8be534`; un solo «Starting uWSGI» a las 01:19:44, hora de Chile). Partes A3, B, C y E registradas; D: sin retroceso. Siguen «No informado» las filas 3, 3b, 4 y 5 de A0. La iteración sigue «En revisión»: el cierre va aparte.
+- **Estado (2026-11-28, cierre):** **cerrada.** La iteración quedó Terminada el 2026-11-28 ([bitacora-14-04-cierre](../../99_bitacora/epica-14-mantenimiento/bitacora-14-04-cierre.md)). Lo que sigue «No informado» se conserva así y queda en el registro como pendiente.
+- **Estado anterior (2026-11-28, tras el despliegue):** **desplegada el 2026-11-28** (`v14.3-rut-y-folio`, `d8be534`; un solo «Starting uWSGI» a las 01:19:44, hora de Chile). Partes A3, B, C y E registradas; D: sin retroceso. Siguen «No informado» las filas 3, 3b, 4 y 5 de A0. La iteración sigue «En revisión»: el cierre va aparte.
 - ~~**Estado (2026-11-28, tras el ensayo en la réplica):** **Parte A comprobada salvo A0 (filas 3, 3b, 4 y 5) y A3.**~~ A1, A2 y A2b, comprobados en la consola del desarrollador el 2026-11-28. Faltan los avisos y la hora (A0), el respaldo de producción (A3) y las partes B a E.
 - ~~**Estado (2026-11-27, tras el análisis):** **Pendiente.** Registrados el punto de partida informado y el resultado de A0.1 (prueba efímera). Nada de lo demás se ejecutó.~~
 - ~~**Estado (2026-11-27):** **Pendiente. No se ejecutó nada.**~~ Este archivo solo deja los pasos y las tablas listos. Nada de lo que está en blanco se completa por inferencia: lo que no se informe queda como «No informado».
@@ -372,6 +373,8 @@ tail -n 80 "$E"
 ---
 
 ## Parte D · Retroceso (solo si se cumple la regla)
+
+**Nota del cierre (2026-11-28):** la regla quedó sin confirmar y **ya no aplica**: el despliegue terminó sin retroceso. Se conserva como registro.
 
 **Regla propuesta** *(`PENDIENTE_DESARROLLADOR`: confirmar o ajustar antes del despliegue)*: se retrocede si hay datos incorrectos (folio repetido o en cero, RUT perdido, cotizaciones sin folio), o dos o más `5xx` en la misma ruta tocada por la iteración sin causa explicada. Un `5xx` suelto se investiga.
 
