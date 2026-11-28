@@ -1,7 +1,8 @@
 # Bitácora 14-04 · Implementación (RUT del cliente y folio de cotización)
 
 - **Fecha:** 2026-11-27
-- **Estado de la iteración:** En revisión. Implementada en local (commit `e82c9cf`), ensayada en la réplica y revisada a mano en escritorio y a 360 px el 2026-11-28 (ver «Ensayo en la réplica»). Faltan los avisos y la hora (evidencia A0), el respaldo de producción (A3) y el despliegue (partes B a E), que hace el desarrollador.
+- **Estado de la iteración:** En revisión. **Desplegada el 2026-11-28** (`v14.3-rut-y-folio`, `d8be534`), sin retroceso (ver «Despliegue en producción»). El cierre de la iteración va aparte.
+- ~~**Estado de la iteración:** En revisión. Implementada en local (commit `e82c9cf`), ensayada en la réplica y revisada a mano en escritorio y a 360 px el 2026-11-28. Faltan los avisos y la hora (evidencia A0), el respaldo de producción (A3) y el despliegue (partes B a E).~~
 - ~~**Estado de la iteración:** En revisión. Implementada en local; faltan el ensayo en la réplica, la revisión manual (escritorio y 360 px) y el despliegue.~~
 - **Commit base:** `main` con la parte documental del análisis ya confirmada. Sin commit, etiqueta ni despliegue. Nada contra la réplica ni producción: las pruebas usan la base `test_…`.
 - **Rótulos:** **[doc]** documento; **[código]** leído o escrito en el código; **[prueba]** salió de una prueba o comando local; **[inferido]** conclusión no comprobada.
@@ -102,8 +103,33 @@ Ejecutado por el desarrollador en su PC; aquí solo se registra (evidencia A1, A
 - **Coincide con lo esperado:** los conteos de la réplica (869 y 33) son los del refresco del 2026-11-27 [doc]; el paso único no se negó en la primera corrida porque el mayor folio era 34 [consola].
 - **Sin desviaciones** respecto del procedimiento, según lo informado [consola].
 
+## Despliegue en producción (2026-11-28)
+
+Ejecutado por el desarrollador; aquí solo se registra (evidencia, partes A3, B, C y E; `despliegue.md`, sección 5). Rótulos: **[consola]**, **[pantalla]**, **[dicho]**, **[inferido]**.
+
+| Paso | Resultado |
+| :--- | :-------- |
+| A3, respaldo previo | `respaldo_28-11-2026_01-11-50.sql`, 1.587.120 bytes, `d21658e58801…4b97`, `VÁLIDO` 19 de 19 con el verificador de `v4.11`, `CUMPLE D2`, código 0; con `v4.11` activo; rotación 04:11:52 UTC, antes del checkout de las 04:18 UTC [consola] |
+| B1, etiqueta | `HEAD` = `origin/main` = `d8be534`, árbol limpio, diff de 37 archivos sin `requirements.txt`, `settings.py` ni `admin.py`; etiqueta anotada «desplegada el 2026-11-28», `[new tag]` [consola] |
+| B2, servidor antes | `(venv)`, `which python` al entorno virtual, árbol limpio, `v4.11-csp-observacion`, `ACCESO_` 20 y 1, `CSP_OBSERVACION` 0 [consola] |
+| B3 y B3b | `37527b9` → `d8be534`; `collectstatic`: `1 static file copied, 132 unmodified` [consola] |
+| B4 | `migrate --plan` solo `0010` a `0012`; `check --deploy` solo W005 y W021 [consola] |
+| B5 y B6 | `migrate` OK, `[X]` en las tres (04:18 UTC); paso único antes 34, después 999 [consola] |
+| B7, Reload | `DESDE_CL` 01:18:14 válido; un solo «Starting uWSGI» a las 01:19:44, hora de Chile [consola]. Ventana `migrate`–Reload de unos 1,5 min [inferido] |
+| B8, respaldo posterior | `respaldo_28-11-2026_01-20-33.sql`, 1.602.092 bytes, `475b6b052004…2dbe`, `VÁLIDO` 20 de 20, `CUMPLE D2` [consola] |
+| C 1 a 8 | Sin 500; cliente existente con `00.000.000-0`, rechazado al guardar; cliente de prueba `12.345.678-5` creado y borrado; cotización con folio 1000, buscada por folio y borrada; modal sin RUT rechazado; sin `[Report Only]` nuevos [dicho]. PDF con folio 1000 sin separador y RUT visible [pantalla] |
+| C 4c | Nueva corrida del paso único: antes 1000, después 999 [consola] |
+| C 9 a 11 | RUT vacío 0; folio 0: 0; repetidos 0; 872 de 872 con `00.000.000-0`; contador 999 [consola] |
+| C 12 a 14 | Conteo a las 01:35:30 (Chile), después del uso: 0 coincidencias; `error.log` sin entradas posteriores al arranque salvo dos `INFO` «Respaldo antiguo eliminado» (04:11:52 y 04:20:34 UTC) [consola] |
+| D | Sin retroceso [consola] |
+
+- **Desviaciones:** (1) la cotización de prueba usó un cliente real, que se conservó sin cambios [dicho]; el folio consumido se recuperó con la nueva corrida (contador 999) [consola]. (2) Las filas 3, 3b, 4 y 5 de A0 (avisos y hora) no se informaron.
+- **No consta:** el nombre del archivo PDF; el RUT en el detalle; el texto de `git describe` y el `git status` tras el checkout; pruebas sobre `d8be534` (constan las de `e82c9cf`; que la diferencia sea solo documental es [inferido]).
+- **Retroceso del despliegue siguiente:** `v14.3-rut-y-folio` (previo `v4.11-csp-observacion`).
+- **Hallazgos nuevos:** ninguno.
+
 ## Pendiente para el desarrollador
 
-- ~~Ensayo en la réplica (A2), revisión manual a 360 px (A2b)~~ (hechos el 2026-11-28). Avisos al dueño y respuesta del cliente (A0, filas 3, 3b y 4), hora de poco uso (A0.5) y despliegue (`despliegue.md` 3.17; evidencia A3 y B a E).
+- ~~Ensayo en la réplica (A2), revisión manual a 360 px (A2b)~~ (hechos el 2026-11-28). ~~Avisos al dueño y respuesta del cliente (A0, filas 3, 3b y 4), hora de poco uso (A0.5) y despliegue (`despliegue.md` 3.17; evidencia A3 y B a E).~~ Despliegue hecho el 2026-11-28. Queda el cierre de la iteración, y, si se quiere, completar lo que no consta (A0, filas 3 a 5; nombre del PDF; RUT en el detalle).
 - Respaldo previo (A3) verificado con la versión de `v4.11` del script (dato 4).
 - **Requiere respaldo previo al despliegue:** sí, obligatorio (migraciones con datos y tabla nueva).

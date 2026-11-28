@@ -4,7 +4,8 @@
 - **Pedido por:** Claude (chat de traspaso a la Épica 14), para que el desarrollador la complete y Claude Code la dé por registrada.
 - **Iteración:** [14-04](iteracion-14-04-rut-del-cliente-y-folio-de-cotizacion.md). Etiqueta propuesta `v14.3-rut-y-folio`; partida y **destino de retroceso `v4.11-csp-observacion`** (decisión del desarrollador, 2026-11-27, dicha por él; `v4.11` queda en `37527b9`).
 - **Criterios que dependen de esta evidencia:** los criterios 1 a 5 y 7 de la iteración que solo se pueden comprobar con datos reales (réplica y producción).
-- **Estado (2026-11-28, tras el ensayo en la réplica):** **Parte A comprobada salvo A0 (filas 3, 3b, 4 y 5) y A3.** A1, A2 y A2b, comprobados en la consola del desarrollador el 2026-11-28. Faltan los avisos y la hora (A0), el respaldo de producción (A3) y las partes B a E.
+- **Estado (2026-11-28, tras el despliegue):** **desplegada el 2026-11-28** (`v14.3-rut-y-folio`, `d8be534`; un solo «Starting uWSGI» a las 01:19:44, hora de Chile). Partes A3, B, C y E registradas; D: sin retroceso. Siguen «No informado» las filas 3, 3b, 4 y 5 de A0. La iteración sigue «En revisión»: el cierre va aparte.
+- ~~**Estado (2026-11-28, tras el ensayo en la réplica):** **Parte A comprobada salvo A0 (filas 3, 3b, 4 y 5) y A3.**~~ A1, A2 y A2b, comprobados en la consola del desarrollador el 2026-11-28. Faltan los avisos y la hora (A0), el respaldo de producción (A3) y las partes B a E.
 - ~~**Estado (2026-11-27, tras el análisis):** **Pendiente.** Registrados el punto de partida informado y el resultado de A0.1 (prueba efímera). Nada de lo demás se ejecutó.~~
 - ~~**Estado (2026-11-27):** **Pendiente. No se ejecutó nada.**~~ Este archivo solo deja los pasos y las tablas listos. Nada de lo que está en blanco se completa por inferencia: lo que no se informe queda como «No informado».
 
@@ -152,13 +153,13 @@ Get-FileHash "<ruta del respaldo descargado>" -Algorithm SHA256
 
 | Dato | Esperado | Resultado | Estado |
 | :--- | :------- | :-------- | :----- |
-| Nombre del archivo | | | No informado |
-| Tamaño (bytes) | | | No informado |
-| SHA-256 | | | No informado |
-| `verificar_respaldo.py` | `VÁLIDO` (19 tablas; texto exacto lo fija el dato 4 de la tabla inicial) | | No informado |
-| `revisar_volcado_d2.py` | `RESULTADO: CUMPLE D2` | | No informado |
-| Código de salida | `0` | | No informado |
-| Hora (rotación en `error.log`, UTC) | Anterior al checkout | | No informado |
+| Nombre del archivo | | `respaldo_28-11-2026_01-11-50.sql`, generado con `v4.11-csp-observacion` activo | Comprobado (consola) |
+| Tamaño (bytes) | | 1.587.120 | Comprobado (consola) |
+| SHA-256 | | `d21658e58801…4b97` | Comprobado (consola) |
+| `verificar_respaldo.py` | `VÁLIDO` (19 tablas; texto exacto lo fija el dato 4 de la tabla inicial) | `VÁLIDO`, 19 de 19, con el verificador de `v4.11` | Comprobado (consola) |
+| `revisar_volcado_d2.py` | `RESULTADO: CUMPLE D2` | `CUMPLE D2` | Comprobado (consola) |
+| Código de salida | `0` | `0` | Comprobado (consola) |
+| Hora (rotación en `error.log`, UTC) | Anterior al checkout | 04:11:52 UTC, anterior al checkout de las 04:18 UTC | Comprobado (consola) |
 
 **Con migraciones y una tabla nueva, este respaldo es obligatorio.** Si algo no cumple, no sigas.
 
@@ -184,11 +185,11 @@ git push origin v14.3-rut-y-folio
 
 | # | Comprobación | Esperado | Resultado | Estado |
 | :- | :----------- | :------- | :-------- | :----- |
-| 1 | `git status --short` | Sin salida | | No informado |
-| 2 | `HEAD` y `origin/main` | El mismo hash | | No informado |
-| 3 | `git diff --stat` | Solo los archivos de la iteración (dato 5 de la tabla inicial) y documentos; **no** `requirements.txt` (inferido) ni `pedidos/static/` salvo `index.js` | | No informado |
-| 4 | `git tag -n` | `Iteración 14-04 · desplegada el <fecha de hoy>` | | No informado |
-| 5 | `push` | `[new tag]`; si dice `already exists` o `rejected`, **no fuerces**: usa el correlativo siguiente | | No informado |
+| 1 | `git status --short` | Sin salida | Árbol limpio | Comprobado (consola) |
+| 2 | `HEAD` y `origin/main` | El mismo hash | `d8be534` en ambos | Comprobado (consola) |
+| 3 | `git diff --stat` | Solo los archivos de la iteración (dato 5 de la tabla inicial) y documentos; **no** `requirements.txt` (inferido) ni `pedidos/static/` salvo `index.js` | 37 archivos, sin `requirements.txt`, `settings.py` ni `admin.py` | Comprobado (consola) |
+| 4 | `git tag -n` | `Iteración 14-04 · desplegada el <fecha de hoy>` | Etiqueta anotada «desplegada el 2026-11-28» | Comprobado (consola) |
+| 5 | `push` | `[new tag]`; si dice `already exists` o `rejected`, **no fuerces**: usa el correlativo siguiente | `[new tag]` | Comprobado (consola) |
 
 ### B2. Servidor antes
 
@@ -207,11 +208,11 @@ grep -c '^CSP_OBSERVACION' .env
 
 | # | Comprobación | Esperado | Resultado | Estado |
 | :- | :----------- | :------- | :-------- | :----- |
-| 1 | Prompt `(venv)` y `which python` | El entorno virtual | | No informado |
-| 2 | `git status --short` | Sin salida | | No informado |
-| 3 | `git describe --tags` | `v4.11-csp-observacion` (`37527b9`) | | No informado |
-| 4 | `ACCESO_` | Las dos líneas (`...POR_DIRECCION=20`, `...PROXIES_CONFIABLES=1`) | | No informado |
-| 5 | `CSP_OBSERVACION` | `0` | | No informado |
+| 1 | Prompt `(venv)` y `which python` | El entorno virtual | `(venv)`; `which python` apunta al entorno virtual | Comprobado (consola) |
+| 2 | `git status --short` | Sin salida | Árbol limpio | Comprobado (consola) |
+| 3 | `git describe --tags` | `v4.11-csp-observacion` (`37527b9`) | `v4.11-csp-observacion` | Comprobado (consola) |
+| 4 | `ACCESO_` | Las dos líneas (`...POR_DIRECCION=20`, `...PROXIES_CONFIABLES=1`) | Las dos: 20 y 1 | Comprobado (consola) |
+| 5 | `CSP_OBSERVACION` | `0` | `0` | Comprobado (consola) |
 
 ### B3. Checkout
 
@@ -227,9 +228,9 @@ git status --short
 
 | # | Comprobación | Esperado | Resultado | Estado |
 | :- | :----------- | :------- | :-------- | :----- |
-| 1 | `describe` | `v14.3-rut-y-folio`; prompt `(HEAD detached at v14.3-rut-y-folio)` | | No informado |
-| 2 | `rev-parse` | El hash de la etiqueta | | No informado |
-| 3 | `git status --short` | Sin salida | | No informado |
+| 1 | `describe` | `v14.3-rut-y-folio`; prompt `(HEAD detached at v14.3-rut-y-folio)` | No informado por separado; `HEAD` pasó de `37527b9` a `d8be534`, el commit de la etiqueta (fila 2) | Comprobado (consola), salvo el texto de `describe` |
+| 2 | `rev-parse` | El hash de la etiqueta | `37527b9` → `d8be534` | Comprobado (consola) |
+| 3 | `git status --short` | Sin salida | No informado | No informado |
 
 ### B3b. Estáticos (después del checkout, antes de migrar; H2, 2026-11-27)
 
@@ -241,7 +242,7 @@ python manage.py collectstatic --noinput
 
 | # | Comprobación | Esperado | Resultado | Estado |
 | :- | :----------- | :------- | :-------- | :----- |
-| 1 | `collectstatic` | `1 static file copied` (o el número que fije el dato 5), sin errores | | No informado |
+| 1 | `collectstatic` | `1 static file copied` (o el número que fije el dato 5), sin errores | `1 static file copied, 132 unmodified` | Comprobado (consola) |
 
 Después del Reload (B7), **[Navegador]** `Ctrl+F5` en el formulario de pedidos y en el de cotizaciones antes de usar el modal.
 
@@ -256,8 +257,8 @@ python manage.py check --deploy
 
 | # | Comprobación | Esperado | Resultado | Estado |
 | :- | :----------- | :------- | :-------- | :----- |
-| 1 | `migrate --plan` | **Solo** `0010`, `0011` y `0012` | | No informado |
-| 2 | `check --deploy` | Solo W005 y W021 | | No informado |
+| 1 | `migrate --plan` | **Solo** `0010`, `0011` y `0012` | Solo `0010` a `0012` | Comprobado (consola) |
+| 2 | `check --deploy` | Solo W005 y W021 | Solo W005 y W021 | Comprobado (consola) |
 
 Si sale otra cosa, **no migres**: `git checkout v4.11-csp-observacion`.
 
@@ -272,9 +273,9 @@ python manage.py showmigrations pedidos
 
 | # | Comprobación | Esperado | Resultado | Estado |
 | :- | :----------- | :------- | :-------- | :----- |
-| 1 | `migrate` | `Applying ...0010... OK`, `0011` y `0012` | | No informado |
-| 2 | `showmigrations pedidos` | `[X]` en las tres | | No informado |
-| 3 | Hora del `migrate` (Chile) | Anotar | | No informado |
+| 1 | `migrate` | `Applying ...0010... OK`, `0011` y `0012` | OK en las tres | Comprobado (consola) |
+| 2 | `showmigrations pedidos` | `[X]` en las tres | `[X]` en `0010`, `0011` y `0012` | Comprobado (consola) |
+| 3 | Hora del `migrate` (Chile) | Anotar | 04:18 UTC (01:18, hora de Chile) | Comprobado (consola) |
 
 Si `migrate` falla a medias, detente y sigue `retroceso.md` (caso 2). Anota cuál quedó aplicada.
 
@@ -284,9 +285,9 @@ El bloque de `python manage.py shell` lo escribe y ensaya Claude Code en la rép
 
 | # | Dato | Esperado | Resultado | Estado |
 | :- | :--- | :------- | :-------- | :----- |
-| 1 | Valor del contador **antes** | El mayor folio existente | | No informado |
-| 2 | ¿El bloque se negó (había folios ≥ 1000)? | No | | No informado |
-| 3 | Valor del contador **después** | `999` | | No informado |
+| 1 | Valor del contador **antes** | El mayor folio existente | 34 | Comprobado (consola) |
+| 2 | ¿El bloque se negó (había folios ≥ 1000)? | No | No: el contador cambió (fila 3), cosa que la negativa no hace | Comprobado (consola) |
+| 3 | Valor del contador **después** | `999` | 999 | Comprobado (consola) |
 
 ### B7. Un solo Reload
 
@@ -309,8 +310,8 @@ for f in "$S" "$S".*; do [ -f "$f" ] && zcat -f "$f"; done \
 
 | # | Dato | Esperado | Resultado | Estado |
 | :- | :--- | :------- | :-------- | :----- |
-| 1 | `DESDE_CL` y «válido» | Hora de Chile de un minuto antes y `DESDE_CL válido` | | No informado |
-| 2 | «Starting uWSGI» | **Una** línea; anota su hora (es `R`, la hora oficial del Reload) | | No informado |
+| 1 | `DESDE_CL` y «válido» | Hora de Chile de un minuto antes y `DESDE_CL válido` | `DESDE_CL` 01:18:14 y `DESDE_CL válido` | Comprobado (consola) |
+| 2 | «Starting uWSGI» | **Una** línea; anota su hora (es `R`, la hora oficial del Reload) | Una sola, a las 01:19:44 (hora de Chile). La ventana entre `migrate` (01:18) y el Reload fue de unos 1,5 minutos [inferido: el `migrate` se anotó al minuto] | Comprobado (consola) |
 
 ### B8. Respaldo posterior (PC)
 
@@ -318,9 +319,9 @@ Genera otro respaldo desde la app y verifícalo como en A3.
 
 | Dato | Esperado | Resultado | Estado |
 | :--- | :------- | :-------- | :----- |
-| Nombre, tamaño y SHA-256 | | | No informado |
-| `verificar_respaldo.py` | `VÁLIDO` con **20** tablas (texto exacto: dato 4 de la tabla inicial) | | No informado |
-| `revisar_volcado_d2.py` | `CUMPLE D2` | | No informado |
+| Nombre, tamaño y SHA-256 | | `respaldo_28-11-2026_01-20-33.sql`, 1.602.092 bytes, `475b6b052004…2dbe` | Comprobado (consola) |
+| `verificar_respaldo.py` | `VÁLIDO` con **20** tablas (texto exacto: dato 4 de la tabla inicial) | `VÁLIDO`, 20 de 20 | Comprobado (consola) |
+| `revisar_volcado_d2.py` | `CUMPLE D2` | `CUMPLE D2` | Comprobado (consola) |
 
 ---
 
@@ -332,25 +333,25 @@ Sin esperas de 3, 5 ni 7 días: el despliegue se valida hoy y se respalda con el
 
 | # | Caso | Esperado | Resultado | Estado |
 | :- | :--- | :------- | :-------- | :----- |
-| 1 | Acceso y panel | Sin 500 | | No informado |
-| 2 | Editar un cliente existente **sin cambiar el RUT** | Muestra `00.000.000-0` y rechaza guardar (no guardes nada) | | No informado |
-| 3 | Crear un cliente de prueba con `12.345.678-5` y borrarlo | Se crea con ese RUT normalizado y se borra | | No informado |
-| 4 | Cotización de validación (aviso 2): folio en pantalla | `1000` (sin punto de miles) | | No informado |
-| 5 | Mismo folio en el PDF y en el nombre del archivo | `1000` | | No informado |
-| 4b | Borrar la cotización de prueba y **después** su cliente de prueba (`PROTECT` impide el orden inverso) | Ambos borrados | | No informado |
-| 4c | Re-correr el paso único (aviso 2, opción C): valor antes y después | Antes `1000`; después `999`; no se niega (ninguna cotización existente con folio ≥ 1000) | | No informado |
-| 4d | Modal de cliente rápido tras `Ctrl+F5`: pide RUT y rechaza vacío (sin guardar o con el sintético, borrado después) | Rechazo sin RUT | | No informado |
-| 6 | RUT del cliente en el PDF y en el detalle | Se ve | | No informado |
-| 7 | Listado y búsqueda por folio | Lo encuentra | | No informado |
-| 8 | Consola del navegador (`F12`) | Sin mensajes `[Report Only]` nuevos de piezas en línea | | No informado |
+| 1 | Acceso y panel | Sin 500 | Sin 500 | Comprobado (dicho) |
+| 2 | Editar un cliente existente **sin cambiar el RUT** | Muestra `00.000.000-0` y rechaza guardar (no guardes nada) | Muestra `00.000.000-0` y rechaza | Comprobado (dicho) |
+| 3 | Crear un cliente de prueba con `12.345.678-5` y borrarlo | Se crea con ese RUT normalizado y se borra | Creado y borrado | Comprobado (dicho) |
+| 4 | Cotización de validación (aviso 2): folio en pantalla | `1000` (sin punto de miles) | Folio 1000. **Desviación 1:** la cotización de prueba usó un cliente real | Comprobado (dicho) |
+| 5 | Mismo folio en el PDF y en el nombre del archivo | `1000` | PDF: folio 1000, sin separador. Nombre del archivo: no informado | Comprobado (pantalla) en el PDF; el nombre del archivo, no informado |
+| 4b | Borrar la cotización de prueba y **después** su cliente de prueba (`PROTECT` impide el orden inverso) | Ambos borrados | Cotización borrada. El cliente era real: se conservó, sin cambios (desviación 1) | Comprobado (dicho) |
+| 4c | Re-correr el paso único (aviso 2, opción C): valor antes y después | Antes `1000`; después `999`; no se niega (ninguna cotización existente con folio ≥ 1000) | Antes: 1000; después: 999 | Comprobado (consola) |
+| 4d | Modal de cliente rápido tras `Ctrl+F5`: pide RUT y rechaza vacío (sin guardar o con el sintético, borrado después) | Rechazo sin RUT | Sin RUT, rechazado | Comprobado (dicho) |
+| 6 | RUT del cliente en el PDF y en el detalle | Se ve | PDF: RUT visible. Detalle: no informado | Comprobado (pantalla) en el PDF; el detalle, no informado |
+| 7 | Listado y búsqueda por folio | Lo encuentra | Lo encuentra | Comprobado (dicho) |
+| 8 | Consola del navegador (`F12`) | Sin mensajes `[Report Only]` nuevos de piezas en línea | Sin `[Report Only]` nuevos | Comprobado (dicho) |
 
 **Integridad (aviso 1):** número de clientes con `rut` vacío y de cotizaciones con `folio = 0` o repetido, contados con el bloque que fije Claude Code (solo conteos).
 
 | # | Dato | Esperado | Resultado | Estado |
 | :- | :--- | :------- | :-------- | :----- |
-| 9 | Clientes con `rut` vacío | 0 | | No informado |
-| 10 | Cotizaciones con `folio = 0` o repetido | 0 | | No informado |
-| 11 | Clientes con `00.000.000-0` | Igual al total de clientes anteriores | | No informado |
+| 9 | Clientes con `rut` vacío | 0 | 0 | Comprobado (consola) |
+| 10 | Cotizaciones con `folio = 0` o repetido | 0 | `folio = 0`: 0; repetidos: 0 | Comprobado (consola) |
+| 11 | Clientes con `00.000.000-0` | Igual al total de clientes anteriores | 872 de 872 (el total de producción del 2026-11-27). Contador: 999 | Comprobado (consola) |
 
 **Registros desde el último «Starting uWSGI»**, contados **después** de usar las pantallas (anota la hora del conteo, en Chile). **[PA · Bash]**:
 
@@ -364,9 +365,9 @@ tail -n 80 "$E"
 
 | # | Dato | Esperado | Resultado | Estado |
 | :- | :--- | :------- | :-------- | :----- |
-| 12 | Hora del conteo (Chile) | Anotar | | No informado |
-| 13 | `coincidencias desde el arranque` | `0` | | No informado |
-| 14 | `error.log` desde la hora UTC del arranque | Sin entradas nuevas | | No informado |
+| 12 | Hora del conteo (Chile) | Anotar | 01:35:30, después de usar las pantallas | Comprobado (consola) |
+| 13 | `coincidencias desde el arranque` | `0` | 0 | Comprobado (consola) |
+| 14 | `error.log` desde la hora UTC del arranque | Sin entradas nuevas | Sin entradas posteriores al arranque, salvo dos `INFO` «Respaldo antiguo eliminado» (04:11:52 y 04:20:34 UTC), de la rotación de los respaldos A3 y B8 [inferido por la hora] | Comprobado (consola) |
 
 ---
 
@@ -379,10 +380,10 @@ tail -n 80 "$E"
 
 | # | Dato | Resultado | Estado |
 | :- | :--- | :-------- | :----- |
-| 1 | ¿Se retrocedió? (sí/no y por qué) | | No informado |
-| 2 | Caso de `retroceso.md` aplicado y hora (Chile) | | No informado |
-| 3 | Etiqueta de destino y `git describe` posterior | | No informado |
-| 4 | Resultado de la verificación posterior | | No informado |
+| 1 | ¿Se retrocedió? (sí/no y por qué) | No: no se cumplió la regla (sin datos incorrectos ni `5xx`) | Comprobado (consola) |
+| 2 | Caso de `retroceso.md` aplicado y hora (Chile) | No aplica | No aplica |
+| 3 | Etiqueta de destino y `git describe` posterior | No aplica | No aplica |
+| 4 | Resultado de la verificación posterior | No aplica | No aplica |
 
 ---
 
@@ -390,14 +391,14 @@ tail -n 80 "$E"
 
 | Campo | Valor | Estado |
 | :---- | :---- | :----- |
-| Fecha y hora del Reload (`Starting uWSGI`, Chile) | | No informado |
-| Etiqueta | `v14.3-rut-y-folio` | |
-| Commit de la etiqueta | | No informado |
+| Fecha y hora del Reload (`Starting uWSGI`, Chile) | 2026-11-28 01:19:44 (un solo arranque); checkout y `migrate` a las 04:18 UTC (01:18) | Comprobado (consola) |
+| Etiqueta | `v14.3-rut-y-folio` | Comprobado (consola) |
+| Commit de la etiqueta | `d8be534` | Comprobado (consola) |
 | Iteración | 14-04 (RUT del cliente y folio de cotización; partida y retroceso `v4.11-csp-observacion`); con migraciones `0010` a `0012` (`sqlmigrate`: clases confirmadas), sin `pip`; ~~`collectstatic` solo si cambió `index.js`~~ **con `collectstatic`** (cambia `index.js`, H2) y `Ctrl+F5` | |
-| Respaldo previo (nombre, tamaño, SHA-256, resultado) | | No informado |
-| Respaldo posterior (nombre, tamaño, SHA-256, 20 tablas) | | No informado |
-| Resultado general | | No informado |
-| Pruebas previas | | No informado |
+| Respaldo previo (nombre, tamaño, SHA-256, resultado) | `respaldo_28-11-2026_01-11-50.sql`, 1.587.120 bytes, `d21658e58801…4b97`, `VÁLIDO` 19 de 19 (verificador de `v4.11`), `CUMPLE D2`, código 0; con `v4.11` activo, antes del checkout | Comprobado (consola) |
+| Respaldo posterior (nombre, tamaño, SHA-256, 20 tablas) | `respaldo_28-11-2026_01-20-33.sql`, 1.602.092 bytes, `475b6b052004…2dbe`, `VÁLIDO` 20 de 20, `CUMPLE D2` | Comprobado (consola) |
+| Resultado general | Correcto, sin retroceso. Integridad: 0 RUT vacíos, 0 folios en cero o repetidos, 872 de 872 con `00.000.000-0`, contador 999; 0 errores desde el arranque, contados después del uso. Una desviación sin efecto en los datos (cliente real en la cotización de prueba) | Comprobado (consola, pantalla y dicho) |
+| Pruebas previas | 500, `OK (expected failures=3)`, en la réplica el 2026-11-28 (A1), sobre `e82c9cf`. Que `d8be534` solo agregue documentos a ese commit es inferido: no se repitieron sobre la etiqueta | Comprobado (consola); la equivalencia, [inferido] |
 | Retroceso del despliegue siguiente | `v14.3-rut-y-folio` (previo `v4.11-csp-observacion`) | |
 
 ## Desviaciones de la ejecución
@@ -406,7 +407,8 @@ Se llena durante la ejecución: qué estaba previsto, qué pasó y qué efecto t
 
 | # | Estaba previsto | Pasó | Efecto |
 | :- | :-------------- | :--- | :----- |
-| | | | |
+| 1 | Cotización de validación con un **cliente de prueba**, que se borra después de la cotización (C, filas 3, 4 y 4b) | La cotización de prueba se hizo sobre un **cliente real**. La cotización se borró y el cliente se conservó, sin cambios [dicho] | Sin efecto en los datos del cliente, según lo dicho. El folio 1000 consumido se recuperó con la nueva corrida del paso único (antes 1000, después 999) [consola]. Puede quedar un evento de creación y uno de borrado de la cotización asociados a ese cliente [inferido, no revisado] |
+| 2 | Avisos al dueño y al cliente, y hora de poco uso registrados antes del despliegue (A0, filas 3, 3b, 4 y 5) | Se desplegó sin que esas filas estén informadas en esta evidencia | Sin efecto observado: 0 RUT vacíos y 0 folios en cero o repetidos (C, filas 9 a 11). Si los avisos se dieron, no consta |
 
 ## Hallazgos nuevos
 
@@ -417,4 +419,8 @@ Se llena durante la ejecución: qué estaba previsto, qué pasó y qué efecto t
 ## Qué no consta (se completa al cerrar)
 
 - Lo que el desarrollador no informe queda aquí, con su motivo.
+- **A0, filas 3, 3b, 4 y 5:** aviso al dueño, aviso de no crear clientes ni cotizaciones, respuesta del cliente y hora elegida. No se informaron (desviación 2).
+- **B3, filas 1 y 3:** el texto de `git describe` y el `git status` después del checkout. Consta el cambio de `HEAD` de `37527b9` a `d8be534`.
+- **C, filas 5 y 6:** el nombre del archivo PDF y el RUT en el detalle de la cotización. Consta el PDF (folio 1000 y RUT visibles, pantalla).
+- **Pruebas sobre `d8be534`:** no se repitieron; constan las del 2026-11-28 sobre `e82c9cf`.
 - **A2.10 (2026-11-28):** las salidas exactas de la negativa y de la nueva corrida (cuántas cotizaciones tenían folio ≥ 1000, y los valores antes y después) no se pegaron. Consta el resultado («NEGADO», limpieza y «HECHO» sin errores), no los números.
