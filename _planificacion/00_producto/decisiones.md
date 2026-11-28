@@ -29,6 +29,7 @@ Las RDA-002 a RDA-010 registran las nueve decisiones D1 a D9 que el plan de trab
 | RDA-021 | Sin esperas de 3, 5 ni 7 días: cada despliegue se valida con el día 0 y el plan de retroceso | Aceptada |
 | RDA-022 | Las fallas se corrigen según su gravedad, y la Épica 14 pasa a ser «Mantenimiento», sin AWS | Aceptada |
 | RDA-023 | Lista de clientes: arreglo mínimo en la Épica 14, funciones reales y teléfonos internacionales en la Épica 10 ampliada | Aceptada |
+| RDA-024 | La Épica 14 pasa a ser «Mantenimiento: errores y mejoras puntuales» | Aceptada; enmienda a RDA-022 (solo el alcance de la Épica 14) |
 
 ---
 

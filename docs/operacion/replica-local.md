@@ -144,7 +144,7 @@ docker compose exec db sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CRE
    ```
 
    Código 0 y sin mensajes `ERROR` significa que terminó bien.
-3. Comprueba que no apareció ninguna base inesperada y que la réplica tiene 18 tablas:
+3. Comprueba que no apareció ninguna base inesperada y que la réplica tiene ~~18~~ 19 tablas (desde la `0007`; 20 después de la 14-04):
 
    ```powershell
    docker compose exec db sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SHOW DATABASES; SELECT COUNT(*) AS tablas FROM information_schema.tables WHERE table_schema = ''manzagrafica_replica'';"'
@@ -236,6 +236,7 @@ Cuando los datos queden viejos (por ejemplo, antes de ensayar una migración o u
 | 2026-10-21 (primera restauración, 00-03) | 2026-10-20 13:09:17 | 4,17 | 7 de 8 coinciden; Python aceptado; `pip freeze` 21/21 |
 | 2026-10-25 (ensayo de retroceso de la 01-06, parte A3) | 2026-10-25 21:02:34 | 3,6 | No se repitió la comprobación completa de la sección 7. Se comprobaron 18 tablas, `[X] 0006` como última migración y 79 pruebas en `OK` con la réplica restaurada y migrada (A5) |
 | 2026-11-18 (refresco de la parte F de la 03-05) | 2026-11-18 14:26:45 (`respaldo_18-11-2026_14-26-45.sql`, 19 de 19, `VÁLIDO`) | 4,4 | Código 0; 19 tablas; última migración `0007`. La comprobación completa de la sección 7 no se informó |
+| 2026-11-27 (antes de implementar la 14-04) | 2026-11-27 10:51:07 (`respaldo_27-11-2026_10-51-07.sql`, 1.585.017 bytes, SHA-256 `2126d253bace…`, 19 de 19, `VÁLIDO`) | 5,5 | Paridad 0 diferencias; 19 tablas; última migración `0009` (consola). Cifrado comprobado **después** de restaurar: D: con BitLocker al 100,0 % y protección activada; disco de Docker en `D:\Docker\datos_nuevos_nov_2026\DockerDesktopWSL`; nada en C: ni en Descargas (consola) |
 
 > **Nota 2026-11-04:** el paso 2 (repetir la comprobación de cifrado) hoy no pasa, por el disco de Docker en C: (AUD-05-002). El traslado del disco a D: (o el cifrado de C:) y el refresco de la réplica con el respaldo del 2026-11-04 00:12:37 se hacen al cerrar la Épica 03, sin respaldo nuevo. Hasta entonces, la última fila de la tabla es la del 2026-10-25. Los pasos de esta sección no cambian.
 
