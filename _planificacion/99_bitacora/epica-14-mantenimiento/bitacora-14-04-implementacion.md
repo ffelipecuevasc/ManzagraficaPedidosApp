@@ -1,7 +1,8 @@
 # Bitácora 14-04 · Implementación (RUT del cliente y folio de cotización)
 
 - **Fecha:** 2026-11-27
-- **Estado de la iteración:** En revisión. Implementada en local; faltan el ensayo en la réplica, la revisión manual (escritorio y 360 px) y el despliegue, que hace el desarrollador (evidencia, partes A a E).
+- **Estado de la iteración:** En revisión. Implementada en local (commit `e82c9cf`), ensayada en la réplica y revisada a mano en escritorio y a 360 px el 2026-11-28 (ver «Ensayo en la réplica»). Faltan los avisos y la hora (evidencia A0), el respaldo de producción (A3) y el despliegue (partes B a E), que hace el desarrollador.
+- ~~**Estado de la iteración:** En revisión. Implementada en local; faltan el ensayo en la réplica, la revisión manual (escritorio y 360 px) y el despliegue.~~
 - **Commit base:** `main` con la parte documental del análisis ya confirmada. Sin commit, etiqueta ni despliegue. Nada contra la réplica ni producción: las pruebas usan la base `test_…`.
 - **Rótulos:** **[doc]** documento; **[código]** leído o escrito en el código; **[prueba]** salió de una prueba o comando local; **[inferido]** conclusión no comprobada.
 
@@ -81,8 +82,28 @@ ALTER TABLE `pedidos_cotizacion` ADD CONSTRAINT `pedidos_cotizacion_folio_36c672
 | 3 | `__str__` de la cotización usa el folio | Coherencia con lo visible |
 | 4 | No se tocó `admin.py` | El admin de clientes hereda todo del modelo (H3: sin admin de cotizaciones) |
 
+## Ensayo en la réplica (2026-11-28)
+
+Ejecutado por el desarrollador en su PC; aquí solo se registra (evidencia A1, A2 y A2b). Rótulos: **[consola]** salida informada por el desarrollador; **[doc]**; **[inferido]**.
+
+| Paso | Resultado |
+| :--- | :-------- |
+| A1, pruebas y comprobaciones | `Ran 500 tests` en 604 s, `OK (expected failures=3)`; `check` sin problemas; `makemigrations --check`: `No changes detected` [consola] |
+| A1.4, «1000» | Solo coincidencias preexistentes (SVG 1000×400, `duration-1000`, `data-desbloquear-ms="10000"`, textos de ejemplo de `cotizacion_form.html:289` y `producto_form.html:44`); ninguna en `git diff 6815ef3 e82c9cf` [consola]. El «Esperado» pasa a «ninguna coincidencia que sea el folio» [doc] |
+| A2.1, paridad | 0 diferencias no aceptadas, 1 aceptada (Python 3.13.0 frente a 3.13.1), 19 tablas, 22 de 22 [consola] |
+| A2.2, respaldo de la réplica | `replica_antes_14-04.sql`, 1.585.767 bytes, SHA-256 `2ef41d7845ba…`, `VÁLIDO` 19 de 19 con el verificador de `v4.11`, `CUMPLE D2` [consola] |
+| A2.3 a A2.6, migraciones | Plan `0010`, `0011`, `0012`; `sqlmigrate` igual al de arriba (la `0012` sin `MODIFY`); `migrate` OK y `[X]` en las tres [consola] |
+| A2.7, conteos | 869 clientes, 869 con `00.000.000-0`; 33 cotizaciones, 33 con `folio = id`; mayor folio 34; contador 34 [consola] |
+| A2.8, reversa | `migrate pedidos 0010` y vuelta, OK; siguen 869, 33 y contador 34 [consola] |
+| A2.9, paso único | `HECHO`, antes 34, después 999; la primera cotización nueva recibió el folio 1000 [consola] |
+| A2.10 y opción C | Con un folio ≥ 1000: `NEGADO`; limpieza de los datos de prueba (cotizaciones, pedido y clientes) y nueva corrida: `HECHO`, sin errores [consola]. Valores exactos de esas salidas: no informado |
+| A2b, 1 a 13 | Comprobados en escritorio y a 360 px, sin mensajes `[Report Only]` nuevos [consola]. El 11 es una prueba débil: desde el navegador no se fuerza un fallo dentro del guardado, así que la garantía es la prueba automática de transacción revertida [inferido] |
+
+- **Coincide con lo esperado:** los conteos de la réplica (869 y 33) son los del refresco del 2026-11-27 [doc]; el paso único no se negó en la primera corrida porque el mayor folio era 34 [consola].
+- **Sin desviaciones** respecto del procedimiento, según lo informado [consola].
+
 ## Pendiente para el desarrollador
 
-- Ensayo en la réplica (A2), revisión manual a 360 px (A2b), avisos (A0) y despliegue (`despliegue.md` 3.17; evidencia B a E).
+- ~~Ensayo en la réplica (A2), revisión manual a 360 px (A2b)~~ (hechos el 2026-11-28). Avisos al dueño y respuesta del cliente (A0, filas 3, 3b y 4), hora de poco uso (A0.5) y despliegue (`despliegue.md` 3.17; evidencia A3 y B a E).
 - Respaldo previo (A3) verificado con la versión de `v4.11` del script (dato 4).
 - **Requiere respaldo previo al despliegue:** sí, obligatorio (migraciones con datos y tabla nueva).

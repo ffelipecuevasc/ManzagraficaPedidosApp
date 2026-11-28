@@ -4,7 +4,8 @@
 - **Pedido por:** Claude (chat de traspaso a la Épica 14), para que el desarrollador la complete y Claude Code la dé por registrada.
 - **Iteración:** [14-04](iteracion-14-04-rut-del-cliente-y-folio-de-cotizacion.md). Etiqueta propuesta `v14.3-rut-y-folio`; partida y **destino de retroceso `v4.11-csp-observacion`** (decisión del desarrollador, 2026-11-27, dicha por él; `v4.11` queda en `37527b9`).
 - **Criterios que dependen de esta evidencia:** los criterios 1 a 5 y 7 de la iteración que solo se pueden comprobar con datos reales (réplica y producción).
-- **Estado (2026-11-27, tras el análisis):** **Pendiente.** Registrados el punto de partida informado y el resultado de A0.1 (prueba efímera). Nada de lo demás se ejecutó.
+- **Estado (2026-11-28, tras el ensayo en la réplica):** **Parte A comprobada salvo A0 (filas 3, 3b, 4 y 5) y A3.** A1, A2 y A2b, comprobados en la consola del desarrollador el 2026-11-28. Faltan los avisos y la hora (A0), el respaldo de producción (A3) y las partes B a E.
+- ~~**Estado (2026-11-27, tras el análisis):** **Pendiente.** Registrados el punto de partida informado y el resultado de A0.1 (prueba efímera). Nada de lo demás se ejecutó.~~
 - ~~**Estado (2026-11-27):** **Pendiente. No se ejecutó nada.**~~ Este archivo solo deja los pasos y las tablas listos. Nada de lo que está en blanco se completa por inferencia: lo que no se informe queda como «No informado».
 
 > Este archivo existe porque el agente no puede tocar producción, crear etiquetas ni abrir respaldos. Responde solo lo que se pide. **Sin datos de clientes:** nada de nombres, teléfonos ni **RUT reales** (usa solo los sintéticos `12.345.678-5` y `11.111.111-1`); solo conteos, horas, códigos y tipos de error. Nunca pegues el texto completo de una línea del registro (`despliegue.md`, 3.9).
@@ -22,7 +23,7 @@ Estos datos no existen hasta que la iteración se implemente. Márcalos aquí cu
 | # | Dato | Dónde queda | Estado |
 | :- | :--- | :---------- | :----- |
 | 1 | Nombres exactos de las migraciones `0010`, `0011` y `0012` | Parte A2 y B5 | **Hecho (2026-11-27, agente):** `0010_rut_y_folio`, `0011_folio_igual_id`, `0012_folio_unico`. `sqlmigrate` [código]: la `0010` emite `CREATE TABLE pedidos_secuenciafolio`, `ADD COLUMN folio integer UNSIGNED DEFAULT 0 NOT NULL CHECK (folio >= 0)` + `ALTER COLUMN folio DROP DEFAULT`, y `ADD COLUMN rut varchar(12) DEFAULT '00.000.000-0' NOT NULL` + `DROP DEFAULT` (Clase 2); la `0011` es `-- Raw Python operation` (datos, sin DDL); la `0012` emite solo `ADD CONSTRAINT pedidos_cotizacion_folio_36c672ad_uniq UNIQUE (folio)`, **sin `MODIFY`** (Clase 2). SQL completo en [bitacora-14-04-implementacion](../../99_bitacora/epica-14-mantenimiento/bitacora-14-04-implementacion.md) |
-| 2 | Bloque de `python manage.py shell` del paso único del folio (ensayado en la réplica) | Parte B6 | **Escrito y ensayado solo en la base de prueba (2026-11-27, agente; falta el ensayo en la réplica, A2.9 y A2.10):** `from pedidos.paso_unico_folio import fijar_inicio_folio` · `ok, texto = fijar_inicio_folio(1000)` · `print(texto)`. Respuesta esperada: `HECHO: contador de folios de cotización, antes: <N>; después: 999. La próxima cotización recibirá el folio 1000.` o `NEGADO: <k> cotización(es) ya tienen folio 1000 o mayor. Contador sin cambios (antes: <N>; después: <N>).` La guarda mira las cotizaciones, no el contador: se puede volver a correr (aviso 2, opción C) |
+| 2 | Bloque de `python manage.py shell` del paso único del folio (ensayado en la réplica) | Parte B6 | **Escrito (2026-11-27, agente) y ensayado en la réplica (A2.9 y A2.10), comprobado en la consola del desarrollador el 2026-11-28.** ~~Escrito y ensayado solo en la base de prueba; falta el ensayo en la réplica, A2.9 y A2.10.~~ Bloque: `from pedidos.paso_unico_folio import fijar_inicio_folio` · `ok, texto = fijar_inicio_folio(1000)` · `print(texto)`. Respuesta esperada: `HECHO: contador de folios de cotización, antes: <N>; después: 999. La próxima cotización recibirá el folio 1000.` o `NEGADO: <k> cotización(es) ya tienen folio 1000 o mayor. Contador sin cambios (antes: <N>; después: <N>).` La guarda mira las cotizaciones, no el contador: se puede volver a correr (aviso 2, opción C) |
 | 3 | Cantidad de pruebas finales (461 de hoy + las nuevas) con `OK (expected failures=3)` | Parte A1 | **Hecho (2026-11-27, agente):** `Ran 500 tests` (461 + 39 nuevas), `OK (expected failures=3)`, en la base `test_…`. `check`: sin problemas; `makemigrations --check --dry-run`: `No changes detected` |
 | 4 | Texto exacto que imprime `verificar_respaldo.py` con un volcado de 19 tablas y con uno de 20 | Partes A3 y B8 | **Hecho (2026-11-27, agente, con volcados ficticios):** script nuevo, 20 tablas → `Tablas esperadas encontradas: 20 de 20`, `Tablas faltantes: ninguna`, `Resultado: VÁLIDO`, código 0. Script nuevo, 19 tablas → `Tablas esperadas encontradas: 19 de 20`, `Tablas faltantes: pedidos_secuenciafolio`, `Resultado: NO VÁLIDO (1 tabla(s) faltante(s))`, código 1. **Por eso el respaldo previo (A3, 19 tablas) se verifica con la versión de `v4.11`:** `git show v4.11-csp-observacion:scripts/verificar_respaldo.py > "$env:TEMP\verificar_respaldo_v411.py"` y `python "$env:TEMP\verificar_respaldo_v411.py" "<ruta>"` → `19 de 19`, `VÁLIDO` (`respaldo.md`; el mismo trato que tuvieron los de 18 tablas) |
 | 5 | Lista de archivos que debe mostrar `git diff --stat v4.11-csp-observacion v14.3-rut-y-folio` | Parte B1 | **Hecho (2026-11-27, agente), según el árbol de trabajo:** código `pedidos/models.py`, `pedidos/validadores.py` (nuevo), `pedidos/paso_unico_folio.py` (nuevo), `pedidos/views.py`, `pedidos/migrations/0010_rut_y_folio.py`, `0011_folio_igual_id.py`, `0012_folio_unico.py` (nuevas), `pedidos/static/pedidos/js/index.js`, plantillas `cotizacion_confirm_delete.html`, `cotizacion_convertir.html`, `cotizacion_detail.html`, `cotizacion_form.html`, `cotizacion_list.html`, `cotizacion_pdf.html`, `pedido_form.html`, `scripts/verificar_respaldo.py`; pruebas `pedidos/tests/factorias.py`, `test_acceso.py`, `test_cotizaciones.py`, `test_eventos_negocio.py`, `test_rut_folio.py` y `test_verificar_respaldo.py` (nuevas); documentos `docs/operacion/despliegue.md`, `respaldo.md` y `_planificacion/`. **No** debe aparecer `requirements.txt`, `PedidosApp/settings.py` ni `pedidos/admin.py` (sin cambios) |
@@ -94,10 +95,10 @@ python manage.py makemigrations --check --dry-run
 
 | # | Comando | Esperado | Resultado | Estado |
 | :- | :------ | :------- | :-------- | :----- |
-| 1 | `test pedidos` | `Ran N tests` (461 + nuevas) y `OK (expected failures=3)` | | No informado |
-| 2 | `check` | `no issues` | | No informado |
-| 3 | `makemigrations --check --dry-run` | `No changes detected` (con las tres migraciones ya en el repositorio) | | No informado |
-| 4 | `grep` del número 1000 en código y migraciones (criterio 6) | Ninguna coincidencia | | No informado |
+| 1 | `test pedidos` | `Ran N tests` (461 + nuevas) y `OK (expected failures=3)` | `Ran 500 tests` en 604 s, `OK (expected failures=3)` | Comprobado (consola del desarrollador, 2026-11-28) |
+| 2 | `check` | `no issues` | Sin problemas | Comprobado (consola del desarrollador, 2026-11-28) |
+| 3 | `makemigrations --check --dry-run` | `No changes detected` (con las tres migraciones ya en el repositorio) | `No changes detected` | Comprobado (consola del desarrollador, 2026-11-28) |
+| 4 | `grep` del número 1000 en código y migraciones (criterio 6) | ~~Ninguna coincidencia~~ **Ninguna coincidencia que sea el folio** (ajustado el 2026-11-28: el código ya tenía usos del número ajenos al folio) | Solo coincidencias preexistentes: el lienzo SVG de 1000×400, la clase `duration-1000`, `data-desbloquear-ms="10000"` y los textos de ejemplo de `cotizacion_form.html:289` y `producto_form.html:44`. Ninguna en el diff de la 14-04 (`git diff 6815ef3 e82c9cf`) | Comprobado (consola del desarrollador, 2026-11-28) |
 
 ### A2. Réplica: respaldo, migraciones y ensayo
 
@@ -105,16 +106,16 @@ Todo en una sola ventana. **Nunca** `docker compose down -v` ni `docker volume r
 
 | # | Paso | Esperado | Resultado | Estado |
 | :- | :--- | :------- | :-------- | :----- |
-| 1 | Paridad: `python scripts\diagnostico\paridad_replica.py` | `PARIDAD con diferencias aceptadas` | | No informado |
-| 2 | Respaldo de la réplica antes de migrar (como `despliegue.md`, 3.13 A, paso 2), con `verificar_respaldo.py` y `revisar_volcado_d2.py` | `VÁLIDO` y `CUMPLE D2` | | No informado |
-| 3 | `sqlmigrate` de la `0010` | `ALTER`/`CREATE` aditivos; las columnas nuevas nacen `NOT NULL` con relleno en el mismo paso | | No informado |
-| 4 | `sqlmigrate` de la `0011` | Sin DDL (solo datos) | | No informado |
-| 5 | `sqlmigrate` de la `0012` | **Solo** el índice único de `folio`; **ningún `MODIFY` de la columna** (si lo hay, es Clase 3: se detiene) | | No informado |
-| 6 | `migrate`; después `showmigrations pedidos` | `[X]` en `0010`, `0011` y `0012` | | No informado |
-| 7 | Conteos: clientes totales; clientes con `00.000.000-0`; cotizaciones totales; cotizaciones con `folio = id`; valor del contador | Los dos primeros iguales; los dos siguientes iguales; contador = mayor folio | | No informado |
-| 8 | Reversa de la `0011` ensayada (`migrate pedidos 0010` y de vuelta) | Sin errores; datos intactos | | No informado |
-| 9 | **Paso único del folio ensayado:** valor antes, valor después, folio de la primera cotización nueva | Antes: mayor folio; después: `999`; primera nueva: `1000` | | No informado |
-| 10 | El paso único se **niega** si ya hay folios ≥ 1000 | Se ensaya contra una copia con un folio ≥ 1000 | | No informado |
+| 1 | Paridad: `python scripts\diagnostico\paridad_replica.py` | `PARIDAD con diferencias aceptadas` | 0 diferencias no aceptadas y 1 aceptada (Python 3.13.0 frente a 3.13.1); 19 tablas; 22 de 22 comprobaciones | Comprobado (consola del desarrollador, 2026-11-28) |
+| 2 | Respaldo de la réplica antes de migrar (como `despliegue.md`, 3.13 A, paso 2), con `verificar_respaldo.py` y `revisar_volcado_d2.py` | `VÁLIDO` y `CUMPLE D2` | `replica_antes_14-04.sql`, 1.585.767 bytes, SHA-256 `2ef41d7845ba…`; `VÁLIDO`, 19 de 19 con el verificador de `v4.11`; `CUMPLE D2` | Comprobado (consola del desarrollador, 2026-11-28) |
+| 3 | `sqlmigrate` de la `0010` | `ALTER`/`CREATE` aditivos; las columnas nuevas nacen `NOT NULL` con relleno en el mismo paso | Plan: `0010`, `0011` y `0012`. Aditiva: `CREATE TABLE pedidos_secuenciafolio`; `ADD COLUMN` de `folio` y de `rut`, cada una seguida de su `DROP DEFAULT` | Comprobado (consola del desarrollador, 2026-11-28) |
+| 4 | `sqlmigrate` de la `0011` | Sin DDL (solo datos) | Operación Python, sin DDL | Comprobado (consola del desarrollador, 2026-11-28) |
+| 5 | `sqlmigrate` de la `0012` | **Solo** el índice único de `folio`; **ningún `MODIFY` de la columna** (si lo hay, es Clase 3: se detiene) | Solo `ADD CONSTRAINT … UNIQUE (folio)`, sin `MODIFY` | Comprobado (consola del desarrollador, 2026-11-28) |
+| 6 | `migrate`; después `showmigrations pedidos` | `[X]` en `0010`, `0011` y `0012` | `migrate` OK; `[X]` en `0010` a `0012` | Comprobado (consola del desarrollador, 2026-11-28) |
+| 7 | Conteos: clientes totales; clientes con `00.000.000-0`; cotizaciones totales; cotizaciones con `folio = id`; valor del contador | Los dos primeros iguales; los dos siguientes iguales; contador = mayor folio | 869 clientes, 869 con `00.000.000-0`; 33 cotizaciones, 33 con `folio = id`; mayor folio 34; contador 34 | Comprobado (consola del desarrollador, 2026-11-28) |
+| 8 | Reversa de la `0011` ensayada (`migrate pedidos 0010` y de vuelta) | Sin errores; datos intactos | Ida y vuelta OK; después, 869 clientes, 33 cotizaciones y contador 34 | Comprobado (consola del desarrollador, 2026-11-28) |
+| 9 | **Paso único del folio ensayado:** valor antes, valor después, folio de la primera cotización nueva | Antes: mayor folio; después: `999`; primera nueva: `1000` | `HECHO`, antes: 34; después: 999. Primera cotización nueva: folio 1000 | Comprobado (consola del desarrollador, 2026-11-28) |
+| 10 | El paso único se **niega** si ya hay folios ≥ 1000 | Se ensaya contra una copia con un folio ≥ 1000 | Con una cotización de folio ≥ 1000: `NEGADO`. Después, limpieza de los datos de prueba (cotizaciones, pedido y clientes) y nueva corrida: `HECHO`, sin errores (opción C del aviso 2). Los valores exactos de las salidas (cantidad negada, antes y después de la nueva corrida): no informado | Comprobado (consola del desarrollador, 2026-11-28); valores exactos no informados |
 
 ### A2b. Revisión manual en la réplica (escritorio y 360 px)
 
@@ -122,19 +123,19 @@ Solo resultados; sin RUT reales ni nombres de clientes.
 
 | # | Caso | Esperado | Resultado | Estado |
 | :- | :--- | :------- | :-------- | :----- |
-| 1 | Editar un cliente existente sin cambiar el RUT | Muestra `00.000.000-0` y **rechaza** guardar | | No informado |
-| 2 | Escribir `00.000.000-0` a mano | Rechazado | | No informado |
-| 3 | Escribir `12.345.678-5`, `12345678-5` y `123456785` | Aceptados y guardados como `12.345.678-5` | | No informado |
-| 4 | Escribir `12.345.678-4` (dígito erróneo) y `12.345.67A-5` | Rechazados | | No informado |
-| 5 | Crear cliente rápido (modal) sin RUT, y con `11.111.111-1` | Sin RUT: rechazado; con RUT: crea | | No informado |
-| 6 | Crear una cotización: folio asignado | Siguiente correlativo, sin separador de miles | | No informado |
-| 7 | Detalle y PDF de la cotización | Muestran el RUT del cliente y el folio; el nombre del archivo trae el folio | | No informado |
-| 8 | Listado y búsqueda por folio | Lo encuentra | | No informado |
-| 9 | Convertir una cotización a pedido y eliminar una cotización | Los mensajes dicen «folio N»; sin 500 | | No informado |
-| 10 | Dos cotizaciones creadas casi a la vez (dos pestañas) | Folios distintos | | No informado |
-| 11 | Un error forzado al guardar una cotización | El folio **no** queda consumido | | No informado |
-| 12 | Consola del navegador (`F12`) en las pantallas tocadas | Sin mensajes `[Report Only]` nuevos de scripts o estilos en línea | | No informado |
-| 13 | A 360 px | Todo se lee completo, sin barra horizontal | | No informado |
+| 1 | Editar un cliente existente sin cambiar el RUT | Muestra `00.000.000-0` y **rechaza** guardar | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 2 | Escribir `00.000.000-0` a mano | Rechazado | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 3 | Escribir `12.345.678-5`, `12345678-5` y `123456785` | Aceptados y guardados como `12.345.678-5` | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 4 | Escribir `12.345.678-4` (dígito erróneo) y `12.345.67A-5` | Rechazados | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 5 | Crear cliente rápido (modal) sin RUT, y con `11.111.111-1` | Sin RUT: rechazado; con RUT: crea | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 6 | Crear una cotización: folio asignado | Siguiente correlativo, sin separador de miles | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 7 | Detalle y PDF de la cotización | Muestran el RUT del cliente y el folio; el nombre del archivo trae el folio | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 8 | Listado y búsqueda por folio | Lo encuentra | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 9 | Convertir una cotización a pedido y eliminar una cotización | Los mensajes dicen «folio N»; sin 500 | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 10 | Dos cotizaciones creadas casi a la vez (dos pestañas) | Folios distintos | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 11 | Un error forzado al guardar una cotización | El folio **no** queda consumido | Como se esperaba. **Prueba débil:** desde el navegador no se puede forzar un fallo dentro del guardado; la garantía es la prueba automática de transacción revertida (`test_rut_folio.py`) [inferido] | Comprobado (escritorio y 360 px, 2026-11-28), con esa salvedad |
+| 12 | Consola del navegador (`F12`) en las pantallas tocadas | Sin mensajes `[Report Only]` nuevos de scripts o estilos en línea | Sin mensajes `[Report Only]` nuevos | Comprobado (escritorio y 360 px, 2026-11-28) |
+| 13 | A 360 px | Todo se lee completo, sin barra horizontal | Como se esperaba | Comprobado (escritorio y 360 px, 2026-11-28) |
 
 Limpieza: `Ctrl+C` en `runserver`, `Remove-Item Env:DB_NAME`, `docker compose stop`.
 
@@ -416,3 +417,4 @@ Se llena durante la ejecución: qué estaba previsto, qué pasó y qué efecto t
 ## Qué no consta (se completa al cerrar)
 
 - Lo que el desarrollador no informe queda aquí, con su motivo.
+- **A2.10 (2026-11-28):** las salidas exactas de la negativa y de la nueva corrida (cuántas cotizaciones tenían folio ≥ 1000, y los valores antes y después) no se pegaron. Consta el resultado («NEGADO», limpieza y «HECHO» sin errores), no los números.
