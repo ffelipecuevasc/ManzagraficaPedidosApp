@@ -115,7 +115,7 @@ class EventosCotizacionClienteProductoTests(EventosNegocioBase):
         })
         pedido = Pedido.objects.get()
         evento = self.assertUnEvento('cotizacion_convertida', 'cotizacion', cotizacion.pk)
-        self.assertEqual(evento.resumen, f'Cotización #{cotizacion.pk} convertida en el pedido #{pedido.pk}')
+        self.assertEqual(evento.resumen, f'Cotización folio {cotizacion.folio} convertida en el pedido #{pedido.pk}')
 
     def test_cliente_eliminado(self):
         cliente = factorias.crear_cliente()

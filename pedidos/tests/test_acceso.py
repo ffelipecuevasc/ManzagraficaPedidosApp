@@ -228,7 +228,7 @@ class BaseDeDatosPermisosTests(CarpetaTemporalMixin, TestCase):
 # Tarea 4 · Puntos JSON
 # ---------------------------------------------------------------------------
 class PuntosJsonTests(TestCase):
-    CLIENTE = {'nombre': 'Cliente rápido', 'telefono': '+56 9 1234 5678'}
+    CLIENTE = {'nombre': 'Cliente rápido', 'telefono': '+56 9 1234 5678', 'rut': '11.111.111-1'}  # sintético (14-04)
     PRODUCTO = {'nombre': 'Producto rápido', 'unidad': 'UNITARIO', 'valor_neto': 10_000}
 
     def test_sin_sesion_redirigen_en_html_y_no_crean(self):

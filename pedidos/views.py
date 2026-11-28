@@ -850,10 +850,12 @@ def lista_cotizaciones(request):
     # 3. Búsqueda
     busqueda = request.GET.get('busqueda')
     if busqueda:
-        cotizaciones = cotizaciones.filter(
-            Q(cliente__nombre__icontains=busqueda) |
-            Q(resumen__icontains=busqueda)
-        )
+        filtro = Q(cliente__nombre__icontains=busqueda) | Q(resumen__icontains=busqueda)
+        # 14-04: también por folio exacto, con o sin «#» delante.
+        numero = busqueda.strip().lstrip('#').strip()
+        if numero.isdigit():
+            filtro |= Q(folio=int(numero))
+        cotizaciones = cotizaciones.filter(filtro)
 
     # 4. Paginación
     paginator = Paginator(cotizaciones, 10)
@@ -1063,7 +1065,7 @@ def convertir_a_pedido(request, pk):
                         metodo=metodo,
                         fecha=timezone.now(),
                         registrado_por=request.user,
-                        nota=f'Abono inicial por conversión de Cotización #{cotizacion.id}'
+                        nota=f'Abono inicial por conversión de la cotización folio {cotizacion.folio}'
                     )
 
                     # Calcular estado financiero
@@ -1074,7 +1076,7 @@ def convertir_a_pedido(request, pk):
                 cotizacion.estado = 'ACEPTADA'
                 cotizacion.save()
                 registrar_evento('cotizacion_convertida', request.user, 'cotizacion', cotizacion.pk,
-                                 f'Cotización #{cotizacion.pk} convertida en el pedido #{pedido.pk}')
+                                 f'Cotización folio {cotizacion.folio} convertida en el pedido #{pedido.pk}')
 
                 # 6. Redirigir al nuevo pedido
                 messages.success(request, f"Cotización convertida exitosamente en el Pedido #{pedido.id}")
@@ -1116,7 +1118,7 @@ def exportar_cotizacion_pdf(request, pk):
     # 5. Crear la respuesta HTTP con el tipo de contenido PDF
     response = HttpResponse(content_type='application/pdf')
     # 'inline' para ver en navegador, 'attachment' para descargar directo
-    response['Content-Disposition'] = f'inline; filename="Cotizacion_{cotizacion.id}.pdf"'
+    response['Content-Disposition'] = f'inline; filename="Cotizacion_{cotizacion.folio}.pdf"'
     response.write(result)
 
     return response

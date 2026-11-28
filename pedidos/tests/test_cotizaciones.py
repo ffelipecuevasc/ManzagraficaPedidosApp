@@ -176,5 +176,5 @@ class ConvertirCotizacionTests(CotizacionBase):
                 else:
                     self.assertEqual((pago.monto, pago.metodo, pago.registrado_por),
                                      (monto, metodo_guardado, self.usuario))
-                    self.assertEqual(pago.nota, f'Abono inicial por conversión de Cotización #{self.cotizacion.pk}')
+                    self.assertEqual(pago.nota, f'Abono inicial por conversión de la cotización folio {self.cotizacion.folio}')
                 self.assertEqual(pedido.estado_pago, estado_pago)

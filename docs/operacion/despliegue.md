@@ -942,6 +942,41 @@ La 04-09 agrega `Content-Security-Policy-Report-Only` a todas las respuestas, **
 - **Por etiqueta:** `retroceso.md`, caso 1 (sin migraciones): checkout de `v4.10-acceso-limites` y Reload. Las variables `ACCESO_` se quedan.
 - No hay datos que deshacer.
 
+### 3.17 Despliegue de la 14-04 (`v14.3-rut-y-folio`): migraciones, estáticos y paso único del folio
+
+La 14-04 agrega `Cliente.rut` (obligatorio, los existentes reciben `00.000.000-0`) y el folio de cotización (tabla `pedidos_secuenciafolio` y columna `folio`), con las migraciones `0010_rut_y_folio` (Clase 2), `0011_folio_igual_id` (datos) y `0012_folio_unico` (solo el índice único, Clase 2). Cambia `index.js`: lleva `collectstatic`. Sin `pip`. El paso a paso con las tablas que se anotan está en [evidencia-14-04](../../_planificacion/10_epicas/epica-14-mantenimiento/evidencia-14-04.md).
+
+#### A. Antes (en tu PC)
+
+1. Ensayo en la réplica (evidencia, parte A2): respaldo de la réplica, `migrate`, conteos, reversa de la `0011` y paso único ensayado.
+2. `python manage.py test pedidos` → `OK (expected failures=3)` con la cuenta de la evidencia (dato 3).
+3. Avisos: el dueño, avisado de no crear clientes ni cotizaciones durante la actualización; hora de poco uso (aviso 1, opción A).
+
+#### B. Orden del despliegue
+
+1. **Respaldo de producción ANTES del checkout**, con `v4.11-csp-observacion` activo. Es de **19 tablas**: con el script de 20 da `NO VÁLIDO` por `pedidos_secuenciafolio`, así que se verifica con la versión de `v4.11` (`respaldo.md`, nota «Desde la 14-04»): `VÁLIDO` (19 de 19), `RESULTADO: CUMPLE D2` y `0`. **Obligatorio.**
+2. **Etiqueta** `v14.3-rut-y-folio` y `git push` (sección 1).
+3. **Checkout** (3.2): `git fetch origin --tags` y `git checkout v14.3-rut-y-folio`; nunca `git pull`.
+4. **`python manage.py collectstatic --noinput`** (cambia `index.js`).
+5. **Revisión:** `migrate --plan` → solo `0010`, `0011` y `0012`; `check --deploy` → solo W005 y W021. Si sale otra cosa, no migres: `git checkout v4.11-csp-observacion`.
+6. **`python manage.py migrate`** y `showmigrations pedidos` con `[X]` en las tres. La ventana con el código viejo cargado va de aquí al Reload: hazla corta.
+7. **Paso único del folio**, antes de crear cualquier cotización, en `python manage.py shell`:
+
+   ```python
+   from pedidos.paso_unico_folio import fijar_inicio_folio
+   ok, texto = fijar_inicio_folio(1000)
+   print(texto)
+   ```
+
+   Debe decir `HECHO: contador de folios de cotización, antes: <mayor folio>; después: 999. …`. Si dice `NEGADO`, no sigas: alguna cotización ya tiene folio ≥ 1000; decide el desarrollador. El número 1000 solo se escribe aquí (D4).
+8. **UN solo Reload**, con `DESDE_CL` (3.14 B, paso 6) y una sola línea `Starting uWSGI` (3.6). Después, `Ctrl+F5` en el navegador.
+9. **Respaldo posterior**: `VÁLIDO` con **20 de 20** con el script actual.
+10. **Verificaciones del mismo día (RDA-021):** evidencia, parte C. La cotización de prueba se borra **antes** que su cliente de prueba (`PROTECT`) y el paso 7 se vuelve a correr (antes `1000`, después `999`; aviso 2, opción C). Registros desde el último `Starting uWSGI` con el conteo de 3.12 B, paso 6.3, que incluye `IntegrityError`.
+
+#### C. Retroceso
+
+- `retroceso.md`, **con restauración del respaldo previo** (hay migraciones con datos y una tabla nueva), y checkout de `v4.11-csp-observacion`. La alternativa `migrate pedidos 0009` deshace las tres (la `0011` tiene reversa) pero **borra los RUT y folios escritos después del despliegue**: decide el desarrollador (evidencia, parte D).
+
 ## 4. Primer uso: despliegue de la 00-04 (`v0.1-higiene`)
 
 El paso a paso exacto, con las salidas que hay que anotar, está en `_planificacion/10_epicas/epica-00-blindaje/evidencia-00-05.md`, parte B. Resume lo propio de este despliegue (punto 8 de la lista):

@@ -42,7 +42,8 @@ $LASTEXITCODE
 ```
 
 - `0`: el volcado es válido. `1`: no es válido o no se pudo leer.
-- El script revisa el tamaño (mínimo 500.000 bytes por defecto; se cambia con `--min-bytes N`), la línea de cierre `-- Dump completed`, las 19 tablas esperadas y el SHA-256. El informe no muestra ninguna línea del volcado, así que se puede copiar en la tabla de la sección 6 y en las evidencias.
+- El script revisa el tamaño (mínimo 500.000 bytes por defecto; se cambia con `--min-bytes N`), la línea de cierre `-- Dump completed`, las ~~19~~ 20 tablas esperadas (desde la 14-04) y el SHA-256. El informe no muestra ninguna línea del volcado, así que se puede copiar en la tabla de la sección 6 y en las evidencias.
+- **Desde la 14-04** (migración `0010`) la lista tiene **20 tablas**: suma `pedidos_secuenciafolio`. Un volcado anterior a esa migración tiene 19 tablas y da `NO VÁLIDO (1 tabla(s) faltante(s))`, con `Tablas faltantes: pedidos_secuenciafolio`, con el script actual: verifícalo con la versión anterior, `git show v4.11-csp-observacion:scripts/verificar_respaldo.py > "$env:TEMP\verificar_respaldo_v411.py"` y `python "$env:TEMP\verificar_respaldo_v411.py" "<ruta>"`. Es el caso del respaldo previo al despliegue de la 14-04.
 - **Desde el 2026-10-25** (01-06, migración 0007) la lista incluye `pedidos_registroevento`. Un volcado anterior a esa fecha tiene 18 tablas y da `NO VÁLIDO (1 tabla(s) faltante(s))` con el script actual: verifícalo con la versión anterior, `git show v0.2-correcciones:scripts/verificar_respaldo.py > "$env:TEMP\verificar_respaldo_v02.py"`.
 - Para comprobar el hash por otro camino:
 

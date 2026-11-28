@@ -1,12 +1,19 @@
-from django.db import models
+from django.db import models, transaction
 from datetime import timedelta
 from django.utils import timezone
-from django.db.models import Sum
+from django.db.models import Max, Sum
 from django.contrib.auth.models import User
+
+from .validadores import normalizar_rut, validar_rut
 
 # Clase básica de Clientes
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
+    # 14-04 (D1): obligatorio y sin índice único (los clientes anteriores comparten el provisorio
+    # 00.000.000-0). La validación vive aquí, no en MySQL, para que la apliquen el formulario, el
+    # admin y el modal de cliente rápido.
+    rut = models.CharField(max_length=12, verbose_name='RUT', validators=[validar_rut],
+                           help_text='Con o sin puntos y guion. Ej: 12.345.678-5')
     telefono = models.CharField(max_length=20, help_text='Formato WhatsApp')
     email = models.CharField(max_length=100, blank=True, null=True)
 
@@ -21,6 +28,12 @@ class Cliente(models.Model):
         # Quitamos espacios, el signo +, guiones y paréntesis
         limpio = self.telefono.replace(" ", "").replace("+", "").replace("-", "").replace("(", "").replace(")", "")
         return limpio
+
+    def clean(self):
+        # Único lugar de la normalización (14-04, A.4): formulario, admin y modal pasan por
+        # full_clean(), que llama a clean() después de los validadores de campo.
+        super().clean()
+        self.rut = normalizar_rut(self.rut)
 
     def __str__(self):
         return self.nombre
@@ -147,6 +160,42 @@ class Producto(models.Model):
         # Mostramos el precio final en el admin/selects para facilitar la vida
         return f"{self.nombre} (${self.valor_bruto} IVA inc.)"
 
+class SecuenciaFolio(models.Model):
+    """Contador de folios (14-04, D5): una fila por numeración.
+
+    MySQL admite una sola columna AUTO_INCREMENT por tabla y ya es el `id`, así que el folio lo
+    asigna la aplicación. El número inicial del negocio es un dato de esta tabla, no del código (D4).
+    Retención: una fila por numeración, sin crecimiento; no necesita purga (AGENTS.md 8.11).
+    """
+    COTIZACION = 'cotizacion'
+
+    nombre = models.CharField(max_length=30, unique=True)
+    ultimo_folio = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Secuencia de folios'
+        verbose_name_plural = 'Secuencias de folios'
+
+    def __str__(self):
+        return f'{self.nombre}: {self.ultimo_folio}'
+
+    @classmethod
+    def siguiente(cls, nombre, piso):
+        """Reserva y devuelve el folio siguiente. Debe llamarse dentro de una transacción.
+
+        La fila se bloquea con select_for_update hasta que la transacción termine: dos peticiones a
+        la vez reciben folios distintos y, si la transacción se revierte, el incremento también.
+        `piso` calcula el punto de partida si la fila no existe (el mayor folio ya usado).
+        """
+        fila = cls.objects.select_for_update().filter(nombre=nombre).first()
+        if fila is None:
+            fila, _ = cls.objects.select_for_update().get_or_create(
+                nombre=nombre, defaults={'ultimo_folio': piso()})
+        fila.ultimo_folio += 1
+        fila.save(update_fields=['ultimo_folio'])
+        return fila.ultimo_folio
+
+
 # Clase de Cotizaciones, espejo de Pedidos
 class Cotizacion(models.Model):
     """
@@ -159,6 +208,9 @@ class Cotizacion(models.Model):
         ('EXPIRADA', 'Expirada'),  # Pasó la fecha sin acción
         ('RECHAZADA', 'Rechazada'),  # Cliente no quiso
     ]
+
+    # 14-04 (D3): número visible, distinto del id (las URL siguen usando pk). Lo asigna save().
+    folio = models.PositiveIntegerField(unique=True, editable=False, verbose_name='Folio')
 
     # Relaciones y Datos Básicos
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
@@ -185,8 +237,27 @@ class Cotizacion(models.Model):
     def esta_vencida(self):
         return self.estado == 'ENVIADA' and self.fecha_vencimiento < timezone.now().date()
 
+    def save(self, *args, **kwargs):
+        # 14-04 (B.2): toda cotización nueva recibe su folio aquí, por cualquier camino. El
+        # incremento del contador y el INSERT van en la misma transacción.
+        if self.folio is not None:
+            return super().save(*args, **kwargs)
+        guardada = False
+        try:
+            with transaction.atomic():
+                self.folio = SecuenciaFolio.siguiente(
+                    SecuenciaFolio.COTIZACION,
+                    piso=lambda: Cotizacion.objects.aggregate(m=Max('folio'))['m'] or 0)
+                super().save(*args, **kwargs)
+            guardada = True
+        finally:
+            if not guardada:
+                # Si algo falló, la transacción ya se revirtió y el folio no quedó consumido: la
+                # instancia no lo conserva (un segundo save() pide uno nuevo). El error sigue su curso.
+                self.folio = None
+
     def __str__(self):
-        return f"Cotización #{self.id} - {self.cliente.nombre}"
+        return f"Cotización folio {self.folio} - {self.cliente.nombre}"
 
 # Clase hecha para relacionar Productos con Pedidos y viceversa.
 class ItemPedido(models.Model):

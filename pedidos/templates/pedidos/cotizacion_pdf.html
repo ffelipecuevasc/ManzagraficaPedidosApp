@@ -1,9 +1,9 @@
-{% load humanize %}
+{% load humanize l10n %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cotización #{{ cotizacion.id }}</title>
+    <title>Cotización #{{ cotizacion.folio|unlocalize }}</title>
     <style>
         /* --- CONFIGURACIÓN GLOBAL (ESTILO TIPO TAILWIND) --- */
         @page {
@@ -234,7 +234,7 @@
 
         <div class="quote-badge">
             <div class="quote-title">Cotización N°</div>
-            <div class="quote-number">{{ cotizacion.id }}</div>
+            <div class="quote-number">{{ cotizacion.folio|unlocalize }}</div>
         </div>
     </div>
 
@@ -246,6 +246,13 @@
 
                 <td class="label text-right">EMISIÓN</td>
                 <td class="value text-right" style="width: 100px;">{{ cotizacion.fecha_emision|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+                <td class="label">RUT</td>
+                <td class="value">{{ cotizacion.cliente.rut }}</td>
+
+                <td class="label text-right"></td>
+                <td class="value text-right"></td>
             </tr>
             <tr>
                 <td class="label">TELÉFONO</td>

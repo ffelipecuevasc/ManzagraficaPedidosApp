@@ -45,7 +45,8 @@ def crear_superusuario(username=None, password='clave-prueba-123', **campos):
 
 def crear_cliente(**campos):
     n = _siguiente()
-    datos = {'nombre': f'Cliente de prueba {n}', 'telefono': '+56 9 0000 0000'}
+    # RUT sintético válido (14-04); nunca un RUT real. El otro sintético es 11.111.111-1.
+    datos = {'nombre': f'Cliente de prueba {n}', 'telefono': '+56 9 0000 0000', 'rut': '12.345.678-5'}
     datos.update(campos)
     return Cliente.objects.create(**datos)
 

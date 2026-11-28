@@ -6,7 +6,7 @@ Uso:
 Comprueba:
   1. Que el tamaño supere un mínimo (por defecto 500.000 bytes).
   2. Que la última línea con texto empiece con «-- Dump completed».
-  3. Que haya un CREATE TABLE por cada una de las 19 tablas esperadas.
+  3. Que haya un CREATE TABLE por cada una de las 20 tablas esperadas.
   4. El SHA-256 del archivo.
 
 El informe solo muestra tamaños, nombres de tabla, conteos y el hash; nunca
@@ -30,7 +30,9 @@ TAMANO_MINIMO_POR_DEFECTO = 500_000
 # producción el 2026-10-20 (linea-base-produccion.md, sección 2), más
 # pedidos_registroevento (migración 0007, aplicada en producción el
 # 2026-10-25 en la 01-06). Los volcados anteriores se verifican con la
-# versión de v0.2-correcciones.
+# versión de v0.2-correcciones. Desde la 14-04 (migración 0010) se suma
+# pedidos_secuenciafolio: los volcados de 19 tablas, anteriores a esa
+# migración, se verifican con la versión de v4.11-csp-observacion.
 TABLAS_ESPERADAS = frozenset({
     "pedidos_cliente",
     "pedidos_producto",
@@ -41,6 +43,7 @@ TABLAS_ESPERADAS = frozenset({
     "pedidos_pago",
     "pedidos_historialbd",
     "pedidos_registroevento",
+    "pedidos_secuenciafolio",
     "auth_group",
     "auth_group_permissions",
     "auth_permission",

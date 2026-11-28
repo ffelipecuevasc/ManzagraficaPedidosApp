@@ -213,12 +213,16 @@ function initPedidoForm() {
     if (btnGuardarApi) {
         btnGuardarApi.addEventListener('click', function () {
             const nombre = document.getElementById('new_client_nombre').value;
+            const rutInput = document.getElementById('new_client_rut');
+            const rut = rutInput ? rutInput.value.trim() : '';
             const telefono = document.getElementById('new_client_telefono').value;
             const email = document.getElementById('new_client_email').value;
 
-            if (!nombre || !telefono) {
+            // Solo ayuda: la validación del RUT (formato, dígito verificador, provisorio) la hace
+            // el servidor (14-04). Aquí se avisa antes de enviar si falta algo obligatorio.
+            if (!nombre || !rut || !telefono) {
                 const errorDiv = document.getElementById('cliente-api-error');
-                errorDiv.innerText = 'Nombre y Teléfono son obligatorios';
+                errorDiv.innerText = 'Nombre, RUT y Teléfono son obligatorios';
                 errorDiv.classList.remove('hidden');
                 return;
             }
@@ -236,7 +240,7 @@ function initPedidoForm() {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-CSRFToken': csrfToken
                 },
-                body: new URLSearchParams({'nombre': nombre, 'telefono': telefono, 'email': email})
+                body: new URLSearchParams({'nombre': nombre, 'rut': rut, 'telefono': telefono, 'email': email})
             })
                 .then(response => response.json())
                 .then(data => {
@@ -248,13 +252,16 @@ function initPedidoForm() {
                         sectionBuscar.classList.remove('hidden');
 
                         document.getElementById('new_client_nombre').value = '';
+                        if (rutInput) rutInput.value = '';
                         document.getElementById('new_client_telefono').value = '';
                         document.getElementById('new_client_email').value = '';
 
                         checkClienteSeleccionado();
                     } else {
                         const errorDiv = document.getElementById('cliente-api-error');
-                        errorDiv.innerText = 'Error: ' + JSON.stringify(data.errors);
+                        // Mensajes del formulario de Django, legibles (antes: el JSON crudo).
+                        const mensajes = Object.values(data.errors || {}).flat();
+                        errorDiv.innerText = mensajes.length ? mensajes.join(' ') : 'No se pudo crear el cliente.';
                         errorDiv.classList.remove('hidden');
                     }
                 })
